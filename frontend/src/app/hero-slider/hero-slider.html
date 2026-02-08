@@ -1,0 +1,31 @@
+<div class="hero-slider">
+    <div class="slide" *ngFor="let slide of slides; let i = index" [class.active]="i === currentIndex">
+        <!-- Background Image Container -->
+        <div class="slide-bg" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
+
+        <!-- Text Overlay -->
+        <div class="slide-content">
+            <h1 class="title">Happiness</h1>
+            <div class="subtitle-group">
+                <span class="subtitle">{{ slide.subtitle }}</span>
+                <span class="highlight">{{ slide.highlight }}</span>
+            </div>
+            <div class="discount">{{ slide.discount }}</div>
+            <button class="shop-now-btn">Shop Now</button>
+        </div>
+    </div>
+
+    <!-- Navigation Arrows -->
+    <button class="nav-btn prev" (click)="prevSlide()">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="nav-btn next" (click)="nextSlide()">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <!-- Dots -->
+    <div class="dots-container">
+        <span class="dot" *ngFor="let slide of slides; let i = index" [class.active]="i === currentIndex"
+            (click)="goToSlide(i)"></span>
+    </div>
+</div>
