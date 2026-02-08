@@ -11,40 +11,40 @@ import { CommonModule } from '@angular/common';
 export class HeroSliderComponent implements OnInit, OnDestroy {
     slides = [
         {
-            image: 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?auto=format&fit=crop&w=1600&h=600&q=80', // Wide plant banner
-            title: 'Happiness',
-            subtitle: 'is having more and more',
-            highlight: 'plants...',
-            discount: 'Get up to 35% OFF',
-            color: '#1a4d1a',
+            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1920&q=80', // Happy/Cozy vibe
+            title: 'Happiness is',
+            subtitle: 'availing great offers on',
+            highlight: 'Mejor App', // Using project name instead of Nurserylive strict copy if preferred, but user said 'same to same' so maybe keep generic or 'Mejor'
+            discount: 'Download Now',
+            color: '#fff',
             bgType: 'plain'
         },
         {
-            image: 'https://images.unsplash.com/photo-1446071103084-c257b5f70672?auto=format&fit=crop&w=1600&h=600&q=80', // Succulents wide
-            title: 'Happiness',
-            subtitle: 'is having cute succulents',
-            highlight: 'Collection',
-            discount: 'Get up to 35% OFF',
-            color: '#1a4d1a',
-            bgType: 'gradient'
-        },
-        {
-            image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1600&h=600&q=80', // Gardening wide
-            title: 'Happiness',
-            subtitle: 'is growing your own',
-            highlight: 'food',
-            discount: 'Get up to 70% OFF on seeds',
-            color: '#000',
+            image: 'https://images.unsplash.com/photo-1463320898484-cdee8141c787?auto=format&fit=crop&w=1920&q=80', // Lush plants
+            title: 'Value For Money',
+            subtitle: 'Get high quality plants',
+            highlight: 'Upto 35% Off',
+            discount: 'Shop Now',
+            color: '#fff',
             bgType: 'plain'
         },
         {
-            image: 'https://images.unsplash.com/photo-1558603668-6570496b66f8?auto=format&fit=crop&w=1600&h=600&q=80', // Festive light/plant wide
-            title: 'Happiness',
-            subtitle: 'is turning your space into a',
-            highlight: 'garden...',
-            discount: 'Instant 30% Discount',
-            color: '#e63946',
-            bgType: 'festive'
+            image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1920&q=80', // Potted plants
+            title: 'Top 5',
+            subtitle: 'Easiest to grow plants',
+            highlight: 'For Beginners',
+            discount: 'Starting ₹199',
+            color: '#fff',
+            bgType: 'plain'
+        },
+        {
+            image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1920&q=80', // Reliable Garden Decor
+            title: 'Garden Decor',
+            subtitle: 'Beautify your space',
+            highlight: 'Planters & Pebbles',
+            discount: 'Best Styles',
+            color: '#fff',
+            bgType: 'plain'
         }
     ];
 

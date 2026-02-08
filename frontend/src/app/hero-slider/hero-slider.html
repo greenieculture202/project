@@ -1,26 +1,29 @@
 <div class="hero-slider">
-    <div class="slide" *ngFor="let slide of slides; let i = index" [class.active]="i === currentIndex">
-        <!-- Background Image Container -->
-        <div class="slide-bg" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
-
-        <!-- Text Overlay -->
-        <div class="slide-content">
-            <h1 class="title">Happiness</h1>
-            <div class="subtitle-group">
-                <span class="subtitle">{{ slide.subtitle }}</span>
-                <span class="highlight">{{ slide.highlight }}</span>
+    <div class="slides-container" [style.transform]="'translateX(-' + currentIndex * 100 + '%)'">
+        <div class="slide" *ngFor="let slide of slides; let i = index">
+            <img [src]="slide.image" class="slide-bg" alt="{{ slide.title }}">
+            <div class="slide-content">
+                <h2 class="title">{{ slide.title }}</h2>
+                <div class="subtitle-group">
+                    <span class="subtitle">{{ slide.subtitle }}</span>
+                    <span class="highlight">{{ slide.highlight }}</span>
+                </div>
+                <div class="discount">{{ slide.discount }}</div>
+                <button class="shop-now-btn">Shop Now</button>
             </div>
-            <div class="discount">{{ slide.discount }}</div>
-            <button class="shop-now-btn">Shop Now</button>
         </div>
     </div>
 
     <!-- Navigation Arrows -->
     <button class="nav-btn prev" (click)="prevSlide()">
-        <i class="fas fa-chevron-left"></i>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
     </button>
     <button class="nav-btn next" (click)="nextSlide()">
-        <i class="fas fa-chevron-right"></i>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
     </button>
 
     <!-- Dots -->

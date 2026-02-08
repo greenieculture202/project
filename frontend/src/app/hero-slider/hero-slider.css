@@ -1,136 +1,136 @@
-/* Google Fonts Import for "Happiness" look */
+/* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Great+Vibes&family=Open+Sans:wght@400;600&display=swap');
 
 .hero-slider {
     position: relative;
     width: 100%;
     height: 600px;
-    /* Adjust height as needed */
     overflow: hidden;
-    background-color: #f0f0f0;
-    /* Fallback color */
-    border-bottom: 1px solid #ddd;
-    display: block;
-    /* Ensure it takes space */
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #eee;
+}
+
+.slides-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    min-width: 100%;
     height: 100%;
-    opacity: 0;
-    transition: opacity 0.8s ease-in-out;
-    align-items: center;
-    justify-content: flex-end;
-    /* Align to right */
-    padding-right: 10%;
-    /* Space from right */
+    position: relative;
+    overflow: hidden;
 }
 
-.slide.active {
-    opacity: 1;
-    z-index: 1;
-}
-
+/* Image Styling */
 .slide-bg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center bottom;
-    z-index: -1;
+    object-fit: cover;
+    z-index: 0;
 }
 
-/* Gradient overlay removed as per user request */
+/* Gradient Overlay for better text readability */
+.slide::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 60%);
+    z-index: 1;
+}
+
+/* Content Positioning */
 .slide-content {
-    text-align: right;
-    max-width: 45%;
-    /* Slightly narrower to not cover image */
-    color: #333;
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    transform: translateY(-50%);
+    max-width: 600px;
     z-index: 2;
-    margin-right: 5%;
-    /* Push text slightly away from edge */
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.4);
-    /* Very subtle backdrop for readability */
-    border-radius: 10px;
+    text-align: left;
+    padding: 0;
 }
 
-/* Typography Specifics */
+/* Typography Overrides */
 .title {
     font-family: 'Playfair Display', serif;
-    /* Serif font for "Happiness" */
-    font-size: 5rem;
-    /* Better balance */
+    font-size: 5.5rem;
+    /* Very large */
     font-weight: 700;
-    color: #1a4d1a;
-    /* Deep green */
-    line-height: 1.1;
-    margin: 0;
-    letter-spacing: -1px;
-    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5);
-    /* Subtle readability shadow */
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .subtitle-group {
-    margin: 10px 0;
+    margin: 10px 0 20px 5px;
 }
 
 .subtitle {
     font-family: 'Open Sans', sans-serif;
-    font-size: 1.5rem;
-    color: #1a4d1a;
-    /* Green color match */
-    display: block;
+    font-size: 1.4rem;
+    color: #f0f0f0;
     font-weight: 600;
-    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .highlight {
     font-family: 'Great Vibes', cursive;
-    /* Script font for "plants...", "Collection" */
     font-size: 4rem;
-    /* Better scaling */
-    color: #1a4d1a;
-    line-height: 0.9;
+    color: #ffd700;
+    /* Gold */
+    line-height: 1.2;
     display: block;
-    margin-top: -10px;
-    margin-bottom: 25px;
+    margin-top: 5px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .discount {
     font-family: 'Open Sans', sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
-    color: #000;
-    margin: 15px 0 25px;
+    color: #fff;
+    margin: 20px 0 35px 5px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+    background: none;
+    padding: 0;
 }
 
-/* Button */
+/* Button - Solid and Premium */
 .shop-now-btn {
-    background-color: #222;
-    /* Darker black */
+    background-color: #1a4d1a;
+    /* Corporate Green */
     color: #fff;
-    border: none;
-    padding: 12px 40px;
-    /* Wider button */
+    border: 2px solid #1a4d1a;
+    padding: 15px 45px;
     font-size: 1.1rem;
+    font-weight: 600;
     text-transform: uppercase;
-    /* UPPERCASE text */
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    border-radius: 0;
-    /* Sharp corners */
+    transition: all 0.3s ease;
+    border-radius: 4px;
+    /* Slight radius */
+    margin-left: 5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .shop-now-btn:hover {
-    background-color: #1a4d1a;
+    background-color: transparent;
+    color: #fff;
+    border-color: #fff;
 }
 
 /* Navigation Arrows */
@@ -138,17 +138,21 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: transparent;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    font-size: 2rem;
-    color: #333;
+    color: #fff;
     cursor: pointer;
-    padding: 10px;
-    z-index: 2;
-    transition: color 0.3s;
+    padding: 15px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
     color: #1a4d1a;
 }
 
@@ -163,51 +167,49 @@
 /* Dots */
 .dots-container {
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 10px;
-    z-index: 2;
+    gap: 12px;
+    z-index: 10;
 }
 
 .dot {
-    width: 10px;
-    height: 10px;
-    background-color: #ccc;
+    width: 12px;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .dot.active {
-    background-color: #333;
+    background-color: #fff;
+    width: 14px;
+    height: 14px;
+    border-color: #fff;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .title {
-        font-size: 3rem;
-    }
-
-    .highlight {
         font-size: 2.5rem;
     }
 
+    .highlight {
+        font-size: 2.8rem;
+    }
+
     .discount {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
     }
 
     .slide-content {
-        max-width: 80%;
-        padding-right: 5%;
+        left: 5%;
+        max-width: 90%;
         text-align: center;
-        margin: 0 auto;
-        justify-content: center;
-    }
-
-    .slide {
-        justify-content: center;
-        padding-right: 0;
+        width: 90%;
     }
 }
