@@ -11,38 +11,38 @@ import { CommonModule } from '@angular/common';
 export class HeroSliderComponent implements OnInit, OnDestroy {
     slides = [
         {
-            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1920&q=80', // Happy/Cozy vibe
-            title: 'Happiness is',
-            subtitle: 'availing great offers on',
-            highlight: 'Mejor App', // Using project name instead of Nurserylive strict copy if preferred, but user said 'same to same' so maybe keep generic or 'Mejor'
-            discount: 'Download Now',
+            image: 'https://images.unsplash.com/photo-1470058869958-2a77ade41c02?auto=format&fit=crop&w=1920&q=80', // Lush Forest/Ferns
+            title: 'Bring Nature Home',
+            subtitle: 'Curated collection of',
+            highlight: 'Exotic Ferns',
+            discount: 'Starting ₹299',
             color: '#fff',
             bgType: 'plain'
         },
         {
-            image: 'https://images.unsplash.com/photo-1463320898484-cdee8141c787?auto=format&fit=crop&w=1920&q=80', // Lush plants
-            title: 'Value For Money',
-            subtitle: 'Get high quality plants',
-            highlight: 'Upto 35% Off',
-            discount: 'Shop Now',
+            image: 'https://images.unsplash.com/photo-1463320898484-cdee8141c787?auto=format&fit=crop&w=1920&q=80', // Lush Green Plants
+            title: 'Modern Living',
+            subtitle: 'Transform your space with',
+            highlight: 'Statement Plants',
+            discount: 'Up to 40% Off',
             color: '#fff',
             bgType: 'plain'
         },
         {
-            image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1920&q=80', // Potted plants
-            title: 'Top 5',
-            subtitle: 'Easiest to grow plants',
-            highlight: 'For Beginners',
-            discount: 'Starting ₹199',
+            image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1920&q=80', // Cosy Indoor Plants
+            title: 'Blooming Joy',
+            subtitle: 'Add colors to life with',
+            highlight: 'Premium Flowers',
+            discount: 'Best Sellers',
             color: '#fff',
             bgType: 'plain'
         },
         {
-            image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1920&q=80', // Reliable Garden Decor
-            title: 'Garden Decor',
-            subtitle: 'Beautify your space',
-            highlight: 'Planters & Pebbles',
-            discount: 'Best Styles',
+            image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1920&q=80', // Sustainable pots/tools
+            title: 'Sustainable Care',
+            subtitle: 'Eco-friendly essentials &',
+            highlight: 'Handcrafted Pots',
+            discount: 'New Arrivals',
             color: '#fff',
             bgType: 'plain'
         }
