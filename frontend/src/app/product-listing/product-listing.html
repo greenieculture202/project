@@ -6,7 +6,8 @@
     </div>
 
     <div class="product-grid">
-        <div class="product-card" *ngFor="let product of products">
+        <div class="product-card" *ngFor="let product of products" [routerLink]="['/product', getSlug(product.name)]"
+            style="cursor: pointer;">
             <div class="image-container">
                 <img [src]="product.image" [alt]="product.name" class="product-img main-img">
                 <img [src]="product.hoverImage || product.image" [alt]="product.name" class="product-img hover-img">

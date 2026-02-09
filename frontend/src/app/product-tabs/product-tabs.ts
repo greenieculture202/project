@@ -61,4 +61,8 @@ export class ProductTabsComponent implements AfterViewInit {
             this.sliderRef.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
         }
     }
+
+    getSlug(name: string): string {
+        return this.productService.createSlug(name);
+    }
 }

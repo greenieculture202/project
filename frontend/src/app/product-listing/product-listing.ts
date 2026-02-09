@@ -36,4 +36,8 @@ export class ProductListingComponent {
             this.displayCategory = 'Product Not Found';
         }
     }
+
+    getSlug(name: string): string {
+        return this.productService.createSlug(name);
+    }
 }

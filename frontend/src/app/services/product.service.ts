@@ -653,4 +653,19 @@ export class ProductService {
     getAllProductsMap() {
         return this.allProducts;
     }
+
+    getProductBySlug(slug: string): Product | undefined {
+        const allCategories = Object.values(this.allProducts);
+        for (const categoryProducts of allCategories) {
+            const product = categoryProducts.find(p => this.createSlug(p.name) === slug);
+            if (product) {
+                return product;
+            }
+        }
+        return undefined;
+    }
+
+    createSlug(name: string): string {
+        return name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    }
 }
