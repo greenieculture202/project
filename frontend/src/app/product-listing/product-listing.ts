@@ -40,4 +40,8 @@ export class ProductListingComponent {
     getSlug(name: string): string {
         return this.productService.createSlug(name);
     }
+
+    getTagClass(tag: string): string {
+        return tag.toLowerCase().replace(/\s+/g, '-');
+    }
 }

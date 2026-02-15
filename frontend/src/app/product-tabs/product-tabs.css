@@ -199,6 +199,197 @@
     font-weight: 600;
 }
 
+/* Product Tags */
+/* Product Tags */
+.product-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Easy Care - Pink */
+.tag.easy-care {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.tag.easy-care:hover {
+    background-color: #f8bbd0;
+}
+
+/* Vastu Friendly - Yellow */
+.tag.vastu-friendly {
+    background-color: #fff9c4;
+    color: #f57f17;
+}
+
+.tag.vastu-friendly:hover {
+    background-color: #fff59d;
+}
+
+/* Air Purifying - Green */
+.tag.air-purifying {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.air-purifying:hover {
+    background-color: #c8e6c9;
+}
+
+/* Pet Friendly - Purple */
+.tag.pet-friendly {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tag.pet-friendly:hover {
+    background-color: #e1bee7;
+}
+
+/* Modern Decor - Blue */
+.tag.modern-decor {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.tag.modern-decor:hover {
+    background-color: #bbdefb;
+}
+
+/* Perfect Gift - Orange */
+.tag.perfect-gift {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.tag.perfect-gift:hover {
+    background-color: #ffe0b2;
+}
+
+/* Responsive adjustments */
+
+/* Mobile devices (up to 480px) */
+@media (max-width: 480px) {
+    .tabs-container {
+        padding: 15px 10px;
+    }
+
+    .tabs {
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .tab {
+        font-size: 13px;
+        padding: 8px 14px;
+        white-space: nowrap;
+    }
+
+    .product-card {
+        min-width: 160px;
+        max-width: 180px;
+    }
+
+    .product-title {
+        font-size: 13px;
+        line-height: 1.3;
+    }
+
+    .current-price {
+        font-size: 16px;
+    }
+
+    .original-price {
+        font-size: 12px;
+    }
+
+    .discount-text {
+        font-size: 11px;
+    }
+
+    .tag {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+
+    .product-tags {
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .slider-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+}
+
+/* Tablets (481px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .tabs {
+        gap: 15px;
+    }
+
+    .tab {
+        font-size: 14px;
+        padding: 10px 18px;
+    }
+
+    .product-card {
+        min-width: 200px;
+        max-width: 220px;
+    }
+
+    .product-title {
+        font-size: 14px;
+    }
+
+    .tag {
+        font-size: 11px;
+        padding: 4px 12px;
+    }
+
+    .slider-arrow {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Small laptops (769px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .product-card {
+        min-width: 220px;
+        max-width: 240px;
+    }
+
+    .tabs {
+        gap: 20px;
+    }
+}
+
+/* Large screens (1025px and above) */
+@media (min-width: 1025px) {
+    .product-card {
+        min-width: 250px;
+        max-width: 280px;
+    }
+}
+
+
 /* Nav Arrows */
 /* Nav Arrows */
 .slider-arrow {

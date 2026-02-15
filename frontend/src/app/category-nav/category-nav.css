@@ -139,6 +139,18 @@
     color: #1a5d1a;
 }
 
+.menu-item-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    transition: color 0.2s;
+}
+
+.menu-item-link:hover {
+    color: #1a5d1a;
+}
+
 .badge {
     background-color: #ff4d4f;
     color: white;

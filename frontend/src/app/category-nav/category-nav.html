@@ -14,10 +14,12 @@
                     <h3>{{ columnData.title }}</h3>
                     <ul>
                         <li *ngFor="let item of columnData.items">
-                            <ng-container *ngIf="isComplexItem(item); else simpleItem">
-                                {{ $any(item).name }} <span class="badge">{{ $any(item).badge }}</span>
-                            </ng-container>
-                            <ng-template #simpleItem>{{ item }}</ng-template>
+                            <a [routerLink]="getItemLink(cat, item)" class="menu-item-link">
+                                <ng-container *ngIf="isComplexItem(item); else simpleItem">
+                                    {{ $any(item).name }} <span class="badge">{{ $any(item).badge }}</span>
+                                </ng-container>
+                                <ng-template #simpleItem>{{ item }}</ng-template>
+                            </a>
                         </li>
                     </ul>
                 </div>

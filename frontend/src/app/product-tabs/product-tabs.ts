@@ -17,7 +17,7 @@ export class ProductTabsComponent implements AfterViewInit {
 
     productService = inject(ProductService);
 
-    tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Money Plants', 'Air Purifying'];
+    tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Air Purifying'];
     activeTab = 'Bestsellers';
     showArrows = true;
 
@@ -64,5 +64,9 @@ export class ProductTabsComponent implements AfterViewInit {
 
     getSlug(name: string): string {
         return this.productService.createSlug(name);
+    }
+
+    getTagClass(tag: string): string {
+        return tag.toLowerCase().replace(/\s+/g, '-');
     }
 }

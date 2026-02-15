@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
     selector: 'app-category-nav',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, RouterLink],
     templateUrl: './category-nav.html',
     styleUrl: './category-nav.css'
 })
@@ -211,5 +212,27 @@ export class CategoryNavComponent {
 
     isComplexItem(item: any): boolean {
         return typeof item === 'object' && item !== null && 'name' in item;
+    }
+
+    getItemLink(category: string, item: any): string {
+        const itemName = this.isComplexItem(item) ? item.name : item;
+
+        // For Indoor, Outdoor, and Flowering categories, navigate directly to product detail page
+        if (category === 'Indoor' || category === 'Outdoor' || category === 'Flowering') {
+            // Convert plant name to URL-friendly format (replace spaces with hyphens, lowercase)
+            const productId = itemName.toLowerCase().replace(/\s+/g, '-');
+            return `/product/${productId}`;
+        }
+
+        // For other categories, try to match with product categories
+        // Check if the item name matches any product category
+        const productCategories = ['Flowering Plants', 'Air Purifying', 'Bestsellers', 'New Arrivals'];
+
+        if (productCategories.includes(itemName)) {
+            return `/products/${itemName}`;
+        }
+
+        // Default: navigate to the parent category
+        return `/products/${category} Plants`;
     }
 }

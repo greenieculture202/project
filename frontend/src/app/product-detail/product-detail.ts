@@ -167,6 +167,40 @@ export class ProductDetailComponent {
         }
     }
 
+    // Dynamic FAQs based on category
+    categoryFaqs: { [key: string]: any[] } = {
+        'Indoor': [
+            { id: 'water', title: 'Water once a week', icon: 'https://cdn-icons-png.flaticon.com/128/3105/3105807.png', content: 'Always check your plants before watering, the topsoil should be dry to touch. Indoor plants generally need less water.' },
+            { id: 'sunlight', title: 'Needs bright indirect sunlight', icon: 'https://cdn-icons-png.flaticon.com/128/6974/6974854.png', content: 'Place your plants on window sills where it can get the brightest possible indirect light. Avoid direct harsh sun.' },
+            { id: 'pets', title: 'Keep out of pet reach', icon: 'https://cdn-icons-png.flaticon.com/128/1998/1998592.png', content: 'This plant and your furry friends cannot become the best buds. Some species can be toxic if ingested.' },
+            { id: 'beginner', title: 'Needs Gardening experience', icon: 'https://cdn-icons-png.flaticon.com/128/2491/2491418.png', content: 'This plant is slightly delicate and rewarding with the right care. Perfect for those who love monitoring their plants.' }
+        ],
+        'Outdoor': [
+            { id: 'water', title: 'Water daily in summers', icon: 'https://cdn-icons-png.flaticon.com/128/3105/3105807.png', content: 'Outdoor plants evaporate water quickly. Check soil twice a day during peak summer.' },
+            { id: 'sunlight', title: 'Thrives in direct sunlight', icon: 'https://cdn-icons-png.flaticon.com/128/6974/6974854.png', content: 'Requires at least 4-6 hours of direct morning or filtered afternoon sun for the best growth.' },
+            { id: 'pets', title: 'Safe for garden pets', icon: 'https://cdn-icons-png.flaticon.com/128/1998/1998592.png', content: 'Generally outdoor hardy plants are safe, but always monitor your pets around new greenery.' },
+            { id: 'beginner', title: 'Beginner Friendly', icon: 'https://cdn-icons-png.flaticon.com/128/1162/1162283.png', content: 'Very hardy and difficult to kill. Great for first-time gardeners.' }
+        ],
+        'Flowering': [
+            { id: 'water', title: 'Keep soil moist', icon: 'https://cdn-icons-png.flaticon.com/128/3105/3105807.png', content: 'Flowering plants need consistent moisture to support bloom production. Don\'t let it dry out completely.' },
+            { id: 'sunlight', title: 'Needs 6+ hours of sun', icon: 'https://cdn-icons-png.flaticon.com/128/6974/6974854.png', content: 'Sunlight is the fuel for flowers. More sun usually means more vibrant and frequent blooms.' },
+            { id: 'pets', title: 'Fragrant & Pet safe', icon: 'https://cdn-icons-png.flaticon.com/128/1998/1998592.png', content: 'Beautiful and safe for your home environment. Enjoy the fragrance worry-free.' },
+            { id: 'beginner', title: 'Flowering expert', icon: 'https://cdn-icons-png.flaticon.com/128/2491/2491418.png', content: 'Needs deadheading (pruning spent flowers) to keep blooming throughout the season.' }
+        ]
+    };
+
+    get currentFaqs(): any[] {
+        if (!this.product?.category) return this.categoryFaqs['Indoor']; // Default
+
+        // Check which category set to use
+        const cat = this.product.category;
+        if (cat.includes('Outdoor')) return this.categoryFaqs['Outdoor'];
+        if (cat.includes('Flowering')) return this.categoryFaqs['Flowering'];
+        if (cat.includes('Indoor')) return this.categoryFaqs['Indoor'];
+
+        return this.categoryFaqs['Indoor']; // Fallback
+    }
+
     createSlug(name: string): string {
         return this.productService.createSlug(name);
     }

@@ -21,6 +21,10 @@
                     <span class="discount-text" *ngIf="product.discountPercent">{{ product.discountPercent }}%
                         OFF</span>
                 </div>
+                <div class="product-tags" *ngIf="product.tags && product.tags.length > 0">
+                    <span class="tag" [ngClass]="getTagClass(tag)" *ngFor="let tag of product.tags.slice(0, 2)">{{ tag
+                        }}</span>
+                </div>
             </div>
         </div>
     </div>
