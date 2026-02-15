@@ -1,0 +1,98 @@
+<div class="flowering-page">
+    <!-- Hero Section -->
+    <section class="flowering-hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="offer-tag">EXCLUSIVE GIFT BUNDLE</span>
+            <h1>Flowering Bonanza</h1>
+            <p class="discount-text">70% OFF + FREE FERTILIZER</p>
+            <h2 class="tagline">EVERYTHING YOUR BLOOMS NEED TO THRIVE</h2>
+            <p class="description">Get our premium flower seeds at 70% off and receive a special 100g packet of Organic
+                Growth Fertilizer FREE with every order!</p>
+            <a href="#seed-collection" class="btn-primary">CLAIM YOUR GIFT BUNDLE</a>
+        </div>
+    </section>
+
+    <!-- Free Gift Banner -->
+    <section class="gift-banner" style="background: #db2777; color: white; padding: 25px 0;">
+        <div class="container" style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-gift"></i></div>
+            <div style="text-align: left;">
+                <h3 style="margin: 0; font-size: 1.4rem;">SPECIAL BONUS: Premium Nutri-Boost Packet</h3>
+                <p style="margin: 0; opacity: 0.9;">100g Organic Fertilizer (Worth ₹99) added automatically to your cart
+                    for FREE!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Growing Guide Mini Section -->
+    <section class="growing-steps">
+        <div class="container grid-3">
+            <div class="step-card">
+                <div class="step-num">01</div>
+                <h4>Sow</h4>
+                <p>Plant seeds in well-draining soil at recommended depth.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">02</div>
+                <h4>Nurture</h4>
+                <p>Keep soil moist and ensure adequate sunlight for sprouts.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">03</div>
+                <h4>Bloom</h4>
+                <p>Watch your flowers thrive and color your home!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collection Section -->
+    <section id="seed-collection" class="collection-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Premium Seed Varieties</h2>
+                <p>Selected for high success rate and vibrant colors.</p>
+            </div>
+
+            <div class="product-grid">
+                <div class="product-card" *ngFor="let seed of flowerSeeds"
+                    [routerLink]="['/product', createSlug(seed.name)]">
+                    <div class="card-image">
+                        <img [src]="seed.image" [alt]="seed.name">
+                        <span class="badge">70% OFF</span>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ seed.name }}</h3>
+                        <div class="price-row">
+                            <span class="price">₹{{ seed.price }}</span>
+                            <span class="original-price">₹{{ seed.originalPrice }}</span>
+                        </div>
+                        <button class="btn-outline">VIEW SEEDS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bloom Guarantee Section -->
+    <section class="guarantee-section">
+        <div class="container">
+            <div class="guarantee-header">
+                <h3>Bloom Happiness Guarantee</h3>
+                <p>Your satisfaction is our priority. We ensure the highest quality for every seed packet.</p>
+            </div>
+            <div class="guarantee-grid">
+                <div class="guarantee-item">
+                    <i class="fas fa-certificate"></i>
+                    <h4>High Germination</h4>
+                    <p>95% success rate tested in our quality labs for every season.</p>
+                </div>
+                <div class="guarantee-item">
+                    <i class="fas fa-leaf"></i>
+                    <h4>Organic & Non-GMO</h4>
+                    <p>Pure, heritage seeds without any chemical coatings or modifications.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

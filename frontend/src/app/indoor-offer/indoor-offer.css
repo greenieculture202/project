@@ -1,0 +1,241 @@
+.indoor-page {
+    font-family: 'Outfit', sans-serif;
+    color: #1a202c;
+    background: #fdfdfd;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Hero Section */
+.indoor-hero {
+    position: relative;
+    height: 600px;
+    background: url('https://images.unsplash.com/photo-1512428813833-ed1107380905?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.4) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+}
+
+.offer-tag {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #10b981;
+    color: white;
+    font-weight: 800;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.indoor-hero h1 {
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin: 0;
+    color: #fff;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.on-selection {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 10px 0;
+    color: #34d399;
+}
+
+.promo-text {
+    font-size: 2.2rem;
+    font-weight: 300;
+    margin-bottom: 25px;
+    letter-spacing: 2px;
+}
+
+.description {
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 16px 40px;
+    background: #059669;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background: #047857;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Collection Section */
+.collection-section {
+    padding: 100px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 40px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    cursor: pointer;
+    border: 1px solid #f1f5f9;
+}
+
+.product-card:hover {
+    transform: translateY(-15px);
+    box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.15);
+}
+
+.card-image {
+    position: relative;
+    height: 380px;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #ef4444;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-info {
+    padding: 25px;
+}
+
+.card-info h3 {
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.price {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #059669;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+.btn-outline {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 2px solid #10b981;
+    color: #10b981;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.product-card:hover .btn-outline {
+    background: #10b981;
+    color: white;
+}
+
+/* Benefits */
+.benefits-section {
+    padding: 80px 0;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.benefits-section .container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+.benefit-item i {
+    font-size: 2.5rem;
+    color: #10b981;
+    margin-bottom: 20px;
+}
+
+.benefit-item h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.benefit-item p {
+    color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .indoor-hero h1 {
+        font-size: 3rem;
+    }
+}

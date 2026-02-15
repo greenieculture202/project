@@ -1,0 +1,322 @@
+.flowering-page {
+    font-family: 'Outfit', sans-serif;
+    color: #1a202c;
+    background: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Hero Section */
+.flowering-hero {
+    position: relative;
+    height: 600px;
+    background: url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 26, 15, 0.45);
+    /* Earthy deep overlay */
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 850px;
+}
+
+.offer-tag {
+    display: inline-block;
+    padding: 8px 20px;
+    background: #f59e0b;
+    /* Amber */
+    color: #000;
+    font-weight: 800;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+}
+
+.flowering-hero h1 {
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+.discount-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #fbbf24;
+    margin: 15px 0;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tagline {
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.description {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    line-height: 1.6;
+    opacity: 0.95;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 18px 45px;
+    background: #ea580c;
+    /* Vibrant Orange */
+    color: white;
+    text-decoration: none;
+    font-weight: 800;
+    border-radius: 50px;
+    transition: all 0.3s;
+    box-shadow: 0 10px 20px rgba(234, 88, 12, 0.3);
+}
+
+.btn-primary:hover {
+    background: #c2410c;
+    transform: scale(1.05);
+}
+
+/* Growing Steps */
+.growing-steps {
+    padding: 60px 0;
+    background: #fffbef;
+    /* Light yellow tint */
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.step-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.step-num {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fef3c7;
+    margin-bottom: -35px;
+    z-index: 1;
+    position: relative;
+}
+
+.step-card h4 {
+    position: relative;
+    z-index: 2;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #92400e;
+}
+
+/* Collection Section */
+.collection-section {
+    padding: 100px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #1e1b4b;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+    border: 1px solid #fde68a;
+    /* Light amber border */
+}
+
+.product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 40px -15px rgba(245, 158, 11, 0.2);
+}
+
+.card-image {
+    position: relative;
+    height: 320px;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ea580c;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.card-info {
+    padding: 25px;
+}
+
+.card-info h3 {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    color: #1e1b4b;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.price {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #16a34a;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #94a3b8;
+}
+
+.btn-outline {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 2px solid #16a34a;
+    color: #16a34a;
+    font-weight: 800;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.product-card:hover .btn-outline {
+    background: #16a34a;
+    color: white;
+}
+
+/* Bloom Guarantee Section */
+.guarantee-section {
+    padding: 80px 0;
+    background: #fff;
+    color: #1a202c;
+    text-align: center;
+}
+
+.guarantee-header {
+    margin-bottom: 50px;
+}
+
+.guarantee-header h3 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    color: #1e1b4b;
+}
+
+.guarantee-header p {
+    font-size: 1.1rem;
+    color: #475569;
+}
+
+.guarantee-grid {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.guarantee-item {
+    background: #f8fafc;
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s;
+    flex: 1;
+}
+
+.guarantee-item:hover {
+    background: #fff;
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.guarantee-item i {
+    font-size: 2.8rem;
+    color: #ea580c;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.guarantee-item h4 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: #1e1b4b;
+}
+
+.guarantee-item p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .flowering-hero h1 {
+        font-size: 3rem;
+    }
+
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}

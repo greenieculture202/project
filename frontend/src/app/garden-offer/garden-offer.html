@@ -1,0 +1,69 @@
+<div class="garden-page">
+    <!-- Hero Section -->
+    <section class="garden-hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="offer-tag">COMPLETE TOOLKIT SALE</span>
+            <h1>Garden Toolkits</h1>
+            <p class="premium-text">FLAT 40% OFF ON PROFESSIONAL SETS</p>
+            <h2 class="promo-text">LEVEL UP YOUR GARDENING</h2>
+            <p class="description">Stop buying individual tools. Get everything you need in our curated
+                professional-grade toolkits, now at an unbeatable 40% discount.</p>
+            <a href="#garden-collection" class="btn-primary">EXPLORE TOOLKITS</a>
+        </div>
+    </section>
+
+    <!-- Features Strip -->
+    <section class="features-strip">
+        <div class="container flex-row" style="display: flex; justify-content: space-around; padding: 20px 0;">
+            <div class="feature-item"><i class="fas fa-box-open"
+                    style="margin-right: 10px; color: #f59e0b;"></i><span>All-in-One</span></div>
+            <div class="feature-item"><i class="fas fa-tools" style="margin-right: 10px; color: #f59e0b;"></i><span>Pro
+                    Quality</span></div>
+            <div class="feature-item"><i class="fas fa-percentage"
+                    style="margin-right: 10px; color: #f59e0b;"></i><span>40% Savings</span></div>
+            <div class="feature-item"><i class="fas fa-truck" style="margin-right: 10px; color: #f59e0b;"></i><span>Free
+                    Shipping</span></div>
+        </div>
+    </section>
+
+    <!-- Collection Section -->
+    <section id="garden-collection" class="collection-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Professional Garden Toolkits</h2>
+                <p>Curated sets designed for specific gardening needs, from beginners to masters.</p>
+            </div>
+
+            <div class="product-grid">
+                <div class="product-card" *ngFor="let item of gardenTools"
+                    [routerLink]="['/product', createSlug(item.name)]">
+                    <div class="card-image">
+                        <img [src]="item.image" [alt]="item.name">
+                        <span class="badge">KIT SAVINGS</span>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ item.name }}</h3>
+                        <div class="price-row">
+                            <span class="price">₹{{ item.price }}</span>
+                            <span class="original-price">₹{{ item.originalPrice }}</span>
+                        </div>
+                        <button class="btn-outline">VIEW TOOLKIT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Guide Section -->
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-content">
+                <h3>Beginners Tool Guide</h3>
+                <p>Not sure what you need? Our experts have curated the perfect starter kit for new home gardeners. Get
+                    started today with the right equipment.</p>
+                <button class="btn-dark" [routerLink]="['/tool-guide']">READ GUIDE</button>
+            </div>
+        </div>
+    </section>
+</div>

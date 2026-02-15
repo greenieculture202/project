@@ -17,7 +17,7 @@ export class ProductTabsComponent implements AfterViewInit {
 
     productService = inject(ProductService);
 
-    tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Air Purifying'];
+    tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Gardening'];
     activeTab = 'Bestsellers';
     showArrows = true;
 

@@ -945,6 +945,375 @@ export class ProductService {
             { name: 'ZZ Plant II', price: '349', originalPrice: '549', discount: '36% OFF', discountPercent: 36, image: 'https://images.unsplash.com/photo-1632207191677-8446985f9d65?auto=format&fit=crop&w=600&q=80', hoverImage: 'https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=600&q=80', category: 'Air Purifying', tags: ['Air Purifying', 'Easy Care', 'Pet Friendly'] },
             { name: 'Philodendron II', price: '449', originalPrice: '649', discount: '30% OFF', discountPercent: 30, image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80', hoverImage: 'https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=600&q=80', category: 'Air Purifying', tags: ['Air Purifying', 'Easy Care', 'Modern Decor'] }
         ],
+        'Gardening': [
+            {
+                name: 'Rose (Gulab)',
+                price: '249',
+                originalPrice: '349',
+                discount: '28% OFF',
+                discountPercent: 28,
+                image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+                hoverImage: 'https://images.unsplash.com/photo-1496062031456-07b8f162a322?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Outdoor Blooms', 'Fragrant', 'Full Sun']
+            },
+            {
+                name: 'Marigold (Genda)',
+                price: '149',
+                originalPrice: '199',
+                discount: '25% OFF',
+                discountPercent: 25,
+                image: 'https://images.unsplash.com/photo-1541604193435-22b40742194b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Outdoor Blooms', 'Pest Repellent', 'Sun Lover']
+            },
+            {
+                name: 'Jasmine (Mogra)',
+                price: '299',
+                originalPrice: '399',
+                discount: '25% OFF',
+                discountPercent: 25,
+                image: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Outdoor Blooms', 'Aromatic', 'Fragrant']
+            },
+            {
+                name: 'Petunia',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Outdoor Blooms', 'Colorful', 'Sun Lover']
+            },
+            {
+                name: 'Sunflower',
+                price: '149',
+                originalPrice: '199',
+                discount: '25% OFF',
+                discountPercent: 25,
+                image: 'https://images.unsplash.com/photo-1470509037663-253afd7f0f51?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Outdoor Blooms', 'Bright', 'Full Sun']
+            },
+            {
+                name: 'Tulsi (Holy Basil)',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1628172901309-9fc480b067a5?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Home Garden Essentials', 'Air Purifying', 'Vastu Friendly']
+            },
+            {
+                name: 'Curry Leaves (Kadi Patta)',
+                price: '299',
+                originalPrice: '399',
+                discount: '25% OFF',
+                discountPercent: 25,
+                image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Home Garden Essentials', 'Culinary Use', 'Nutritious']
+            },
+            {
+                name: 'Aloe Vera',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Home Garden Essentials', 'Medicinal', 'Low Maintenance']
+            },
+            {
+                name: 'Lemon Plant',
+                price: '349',
+                originalPrice: '449',
+                discount: '22% OFF',
+                discountPercent: 22,
+                image: 'https://images.unsplash.com/photo-1591122137683-1262d1487d7b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Home Garden Essentials', 'Fruit Bearing']
+            },
+            {
+                name: 'Mint (Pudina)',
+                price: '129',
+                originalPrice: '199',
+                discount: '35% OFF',
+                discountPercent: 35,
+                image: 'https://images.unsplash.com/photo-1533413977504-2070387532ac?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Home Garden Essentials', 'Aromatic']
+            },
+            {
+                name: 'Areca Palm',
+                price: '599',
+                originalPrice: '899',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Foliage & Greens', 'Modern Decor']
+            },
+            {
+                name: 'Ferns',
+                price: '399',
+                originalPrice: '599',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Foliage & Greens', 'Moist Soil']
+            },
+            {
+                name: 'Bamboo Palm',
+                price: '649',
+                originalPrice: '849',
+                discount: '23% OFF',
+                discountPercent: 23,
+                image: 'https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Foliage & Greens', 'Air Purifying']
+            },
+            {
+                name: 'Croton',
+                price: '499',
+                originalPrice: '799',
+                discount: '37% OFF',
+                discountPercent: 37,
+                image: 'https://images.unsplash.com/photo-1584281729110-3882f7f98e6c?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Foliage & Greens', 'Colorful']
+            },
+            {
+                name: 'Cypress',
+                price: '999',
+                originalPrice: '1299',
+                discount: '23% OFF',
+                discountPercent: 23,
+                image: 'https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Foliage & Greens', 'Ornamental Tree']
+            },
+            {
+                name: 'Bougainvillea',
+                price: '349',
+                originalPrice: '449',
+                discount: '22% OFF',
+                discountPercent: 22,
+                image: 'https://images.unsplash.com/photo-1512431707018-8739199d75b3?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Decorative Style', 'Vibrant Flowers']
+            },
+            {
+                name: 'Hibiscus (Gudhal)',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Decorative Style', 'Big Blooms']
+            },
+            {
+                name: 'Coleus',
+                price: '249',
+                originalPrice: '349',
+                discount: '28% OFF',
+                discountPercent: 28,
+                image: 'https://images.unsplash.com/photo-1584281729110-3882f7f98e6c?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Decorative Style', 'Patterned Leaves']
+            },
+            {
+                name: 'Golden Pothos',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Decorative Style', 'Climber']
+            },
+            {
+                name: 'Song of India',
+                price: '449',
+                originalPrice: '649',
+                discount: '30% OFF',
+                discountPercent: 30,
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
+                category: 'Gardening',
+                tags: ['Decorative Style', 'Ornamental']
+            }
+        ],
+        'XL Plants': [
+            {
+                name: 'Fiddle Leaf Fig XL',
+                price: '2499',
+                originalPrice: '3299',
+                discount: '24% OFF',
+                discountPercent: 24,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Interior Decor', 'Premium']
+            },
+            {
+                name: 'Monstera Deliciosa XL',
+                price: '1899',
+                originalPrice: '2499',
+                discount: '24% OFF',
+                discountPercent: 24,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Lush Green', 'Trending']
+            },
+            {
+                name: 'Areca Palm XL',
+                price: '1499',
+                originalPrice: '1999',
+                discount: '25% OFF',
+                discountPercent: 25,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Air Purifying', 'Statuesque']
+            },
+            {
+                name: 'Rubber Plant Burgundy XL',
+                price: '1699',
+                originalPrice: '2299',
+                discount: '26% OFF',
+                discountPercent: 26,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Easy Care', 'Dark Foliage']
+            },
+            {
+                name: 'Bonsai Ficus XL',
+                price: '3499',
+                originalPrice: '4499',
+                discount: '22% OFF',
+                discountPercent: 22,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Masterpiece', 'Artistic']
+            },
+            {
+                name: 'Peace Lily XL',
+                price: '1299',
+                originalPrice: '1799',
+                discount: '28% OFF',
+                discountPercent: 28,
+                image: 'assets/images/bogo-combo.png',
+                category: 'XL Plants',
+                tags: ['XL Size', 'Air Purifying', 'White Flowers']
+            }
+        ],
+        'Garden Toolkits': [
+            {
+                name: 'Pro Gardener Starter Kit',
+                price: '1499',
+                originalPrice: '2499',
+                discount: '40% OFF',
+                discountPercent: 40,
+                image: 'https://images.unsplash.com/photo-1592150621344-82ea42866657?auto=format&fit=crop&w=800&q=80',
+                category: 'Garden Toolkits',
+                tags: ['Beginner Friendly', 'Essential Tools', 'Best Value']
+            },
+            {
+                name: 'Master Gardeners Belt Set',
+                price: '1899',
+                originalPrice: '2999',
+                discount: '37% OFF',
+                discountPercent: 37,
+                image: 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=800&q=80',
+                category: 'Garden Toolkits',
+                tags: ['Professional', 'Heavy Duty', 'Complete Set']
+            },
+            {
+                name: 'Bonsai Care Specialist Kit',
+                price: '2499',
+                originalPrice: '3999',
+                discount: '38% OFF',
+                discountPercent: 38,
+                image: 'https://images.unsplash.com/photo-1512428813833-ed1107380905?auto=format&fit=crop&w=800&q=80',
+                category: 'Garden Toolkits',
+                tags: ['Bonsai Tools', 'Precision', 'Gift Idea']
+            },
+            {
+                name: 'Kids Discovery Garden Kit',
+                price: '999',
+                originalPrice: '1499',
+                discount: '33% OFF',
+                discountPercent: 33,
+                image: 'https://images.unsplash.com/photo-1592819076136-11f8450f3810?auto=format&fit=crop&w=800&q=80',
+                category: 'Garden Toolkits',
+                tags: ['Kids Safe', 'Educational', 'Fun']
+            }
+        ],
+        'Flower Seeds': [
+            {
+                name: 'Zinnia Elegans Seeds',
+                price: '99',
+                originalPrice: '349',
+                discount: '71% OFF',
+                discountPercent: 71,
+                image: 'https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Easy to Grow', 'Vibrant', 'Summer Bloom']
+            },
+            {
+                name: 'Marigold French Seeds',
+                price: '89',
+                originalPrice: '299',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1541604193435-22b40742194b?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Low Maintenance', 'Pest Repellent', 'Sun Lover']
+            },
+            {
+                name: 'Cosmos Mixed Seeds',
+                price: '79',
+                originalPrice: '299',
+                discount: '73% OFF',
+                discountPercent: 73,
+                image: 'https://images.unsplash.com/photo-1597055181300-e3633a207519?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Wildflower Style', 'Graceful', 'Pollinator Friendly']
+            },
+            {
+                name: 'Sunflower Dwarf Seeds',
+                price: '119',
+                originalPrice: '399',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1470509037663-253afd7f0f51?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Cheery', 'Full Sun', 'Great for Kids']
+            },
+            {
+                name: 'Petunia Hybrid Seeds',
+                price: '129',
+                originalPrice: '449',
+                discount: '71% OFF',
+                discountPercent: 71,
+                image: 'https://images.unsplash.com/photo-1592819076136-11f8450f3810?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Hanging Basket', 'Fragrant', 'Continuous Bloom']
+            },
+            {
+                name: 'Morning Glory Seeds',
+                price: '69',
+                originalPrice: '249',
+                discount: '72% OFF',
+                discountPercent: 72,
+                image: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&w=800&q=80',
+                category: 'Flower Seeds',
+                tags: ['Climber', 'Rapid Growth', 'Morning Bloom']
+            }
+        ],
     };
 
     constructor() { }

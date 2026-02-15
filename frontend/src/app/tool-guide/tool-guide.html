@@ -1,0 +1,45 @@
+<div class="guide-container">
+    <header class="guide-header">
+        <div class="header-content">
+            <button class="back-btn" [routerLink]="['/garden-offer']"><i class="fas fa-arrow-left"></i> Back to
+                Offer</button>
+            <h1>Gardening Tools Masterclass</h1>
+            <p>Learn how to use your new toolkit like a pro for a thriving garden.</p>
+        </div>
+    </header>
+
+    <main class="guide-content">
+        <div class="guide-grid">
+            <section class="guide-card" *ngFor="let guide of guides">
+                <div class="card-header">
+                    <div class="guide-icon"><i [class]="guide.icon"></i></div>
+                    <h3>{{ guide.title }}</h3>
+                </div>
+                <ul class="steps-list">
+                    <li *ngFor="let step of guide.steps">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ step }}</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+        <section class="pro-tips">
+            <h2><i class="fas fa-lightbulb"></i> Pro Maintenance Tips</h2>
+            <div class="tips-row">
+                <div class="tip-box">
+                    <h4>Sharpening</h4>
+                    <p>Keep your shears sharp for clean cuts that heal faster.</p>
+                </div>
+                <div class="tip-box">
+                    <h4>Oiling</h4>
+                    <p>Apply a light coat of oil to metal parts to prevent oxidation.</p>
+                </div>
+                <div class="tip-box">
+                    <h4>Storage</h4>
+                    <p>Store tools in a dry place, ideally hanging to avoid moisture buildup.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>

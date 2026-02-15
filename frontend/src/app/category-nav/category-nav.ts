@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ProductService } from '../services/product.service';
 
 @Component({
     selector: 'app-category-nav',
@@ -10,6 +11,7 @@ import { RouterLink } from '@angular/router';
     styleUrl: './category-nav.css'
 })
 export class CategoryNavComponent {
+    private productService = inject(ProductService);
     categories = [
         'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Flowers',
         'Cakes', 'Personalised', 'Plants', 'Balloon Decor', 'Chocolates',
@@ -47,7 +49,6 @@ export class CategoryNavComponent {
             plantersStyle: [
                 'Snake Plant', 'Hibiscus', 'Bougainvillea', 'Areca Palm', 'Croton'
             ],
-            // Note: No sendTo as per user request
             images: [
                 { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=360&q=80', text: 'Outdoor Trees' },
                 { url: 'https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=360&q=80', text: 'Garden Plants' }
@@ -97,17 +98,17 @@ export class CategoryNavComponent {
             imageText: 'Lush Plants'
         },
         'Gardening': {
-            eliteGreens: [
-                'Snake Plant', 'Money Plant', 'Areca Palm', 'Aloe Vera', 'Peace Lily'
+            outdoorBlooms: [
+                'Rose (Gulab)', 'Marigold (Genda)', 'Jasmine (Mogra)', 'Petunia', 'Sunflower'
             ],
-            perfectPlacements: [
-                'Spider Plant', 'Rubber Plant', 'ZZ Plant', 'Jade Plant', 'Lucky Bamboo'
+            homeGardenEssentials: [
+                'Tulsi (Holy Basil)', 'Curry Leaves (Kadi Patta)', 'Aloe Vera', 'Lemon Plant', 'Mint (Pudina)'
             ],
-            plantsCollection: [
-                'Chinese Evergreen', 'Dracaena', 'Anthurium', 'Boston Fern', 'Calathea'
+            foliageAndGreens: [
+                'Areca Palm', 'Ferns', 'Bamboo Palm', 'Croton', 'Cypress'
             ],
-            plantersStyle: [
-                'Philodendron', 'Fiddle Leaf Fig', 'English Ivy', 'Croton', 'Parlor Palm'
+            decorativeStyle: [
+                'Bougainvillea', 'Hibiscus (Gudhal)', 'Coleus', 'Golden Pothos', 'Song of India'
             ],
             image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=360&q=80',
             imageText: 'Gardening Essentials'
@@ -187,6 +188,11 @@ export class CategoryNavComponent {
             if (menu.plantSupport) columns.push({ title: 'Support & Protection', items: menu.plantSupport });
             if (menu.lightingEquipment) columns.push({ title: 'Lighting Equipment', items: menu.lightingEquipment });
             if (menu.decorativeAccessories) columns.push({ title: 'Decorative & Display', items: menu.decorativeAccessories });
+        } else if (cat === 'Gardening') {
+            if (menu.outdoorBlooms) columns.push({ title: 'Outdoor Blooms', items: menu.outdoorBlooms });
+            if (menu.homeGardenEssentials) columns.push({ title: 'Home Garden Essentials', items: menu.homeGardenEssentials });
+            if (menu.foliageAndGreens) columns.push({ title: 'Foliage & Greens', items: menu.foliageAndGreens });
+            if (menu.decorativeStyle) columns.push({ title: 'Decorative Style', items: menu.decorativeStyle });
         } else {
             if (menu.eliteGreens) columns.push({ title: 'Elite Greens', items: menu.eliteGreens });
             if (menu.perfectPlacements) columns.push({ title: 'Perfect Placements', items: menu.perfectPlacements });
@@ -217,19 +223,16 @@ export class CategoryNavComponent {
     getItemLink(category: string, item: any): string {
         const itemName = this.isComplexItem(item) ? item.name : item;
 
-        // For Indoor, Outdoor, and Flowering categories, navigate directly to product detail page
-        if (category === 'Indoor' || category === 'Outdoor' || category === 'Flowering') {
-            // Convert plant name to URL-friendly format (replace spaces with hyphens, lowercase)
-            const productId = itemName.toLowerCase().replace(/\s+/g, '-');
-            return `/product/${productId}`;
+        // For specific plant categories, navigate directly to individual product detail page
+        const plantCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening'];
+        if (plantCategories.includes(category)) {
+            return `/product/${this.productService.createSlug(itemName)}`;
         }
 
         // For other categories, try to match with product categories
-        // Check if the item name matches any product category
         const productCategories = ['Flowering Plants', 'Air Purifying', 'Bestsellers', 'New Arrivals'];
-
         if (productCategories.includes(itemName)) {
-            return `/products/${itemName}`;
+            return `/products/${this.productService.createSlug(itemName)}`;
         }
 
         // Default: navigate to the parent category

@@ -1,0 +1,56 @@
+<div class="bogo-page">
+    <!-- Hero Section -->
+    <section class="bogo-hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="offer-tag">EXCLUSIVE BOGO OFFER</span>
+            <h1>Buy any 2 XL Plants</h1>
+            <p class="and-get">& GET</p>
+            <h2 class="gift-text">GREENIE MEDIUM PLANT FREE</h2>
+            <p class="description">Upgrade your home jungle with our premium XL collection and receive a beautiful
+                medium plant as a gift from us.</p>
+            <a href="#xl-collection" class="btn-primary">EXPLORE XL COLLECTION</a>
+        </div>
+    </section>
+
+    <!-- Collection Section -->
+    <section id="xl-collection" class="collection-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Choose Your 2 XL Plants</h2>
+                <p>Select any two plants from our premium XL collection to qualify for the free gift.</p>
+            </div>
+
+            <div class="product-grid">
+                <div class="product-card" *ngFor="let plant of xlPlants"
+                    [routerLink]="['/product', createSlug(plant.name)]">
+                    <div class="card-image">
+                        <img [src]="plant.image" [alt]="plant.name">
+                        <span class="badge" *ngIf="plant.discount">{{ plant.discount }}</span>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ plant.name }}</h3>
+                        <div class="price-row">
+                            <span class="price">₹{{ plant.price }}</span>
+                            <span class="original-price" *ngIf="plant.originalPrice">₹{{ plant.originalPrice }}</span>
+                        </div>
+                        <button class="btn-outline">VIEW DETAILS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terms Section -->
+    <section class="terms-section">
+        <div class="container">
+            <h3>Terms & Conditions</h3>
+            <ul>
+                <li>Offer valid only on items in the XL Plants collection.</li>
+                <li>One Free Greenie Medium Plant per order.</li>
+                <li>The free plant will be automatically added to your cart upon adding 2 XL plants.</li>
+                <li>This offer cannot be combined with other discount codes.</li>
+            </ul>
+        </div>
+    </section>
+</div>

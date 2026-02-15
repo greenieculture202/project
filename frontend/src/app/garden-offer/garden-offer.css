@@ -1,0 +1,264 @@
+.garden-page {
+    font-family: 'Outfit', sans-serif;
+    color: #1a202c;
+    background: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.flex-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Hero Section */
+.garden-hero {
+    position: relative;
+    height: 600px;
+    background: url('https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(45, 26, 12, 0.6);
+    /* Earthy brown overlay */
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+}
+
+.offer-tag {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #f59e0b;
+    color: #000;
+    font-weight: 800;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.garden-hero h1 {
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1;
+}
+
+.premium-text {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 15px 0;
+    color: #fbbf24;
+}
+
+.promo-text {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.description {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 18px 45px;
+    background: #78350f;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 4px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+    background: #92400e;
+    transform: translateY(-2px);
+}
+
+/* Features Strip */
+.features-strip {
+    background: #1a202c;
+    color: white;
+    padding: 30px 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.feature-item i {
+    color: #f59e0b;
+    font-size: 1.4rem;
+}
+
+/* Collection Section */
+.collection-section {
+    padding: 100px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #451a03;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.product-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.card-image {
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.product-card:hover .card-image img {
+    transform: scale(1.1);
+}
+
+.badge {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    background: #f59e0b;
+    color: #000;
+    padding: 5px 15px;
+    font-weight: 800;
+    font-size: 0.8rem;
+}
+
+.card-info {
+    padding: 25px;
+}
+
+.card-info h3 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+    color: #1a202c;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.price {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #78350f;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #94a3b8;
+}
+
+.btn-outline {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid #1a202c;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.product-card:hover .btn-outline {
+    background: #1a202c;
+    color: #fff;
+}
+
+/* Guide Section */
+.guide-section {
+    padding: 80px 0;
+    background: #fef3c7;
+}
+
+.guide-content {
+    max-width: 600px;
+}
+
+.guide-content h3 {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    color: #451a03;
+}
+
+.guide-content p {
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.btn-dark {
+    padding: 14px 35px;
+    background: #1a202c;
+    color: #fff;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .garden-hero h1 {
+        font-size: 3rem;
+    }
+}

@@ -1,0 +1,82 @@
+<div class="indoor-page">
+    <!-- Hero Section -->
+    <section class="indoor-hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="offer-tag">EXCLUSIVE COMBO GIFT</span>
+            <h1>Buy any 2 Indoor Plants</h1>
+            <p class="on-selection">& GET A</p>
+            <h2 class="promo-text">DESIGNER CERAMIC POT FREE</h2>
+            <p class="description">Elevate your home aesthetics. Purchase any two indoor plants from our premium
+                selection and choose a designer ceramic pot as a free gift!</p>
+            <a href="#indoor-collection" class="btn-primary">CHOOSE YOUR PLANTS</a>
+        </div>
+    </section>
+
+    <!-- Gift Highlight Section -->
+    <section class="gift-highlight" style="padding: 40px 0; background: #fff;">
+        <div class="container" style="max-width: 1000px; margin: 0 auto;">
+            <div class="gift-info-card"
+                style="display: flex; align-items: center; gap: 30px; background: #f0fdf4; padding: 30px; border-radius: 20px; border: 2px dashed #10b981;">
+                <div style="font-size: 3rem; color: #10b981;"><i class="fas fa-gift"></i></div>
+                <div>
+                    <h3 style="font-size: 1.5rem; color: #064e3b; margin-bottom: 10px;">The Designer Pot Gift</h3>
+                    <p style="color: #374151; margin-bottom: 5px;">Choose from Emerald, Pearl White, Terracotta, or Navy
+                        Blue glazed pots.</p>
+                    <span
+                        style="font-weight: 800; color: #059669; background: #dcfce7; padding: 4px 12px; border-radius: 10px;">Value:
+                        ₹399 (FREE)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collection Section -->
+    <section id="indoor-collection" class="collection-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Premium Indoor Selection</h2>
+                <p>Pick any two plants from our top-rated selection to qualify for the free pot.</p>
+            </div>
+
+            <div class="product-grid">
+                <div class="product-card" *ngFor="let plant of indoorPlants"
+                    [routerLink]="['/product', createSlug(plant.name)]">
+                    <div class="card-image">
+                        <img [src]="plant.image" [alt]="plant.name">
+                        <span class="badge">ELITE PICK</span>
+                    </div>
+                    <div class="card-info">
+                        <h3>{{ plant.name }}</h3>
+                        <div class="price-row">
+                            <span class="price">₹{{ plant.price }}</span>
+                            <span class="original-price">₹{{ +plant.price + 200 }}</span>
+                        </div>
+                        <button class="btn-outline">ADD TO COMBO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits-section">
+        <div class="container">
+            <div class="benefit-item">
+                <i class="fas fa-wind"></i>
+                <h4>Air Purifying</h4>
+                <p>Natural filters for your home</p>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-smile"></i>
+                <h4>Mood Boosting</h4>
+                <p>Reduce stress with greenery</p>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-tint"></i>
+                <h4>Easy Care</h4>
+                <p>Low maintenance varieties</p>
+            </div>
+        </div>
+    </section>
+</div>

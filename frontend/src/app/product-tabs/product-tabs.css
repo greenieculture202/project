@@ -279,6 +279,56 @@
     background-color: #ffe0b2;
 }
 
+/* Outdoor Blooms - Bright Pink */
+.tag.outdoor-blooms {
+    background-color: #fdf2f8;
+    color: #db2777;
+}
+
+/* Home Garden Essentials - Indigo */
+.tag.home-garden-essentials {
+    background-color: #eef2ff;
+    color: #4338ca;
+}
+
+/* Best Value - Teal */
+.tag.best-value {
+    background-color: #f0fdfa;
+    color: #0f766e;
+}
+
+/* Aromatic/Fragrant - Lavender */
+.tag.aromatic,
+.tag.fragrant {
+    background-color: #f5f3ff;
+    color: #6d28d9;
+}
+
+/* Sun Lover - Gold */
+.tag.sun-lover,
+.tag.full-sun {
+    background-color: #fffbeb;
+    color: #b45309;
+}
+
+/* Fruit Bearing - Red */
+.tag.fruit-bearing {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+/* Medicinal - Mint */
+.tag.medicinal {
+    background-color: #f0fdf4;
+    color: #15803d;
+}
+
+/* Low Maintenance - Cyan */
+.tag.low-maintenance {
+    background-color: #ecfeff;
+    color: #0e7490;
+}
+
 /* Responsive adjustments */
 
 /* Mobile devices (up to 480px) */

@@ -1,0 +1,44 @@
+<section class="offers-slider-section" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+  <div class="container-fluid">
+    <div class="slider-wrapper">
+      <button class="slider-nav prev" (click)="prevSlide()">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="slides-container">
+        <!-- Background image applied via inline style for each slide -->
+        <div class="slide" *ngFor="let offer of offers; let i = index" [class.active]="currentSlide === i"
+          [style.backgroundImage]="'url(' + offer.image + ')'">
+
+          <div class="slide-content">
+            <div class="text-content">
+              <span class="offer-badge">Special Edition</span>
+              <h3 class="offer-title">{{ offer.title }}</h3>
+              <p class="offer-subtitle">{{ offer.subtitle }}</p>
+
+              <div class="discount-wrap">
+                <span class="discount-info">Get upto</span>
+                <span class="discount-val">{{ offer.discount }}</span>
+              </div>
+
+              <a [routerLink]="offer.link" class="shop-btn">
+                {{ offer.buttonText }}
+                <i class="fas fa-shopping-cart"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="slider-nav next" (click)="nextSlide()">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="dots-container">
+      <button *ngFor="let offer of offers; let i = index" class="dot" [class.active]="currentSlide === i"
+        (click)="goToSlide(i)">
+      </button>
+    </div>
+  </div>
+</section>
