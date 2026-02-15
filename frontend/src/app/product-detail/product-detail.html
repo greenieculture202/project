@@ -1,109 +1,208 @@
 <div class="product-detail-container" *ngIf="product">
-    <div class="product-images-wrapper">
-        <!-- Thumbnails sidebar -->
-        <div class="thumbnails-sidebar">
-            <div *ngFor="let img of thumbnails; let i = index" class="thumbnail-item"
-                [class.active]="i === activeImageIndex" (click)="setActiveImage(i)">
-                <img [src]="img" [alt]="product.name">
+    <div class="product-main-content">
+        <div class="product-images-wrapper">
+            <!-- Thumbnails sidebar -->
+            <div class="thumbnails-sidebar">
+                <div *ngFor="let img of thumbnails; let i = index" class="thumbnail-item"
+                    [class.active]="i === activeImageIndex && !showVideo" (click)="setActiveImage(i)">
+                    <img [src]="img" [alt]="product.name">
+                </div>
+
+                <!-- Video Thumbnail (if product has video) -->
+                <div *ngIf="product.videoUrl" class="thumbnail-item video-thumbnail" [class.active]="showVideo"
+                    (click)="setShowVideo(true)">
+                    <div class="play-icon-overlay">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <!-- Use main product image as video thumbnail poster -->
+                    <img [src]="product.image" alt="Watch Video">
+                </div>
+            </div>
+
+            <!-- Main Image / Video -->
+            <div class="main-image-container">
+                <ng-container *ngIf="!showVideo; else videoPlayer">
+                    <img [src]="displayImage" [alt]="product.name" class="main-img">
+                </ng-container>
+                <ng-template #videoPlayer>
+                    <video controls autoplay class="main-video">
+                        <source [src]="product.videoUrl" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </ng-template>
             </div>
         </div>
 
-        <!-- Main Image -->
-        <div class="main-image-container">
-            <img [src]="thumbnails[activeImageIndex]" [alt]="product.name" class="main-img">
+        <!-- Product Details -->
+        <div class="product-info-wrapper">
+            <h1 class="product-title">{{ product.name }}</h1>
+            <div class="rating">
+                <i class="fas fa-star"></i> 4.8 | 195
+            </div>
+            <div class="price-block">
+                <span class="current-price">₹{{ product.price }}</span>
+                <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
+                <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
+            </div>
+            <span class="taxes-text">(Incl. of all taxes)</span>
+
+            <!-- SELECT PLANTER - Ugaoo Style -->
+            <div class="planter-section">
+                <p class="section-label">SELECT PLANTER</p>
+                <div class="planter-options">
+                    <div *ngFor="let planter of planters; let i = index" class="planter-option"
+                        [class.selected]="selectedPlanter === planter.id" (click)="selectPlanter(planter.id)">
+                        <!-- Most Loved Badge -->
+                        <span class="most-loved-badge" *ngIf="i === 1">
+                            <i class="fas fa-heart"></i> Most Loved
+                        </span>
+                        <!-- Pot Icon -->
+                        <div class="pot-icon-wrapper">
+                            <img [src]="planter.thumbnail" [alt]="planter.name" class="planter-thumb">
+                        </div>
+                        <!-- Planter Name -->
+                        <span class="planter-name">{{ planter.name }}</span>
+                        <!-- Planter Price -->
+                        <span class="planter-price">{{ planter.price }}</span>
+                        <!-- Selected Checkmark -->
+                        <div class="check-mark" *ngIf="selectedPlanter === planter.id">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <label class="gift-option">
+                <input type="checkbox"> Make This a Gift
+            </label>
+
+            <div class="actions">
+                <div class="quantity-selector">
+                    <button (click)="decreaseQuantity()">-</button>
+                    <span>{{ quantity }}</span>
+                    <button (click)="increaseQuantity()">+</button>
+                </div>
+                <button class="add-to-cart-btn btn" (click)="addToCart()">ADD TO CART</button>
+                <button class="buy-now-btn btn" (click)="buyNow()">BUY IT NOW</button>
+            </div>
+
+
+
+            <!-- ABOUT PRODUCT -->
+            <div class="about-section">
+                <h3 class="section-title">About The Product</h3>
+                <p class="about-text">
+                    Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just
+                    its
+                    care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its
+                    reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting
+                    option
+                    that works as a personal pick-me-up!
+                </p>
+
+                <div style="color: #008f53; font-weight: 600; margin-bottom: 20px; cursor: pointer;">
+                    <i class="fas fa-leaf"></i> View Light guide
+                </div>
+
+                <div class="features-list">
+                    <!-- Water Twice a Week -->
+                    <div class="feature-card" [class.expanded]="expandedFeature === 'water'"
+                        (click)="toggleFeature('water')">
+                        <div class="feature-header">
+                            <div class="feature-icon-box">
+                                <img src="https://cdn-icons-png.flaticon.com/128/2972/2972458.png" alt="Water"
+                                    class="feature-icon-img">
+                            </div>
+                            <span class="feature-text">Water twice a week</span>
+                            <i class="fas"
+                                [ngClass]="expandedFeature === 'water' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                        <div class="feature-content" *ngIf="expandedFeature === 'water'">
+                            <p>Always check your plants before watering, the topsoil should be dry to touch. For
+                                succulents
+                                allow the potting mix to dry completely before watering again.</p>
+                        </div>
+                    </div>
+
+                    <!-- Needs bright indirect sunlight -->
+                    <div class="feature-card" [class.expanded]="expandedFeature === 'sunlight'"
+                        (click)="toggleFeature('sunlight')">
+                        <div class="feature-header">
+                            <div class="feature-icon-box">
+                                <img src="https://cdn-icons-png.flaticon.com/128/6974/6974854.png" alt="Sunlight"
+                                    class="feature-icon-img">
+                            </div>
+                            <span class="feature-text">Needs bright indirect sunlight</span>
+                            <i class="fas"
+                                [ngClass]="expandedFeature === 'sunlight' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                        <div class="feature-content" *ngIf="expandedFeature === 'sunlight'">
+                            <p>Place your plants on window sills where it can get the brightest possible indirect light.
+                                Bright indirect light is when the plant is within a couple of feet of a natural source
+                                of
+                                light.</p>
+                        </div>
+                    </div>
+
+                    <!-- Keep out of pet reach -->
+                    <div class="feature-card" [class.expanded]="expandedFeature === 'pets'"
+                        (click)="toggleFeature('pets')">
+                        <div class="feature-header">
+                            <div class="feature-icon-box">
+                                <img src="https://cdn-icons-png.flaticon.com/128/1998/1998592.png" alt="Pets"
+                                    class="feature-icon-img">
+                            </div>
+                            <span class="feature-text">Keep out of pet reach</span>
+                            <i class="fas"
+                                [ngClass]="expandedFeature === 'pets' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                        <div class="feature-content" *ngIf="expandedFeature === 'pets'">
+                            <p>This plant and your furry friends cannot become the best buds.</p>
+                        </div>
+                    </div>
+
+                    <!-- Beginner Friendly -->
+                    <div class="feature-card" [class.expanded]="expandedFeature === 'beginner'"
+                        (click)="toggleFeature('beginner')">
+                        <div class="feature-header">
+                            <div class="feature-icon-box">
+                                <img src="https://cdn-icons-png.flaticon.com/128/2491/2491418.png" alt="Beginner"
+                                    class="feature-icon-img">
+                            </div>
+                            <span class="feature-text">Beginner Friendly</span>
+                            <i class="fas"
+                                [ngClass]="expandedFeature === 'beginner' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                        <div class="feature-content" *ngIf="expandedFeature === 'beginner'">
+                            <p>If you are a new gardener this is a great choice for you. The plant will thrive in your
+                                journey to learn gardening with trials and errors.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Go to Home Button -->
+                <a routerLink="/" class="go-home-btn">
+                    <i class="fas fa-home"></i> Go to Home
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Product Details -->
-    <div class="product-info-wrapper">
-        <h1 class="product-title">{{ product.name }}</h1>
-        <div class="rating">
-            <i class="fas fa-star"></i> 4.8 | 195
-        </div>
-        <div class="price-block">
-            <span class="current-price">{{ product.price }}</span>
-            <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice }}</span>
-            <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
-        </div>
-        <span class="taxes-text">(Incl. of all taxes)</span>
-
-        <!-- SELECT PLANTER -->
-        <div style="margin-top: 20px;">
-            <p class="section-label">SELECT PLANTER</p>
-            <div class="planter-options">
-                <div class="planter-option selected">
-                    <span class="planter-name">Glass Bowl</span>
-                    <span class="planter-price">{{ product.price }}</span>
-                    <div class="check-mark"><i class="fas fa-check"></i></div>
+    <!-- Related Products -->
+    <div class="related-products-container" *ngIf="relatedProducts.length > 0">
+        <h2 class="related-title">Related Products</h2>
+        <div class="related-products-grid">
+            <div class="product-card" *ngFor="let p of relatedProducts" [routerLink]="['/product', createSlug(p.name)]">
+                <div class="card-image">
+                    <img [src]="p.image" [alt]="p.name">
+                    <span class="card-discount" *ngIf="p.discount">{{ p.discount }}</span>
                 </div>
-                <div class="planter-option">
-                    <span class="planter-name">Candle Jar</span>
-                    <span class="planter-price">₹420</span>
-                </div>
-                <div class="planter-option">
-                    <span class="planter-name">Potters Wheel</span>
-                    <span class="planter-price">₹465</span>
-                </div>
-            </div>
-        </div>
-
-        <label class="gift-option">
-            <input type="checkbox"> Make This a Gift
-        </label>
-
-        <div class="actions">
-            <div class="quantity-selector">
-                <button>-</button>
-                <span>1</span>
-                <button>+</button>
-            </div>
-            <button class="add-to-cart-btn btn">ADD TO CART</button>
-            <button class="buy-now-btn btn">BUY IT NOW</button>
-        </div>
-
-        <!-- OFFERS -->
-        <div class="offers-box">
-            <div class="offers-header">
-                <i class="fas fa-tags"></i>
-                <span>Your Offers & Gift Cards</span>
-            </div>
-            <p class="offers-subtext">Offers from banks & brands for you!</p>
-        </div>
-
-        <!-- ABOUT PRODUCT -->
-        <div class="about-section">
-            <h3 class="section-title">About The Product</h3>
-            <p class="about-text">
-                Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just its
-                care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its
-                reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting option
-                that works as a personal pick-me-up!
-            </p>
-
-            <div style="color: #008f53; font-weight: 600; margin-bottom: 20px; cursor: pointer;">
-                <i class="fas fa-leaf"></i> View Light guide
-            </div>
-
-            <div class="features-list">
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-tint"></i></div>
-                    <span class="feature-text">Water Twice a Month</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-sun"></i></div>
-                    <span class="feature-text">Needs bright indirect sunlight</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-paw"></i></div>
-                    <span class="feature-text">Keep out of pet reach</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-smile"></i></div>
-                    <span class="feature-text">Beginner friendly</span>
-                    <i class="fas fa-chevron-down"></i>
+                <div class="card-details">
+                    <h3 class="card-title">{{ p.name }}</h3>
+                    <div class="card-price-row">
+                        <span class="card-price">₹{{ p.price }}</span>
+                        <span class="card-original-price" *ngIf="p.originalPrice">₹{{ p.originalPrice }}</span>
+                    </div>
                 </div>
             </div>
         </div>

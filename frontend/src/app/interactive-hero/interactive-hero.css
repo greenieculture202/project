@@ -1,0 +1,274 @@
+/* Global Font Import (Google Fonts: Playfair Display for Serif, Inter for San-Serif) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+.interactive-hero-section {
+    background-color: #111;
+    color: #fff;
+    padding: 80px 5%;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+}
+
+.hero-container {
+    display: flex;
+    max-width: 1400px;
+    width: 100%;
+    align-items: center;
+    gap: 60px;
+}
+
+/* Left Column Styling */
+.hero-left {
+    flex: 1;
+    padding-right: 40px;
+}
+
+.hero-tagline {
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.hero-title {
+    font-family: 'Inter', sans-serif;
+    /* Using sans-serif for modern bold look as per reference */
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 30px;
+    color: #fff;
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    color: #aaa;
+    max-width: 500px;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+.btn-get-started {
+    background-color: #fff;
+    color: #000;
+    border: none;
+    padding: 15px 35px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-get-started:hover {
+    transform: translateY(-2px);
+    background-color: #f0f0f0;
+}
+
+/* Right Column Styling (Product Card Layout) */
+.hero-right {
+    flex: 1.2;
+    display: flex;
+    justify-content: center;
+}
+
+.product-card-mockup {
+    background-color: #fff0e5;
+    /* Light blush/beige background */
+    padding: 40px;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.card-layout {
+    display: flex;
+    gap: 40px;
+}
+
+/* Image Slider Area */
+.card-image-area {
+    flex: 1;
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    background-color: #000;
+    /* Fallback */
+    border-radius: 4px;
+}
+
+/* The vertical track holding all images */
+.slider-track {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    /* Stack images from bottom up */
+    transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+    /* Smooth eased slide */
+}
+
+.slider-image-container {
+    width: 100%;
+    height: 100%;
+    /* Take full height of viewport */
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    /* Space for shapes to breathe */
+}
+
+.slider-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: border-radius 1s ease;
+    /* Smooth shape transition */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Shape Variations */
+.shape-rectangle {
+    border-radius: 4px;
+}
+
+.shape-circle {
+    width: 300px;
+    /* Fixed size for perfect circle */
+    height: 300px;
+    border-radius: 50%;
+}
+
+.shape-landscape {
+    width: 100%;
+    height: 250px;
+    border-radius: 20px;
+}
+
+.shape-oval {
+    width: 250px;
+    height: 350px;
+    border-radius: 125px;
+    /* Stadium/Oval shape */
+}
+
+.shape-square {
+    width: 320px;
+    height: 320px;
+    border-radius: 12px;
+}
+
+/* Card Details Area */
+.card-details {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #333;
+}
+
+.breadcrumbs {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.price-tag {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 400;
+    margin: 0 0 15px 0;
+    color: #1a1a1a;
+}
+
+.card-desc {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* Quantity Selector */
+.quantity-selector {
+    margin-bottom: 25px;
+}
+
+.quantity-selector label {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.quantity-selector input {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.btn-add-cart {
+    background-color: #556b2f;
+    /* Olive Green */
+    color: #fff;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-add-cart:hover {
+    background-color: #4a5d28;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .hero-container {
+        flex-direction: column;
+        padding-top: 40px;
+    }
+
+    .hero-left {
+        text-align: center;
+        padding-right: 0;
+        margin-bottom: 40px;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .card-layout {
+        flex-direction: column;
+    }
+
+    .card-image-area {
+        height: 300px;
+    }
+}

@@ -5,15 +5,15 @@
 
             <span class="category-link">
                 {{ cat }}
-                <i class="fas fa-chevron-down" *ngIf="cat === 'Plants'"></i>
+                <i class="fas fa-chevron-down" *ngIf="hasMenu(cat)"></i>
             </span>
 
-            <!-- Mega Menu for Plants -->
-            <div class="mega-menu" *ngIf="cat === 'Plants' && activeCategory === 'Plants'">
-                <div class="menu-column">
-                    <h3>Elite Greens</h3>
+            <!-- Generic Mega Menu -->
+            <div class="mega-menu" *ngIf="hasMenu(cat) && activeCategory === cat">
+                <div class="menu-column" *ngFor="let columnData of getMenuColumns(cat)">
+                    <h3>{{ columnData.title }}</h3>
                     <ul>
-                        <li *ngFor="let item of plantsMenu.eliteGreens">
+                        <li *ngFor="let item of columnData.items">
                             <ng-container *ngIf="isComplexItem(item); else simpleItem">
                                 {{ $any(item).name }} <span class="badge">{{ $any(item).badge }}</span>
                             </ng-container>
@@ -22,44 +22,21 @@
                     </ul>
                 </div>
 
-                <div class="menu-column">
-                    <h3>Perfect Placements</h3>
-                    <ul>
-                        <li *ngFor="let item of plantsMenu.perfectPlacements">{{ item }}</li>
-                    </ul>
-                    <h3 class="mt-4">For Celebrations</h3>
-                    <ul>
-                        <li *ngFor="let item of plantsMenu.forCelebrations">{{ item }}</li>
-                    </ul>
-                </div>
-
-                <div class="menu-column">
-                    <h3>Plants Collection</h3>
-                    <ul>
-                        <li *ngFor="let item of plantsMenu.plantsCollection">{{ item }}</li>
-                    </ul>
-                </div>
-
-                <div class="menu-column">
-                    <h3>Planters Style</h3>
-                    <ul>
-                        <li *ngFor="let item of plantsMenu.plantersStyle">{{ item }}</li>
-                    </ul>
-                </div>
-
-                <div class="menu-column">
-                    <h3>Send Plants To</h3>
-                    <ul>
-                        <li *ngFor="let item of plantsMenu.sendPlantsTo">{{ item }}</li>
-                    </ul>
-                </div>
-
-                <div class="menu-column image-column">
-                    <div class="promo-image-card">
-                        <img src="https://www.ugaoo.com/cdn/shop/files/Agb_3.jpg?v=1719572522&width=360"
-                            alt="Lush Plants">
-                        <div class="promo-text">Lush Plants</div>
-                    </div>
+                <div class="menu-column image-column" *ngIf="menus[cat].image || menus[cat].images">
+                    <ng-container *ngIf="menus[cat].image; else multiImages">
+                        <div class="promo-image-card">
+                            <img [src]="menus[cat].image" [alt]="menus[cat].imageText">
+                            <div class="promo-text">{{ menus[cat].imageText }}</div>
+                        </div>
+                    </ng-container>
+                    <ng-template #multiImages>
+                        <div class="multi-image-grid">
+                            <div class="promo-image-card" *ngFor="let img of menus[cat].images">
+                                <img [src]="img.url" [alt]="img.text">
+                                <div class="promo-text">{{ img.text }}</div>
+                            </div>
+                        </div>
+                    </ng-template>
                 </div>
             </div>
         </li>

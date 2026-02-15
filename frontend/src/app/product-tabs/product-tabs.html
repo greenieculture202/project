@@ -28,8 +28,8 @@
                 <div class="product-info">
                     <h3 class="product-title">{{ product.name }}</h3>
                     <div class="price-container">
-                        <span class="current-price">{{ product.price }}</span>
-                        <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice }}</span>
+                        <span class="current-price">₹{{ product.price }}</span>
+                        <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
                         <span class="discount-text" *ngIf="product.discountPercent">{{ product.discountPercent }}%
                             OFF</span>
                     </div>

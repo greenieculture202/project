@@ -1,0 +1,128 @@
+﻿
+> frontend@0.0.0 build
+> ng build
+
+[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m         [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-F3LIZFLH.js[39m  [2m | [22m[2m-[22m             [2m | [22m[36m277.41 kB[39m[2m | [22m               [36m67.20 kB[39m
+[32mmain-BU7K7I5H.js[39m   [2m | [22m[2mmain[22m          [2m | [22m [36m47.31 kB[39m[2m | [22m                [36m8.46 kB[39m
+[32mstyles-VO5V25AK.css[39m[2m | [22m[2mstyles[22m        [2m | [22m[36m367 bytes[39m[2m | [22m              [36m367 bytes[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m [2m | [22m[1m325.08 kB[22m[2m | [22m               [1m76.03 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m         [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-BVUJLXKA.js[39m  [2m | [22m[2mproduct-detail[22m[2m | [22m [36m24.58 kB[39m[2m | [22m                [36m5.76 kB[39m
+
+Application bundle generation failed. [8.591 seconds] - 2026-02-13T14:23:22.055Z
+
+node.exe : 
+[1m[33m[33mΓû▓ [4
+3;33m[[43;30mWARNING
+[43;33m][0m [1msrc
+/app/product-detail/p
+roduct-detail.css 
+exceeded maximum 
+budget. Budget 4.00 
+kB was not met by 
+4.93 kB with a total 
+of 8.93 kB.[0m
+At C:\Program Files\n
+odejs\npm.ps1:29 
+char:3
++   & $NODE_EXE 
+$NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([1m[3   
+ 3m[33mΓ...of 8.    
+93 kB.[0m:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+
+
+[33mΓû▓ [43;33m[[4
+3;30mWARNING[43;33m]
+[0m [1mcss-inline-f
+onts:https://fonts.go
+ogleapis.com/css2?fam
+ily=Playfair+Display:
+ital,wght@0,400;0,700
+;1,400&family=Inter:w
+ght@300;400;500;600&d
+isplay=swap exceeded 
+maximum budget. 
+Budget 4.00 kB was 
+not met by 11.81 kB 
+with a total of 
+15.81 kB.[0m
+
+
+[33mΓû▓ [43;33m[[4
+3;30mWARNING[43;33m]
+[0m [1mcss-inline-f
+onts:https://fonts.go
+ogleapis.com/css2?fam
+ily=Playfair+Display:
+wght@700&family=Great
++Vibes&family=Open+Sa
+ns:wght@400;600&displ
+ay=swap exceeded 
+maximum budget. 
+Budget 4.00 kB was 
+not met by 12.91 kB 
+with a total of 
+16.91 kB.[0m
+
+[39m[22m
+[1m[31m[31mX [41;
+31m[[41;97mERROR[41
+;31m][0m [1msrc/app
+/product-detail/produ
+ct-detail.css 
+exceeded maximum 
+budget. Budget 8.00 
+kB was not met by 
+933 bytes with a 
+total of 8.93 kB.[0m
+
+
+[31mX [41;31m[[41;
+97mERROR[41;31m][0m
+ [1mcss-inline-fonts
+:https://fonts.google
+apis.com/css2?family=
+Playfair+Display:ital
+,wght@0,400;0,700;1,4
+00&family=Inter:wght@
+300;400;500;600&displ
+ay=swap exceeded 
+maximum budget. 
+Budget 8.00 kB was 
+not met by 7.81 kB 
+with a total of 
+15.81 kB.[0m
+
+
+[31mX [41;31m[[41;
+97mERROR[41;31m][0m
+ [1mcss-inline-fonts
+:https://fonts.google
+apis.com/css2?family=
+Playfair+Display:wght
+@700&family=Great+Vib
+es&family=Open+Sans:w
+ght@400;600&display=s
+wap exceeded maximum 
+budget. Budget 8.00 
+kB was not met by 
+8.91 kB with a total 
+of 16.91 kB.[0m
+
+[39m[22m

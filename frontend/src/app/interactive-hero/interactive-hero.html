@@ -1,0 +1,56 @@
+<section class="interactive-hero-section">
+    <div class="hero-container">
+        <!-- Left Column: Text Content -->
+        <div class="hero-left">
+            <h4 class="hero-tagline">SELL ANYTHING</h4>
+            <h1 class="hero-title">
+                All you need<br>
+                to power your<br>
+                ecommerce<br>
+                website
+            </h1>
+            <p class="hero-description">
+                Whether you're just getting started or are an established brand, our powerful platform helps your
+                business grow.
+            </p>
+            <button class="btn-get-started">GET STARTED</button>
+        </div>
+
+        <!-- Right Column: Product Card Mockup -->
+        <div class="hero-right">
+            <div class="product-card-mockup">
+                <div class="card-layout">
+                    <!-- Image Slider -->
+                    <div class="card-image-area">
+                        <div class="slider-track" [style.transform]="'translateY(' + (currentSlide * 100) + '%)'">
+                            <div *ngFor="let img of heroImages; let i = index" class="slider-image-container">
+                                <div class="slider-image" [class]="imageShapes[i]"
+                                    [style.backgroundImage]="'url(' + img + ')'">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Details -->
+                    <div class="card-details">
+                        <div class="breadcrumbs">Shop > Orchid</div>
+
+                        <div class="price-tag">$45.00</div>
+                        <h2 class="card-title">Orchid</h2>
+                        <p class="card-desc">
+                            Specifically chosen to thrive indoors and hardy enough to miss a watering or two, our plants
+                            are easy for anyone to care for.
+                        </p>
+
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <input type="number" value="1" readonly>
+                        </div>
+
+                        <button class="btn-add-cart">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
