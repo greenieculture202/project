@@ -114,20 +114,75 @@ export class CategoryNavComponent {
             imageText: 'Gardening Essentials'
         },
         'Seeds': {
-            vegetables: [
-                'Tomato', 'Potato', 'Onion', 'Garlic', 'Carrot',
-                'Cabbage', 'Cauliflower', 'Spinach', 'Brinjal (Eggplant)', 'Lady Finger (Okra)',
-                'Peas', 'Capsicum', 'Radish', 'Beetroot', 'Bottle Gourd',
-                'Bitter Gourd', 'Pumpkin', 'Cucumber', 'Turnip', 'Green Chilli'
+            vegetableSeeds: [
+                'Spinach (Palak)',
+                'Fenugreek (Methi)',
+                'Coriander (Dhaniya)',
+                'Lettuce',
+                'Mustard Greens (Sarson)',
+                'Tomato (Tamatar)',
+                'Chilli (Mirch)',
+                'Capsicum (Shimla Mirch)',
+                'Brinjal (Baingan)',
+                'Cucumber (Kheera)'
             ],
-            fruits: [
-                'Mango', 'Apple', 'Banana', 'Orange', 'Guava',
-                'Papaya', 'Pomegranate', 'Grapes', 'Pineapple', 'Watermelon',
-                'Muskmelon', 'Strawberry', 'Cherry', 'Litchi', 'Coconut',
-                'Pear', 'Peach', 'Plum', 'Kiwi', 'Fig'
+            fruitSeeds: [
+                'Mango (Aam)',
+                'Apple (Seb)',
+                'Orange (Santra)',
+                'Papaya',
+                'Guava (Amrood)',
+                'Pomegranate (Anar)',
+                'Watermelon (Tarbooj)',
+                'Muskmelon (Kharbooja)',
+                'Strawberry',
+                'Blueberry',
+                'Raspberry',
+                'Blackberry'
+            ],
+            herbSeeds: [
+                'Coriander (Dhaniya)',
+                'Mint (Pudina)',
+                'Basil (Tulsi)',
+                'Parsley',
+                'Thyme',
+                'Oregano',
+                'Rosemary',
+                'Sage',
+                'Ashwagandha',
+                'Chamomile',
+                'Lemongrass',
+                'Aloe Vera'
+            ],
+            flowerSeeds: [
+                'Marigold (Genda)',
+                'Sunflower',
+                'Rose',
+                'Zinnia',
+                'Petunia',
+                'Cosmos',
+                'Daisy',
+                'Pansy',
+                'Hibiscus (Gudhal)',
+                'Balsam (Gulmehendi)',
+                'Portulaca (Moss Rose)',
+                'Gomphrena'
+            ],
+            microgreenSeeds: [
+                'Mustard (Sarson)',
+                'Radish (Mooli)',
+                'Broccoli',
+                'Cabbage (Patta Gobhi)',
+                'Fenugreek (Methi)',
+                'Peas (Matar)',
+                'Sunflower',
+                'Radish',
+                'Mustard',
+                'Methi',
+                'Peas'
             ],
             image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=360&q=80',
-            imageText: 'Premium Seeds'
+            imageText: 'Premium Seeds Collection'
         },
         'Accessories': {
             potsAndPlanters: [
@@ -174,14 +229,11 @@ export class CategoryNavComponent {
         const columns: { title: string, items: any[] }[] = [];
 
         if (cat === 'Seeds') {
-            if (menu.vegetables) {
-                columns.push({ title: 'Vegetable', items: menu.vegetables.slice(0, 10) });
-                columns.push({ title: 'Vegetable', items: menu.vegetables.slice(10, 20) });
-            }
-            if (menu.fruits) {
-                columns.push({ title: 'Fruit', items: menu.fruits.slice(0, 10) });
-                columns.push({ title: 'Fruit', items: menu.fruits.slice(10, 20) });
-            }
+            if (menu.vegetableSeeds) columns.push({ title: 'Vegetable Seeds', items: menu.vegetableSeeds });
+            if (menu.fruitSeeds) columns.push({ title: 'Fruit Seeds', items: menu.fruitSeeds });
+            if (menu.herbSeeds) columns.push({ title: 'Herb Seeds', items: menu.herbSeeds });
+            if (menu.flowerSeeds) columns.push({ title: 'Flower Seeds', items: menu.flowerSeeds });
+            if (menu.microgreenSeeds) columns.push({ title: 'Microgreen Seeds', items: menu.microgreenSeeds });
         } else if (cat === 'Accessories') {
             if (menu.potsAndPlanters) columns.push({ title: 'Pots & Planters', items: menu.potsAndPlanters });
             if (menu.wateringEquipment) columns.push({ title: 'Watering Equipment', items: menu.wateringEquipment });
@@ -220,13 +272,25 @@ export class CategoryNavComponent {
         return typeof item === 'object' && item !== null && 'name' in item;
     }
 
-    getItemLink(category: string, item: any): string {
+    getItemLink(category: string, item: any, columnTitle?: string): string {
         const itemName = this.isComplexItem(item) ? item.name : item;
 
         // For specific plant categories, navigate directly to individual product detail page
         const plantCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening'];
         if (plantCategories.includes(category)) {
             return `/product/${this.productService.createSlug(itemName)}`;
+        }
+
+        // For Seeds category items, navigate to individual product detail page
+        // But for column titles (like "Vegetable Seeds"), navigate to category page
+        if (category === 'Seeds') {
+            // Column titles should go to category pages
+            const seedCategoryTitles = ['Vegetable Seeds', 'Fruit Seeds', 'Herb Seeds', 'Flower Seeds', 'Microgreen Seeds'];
+            if (seedCategoryTitles.includes(itemName)) {
+                return `/products/${this.productService.createSlug(itemName)}`;
+            }
+            // Individual seed items go to product detail page
+            return `/product/${this.productService.createSlug(itemName + ' Seeds')}`;
         }
 
         // For other categories, try to match with product categories

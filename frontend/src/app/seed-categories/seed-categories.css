@@ -1,0 +1,204 @@
+/* Seed Categories Section */
+.seed-categories-section {
+    padding: 0 0 4rem 0;
+    background: #fdfdfd;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Section Header */
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #1a5d1a;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.section-subtitle {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    color: #666;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+/* Categories Grid */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2rem;
+    justify-items: center;
+}
+
+/* Category Card */
+.category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    text-decoration: none;
+}
+
+.category-card:hover {
+    transform: translateY(-8px);
+}
+
+/* Category Circle */
+.category-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(26, 93, 26, 0.15);
+    transition: all 0.4s ease;
+    border: 4px solid #fff;
+}
+
+.category-card:hover .category-circle {
+    box-shadow: 0 12px 35px rgba(26, 93, 26, 0.25);
+    border-color: #1a5d1a;
+}
+
+/* Category Image */
+.category-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.category-card:hover .category-image {
+    transform: scale(1.1);
+}
+
+/* Category Overlay */
+.category-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(26, 93, 26, 0.1) 0%, rgba(26, 93, 26, 0.3) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.category-card:hover .category-overlay {
+    opacity: 1;
+}
+
+/* Category Name */
+.category-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 1rem;
+    text-align: center;
+    transition: color 0.3s ease;
+}
+
+.category-card:hover .category-name {
+    color: #1a5d1a;
+}
+
+/* Responsive Design */
+
+/* Large Tablets and Small Laptops (769px to 1024px) */
+@media (max-width: 1024px) {
+    .categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.5rem;
+    }
+
+    .category-circle {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/* Tablets (481px to 768px) */
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .section-subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .category-circle {
+        width: 120px;
+        height: 120px;
+    }
+
+    .category-name {
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile Devices (up to 480px) */
+@media (max-width: 480px) {
+    .seed-categories-section {
+        padding: 2.5rem 0;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .category-circle {
+        width: 100px;
+        height: 100px;
+        border: 3px solid #fff;
+    }
+
+    .category-name {
+        font-size: 0.85rem;
+        margin-top: 0.75rem;
+    }
+}
+
+/* Extra Small Devices (up to 360px) */
+@media (max-width: 360px) {
+    .category-circle {
+        width: 90px;
+        height: 90px;
+    }
+
+    .category-name {
+        font-size: 0.8rem;
+    }
+
+    .categories-grid {
+        gap: 1rem;
+    }
+}

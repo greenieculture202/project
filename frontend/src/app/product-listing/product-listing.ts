@@ -30,10 +30,20 @@ export class ProductListingComponent {
     }
 
     loadProducts() {
-        this.products = this.productService.getProducts(this.displayCategory);
+        // Convert slug to proper category name (e.g., 'vegetable-seeds' -> 'Vegetable Seeds')
+        const categoryName = this.displayCategory
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+        this.products = this.productService.getProducts(categoryName);
+
         // If no products found (bad URL), maybe redirect or show empty
         if (this.products.length === 0) {
             this.displayCategory = 'Product Not Found';
+        } else {
+            // Update display category to proper name
+            this.displayCategory = categoryName;
         }
     }
 

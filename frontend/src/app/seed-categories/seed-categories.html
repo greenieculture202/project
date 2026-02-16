@@ -1,0 +1,16 @@
+<section class="seed-categories-section">
+    <div class="container">
+        <h2 class="section-title">Shop by Seeds</h2>
+        <p class="section-subtitle">Explore our premium collection of seeds</p>
+
+        <div class="categories-grid">
+            <div class="category-card" *ngFor="let category of categories" [routerLink]="category.route">
+                <div class="category-circle">
+                    <img [src]="category.image" [alt]="category.name" class="category-image">
+                    <div class="category-overlay"></div>
+                </div>
+                <h3 class="category-name">{{ category.name }}</h3>
+            </div>
+        </div>
+    </div>
+</section>

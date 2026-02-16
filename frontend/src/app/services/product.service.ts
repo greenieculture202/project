@@ -1314,6 +1314,516 @@ export class ProductService {
                 tags: ['Climber', 'Rapid Growth', 'Morning Bloom']
             }
         ],
+        'Vegetable Seeds': [
+            {
+                name: 'Spinach (Palak) Seeds',
+                price: '49',
+                originalPrice: '149',
+                discount: '67% OFF',
+                discountPercent: 67,
+                image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Easy to Grow', 'Nutritious', 'Quick Harvest']
+            },
+            {
+                name: 'Tomato Hybrid Seeds',
+                price: '79',
+                originalPrice: '249',
+                discount: '68% OFF',
+                discountPercent: 68,
+                image: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['High Yield', 'Disease Resistant', 'Juicy']
+            },
+            {
+                name: 'Chilli (Mirch) Seeds',
+                price: '59',
+                originalPrice: '199',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Spicy', 'Organic', 'High Yield']
+            },
+            {
+                name: 'Coriander (Dhaniya) Seeds',
+                price: '39',
+                originalPrice: '129',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Aromatic', 'Fast Growing', 'Kitchen Essential']
+            },
+            {
+                name: 'Carrot Seeds',
+                price: '69',
+                originalPrice: '229',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Sweet', 'Crunchy', 'Vitamin Rich']
+            },
+            {
+                name: 'Radish (Mooli) Seeds',
+                price: '45',
+                originalPrice: '149',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1616684000065-a2b7eda0c0b6?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Quick Harvest', 'Crisp', 'Easy Care']
+            },
+            {
+                name: 'Cucumber Seeds',
+                price: '55',
+                originalPrice: '179',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Refreshing', 'Summer Crop', 'Hydrating']
+            },
+            {
+                name: 'Brinjal (Baingan) Seeds',
+                price: '65',
+                originalPrice: '219',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Purple Beauty', 'Versatile', 'High Yield']
+            },
+            {
+                name: 'Capsicum (Shimla Mirch) Seeds',
+                price: '89',
+                originalPrice: '299',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Colorful', 'Sweet', 'Vitamin C']
+            },
+            {
+                name: 'Okra (Bhindi) Seeds',
+                price: '49',
+                originalPrice: '159',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Tender', 'Nutritious', 'Summer Favorite']
+            },
+            {
+                name: 'Pumpkin Seeds',
+                price: '75',
+                originalPrice: '249',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1569976710208-b52636b52c09?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Large Fruit', 'Healthy', 'Versatile']
+            },
+            {
+                name: 'Bottle Gourd (Lauki) Seeds',
+                price: '55',
+                originalPrice: '179',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1628773822503-930a7eaecf80?auto=format&fit=crop&w=800&q=80',
+                category: 'Vegetable Seeds',
+                tags: ['Healthy', 'Cooling', 'Easy to Grow']
+            }
+        ],
+        'Fruit Seeds': [
+            {
+                name: 'Mango (Aam) Seeds',
+                price: '99',
+                originalPrice: '349',
+                discount: '71% OFF',
+                discountPercent: 71,
+                image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['King of Fruits', 'Sweet', 'Tropical']
+            },
+            {
+                name: 'Papaya Seeds',
+                price: '69',
+                originalPrice: '229',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1617112848923-cc2234396a8d?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Digestive', 'Fast Growing', 'Nutritious']
+            },
+            {
+                name: 'Guava (Amrood) Seeds',
+                price: '79',
+                originalPrice: '259',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1536511132770-e5058c7e8c46?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Vitamin C', 'Aromatic', 'Easy Care']
+            },
+            {
+                name: 'Watermelon Seeds',
+                price: '89',
+                originalPrice: '299',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1587049352846-4a222e784720?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Summer Delight', 'Juicy', 'Refreshing']
+            },
+            {
+                name: 'Pomegranate (Anaar) Seeds',
+                price: '119',
+                originalPrice: '399',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1615485500834-bc10199bc727?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Antioxidant', 'Ruby Red', 'Healthy']
+            },
+            {
+                name: 'Lemon (Nimbu) Seeds',
+                price: '59',
+                originalPrice: '199',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Citrus', 'Vitamin C', 'Refreshing']
+            },
+            {
+                name: 'Strawberry Seeds',
+                price: '129',
+                originalPrice: '449',
+                discount: '71% OFF',
+                discountPercent: 71,
+                image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Sweet', 'Delicate', 'Garden Favorite']
+            },
+            {
+                name: 'Banana Plant Seeds',
+                price: '99',
+                originalPrice: '329',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Tropical', 'Energy Rich', 'Fast Growing']
+            },
+            {
+                name: 'Grapes Seeds',
+                price: '149',
+                originalPrice: '499',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1599819177331-6d0b2238e2f6?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Vine', 'Sweet', 'Antioxidant']
+            },
+            {
+                name: 'Orange Seeds',
+                price: '79',
+                originalPrice: '259',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80',
+                category: 'Fruit Seeds',
+                tags: ['Citrus', 'Juicy', 'Vitamin Boost']
+            }
+        ],
+        'Herb Seeds': [
+            {
+                name: 'Basil (Tulsi) Seeds',
+                price: '45',
+                originalPrice: '149',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1618375569909-3c8616cf7733?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Sacred', 'Aromatic', 'Medicinal']
+            },
+            {
+                name: 'Mint (Pudina) Seeds',
+                price: '39',
+                originalPrice: '129',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Refreshing', 'Fast Growing', 'Culinary']
+            },
+            {
+                name: 'Fenugreek (Methi) Seeds',
+                price: '35',
+                originalPrice: '119',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1599459183200-59c7687a0275?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Nutritious', 'Medicinal', 'Kitchen Herb']
+            },
+            {
+                name: 'Parsley Seeds',
+                price: '49',
+                originalPrice: '159',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1616684000065-a2b7eda0c0b6?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Garnish', 'Vitamin Rich', 'Fresh Flavor']
+            },
+            {
+                name: 'Oregano Seeds',
+                price: '55',
+                originalPrice: '179',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1618375569909-3c8616cf7733?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Italian Herb', 'Aromatic', 'Pizza Essential']
+            },
+            {
+                name: 'Thyme Seeds',
+                price: '59',
+                originalPrice: '199',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Fragrant', 'Medicinal', 'Culinary']
+            },
+            {
+                name: 'Rosemary Seeds',
+                price: '69',
+                originalPrice: '229',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1599459183200-59c7687a0275?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Woody', 'Aromatic', 'Memory Booster']
+            },
+            {
+                name: 'Sage Seeds',
+                price: '65',
+                originalPrice: '219',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1618375569909-3c8616cf7733?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Medicinal', 'Savory', 'Garden Herb']
+            },
+            {
+                name: 'Dill Seeds',
+                price: '45',
+                originalPrice: '149',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Feathery', 'Aromatic', 'Pickle Spice']
+            },
+            {
+                name: 'Chives Seeds',
+                price: '49',
+                originalPrice: '159',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1599459183200-59c7687a0275?auto=format&fit=crop&w=800&q=80',
+                category: 'Herb Seeds',
+                tags: ['Mild Onion', 'Garnish', 'Easy to Grow']
+            }
+        ],
+        'Microgreen Seeds': [
+            {
+                name: 'Mustard (Sarson) Microgreens',
+                price: '59',
+                originalPrice: '199',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Spicy', 'Nutrient Dense', 'Quick Harvest']
+            },
+            {
+                name: 'Radish Microgreens',
+                price: '55',
+                originalPrice: '179',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Peppery', 'Crunchy', '7-Day Harvest']
+            },
+            {
+                name: 'Broccoli Microgreens',
+                price: '79',
+                originalPrice: '259',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Superfood', 'Antioxidant', 'Healthy']
+            },
+            {
+                name: 'Sunflower Microgreens',
+                price: '69',
+                originalPrice: '229',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Nutty', 'Crunchy', 'Protein Rich']
+            },
+            {
+                name: 'Pea Shoots Microgreens',
+                price: '65',
+                originalPrice: '219',
+                discount: '70% OFF',
+                discountPercent: 70,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Sweet', 'Tender', 'Vitamin Rich']
+            },
+            {
+                name: 'Amaranth Microgreens',
+                price: '75',
+                originalPrice: '249',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Colorful', 'Nutritious', 'Unique']
+            },
+            {
+                name: 'Kale Microgreens',
+                price: '85',
+                originalPrice: '279',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Superfood', 'Mineral Rich', 'Healthy']
+            },
+            {
+                name: 'Beetroot Microgreens',
+                price: '69',
+                originalPrice: '229',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Colorful', 'Sweet', 'Iron Rich']
+            },
+            {
+                name: 'Cress Microgreens',
+                price: '49',
+                originalPrice: '159',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Peppery', 'Fast Growing', 'Salad Topper']
+            },
+            {
+                name: 'Wheatgrass Seeds',
+                price: '55',
+                originalPrice: '179',
+                discount: '69% OFF',
+                discountPercent: 69,
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=800&q=80',
+                category: 'Microgreen Seeds',
+                tags: ['Detox', 'Juice', 'Superfood']
+            }
+        ],
+        'Seeds Kit': [
+            {
+                name: 'Kitchen Garden Starter Kit',
+                price: '499',
+                originalPrice: '999',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Beginner Friendly', '10 Varieties', 'Complete Set']
+            },
+            {
+                name: 'Herb Garden Collection',
+                price: '399',
+                originalPrice: '799',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['8 Herbs', 'Aromatic', 'Culinary']
+            },
+            {
+                name: 'Microgreens Starter Pack',
+                price: '599',
+                originalPrice: '1199',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Superfood', '12 Varieties', 'Quick Harvest']
+            },
+            {
+                name: 'Flower Garden Mix',
+                price: '449',
+                originalPrice: '899',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Colorful', '15 Flowers', 'Pollinator Friendly']
+            },
+            {
+                name: 'Vegetable Garden Bundle',
+                price: '699',
+                originalPrice: '1399',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['20 Varieties', 'Organic', 'High Yield']
+            },
+            {
+                name: 'Balcony Garden Kit',
+                price: '549',
+                originalPrice: '1099',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Space Saving', 'Container Friendly', '12 Seeds']
+            },
+            {
+                name: 'Kids Gardening Kit',
+                price: '349',
+                originalPrice: '699',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Educational', 'Easy to Grow', 'Fun']
+            },
+            {
+                name: 'Organic Farming Kit',
+                price: '899',
+                originalPrice: '1799',
+                discount: '50% OFF',
+                discountPercent: 50,
+                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
+                category: 'Seeds Kit',
+                tags: ['Certified Organic', '25 Varieties', 'Premium']
+            }
+        ],
     };
 
     constructor() { }
