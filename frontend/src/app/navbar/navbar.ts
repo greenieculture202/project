@@ -57,8 +57,9 @@ export class NavbarComponent {
                 return false;
             })
             .slice(0, 8); // Limit to 8 results for better UI
-
+        console.log("search result", this.searchResults);
         this.showResults = this.searchResults.length > 0;
+
     }
 
     selectProduct(product: Product) {

@@ -35,7 +35,7 @@ export class OffersSliderComponent implements OnInit {
             discount: 'GREENIE MEDIUM PLANT',
             description: 'Get a premium medium plant free with XL plants',
             buttonText: 'GRAB OFFER',
-            image: 'https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1920&q=80', // Reliable fallback: Beautiful indoor plants arrangement
+            image: '/images/bogo_offer_v2.jpg',
             backgroundColor: '#064e3b',
             link: '/bogo-offer'
         },
@@ -46,7 +46,7 @@ export class OffersSliderComponent implements OnInit {
             discount: 'FREE CERAMIC POT',
             description: 'Style your space with premium plants and a free gift',
             buttonText: 'SHOP NOW',
-            image: 'https://images.unsplash.com/photo-1512428813833-ed1107380905?auto=format&fit=crop&w=1920&q=80',
+            image: '/images/indoor_jungle_offer.jpg',
             backgroundColor: '#111827',
             link: '/indoor-offer'
         },
@@ -57,7 +57,7 @@ export class OffersSliderComponent implements OnInit {
             discount: 'GARDEN TOOLKITS @ 40% OFF',
             description: 'Everything you need in one premium toolkit',
             buttonText: 'SHOP TOOLKITS',
-            image: 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=1920&q=80',
+            image: '/images/garden_essentials_offer.jpg',
             backgroundColor: '#78350f',
             link: '/garden-offer'
         },
@@ -68,7 +68,7 @@ export class OffersSliderComponent implements OnInit {
             discount: 'EVERY FLOWERING PURCHASE',
             description: 'Grow vibrant blooms with our premium seeds and free plant food',
             buttonText: 'START PLANTING',
-            image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1920&q=80',
+            image: '/images/flowering_bonanza_offer.jpg',
             backgroundColor: '#4c1d95',
             link: '/flowering-offer'
         }

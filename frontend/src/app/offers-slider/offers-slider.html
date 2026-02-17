@@ -8,7 +8,7 @@
       <div class="slides-container">
         <!-- Background image applied via inline style for each slide -->
         <div class="slide" *ngFor="let offer of offers; let i = index" [class.active]="currentSlide === i"
-          [style.backgroundImage]="'url(' + offer.image + ')'">
+          [class.content-right]="offer.id === 3" [style.backgroundImage]="'url(' + offer.image + ')'">
 
           <div class="slide-content">
             <div class="text-content">

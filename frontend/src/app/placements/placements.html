@@ -1,0 +1,51 @@
+<section class="placements-section">
+    <div class="container">
+        <h2 class="section-title">Plants By Placement</h2>
+        <div class="title-underline"></div>
+
+        <div class="placements-grid">
+            <div class="placement-card" *ngFor="let item of placements; let i = index" [class]="'card-' + i">
+                <div class="card-image-wrapper">
+                    <img [src]="item.image" [alt]="item.name" class="placement-image">
+                    <div class="card-overlay">
+                        <p class="placement-desc">{{ item.description.substring(0, 60) }}...</p>
+                        <button class="video-btn" (click)="openVideo(item)">
+                            <span class="btn-icon">▶</span> Video
+                        </button>
+                    </div>
+                </div>
+                <h3 class="placement-name">{{ item.name }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Modal - Full Screen Video -->
+    <div class="modal-backdrop" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <button class="close-btn" (click)="closeModal()">&times;</button>
+            <div class="video-wrapper">
+                <div class="video-container">
+                    <ng-container *ngIf="selectedPlacement && selectedVideo">
+                        <!-- YouTube Iframe -->
+                        <iframe *ngIf="!selectedPlacement.isLocal" [src]="selectedVideo" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+
+                        <!-- Local Video Player with End Event - Now using sanitized URL -->
+                        <video *ngIf="selectedPlacement.isLocal" [src]="selectedVideo" controls autoplay
+                            (ended)="onVideoEnded()" class="local-video">
+                        </video>
+                    </ng-container>
+
+                    <!-- View Plants Overlay Button -->
+                    <div class="video-end-overlay" *ngIf="showViewPlantsBtn">
+                        <button class="view-plants-btn" (click)="navigateToPlants()">
+                            View Plants <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
