@@ -1,8 +1,10 @@
 
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
+import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
     selector: 'app-product-detail',
@@ -14,10 +16,16 @@ import { ProductService, Product } from '../services/product.service';
 export class ProductDetailComponent {
     product: Product | undefined;
     route = inject(ActivatedRoute);
+    router = inject(Router);
     productService = inject(ProductService);
+    authService = inject(AuthService);
+    notificationService = inject(NotificationService);
+
     activeImageIndex = 0;
     showVideo = false; // State to toggle video view
     relatedProducts: Product[] = [];
+    isLoading = true; // Loading state
+    expandedFaqs = new Set<string>(); // Tracks open FAQ sections
 
     // Ugaoo-style planters with pot icons and plant images
     planters = [
@@ -26,7 +34,6 @@ export class ProductDetailComponent {
             name: 'GroPot',
             price: '₹249',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/628/628324.png',
-            // Grey simple pot
             image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=600&q=80'
         },
         {
@@ -34,7 +41,6 @@ export class ProductDetailComponent {
             name: 'Krish',
             price: '₹299',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/1892/1892747.png',
-            // White ceramic pot
             image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=600&q=80'
         },
         {
@@ -42,7 +48,6 @@ export class ProductDetailComponent {
             name: 'Kyoto',
             price: '₹299',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/2917/2917995.png',
-            // Striped pot
             image: 'https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=600&q=80'
         },
         {
@@ -50,7 +55,6 @@ export class ProductDetailComponent {
             name: 'Lagos',
             price: '₹349',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/1147/1147767.png',
-            // Pot with legs/stand
             image: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=600&q=80'
         },
         {
@@ -58,7 +62,6 @@ export class ProductDetailComponent {
             name: 'Diamond',
             price: '₹420',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/3076/3076376.png',
-            // Geometric/diamond pot
             image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=600&q=80'
         },
         {
@@ -66,49 +69,51 @@ export class ProductDetailComponent {
             name: 'Roma',
             price: '₹420',
             thumbnail: 'https://cdn-icons-png.flaticon.com/128/3079/3079155.png',
-            // Classic roma pot
             image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80'
         }
     ];
 
-    // Selected planter and its image
     selectedPlanter = 'gropot';
     selectedPrice = '';
     currentPlanterImage = '';
     quantity = 1;
-    expandedFeature: string | null = null;
 
     constructor() {
         this.route.params.subscribe(params => {
             const slug = params['id'];
             if (slug) {
-                this.product = this.productService.getProductBySlug(slug);
-                if (this.product) {
-                    // Set first planter price to product price
-                    this.planters[0].price = this.product.price;
-                    this.selectedPrice = this.product.price;
-                    // Set initial planter image
-                    this.currentPlanterImage = this.planters[0].image;
-
-                    // Fetch related products
-                    console.log('Fetching related products for category:', this.product.category);
-                    if (this.product.category) {
-                        this.relatedProducts = this.productService.getRelatedProducts(this.product.category, slug);
-                        console.log('Related products found:', this.relatedProducts.length);
+                window.scrollTo(0, 0);
+                this.isLoading = true;
+                this.productService.getProductBySlug(slug).subscribe({
+                    next: (product) => {
+                        this.product = product || undefined;
+                        this.isLoading = false;
+                        if (this.product) {
+                            this.planters[0].price = this.product.price;
+                            this.selectedPrice = this.product.price;
+                            this.currentPlanterImage = this.planters[0].image;
+                            if (this.product.category) {
+                                this.productService.getRelatedProducts(this.product.category, 4).subscribe(related => {
+                                    this.relatedProducts = related;
+                                });
+                            }
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error loading product', err);
+                        this.isLoading = false;
                     }
-                }
+                });
             }
         });
     }
 
     get thumbnails(): string[] {
         if (!this.product) return [];
-        // Show planter images as thumbnails
         return this.planters.map(p => p.image);
     }
 
     get displayImage(): string {
-        // Show current planter's image (plant in selected pot)
         return this.currentPlanterImage || (this.product?.image ?? '');
     }
 
@@ -117,28 +122,24 @@ export class ProductDetailComponent {
     }
 
     setActiveImage(index: number) {
-        this.showVideo = false; // Switch back to image view
+        this.showVideo = false;
         this.activeImageIndex = index;
-        // Also update current planter when thumbnail clicked
         if (this.planters[index]) {
             this.selectPlanter(this.planters[index].id);
         }
     }
 
-    // Planter selection - changes pot image while plant stays same
     selectPlanter(planterId: string) {
-        this.selectedPlanter = planterId; // Changed from selectedPlanterId to selectedPlanter
+        this.selectedPlanter = planterId;
         const planter = this.planters.find(p => p.id === planterId);
         if (planter) {
-            this.selectedPrice = planter.price; // Retained from original
+            this.selectedPrice = planter.price;
             this.currentPlanterImage = planter.image;
-            // Update active thumbnail index
             this.activeImageIndex = this.planters.findIndex(p => p.id === planterId);
-            this.showVideo = false; // Ensure video is hidden when selecting planter
+            this.showVideo = false;
         }
     }
 
-    // Quantity handlers
     increaseQuantity() {
         this.quantity++;
     }
@@ -149,25 +150,56 @@ export class ProductDetailComponent {
         }
     }
 
-    // Cart and Buy actions
-    addToCart() {
-        alert(`Added ${this.quantity} x ${this.product?.name} (${this.selectedPlanter}) to cart!`);
-    }
-
-    buyNow() {
-        alert(`Proceeding to buy ${this.quantity} x ${this.product?.name} (${this.selectedPlanter})!`);
-    }
-
-    // Toggle feature expansion
-    toggleFeature(feature: string) {
-        if (this.expandedFeature === feature) {
-            this.expandedFeature = null;
+    toggleFaq(faqId: string) {
+        if (this.expandedFaqs.has(faqId)) {
+            this.expandedFaqs.delete(faqId);
         } else {
-            this.expandedFeature = feature;
+            this.expandedFaqs.add(faqId);
         }
     }
 
-    // Dynamic FAQs based on category
+    isFaqExpanded(faqId: string): boolean {
+        return this.expandedFaqs.has(faqId);
+    }
+
+    addToCart() {
+        if (!this.authService.getCurrentUser()) {
+            this.notificationService.show(
+                'Please login first to add items to your cart.',
+                'Sign In Required',
+                'info',
+                'standard',
+                '/login'
+            );
+            return;
+        }
+        this.notificationService.show(
+            `Successfully added ${this.quantity} x ${this.product?.name} to your botanical collection!`,
+            'Added to Cart',
+            'success',
+            'cart'
+        );
+    }
+
+    buyNow() {
+        if (!this.authService.getCurrentUser()) {
+            this.notificationService.show(
+                'Please login first to proceed with the purchase.',
+                'Sign In Required',
+                'info',
+                'standard',
+                '/login'
+            );
+            return;
+        }
+        this.notificationService.show(
+            `Proceeding to checkout for ${this.quantity} x ${this.product?.name}.`,
+            'Checkout',
+            'success',
+            'cart'
+        );
+    }
+
     categoryFaqs: { [key: string]: any[] } = {
         'Indoor': [
             { id: 'water', title: 'Water once a week', icon: 'https://cdn-icons-png.flaticon.com/128/3105/3105807.png', content: 'Always check your plants before watering, the topsoil should be dry to touch. Indoor plants generally need less water.' },
@@ -190,15 +222,12 @@ export class ProductDetailComponent {
     };
 
     get currentFaqs(): any[] {
-        if (!this.product?.category) return this.categoryFaqs['Indoor']; // Default
-
-        // Check which category set to use
+        if (!this.product?.category) return this.categoryFaqs['Indoor'];
         const cat = this.product.category;
         if (cat.includes('Outdoor')) return this.categoryFaqs['Outdoor'];
         if (cat.includes('Flowering')) return this.categoryFaqs['Flowering'];
         if (cat.includes('Indoor')) return this.categoryFaqs['Indoor'];
-
-        return this.categoryFaqs['Indoor']; // Fallback
+        return this.categoryFaqs['Indoor'];
     }
 
     createSlug(name: string): string {

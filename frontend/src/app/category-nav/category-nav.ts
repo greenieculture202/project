@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { ProductService } from '../services/product.service';
 
 @Component({
@@ -12,10 +12,10 @@ import { ProductService } from '../services/product.service';
 })
 export class CategoryNavComponent {
     private productService = inject(ProductService);
+    private router = inject(Router);
     categories = [
-        'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Flowers',
-        'Cakes', 'Personalised', 'Plants', 'Balloon Decor', 'Chocolates',
-        'Luxe', 'Hampers', 'Lifestyle', 'International'
+        'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Soil & Growing Media',
+        'Fertilizers & Nutrients', 'Gardening Tools'
     ];
 
     // Map of categories that have specific mega menus
@@ -217,6 +217,84 @@ export class CategoryNavComponent {
             ],
             image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=360&q=80',
             imageText: 'Garden Tools'
+        },
+        'Soil & Growing Media': {
+            soilTypes: [
+                'Garden Soil',
+                'Potting Mix',
+                'Red Soil',
+                'Black Soil',
+                'Sand Mix'
+            ],
+            organicAmendments: [
+                'Coco Peat',
+                'Vermicompost',
+                'Peat Moss',
+                'Compost',
+                'Organic Manure'
+            ],
+            growthMedia: [
+                'Perlite',
+                'Vermiculite',
+                'Hydroponic Media',
+                'Mulch',
+                'Leaf Mold'
+            ],
+            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=360&q=80',
+            imageText: 'Premium Growing Media'
+        },
+        'Fertilizers & Nutrients': {
+            organicFertilizers: [
+                'Organic Fertilizer',
+                'Vermicompost',
+                'Bone Meal',
+                'Compost Tea',
+                'Bio Fertilizer'
+            ],
+            chemicalFertilizers: [
+                'Liquid Fertilizer',
+                'NPK Fertilizer',
+                'Urea',
+                'Slow Release Fertilizer',
+                'Micronutrient Mix'
+            ],
+            plantBoosters: [
+                'Plant Growth Booster',
+                'Flower Booster',
+                'Root Booster',
+                'Seaweed Extract',
+                'Fish Emulsion',
+                'Humic Acid'
+            ],
+            image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=360&q=80',
+            imageText: 'Premium Fertilizers'
+        },
+        'Gardening Tools': {
+            handTools: [
+                'Hand Trowel',
+                'Garden Fork',
+                'Soil Scoop',
+                'Dibber',
+                'Transplanter'
+            ],
+            cuttingTools: [
+                'Pruning Shears',
+                'Hedge Cutter',
+                'Garden Scissors',
+                'Garden Knife'
+            ],
+            diggingTools: [
+                'Rake',
+                'Shovel',
+                'Spade',
+                'Hoe',
+                'Weeder'
+            ],
+            powerTools: [
+                'Lawn Mower'
+            ],
+            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=360&q=80',
+            imageText: 'Essential Garden Tools'
         }
     };
 
@@ -234,6 +312,19 @@ export class CategoryNavComponent {
             if (menu.herbSeeds) columns.push({ title: 'Herb Seeds', items: menu.herbSeeds });
             if (menu.flowerSeeds) columns.push({ title: 'Flower Seeds', items: menu.flowerSeeds });
             if (menu.microgreenSeeds) columns.push({ title: 'Microgreen Seeds', items: menu.microgreenSeeds });
+        } else if (cat === 'Soil & Growing Media') {
+            if (menu.soilTypes) columns.push({ title: 'Soil Types', items: menu.soilTypes });
+            if (menu.organicAmendments) columns.push({ title: 'Organic Amendments', items: menu.organicAmendments });
+            if (menu.growthMedia) columns.push({ title: 'Growth Media', items: menu.growthMedia });
+        } else if (cat === 'Fertilizers & Nutrients') {
+            if (menu.organicFertilizers) columns.push({ title: 'Organic Fertilizers', items: menu.organicFertilizers });
+            if (menu.chemicalFertilizers) columns.push({ title: 'Chemical Fertilizers', items: menu.chemicalFertilizers });
+            if (menu.plantBoosters) columns.push({ title: 'Plant Boosters', items: menu.plantBoosters });
+        } else if (cat === 'Gardening Tools') {
+            if (menu.handTools) columns.push({ title: 'Hand Tools', items: menu.handTools });
+            if (menu.cuttingTools) columns.push({ title: 'Cutting Tools', items: menu.cuttingTools });
+            if (menu.diggingTools) columns.push({ title: 'Digging Tools', items: menu.diggingTools });
+            if (menu.powerTools) columns.push({ title: 'Power Tools', items: menu.powerTools });
         } else if (cat === 'Accessories') {
             if (menu.potsAndPlanters) columns.push({ title: 'Pots & Planters', items: menu.potsAndPlanters });
             if (menu.wateringEquipment) columns.push({ title: 'Watering Equipment', items: menu.wateringEquipment });
@@ -264,6 +355,24 @@ export class CategoryNavComponent {
         this.activeCategory = null;
     }
 
+    navigateToCategory(category: string, event: Event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const link = this.getCategoryLink(category);
+        this.router.navigateByUrl(link);
+        this.hideMenu();
+    }
+
+    navigateToItem(category: string, item: any, event: Event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const link = this.getItemLink(category, item);
+        this.router.navigateByUrl(link);
+        this.hideMenu();
+    }
+
     hasMenu(category: string): boolean {
         return !!this.menus[category];
     }
@@ -275,9 +384,9 @@ export class CategoryNavComponent {
     getItemLink(category: string, item: any, columnTitle?: string): string {
         const itemName = this.isComplexItem(item) ? item.name : item;
 
-        // For specific plant categories, navigate directly to individual product detail page
-        const plantCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening'];
-        if (plantCategories.includes(category)) {
+        // For specific plant categories and accessories, navigate directly to individual product detail page
+        const directToProductCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Accessories'];
+        if (directToProductCategories.includes(category)) {
             return `/product/${this.productService.createSlug(itemName)}`;
         }
 
@@ -289,8 +398,8 @@ export class CategoryNavComponent {
             if (seedCategoryTitles.includes(itemName)) {
                 return `/products/${this.productService.createSlug(itemName)}`;
             }
-            // Individual seed items go to product detail page
-            return `/product/${this.productService.createSlug(itemName + ' Seeds')}`;
+            // Individual seed items go to product detail page directly using itemName
+            return `/product/${this.productService.createSlug(itemName)}`;
         }
 
         // For other categories, try to match with product categories
@@ -299,7 +408,31 @@ export class CategoryNavComponent {
             return `/products/${this.productService.createSlug(itemName)}`;
         }
 
+        // For new gardening categories, navigate to individual product detail pages
+        const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
+        if (gardeningCategories.includes(category)) {
+            // Individual items go to product detail page
+            return `/product/${this.productService.createSlug(itemName)}`;
+        }
+
         // Default: navigate to the parent category
         return `/products/${category} Plants`;
+    }
+
+    getCategoryLink(category: string): string {
+        // For new gardening categories, navigate to category page
+        const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
+        if (gardeningCategories.includes(category)) {
+            return `/products/${this.productService.createSlug(category)}`;
+        }
+
+        // For other categories with products
+        const directCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories'];
+        if (directCategories.includes(category)) {
+            return `/products/${this.productService.createSlug(category + ' Plants')}`;
+        }
+
+        // Default
+        return `/products/${this.productService.createSlug(category)}`;
     }
 }

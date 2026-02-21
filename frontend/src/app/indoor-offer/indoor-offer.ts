@@ -15,8 +15,10 @@ export class IndoorOfferComponent implements OnInit {
     indoorPlants: Product[] = [];
 
     ngOnInit() {
-        // Get indoor plants and limit to 6 for a clean grid as requested previously for BOGO
-        this.indoorPlants = this.productService.getProducts('Indoor Plants').slice(0, 6);
+        // Get all indoor plants, limit to 6
+        this.productService.getProducts('Indoor Plants', 6).subscribe(products => {
+            this.indoorPlants = products;
+        });
     }
 
     createSlug(name: string): string {

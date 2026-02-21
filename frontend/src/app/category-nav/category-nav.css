@@ -10,7 +10,7 @@
     height: 50px;
     display: flex;
     align-items: center;
-    z-index: 999;
+    z-index: 2000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     overflow-x: auto;
     -ms-overflow-style: none;
@@ -68,6 +68,10 @@
     white-space: nowrap;
     gap: 4px;
     /* Reduced gap for closer arrow alignment */
+    text-decoration: none;
+    /* Remove underline from links */
+    color: inherit;
+    /* Inherit color from parent li */
 }
 
 .category-link i {
@@ -89,10 +93,10 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 1rem;
-    padding: 2rem 5%;
+    gap: 0.5rem;
+    padding: 1.5rem 5%;
     border-top: 1px solid #eee;
-    z-index: 1000;
+    z-index: 2100;
     /* Above the navbar container */
     animation: fadeIn 0.2s ease-in-out;
 }
@@ -113,7 +117,7 @@
     font-size: 0.95rem;
     font-weight: 700;
     color: #000;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
     margin-top: 0;
 }
 
@@ -130,7 +134,7 @@
 .menu-column li {
     font-size: 0.85rem;
     color: #555;
-    padding: 0.3rem 0;
+    padding: 0.2rem 0;
     cursor: pointer;
     transition: color 0.2s;
 }

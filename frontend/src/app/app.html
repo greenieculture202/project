@@ -1,3 +1,5 @@
-<app-navbar></app-navbar>
-<app-category-nav></app-category-nav>
+<app-navbar *ngIf="!hideTopLayout()"></app-navbar>
+<app-category-nav *ngIf="!hideTopLayout()"></app-category-nav>
+<app-offers-strip *ngIf="!hideTopLayout()"></app-offers-strip>
 <router-outlet></router-outlet>
+<app-notification-modal></app-notification-modal>

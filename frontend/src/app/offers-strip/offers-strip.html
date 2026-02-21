@@ -1,0 +1,15 @@
+<div class="offers-strip-container" [style.background]="offers[currentIndex].color">
+    <div class="offers-content">
+        <div class="offer-item" *ngFor="let offer of offers; let i = index" [class.active]="i === currentIndex"
+            [class.prev]="i === (currentIndex - 1 + offers.length) % offers.length">
+            <div class="offer-text-group">
+                <span class="highlight-icon"><i [class]="offer.icon"></i></span>
+                <span class="offer-text">
+                    {{ offer.pre }}<span class="highlight-text">{{ offer.highlight }}</span>{{ offer.post }}
+                </span>
+            </div>
+            <a class="offer-btn" [style.backgroundColor]="offer.btnColor" [href]="offer.link">{{ offer.buttonText }} <i
+                    class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</div>

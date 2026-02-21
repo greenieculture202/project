@@ -27,8 +27,22 @@
     </div>
   </div>
   <div class="nav-icons">
-    <div class="currency-icon">₹</div>
-    <i class="far fa-user"></i>
-    <i class="fas fa-shopping-bag"></i>
+    <ng-container *ngIf="authService.isLoggedIn$ | async; else loginBtn">
+      <div class="user-profile">
+        <span class="welcome-text">Hello, <strong>{{ authService.currentUser$ | async }}</strong></span>
+        <button class="logout-btn" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-template #loginBtn>
+      <button class="login-icon-btn" type="button" routerLink="/login" title="Login" aria-label="Open login page">
+        <i class="far fa-user"></i>
+      </button>
+    </ng-template>
+
+    <i class="fas fa-shopping-bag" title="Cart"></i>
   </div>
 </nav>

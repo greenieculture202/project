@@ -1,0 +1,81 @@
+<div class="winter-login-page">
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <div class="bg-orb orb-c"></div>
+
+    <div class="login-shell">
+        <section class="art-panel">
+            <div class="brand-mark">
+                <i class="fas fa-leaf"></i>
+                <div class="brand-text">
+                    <span class="brand-name">Greenie</span>
+                    <span class="brand-suffix">Culture</span>
+                </div>
+            </div>
+
+            <!-- User's Specific Concept Art (Moved to public/images/login_image.jpeg) -->
+            <div class="panel-art-wrapper">
+                <img src="/images/login_image.jpeg" alt="Sustainability Concept Art" class="full-panel-img">
+            </div>
+
+
+        </section>
+
+        <section class="form-panel">
+            <h1>Login</h1>
+
+            <!-- Unique Floating Error Toast -->
+            <div class="crystal-toast" *ngIf="loginError" (click)="loginError = ''">
+                <div class="toast-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="toast-text">
+                        <span class="toast-title">Login Issue</span>
+                        <p>{{ loginError }}</p>
+                    </div>
+                </div>
+                <div class="toast-progress"></div>
+            </div>
+
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-grid">
+                <div class="input-lock-box">
+                    <label for="login-username">Username</label>
+                    <div class="input-wrapper email-input-group">
+                        <input id="login-username" type="text" formControlName="email" placeholder="username"
+                            [class.field-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <span class="domain-suffix">@gmail.com</span>
+                    </div>
+                    <!-- Crystal Tag Errors -->
+                    <div class="error-tag" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span *ngIf="loginForm.get('email')?.errors?.['required']">Username required</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Check format</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['gmailOnly']">Must be @gmail.com</span>
+                    </div>
+                </div>
+
+                <div class="input-lock-box">
+                    <label for="login-password">Password</label>
+                    <div class="input-wrapper">
+                        <input id="login-password" [type]="isPasswordVisible ? 'text' : 'password'"
+                            formControlName="password" placeholder="Enter password"
+                            [class.field-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        <i [class]="isPasswordVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                            (click)="togglePasswordVisibility()" class="toggle-eye"></i>
+                    </div>
+                    <div class="error-tag"
+                        *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span *ngIf="loginForm.get('password')?.errors?.['required']">Password missing</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+
+            <p class="register-text">
+                Don't have an account?
+                <a routerLink="/register">Register NOW</a>
+            </p>
+        </section>
+    </div>
+</div>

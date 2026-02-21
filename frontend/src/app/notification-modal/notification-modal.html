@@ -1,0 +1,39 @@
+<div class="luxury-notification-overlay" *ngIf="state.isVisible" (click)="$event.stopPropagation()">
+    <div class="luxury-modal-container" [class]="'layout-' + state.layout" (click)="$event.stopPropagation()">
+
+        <!-- Luxury Decorative Header -->
+        <div class="luxury-header-decor">
+            <div class="gold-seal">
+                <i class="fas fa-certificate"></i>
+            </div>
+            <div class="heritage-line"></div>
+        </div>
+
+        <div class="luxury-modal-content">
+            <!-- Icon Section -->
+            <div class="luxury-icon-box" [ngClass]="state.type">
+                <i class="fas fa-check" *ngIf="state.type === 'success'"></i>
+                <i class="fas fa-info" *ngIf="state.type === 'info'"></i>
+                <i class="fas fa-exclamation" *ngIf="state.type === 'error'"></i>
+            </div>
+
+            <!-- Text Content -->
+            <div class="luxury-text-group">
+                <h3 class="luxury-modal-title">{{ state.title }}</h3>
+                <div class="luxury-title-underlay"></div>
+                <p class="luxury-modal-message">{{ state.message }}</p>
+            </div>
+
+            <!-- Professional Footer -->
+            <div class="luxury-modal-footer">
+                <button class="luxury-confirm-btn" (click)="onConfirm()">
+                    <span>{{ state.confirmLabel || 'CONTINUE' }}</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="luxury-corner luxury-top-left"></div>
+        <div class="luxury-corner luxury-bottom-right"></div>
+    </div>
+</div>

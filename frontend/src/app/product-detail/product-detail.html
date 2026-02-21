@@ -1,4 +1,9 @@
-<div class="product-detail-container" *ngIf="product">
+<div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your plant...</p>
+</div>
+
+<div class="product-detail-container" *ngIf="!isLoading && product">
     <div class="product-main-content">
         <div class="product-images-wrapper">
             <!-- Main Image / Video -->
@@ -108,18 +113,19 @@
                 <i class="fas fa-leaf"></i> View Light guide
             </div>
 
-            <!-- FAQs (Under Buttons as requested) -->
+            <!-- FAQs (Accordion Style) -->
             <div class="features-list">
-                <div *ngFor="let faq of currentFaqs" class="feature-card" [class.expanded]="expandedFeature === faq.id"
-                    (click)="toggleFeature(faq.id)">
-                    <div class="feature-header">
+                <div *ngFor="let faq of currentFaqs" class="feature-card" [class.expanded]="isFaqExpanded(faq.id)">
+                    <div class="feature-header" (click)="toggleFaq(faq.id)">
                         <div class="feature-icon-box">
                             <img [src]="faq.icon" [alt]="faq.title" class="feature-icon-img">
                         </div>
                         <span class="feature-text">{{ faq.title }}</span>
-                        <i class="fas fa-chevron-down arrow-icon"></i>
+                        <div class="toggle-icon">
+                            <i class="fas" [ngClass]="isFaqExpanded(faq.id) ? 'fa-minus' : 'fa-plus'"></i>
+                        </div>
                     </div>
-                    <div class="feature-content" *ngIf="expandedFeature === faq.id">
+                    <div class="feature-content" [class.show]="isFaqExpanded(faq.id)">
                         <p>{{ faq.content }}</p>
                     </div>
                 </div>

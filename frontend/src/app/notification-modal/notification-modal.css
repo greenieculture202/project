@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+.luxury-notification-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(2, 44, 34, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: luxuryFadeIn 0.4s ease;
+}
+
+@keyframes luxuryFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.luxury-modal-container {
+    width: 100%;
+    max-width: 420px;
+    background: #fdfbf7;
+    position: relative;
+    border-radius: 2px;
+    box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(194, 154, 91, 0.15);
+    overflow: hidden;
+    animation: luxurySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes luxurySlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Decorative Header */
+.luxury-header-decor {
+    height: 60px;
+    background: #064e3b;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gold-seal {
+    width: 48px;
+    height: 48px;
+    background: #c29a5b;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 15px rgba(194, 154, 91, 0.5);
+    position: absolute;
+    top: 36px;
+    z-index: 2;
+    border: 3px solid #fdfbf7;
+}
+
+.heritage-line {
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(194, 154, 91, 0.3), transparent);
+}
+
+.luxury-modal-content {
+    padding: 60px 40px 40px;
+    text-align: center;
+}
+
+/* Icons */
+.luxury-icon-box {
+    font-size: 2.22rem;
+    margin-bottom: 25px;
+}
+
+.luxury-icon-box.success {
+    color: #064e3b;
+}
+
+.luxury-icon-box.error {
+    color: #b91c1c;
+}
+
+.luxury-icon-box.info {
+    color: #c29a5b;
+}
+
+.luxury-text-group {
+    margin-bottom: 35px;
+    position: relative;
+}
+
+.luxury-modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: #064e3b;
+    font-weight: 700;
+    margin-bottom: 15px;
+    letter-spacing: -0.5px;
+}
+
+.luxury-title-underlay {
+    width: 40px;
+    height: 2px;
+    background: #c29a5b;
+    margin: 0 auto 20px;
+}
+
+.luxury-modal-message {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* Footer & Button */
+.luxury-modal-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.luxury-confirm-btn {
+    background: #064e3b;
+    color: #fff;
+    border: 1px solid #064e3b;
+    padding: 14px 40px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.luxury-confirm-btn:hover {
+    background: transparent;
+    color: #064e3b;
+}
+
+.luxury-confirm-btn i {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+}
+
+.luxury-confirm-btn:hover i {
+    transform: translateX(5px);
+}
+
+/* Corner Decorations */
+.luxury-corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(194, 154, 91, 0.2);
+    pointer-events: none;
+}
+
+.luxury-top-left {
+    top: 10px;
+    left: 10px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.luxury-bottom-right {
+    bottom: 10px;
+    right: 10px;
+    border-left: none;
+    border-top: none;
+}
+
+/* Specialized Layout Tweaks */
+.layout-cart .luxury-header-decor {
+    background: #065f46;
+}
+
+.layout-cart .luxury-confirm-btn {
+    background: #c29a5b;
+    border-color: #c29a5b;
+}
+
+.layout-cart .luxury-confirm-btn:hover {
+    color: #c29a5b;
+    background: transparent;
+}

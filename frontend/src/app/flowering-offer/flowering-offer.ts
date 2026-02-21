@@ -15,7 +15,9 @@ export class FloweringOfferComponent implements OnInit {
     flowerSeeds: Product[] = [];
 
     ngOnInit() {
-        this.flowerSeeds = this.productService.getProducts('Flower Seeds');
+        this.productService.getProducts('Flower Seeds', 6).subscribe(products => {
+            this.flowerSeeds = products;
+        });
     }
 
     createSlug(name: string): string {

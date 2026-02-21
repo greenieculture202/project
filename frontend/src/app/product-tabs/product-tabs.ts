@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 
 
@@ -16,6 +16,8 @@ export class ProductTabsComponent implements AfterViewInit {
     @ViewChild('sliderRef') sliderRef!: ElementRef;
 
     productService = inject(ProductService);
+    router = inject(Router);
+
 
     tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Gardening'];
     activeTab = 'Bestsellers';
@@ -36,8 +38,11 @@ export class ProductTabsComponent implements AfterViewInit {
     }
 
     loadProducts() {
-        // user requested 10 items in the slider
-        this.products = this.productService.getProducts(this.activeTab).slice(0, 10);
+        // Subscribe to the Observable from the service
+        // Limit to 6 products as requested
+        this.productService.getProducts(this.activeTab, 6).subscribe(products => {
+            this.products = products; // Show all products
+        });
     }
 
     setActiveTab(tab: string) {

@@ -3,10 +3,11 @@
         <li *ngFor="let cat of categories" (mouseenter)="showMenu(cat)" (mouseleave)="hideMenu()"
             [class.active]="activeCategory === cat">
 
-            <span class="category-link">
+
+            <a [routerLink]="getCategoryLink(cat)" (click)="navigateToCategory(cat, $event)" class="category-link">
                 {{ cat }}
                 <i class="fas fa-chevron-down" *ngIf="hasMenu(cat)"></i>
-            </span>
+            </a>
 
             <!-- Generic Mega Menu -->
             <div class="mega-menu" *ngIf="hasMenu(cat) && activeCategory === cat">
@@ -14,7 +15,8 @@
                     <h3>{{ columnData.title }}</h3>
                     <ul>
                         <li *ngFor="let item of columnData.items">
-                            <a [routerLink]="getItemLink(cat, item)" class="menu-item-link">
+                            <a [routerLink]="getItemLink(cat, item)" (click)="navigateToItem(cat, item, $event)"
+                                class="menu-item-link">
                                 <ng-container *ngIf="isComplexItem(item); else simpleItem">
                                     {{ $any(item).name }} <span class="badge">{{ $any(item).badge }}</span>
                                 </ng-container>

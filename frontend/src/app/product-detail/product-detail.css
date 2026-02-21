@@ -486,67 +486,83 @@
 }
 
 .feature-card {
-    background: #fff;
-    border: none;
-    border-bottom: 1px solid #e0e0e0;
-    border-radius: 0;
+    background: #ffffff;
+    border: 1px solid #f1f5f1;
+    border-radius: 12px;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
-.feature-card:last-child {
-    border-bottom: none;
-}
-
-.feature-card:hover {
-    background-color: #f9fdf9;
-    transform: none;
-    box-shadow: none;
+.feature-card.expanded {
+    border-color: #dcfce7;
+    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.05);
+    background: #fbfdfb;
 }
 
 .feature-header {
+    padding: 14px 18px;
     display: flex;
     align-items: center;
-    padding: 18px 20px;
-    cursor: pointer;
     gap: 15px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .feature-icon-box {
-    width: 44px;
-    height: 44px;
-    background: transparent;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    background: #f0fdf4;
+    border-radius: 8px;
 }
 
 .feature-icon-img {
-    width: 40px;
-    height: 40px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
 }
 
 .feature-text {
     flex: 1;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 500;
-    color: #333;
+    color: #1a1a1a;
 }
 
-.arrow-icon {
-    color: #666;
-    font-size: 0.9rem;
-    transition: transform 0.3s ease;
+.toggle-icon {
+    color: #1a5d1a;
+    font-size: 0.8rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f1f5f1;
+    transition: all 0.3s ease;
 }
 
-.feature-card.expanded .arrow-icon {
+.feature-card.expanded .toggle-icon {
+    background: #1a5d1a;
+    color: #ffffff;
     transform: rotate(180deg);
 }
 
 .feature-content {
-    padding: 0 20px 20px 79px;
-    background-color: #fff;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0, 1, 0, 1);
+    padding: 0 18px;
+    opacity: 0;
+}
+
+.feature-content.show {
+    max-height: 200px;
+    padding: 4px 18px 18px 65px;
+    opacity: 1;
+    transition: all 0.4s cubic-bezier(1, 0, 1, 0);
 }
 
 .feature-content p {

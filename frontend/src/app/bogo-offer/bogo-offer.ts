@@ -15,7 +15,9 @@ export class BogoOfferComponent implements OnInit {
     xlPlants: Product[] = [];
 
     ngOnInit() {
-        this.xlPlants = this.productService.getProducts('XL Plants');
+        this.productService.getProducts('XL Plants').subscribe(products => {
+            this.xlPlants = products;
+        });
     }
 
     createSlug(name: string): string {

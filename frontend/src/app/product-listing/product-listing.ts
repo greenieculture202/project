@@ -30,21 +30,40 @@ export class ProductListingComponent {
     }
 
     loadProducts() {
-        // Convert slug to proper category name (e.g., 'vegetable-seeds' -> 'Vegetable Seeds')
-        const categoryName = this.displayCategory
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+        // Map of slugs to exact category names (for categories with special characters)
+        const slugToCategoryMap: { [key: string]: string } = {
+            'soil--growing-media': 'Soil & Growing Media',
+            'soil-growing-media': 'Soil & Growing Media',
+            'fertilizers--nutrients': 'Fertilizers & Nutrients',
+            'fertilizers-nutrients': 'Fertilizers & Nutrients',
+            'gardening-tools': 'Gardening Tools',
+            'seeds-plants': 'Seeds',
+            'accessories-plants': 'Accessories',
+            'gardening-plants': 'Gardening'
+        };
 
-        this.products = this.productService.getProducts(categoryName);
+        // First check if we have a direct mapping
+        let categoryName = slugToCategoryMap[this.displayCategory.toLowerCase()];
 
-        // If no products found (bad URL), maybe redirect or show empty
-        if (this.products.length === 0) {
-            this.displayCategory = 'Product Not Found';
-        } else {
-            // Update display category to proper name
-            this.displayCategory = categoryName;
+        // If no direct mapping, convert slug to proper category name (e.g., 'vegetable-seeds' -> 'Vegetable Seeds')
+        if (!categoryName) {
+            categoryName = this.displayCategory
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
         }
+
+        this.productService.getProducts(categoryName).subscribe(products => {
+            this.products = products;
+
+            // If no products found (bad URL), maybe redirect or show empty
+            if (this.products.length === 0) {
+                this.displayCategory = 'Product Not Found';
+            } else {
+                // Update display category to proper name
+                this.displayCategory = categoryName;
+            }
+        });
     }
 
     getSlug(name: string): string {

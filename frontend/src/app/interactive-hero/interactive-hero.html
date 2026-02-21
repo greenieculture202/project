@@ -2,6 +2,21 @@
     <div class="hero-container">
         <!-- Left Column: Text Content -->
         <div class="hero-left">
+            <div class="placement-badge" (click)="scrollToPlacements()">
+                <div class="badge-icon-wrapper">
+                    <span class="badge-text">EXPLORE BY PLACEMENT</span>
+                    <i class="fas fa-play-circle"></i>
+                </div>
+
+                <!-- Preview Rail (Tiny Bubbles) -->
+                <div class="preview-rail">
+                    <div class="preview-bubble" *ngFor="let item of previewPlacements" [title]="item.name"
+                        (click)="openVideoPreview(item, $event)">
+                        <img [src]="item.image" [alt]="item.name">
+                        <div class="play-indicator"><i class="fas fa-play"></i></div>
+                    </div>
+                </div>
+            </div>
             <h4 class="hero-tagline">SELL ANYTHING</h4>
             <h1 class="hero-title">
                 All you need<br>
@@ -50,6 +65,19 @@
                         <button class="btn-add-cart">Add to Cart</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Modal - Immersive Experience -->
+    <div class="video-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="video-modal-content" (click)="$event.stopPropagation()">
+            <button class="modal-close-btn" (click)="closeModal()">&times;</button>
+            <div class="video-header">
+                <h3>{{ selectedPlacementName }} Video</h3>
+            </div>
+            <div class="video-player-box">
+                <video [src]="selectedVideo" controls autoplay class="preview-video"></video>
             </div>
         </div>
     </div>

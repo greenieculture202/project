@@ -1,0 +1,594 @@
+/* Final Refined CSS for Perfect UI */
+.winter-login-page {
+    --bg-1: #f0f7f5;
+    --bg-2: #e8f3f0;
+    --panel-dark: #1f5a4c;
+    --panel-dark-2: #1a4f42;
+    --aqua: #62aeb3;
+    --text-soft: #6a8a82;
+    --ink: #142e28;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 14% 2%, rgba(40, 167, 69, 0.1) 0 10%, rgba(40, 167, 69, 0) 40%),
+        radial-gradient(circle at 78% 90%, rgba(32, 201, 151, 0.1) 0 15%, rgba(32, 201, 151, 0) 45%),
+        radial-gradient(circle at 20% 5%, #f8fbf9 0, var(--bg-1) 34%, var(--bg-2) 100%);
+}
+
+.bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+    opacity: 0.5;
+}
+
+.orb-a {
+    width: 600px;
+    height: 600px;
+    left: -150px;
+    top: -200px;
+    background: radial-gradient(circle, rgba(40, 167, 69, 0.2), rgba(0, 0, 0, 0));
+}
+
+.orb-b {
+    width: 700px;
+    height: 700px;
+    right: -250px;
+    bottom: -300px;
+    background: radial-gradient(circle, rgba(32, 201, 151, 0.2), rgba(0, 0, 0, 0));
+}
+
+.orb-c {
+    width: 300px;
+    height: 300px;
+    right: 100px;
+    top: 50px;
+    background: radial-gradient(circle, rgba(44, 139, 101, 0.15), rgba(0, 0, 0, 0));
+}
+
+.login-shell {
+    position: relative;
+    z-index: 2;
+    width: min(1080px, calc(100vw - 44px));
+    min-height: 620px;
+    display: grid;
+    grid-template-columns: 1.18fr 1fr;
+    border-radius: 34px;
+    background: linear-gradient(180deg, var(--panel-dark) 0%, var(--panel-dark-2) 100%);
+    box-shadow:
+        0 40px 100px rgba(7, 36, 31, 0.15),
+        0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.art-panel {
+    position: relative;
+    z-index: 2;
+    padding: 24px 84px 20px 24px;
+    color: #32514a;
+    background: #ffffff;
+    /* Clean white background for seamless art blending */
+    border-top-left-radius: 34px;
+    border-bottom-left-radius: 34px;
+    border-top-right-radius: 42% 46%;
+    border-bottom-right-radius: 44% 54%;
+    margin-right: -45px;
+    /* Tighter integration with form */
+    overflow: hidden;
+}
+
+/* Removed ::after blob to eliminate extra white space gaps */
+
+.brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: auto;
+    /* Push to top */
+    z-index: 25;
+    /* Higher than the panel image */
+    position: relative;
+    color: #1a4d42;
+}
+
+.brand-mark i {
+    font-size: 38px;
+    color: #2c8b65;
+    filter: drop-shadow(0 4px 10px rgba(44, 139, 101, 0.2));
+}
+
+
+.brand-text {
+    z-index: 20;
+    /* Ensure brand is always on top of full panel image */
+    position: relative;
+}
+
+.brand-name {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.5px;
+    color: #1a4d42;
+    text-transform: uppercase;
+}
+
+.brand-suffix {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    color: #2c8b65;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Full Panel Integrated Art Styles - Filling the entire white shape gaplessly */
+.panel-art-wrapper {
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.full-panel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.15);
+    /* Zoom in to eliminate any internal white borders in the file */
+    opacity: 1;
+    transition: transform 1s ease;
+}
+
+.art-panel:hover .full-panel-img {
+    transform: scale(1.2);
+    /* Immersive zoom */
+}
+
+/* Center the container is no longer needed for full panel */
+
+@keyframes auraPulse {
+    from {
+        transform: scale(0.6);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
+
+.art-footer {
+    position: absolute;
+    left: 34px;
+    bottom: 22px;
+    margin: 0;
+    font-size: 9px;
+    color: #6b8a95;
+}
+
+.form-panel {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    padding: 112px 54px 24px 54px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: transparent;
+}
+
+.form-panel h1 {
+    font-size: clamp(42px, 4.2vw, 52px);
+    letter-spacing: 0.3px;
+    color: #fff;
+}
+
+/* Unique Floating Crystal Toast */
+.crystal-toast {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
+        inset 0 0 15px rgba(255, 100, 100, 0.2);
+    cursor: pointer;
+    overflow: hidden;
+    animation: toastSlideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.crystal-toast i {
+    font-size: 24px;
+    color: #ff6b6b;
+    filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.5));
+}
+
+.toast-text {
+    flex: 1;
+}
+
+.toast-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffdce5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.toast-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ff6b6b, transparent);
+    width: 100%;
+    animation: toastProgress 4s linear forwards;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+@keyframes toastProgress {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+/* Glassmorphic Input Refinement */
+.input-lock-box {
+    position: relative;
+    padding-bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 0.3s ease;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(10, 46, 40, 0.75);
+    /* Deep Obsidian Teal */
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 2px 20px;
+    height: 52px;
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(142, 207, 212, 0.12);
+    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.input-wrapper:focus-within {
+    background: rgba(12, 56, 48, 0.9);
+    border-color: #8ecfd4;
+    box-shadow:
+        0 12px 30px rgba(10, 46, 40, 0.4),
+        inset 0 0 10px rgba(142, 207, 212, 0.05);
+    transform: translateY(-2px);
+}
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    height: 100% !important;
+    outline: none !important;
+    color: #fff;
+    font-size: 16px;
+    letter-spacing: 0.8px;
+}
+
+/* Better Email Prefix/Suffix Alignment */
+.email-input-group {
+    justify-content: space-between;
+}
+
+.email-input-group input {
+    text-align: left;
+    min-width: 0;
+}
+
+.domain-suffix {
+    color: #8ecfd4;
+    font-weight: 500;
+    font-size: 14px;
+    padding-left: 8px;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+/* Eye Toggle Styling */
+.toggle-eye {
+    color: #8ecfd4;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.8;
+    margin-left: 12px;
+    transition: all 0.3s ease;
+    width: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
+
+.toggle-eye:hover {
+    opacity: 1;
+    color: #fff;
+    text-shadow: 0 0 12px rgba(142, 207, 212, 0.6);
+}
+
+/* Unique Crystal Tag Errors */
+.error-tag {
+    position: absolute;
+    bottom: -10px;
+    left: 4px;
+    padding: 4px 12px;
+    background: rgba(255, 107, 107, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 107, 107, 0.25);
+    border-radius: 10px;
+    color: #ff9f9f;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+    animation: tagSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.error-tag i {
+    font-size: 12px;
+    color: #ff6b6b;
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+@keyframes tagSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes iconPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+.field-error {
+    border-color: #ff6b6b !important;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.2) !important;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+/* Cleaned Up Refined Styles */
+.form-grid label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #8ecfd4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+
+.btn-login {
+    margin-top: 30px;
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 18px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #67b9c0 0%, #3e7465 100%);
+    box-shadow: 0 12px 35px rgba(62, 116, 101, 0.4);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: block;
+}
+
+.btn-login:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 18px 45px rgba(62, 116, 101, 0.5);
+    filter: brightness(1.15);
+}
+
+.btn-login::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(80deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent);
+    transform: rotate(45deg);
+    transition: 0.6s ease-in-out;
+}
+
+.btn-login:hover::after {
+    left: 100%;
+}
+
+.register-text {
+    margin: 20px 0 20px;
+    font-size: 14px;
+    color: #dae9e5;
+    text-align: center;
+}
+
+.register-text a {
+    margin-left: 6px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    border-bottom: 2px solid #67b9c0;
+    transition: all 0.3s ease;
+}
+
+.register-text a:hover {
+    color: #67b9c0;
+    border-bottom-color: #fff;
+}
+
+@media (max-width: 980px) {
+    .login-shell {
+        width: min(680px, calc(100vw - 24px));
+        min-height: 0;
+        grid-template-columns: 1fr;
+    }
+
+    .art-panel {
+        min-height: 300px;
+        margin-right: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        padding-right: 34px;
+    }
+
+    .art-panel::after {
+        display: none;
+    }
+
+    .gift-box,
+    .walker,
+    .leaf-rock,
+    .panel-bubble {
+        display: none;
+    }
+
+    .form-panel {
+        padding: 34px 24px;
+    }
+
+    .form-panel h1 {
+        font-size: 34px;
+        margin-bottom: 18px;
+    }
+
+    .register-text {
+        margin-bottom: 38px;
+    }
+
+    .help-text {
+        text-align: left;
+        margin-top: 16px;
+    }
+}
+
+@keyframes frostShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px) rotate(-0.5deg);
+    }
+
+    75% {
+        transform: translateX(5px) rotate(0.5deg);
+    }
+}
+
+@keyframes crystalPulse {
+    0% {
+        border-color: rgba(255, 100, 100, 0.3);
+    }
+
+    50% {
+        border-color: rgba(255, 100, 100, 0.7);
+        box-shadow: 0 0 15px rgba(255, 100, 100, 0.2);
+    }
+
+    100% {
+        border-color: rgba(255, 100, 100, 0.3);
+    }
+}
