@@ -1,21 +1,80 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Product = require('./models/Product');
+const path = require('path');
+const Product = require(path.join(__dirname, 'models/Product'));
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
 
 // Helper function to generate product data
-const createProduct = (name, category, price, originalPrice, image, hoverImage, tags = []) => ({
-    name,
-    category,
-    price,
-    originalPrice,
-    discount: `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`,
-    discountPercent: Math.round(((originalPrice - price) / originalPrice) * 100),
-    image,
-    hoverImage,
-    tags
-});
+// Helper function to generate product data
+const createProduct = (name, category, price, originalPrice, image, hoverImage, tags = []) => {
+    // Tag pools for different categories
+    const plantTags = ['Easy Care', 'Vastu Friendly', 'Air Purifying', 'Pet Friendly', 'Low Maintenance'];
+    const floweringTags = ['Outdoor Blooms', 'Fragrant', 'Aromatic', 'Colorful', 'Pest Repellent'];
+    const seedTags = ['High Germination', 'Organic', 'Fast Growing', 'High Yield', 'Easy to Grow'];
+    const accessoryTags = ['Premium Quality', 'Durable', 'Stylish', 'Eco-Friendly', 'Modern', 'Sleek Design'];
+    const fertilizerTags = ['Organic', 'Fast Acting', 'Nutrient Rich', 'Soil Booster', 'Plant Food', 'Bio-Fertilizer'];
+    const soilTags = ['Premium Mix', 'Well Draining', 'Ready to Use', 'Moisture Retaining', 'Nutrient Dense', 'Sterile'];
+
+    let extraTags = [];
+    const lowerCategory = category.toLowerCase();
+    const lowerName = name.toLowerCase();
+
+    // Categorization logic
+    const isPlant = !lowerCategory.includes('seeds') &&
+        !lowerCategory.includes('accessories') &&
+        !lowerCategory.includes('tools') &&
+        !lowerCategory.includes('media') &&
+        !lowerCategory.includes('fertilizer');
+
+    const getTwoRandom = (pool) => {
+        const shuffled = [...pool].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, 2);
+    };
+
+    if (isPlant) {
+        if (lowerCategory.includes('flowering') || lowerName.includes('rose') || lowerName.includes('marigold') || lowerName.includes('jasmine') || lowerName.includes('petunia')) {
+            extraTags = ['Outdoor Blooms'];
+            if (lowerName.includes('rose')) extraTags.push('Fragrant');
+            else if (lowerName.includes('marigold')) extraTags.push('Pest Repellent');
+            else if (lowerName.includes('jasmine')) extraTags.push('Aromatic');
+            else if (lowerName.includes('petunia')) extraTags.push('Colorful');
+            else extraTags.push(floweringTags[Math.floor(Math.random() * floweringTags.length)]);
+
+            // Ensure we have 2 tags
+            if (extraTags.length < 2) {
+                const remaining = floweringTags.filter(t => !extraTags.includes(t));
+                extraTags.push(remaining[Math.floor(Math.random() * remaining.length)]);
+            }
+        } else if (lowerName.includes('snake') || lowerName.includes('money') || lowerName.includes('zz')) {
+            extraTags = ['Easy Care', 'Air Purifying'];
+        } else if (lowerName.includes('tuls') || lowerName.includes('jade')) {
+            extraTags = ['Vastu Friendly', 'Easy Care'];
+        } else {
+            extraTags = getTwoRandom(plantTags);
+        }
+    } else if (lowerCategory.includes('seeds')) {
+        extraTags = getTwoRandom(seedTags);
+    } else if (lowerCategory.includes('fertilizer')) {
+        extraTags = getTwoRandom(fertilizerTags);
+    } else if (lowerCategory.includes('soil') || lowerCategory.includes('media')) {
+        extraTags = getTwoRandom(soilTags);
+    } else if (lowerCategory.includes('accessories') || lowerCategory.includes('tools')) {
+        extraTags = getTwoRandom(accessoryTags);
+    }
+
+    return {
+        name,
+        category,
+        price,
+        originalPrice,
+        discount: `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`,
+        discountPercent: Math.round(((originalPrice - price) / originalPrice) * 100),
+        image,
+        hoverImage,
+        tags: [...new Set([...tags, ...extraTags])]
+    };
+};
 
 // Base images for different categories
 const images = {
@@ -59,7 +118,7 @@ const productsToSeed = [];
 
 // Load existing products from old seed
 const fs = require('fs');
-const oldSeedContent = fs.readFileSync('seed.js', 'utf8');
+const oldSeedContent = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf8');
 const match = oldSeedContent.match(/const productsToSeed = (\[[\s\S]*?\]);/);
 if (match) {
     const existingProducts = JSON.parse(match[1]);
@@ -84,7 +143,7 @@ Object.keys(seedsCategories).forEach((category, catIdx) => {
             99 + (idx * 15),
             images.seeds[idx % images.seeds.length],
             images.seeds[(idx + 1) % images.seeds.length],
-            ['Easy to Grow', 'High Germination', 'Organic']
+            []
         ));
     });
 });
@@ -106,7 +165,7 @@ soilProducts['Soil & Growing Media'].forEach((product, idx) => {
         199 + (idx * 70),
         images.soil[idx % images.soil.length],
         images.soil[(idx + 1) % images.soil.length],
-        ['Organic', 'Nutrient Rich', 'Premium Quality']
+        []
     ));
 });
 
@@ -127,7 +186,7 @@ fertilizerProducts['Fertilizers & Nutrients'].forEach((product, idx) => {
         249 + (idx * 70),
         images.fertilizer[idx % images.fertilizer.length],
         images.fertilizer[(idx + 1) % images.fertilizer.length],
-        ['Organic', 'Fast Acting', 'Plant Nutrition']
+        []
     ));
 });
 
@@ -148,7 +207,7 @@ gardeningTools['Gardening Tools'].forEach((product, idx) => {
         399 + (idx * 150),
         images.tools[idx % images.tools.length],
         images.tools[(idx + 1) % images.tools.length],
-        ['Durable', 'Ergonomic', 'Professional Grade']
+        []
     ));
 });
 
@@ -172,7 +231,7 @@ accessoriesProducts['Accessories'].forEach((product, idx) => {
         199 + (idx * 80),
         images.accessories[idx % images.accessories.length],
         images.accessories[(idx + 1) % images.accessories.length],
-        ['Premium Quality', 'Durable', 'Stylish']
+        []
     ));
 });
 

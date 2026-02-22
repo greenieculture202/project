@@ -764,3 +764,264 @@
     color: #999;
     font-size: 0.9rem;
 }
+
+/* Tag Color Variations - Premium Palette */
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: #f1f5f9;
+    /* Default background/box */
+    color: #475569;
+    /* Default text */
+}
+
+/* Category & Property Specific Tags */
+.tag.easy-care {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.tag.vastu-friendly {
+    background-color: #fff9c4;
+    color: #f57f17;
+}
+
+.tag.air-purifying {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.pet-friendly {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tag.low-maintenance {
+    background-color: #e0f2f1;
+    color: #00796b;
+}
+
+.tag.ornamental-tree {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.modern-decor {
+    background-color: #e1f5fe;
+    color: #01579b;
+}
+
+/* Flowering & Visual */
+.tag.outdoor-blooms {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.tag.fragrant {
+    background-color: #e1f5fe;
+    color: #0288d1;
+}
+
+.tag.aromatic {
+    background-color: #e0f7fa;
+    color: #0097a7;
+}
+
+.tag.decorative-style {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.tag.home-garden-essentials {
+    background-color: #ede7f6;
+    color: #4527a0;
+}
+
+.tag.colorful {
+    background-color: #f8bbd0;
+    color: #880e4f;
+}
+
+.tag.bright {
+    background-color: #fffde7;
+    color: #fbc02d;
+}
+
+.tag.full-sun {
+    background-color: #fff176;
+    color: #f57f17;
+}
+
+.tag.vibrant {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.tag.graceful {
+    background-color: #f5f5f5;
+    color: #424242;
+}
+
+.tag.cheery {
+    background-color: #fff9c4;
+    color: #fbc02d;
+}
+
+.tag.wildflower-style {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* Growth & Environment */
+.tag.high-germination {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.tag.organic {
+    background-color: #dcedc8;
+    color: #33691e;
+}
+
+.tag.fast-growing {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.tag.high-yield {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.tag.easy-to-grow {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.nutritious {
+    background-color: #f9fbe7;
+    color: #827717;
+}
+
+.tag.disease-resistant {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.climber {
+    background-color: #efebe9;
+    color: #5d4037;
+}
+
+.tag.rapid-growth {
+    background-color: #e0f2f1;
+    color: #00695c;
+}
+
+.tag.hanging-basket {
+    background-color: #e8eaf6;
+    color: #283593;
+}
+
+/* Accessories/Tools Specific */
+.tag.premium-quality {
+    background-color: #ede7f6;
+    color: #4527a0;
+}
+
+.tag.durable {
+    background-color: #eceff1;
+    color: #37474f;
+}
+
+.tag.stylish {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tag.eco-friendly {
+    background-color: #e0f2f1;
+    color: #004d40;
+}
+
+.tag.modern {
+    background-color: #d1c4e9;
+    color: #4527a0;
+}
+
+.tag.sleek-design {
+    background-color: #e1f5fe;
+    color: #01579b;
+}
+
+/* Fertilizer/Soil Specific */
+.tag.fast-acting {
+    background-color: #fff3e0;
+    color: #ff6f00;
+}
+
+.tag.nutrient-rich {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+.tag.soil-booster {
+    background-color: #efebe9;
+    color: #4e342e;
+}
+
+.tag.plant-food {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.bio-fertilizer {
+    background-color: #b2dfdb;
+    color: #00695c;
+}
+
+.tag.premium-mix {
+    background-color: #eceff1;
+    color: #263238;
+}
+
+.tag.well-draining {
+    background-color: #e0f7fa;
+    color: #006064;
+}
+
+.tag.ready-to-use {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.moisture-retaining {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+.tag.nutrient-dense {
+    background-color: #f9fbe7;
+    color: #33691e;
+}
+
+.tag.sterile {
+    background-color: #cfd8dc;
+    color: #455a64;
+}
+
+.tag.pest-repellent {
+    background-color: #efebe9;
+    color: #4e342e;
+}

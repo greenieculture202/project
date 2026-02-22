@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService, NotificationState } from '../services/notification.service';
+import { CartService } from '../services/cart.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,6 +14,7 @@ import { Subscription } from 'rxjs';
 })
 export class NotificationModalComponent implements OnInit, OnDestroy {
     notificationService = inject(NotificationService);
+    cartService = inject(CartService);
     router = inject(Router);
 
     state: NotificationState = {
@@ -44,5 +46,10 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
     onClose() {
         // Optional: Hide on overlay click
         this.notificationService.hide();
+    }
+
+    onViewCart() {
+        this.notificationService.hide();
+        this.cartService.open();
     }
 }

@@ -23,7 +23,7 @@ export interface Product {
 })
 export class ProductService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://127.0.0.1:5005/api';
+    private apiUrl = 'http://127.0.0.1:5000/api';
 
     // Fallback mock data in case backend is not available
     private fallbackProducts: { [key: string]: Product[] } = {
@@ -39,11 +39,51 @@ export class ProductService {
         ],
         'XL Plants': [
             {
-                name: 'Offline-Fiddle Leaf Fig XL',
+                name: 'Fiddle Leaf Fig XL',
                 price: '2499',
                 originalPrice: '3299',
                 discount: '24% OFF',
                 image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            },
+            {
+                name: 'Rubber Plant XL',
+                price: '1999',
+                originalPrice: '2799',
+                discount: '28% OFF',
+                image: 'https://images.unsplash.com/photo-1520412099561-64839ecd0bb3?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            },
+            {
+                name: 'Monstera Deliciosa XL',
+                price: '2999',
+                originalPrice: '3999',
+                discount: '25% OFF',
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            },
+            {
+                name: 'Bird of Paradise XL',
+                price: '3499',
+                originalPrice: '4499',
+                discount: '22% OFF',
+                image: 'https://images.unsplash.com/photo-1617135038936-3bc99d69f6f1?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            },
+            {
+                name: 'Snake Plant XL',
+                price: '1799',
+                originalPrice: '2299',
+                discount: '21% OFF',
+                image: 'https://images.unsplash.com/photo-1593418105716-4307a8366dca?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            },
+            {
+                name: 'Dragon Tree XL',
+                price: '2199',
+                originalPrice: '2999',
+                discount: '26% OFF',
+                image: 'https://images.unsplash.com/photo-1544436484-935035bb2ed7?auto=format&fit=crop&w=800&q=80',
                 category: 'XL Plants'
             }
         ],

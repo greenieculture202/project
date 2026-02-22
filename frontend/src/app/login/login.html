@@ -1,50 +1,40 @@
-<div class="winter-login-page">
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
-    <div class="bg-orb orb-c"></div>
+<div class="login-page">
+    <div class="background-art"></div>
+    <div class="background-overlay"></div>
 
     <div class="login-shell">
-        <section class="art-panel">
-            <div class="brand-mark">
+        <header class="login-header">
+            <div class="brand-badge">
                 <i class="fas fa-leaf"></i>
-                <div class="brand-text">
-                    <span class="brand-name">Greenie</span>
-                    <span class="brand-suffix">Culture</span>
+                <span>Greenie Culture</span>
+            </div>
+            <h1>Welcome Back</h1>
+            <p>Continue your green journey</p>
+        </header>
+
+        <!-- Error Toast -->
+        <div class="crystal-toast" *ngIf="loginError" (click)="loginError = ''">
+            <div class="toast-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="toast-text">
+                    <span class="toast-title">Login Issue</span>
+                    <p>{{ loginError }}</p>
                 </div>
             </div>
+            <div class="toast-progress"></div>
+        </div>
 
-            <!-- User's Specific Concept Art (Moved to public/images/login_image.jpeg) -->
-            <div class="panel-art-wrapper">
-                <img src="/images/login_image.jpeg" alt="Sustainability Concept Art" class="full-panel-img">
-            </div>
-
-
-        </section>
-
-        <section class="form-panel">
-            <h1>Login</h1>
-
-            <!-- Unique Floating Error Toast -->
-            <div class="crystal-toast" *ngIf="loginError" (click)="loginError = ''">
-                <div class="toast-content">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div class="toast-text">
-                        <span class="toast-title">Login Issue</span>
-                        <p>{{ loginError }}</p>
-                    </div>
-                </div>
-                <div class="toast-progress"></div>
-            </div>
-
-            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form-grid">
-                <div class="input-lock-box">
-                    <label for="login-username">Username</label>
-                    <div class="input-wrapper email-input-group">
-                        <input id="login-username" type="text" formControlName="email" placeholder="username"
-                            [class.field-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+            <div class="compact-grid">
+                <!-- Username -->
+                <div class="field-box">
+                    <label>Username</label>
+                    <div class="input-container email-input-group"
+                        [class.field-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <i class="far fa-user"></i>
+                        <input type="text" formControlName="email" placeholder="username">
                         <span class="domain-suffix">@gmail.com</span>
                     </div>
-                    <!-- Crystal Tag Errors -->
                     <div class="error-tag" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <i class="fas fa-circle-exclamation"></i>
                         <span *ngIf="loginForm.get('email')?.errors?.['required']">Username required</span>
@@ -53,29 +43,36 @@
                     </div>
                 </div>
 
-                <div class="input-lock-box">
-                    <label for="login-password">Password</label>
-                    <div class="input-wrapper">
-                        <input id="login-password" [type]="isPasswordVisible ? 'text' : 'password'"
-                            formControlName="password" placeholder="Enter password"
-                            [class.field-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-                        <i [class]="isPasswordVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"
-                            (click)="togglePasswordVisibility()" class="toggle-eye"></i>
+                <!-- Password -->
+                <div class="field-box">
+                    <label>Password</label>
+                    <div class="input-container"
+                        [class.field-error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        <i class="fas fa-key"></i>
+                        <input [type]="isPasswordVisible ? 'text' : 'password'" formControlName="password"
+                            placeholder="Enter password">
+                        <button type="button" class="eye-btn" (click)="togglePasswordVisibility()">
+                            <i [class]="isPasswordVisible ? 'far fa-eye-slash' : 'far fa-eye'"></i>
+                        </button>
                     </div>
                     <div class="error-tag"
                         *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
                         <i class="fas fa-circle-exclamation"></i>
-                        <span *ngIf="loginForm.get('password')?.errors?.['required']">Password missing</span>
+                        <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</span>
                     </div>
                 </div>
+            </div>
 
-                <button type="submit" class="btn-login">Login</button>
-            </form>
+            <button type="submit" class="submit-btn" [disabled]="isLoading">
+                <span class="btn-text">{{ isLoading ? 'Checking...' : 'LOGIN' }}</span>
+                <i class="fas fa-arrow-right" *ngIf="!isLoading"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+            </button>
 
-            <p class="register-text">
-                Don't have an account?
-                <a routerLink="/register">Register NOW</a>
-            </p>
-        </section>
+            <footer class="login-footer">
+                <span>Don't have an account?</span>
+                <a routerLink="/register" class="signup-link">Register NOW</a>
+            </footer>
+        </form>
     </div>
 </div>

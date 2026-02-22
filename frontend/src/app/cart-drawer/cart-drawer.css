@@ -1,0 +1,808 @@
+.cart-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
+
+.cart-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cart-drawer {
+    position: absolute;
+    top: 0;
+    right: -450px;
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10001;
+}
+
+.cart-overlay.open .cart-drawer {
+    transform: translateX(-450px);
+}
+
+/* Header */
+.cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: brandEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes brandEntrance {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.cart-logo-small {
+    width: 60px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
+    overflow: visible;
+}
+
+.cart-logo-small:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 6px 15px rgba(45, 140, 111, 0.15));
+}
+
+.cart-logo-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.cart-title-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-right: 12px;
+    min-width: 60px;
+}
+
+.cart-text {
+    font-size: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 7px;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(90deg,
+            #07241f 0%,
+            #2d8c6f 35%,
+            #86efac 50%,
+            #2d8c6f 65%,
+            #07241f 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+    position: relative;
+    padding-left: 15px;
+    border-left: 3px solid #2d8c6f;
+    text-shadow: 0 0 15px rgba(45, 140, 111, 0.2);
+}
+
+@keyframes shine {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.cart-line {
+    height: 3px;
+    width: 35px;
+    background: linear-gradient(90deg, #2d8c6f, #86efac, transparent);
+    margin-top: 8px;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cart-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-100%);
+    animation: lineShimmer 3s infinite;
+}
+
+@keyframes lineShimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.cart-title-container:hover .cart-line {
+    width: 100%;
+}
+
+.item-count {
+    font-size: 10px;
+    color: #1a5c45;
+    font-weight: 800;
+    background: rgba(45, 140, 111, 0.08);
+    backdrop-filter: blur(4px);
+    padding: 4px 12px;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-left: 12px;
+    border: 1px solid rgba(45, 140, 111, 0.15);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(45, 140, 111, 0.1);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 4px rgba(45, 140, 111, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(45, 140, 111, 0);
+    }
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: #1a5c45;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    transition: transform 0.3s ease;
+}
+
+.close-btn:hover {
+    transform: rotate(90deg);
+}
+
+/* Body */
+.cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.delivery-banner {
+    background: #f0fff4;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #e2f9e9;
+}
+
+.banner-icon {
+    color: #2d8c6f;
+    font-size: 16px;
+}
+
+.banner-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a5c45;
+}
+
+.banner-text span {
+    color: #2d8c6f;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Empty Cart */
+.empty-cart {
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 60px;
+    color: #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.empty-cart h3 {
+    font-size: 20px;
+    color: #07241f;
+    margin-bottom: 8px;
+}
+
+.empty-cart p {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 30px;
+}
+
+.shop-now-btn {
+    background: #1a5c45;
+    color: #fff;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.shop-now-btn:hover {
+    background: #2d8c6f;
+    transform: translateY(-2px);
+}
+
+/* Cart Items */
+.cart-items {
+    padding: 15px 0;
+}
+
+.cart-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.item-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8fafc;
+    flex-shrink: 0;
+}
+
+.item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #07241f;
+    margin: 0;
+}
+
+.remove-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px;
+}
+
+.remove-btn:hover {
+    color: #ef4444;
+}
+
+.item-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 12px;
+}
+
+.unit-price {
+    font-size: 11px;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.item-details {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Tag Styling in Cart */
+.item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    background-color: #f1f5f9;
+    /* Default background/box */
+    color: #475569;
+    /* Default text */
+}
+
+/* Category & Property Specific Tags */
+.tag.easy-care {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.tag.vastu-friendly {
+    background-color: #fff9c4;
+    color: #f57f17;
+}
+
+.tag.air-purifying {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.pet-friendly {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tag.low-maintenance {
+    background-color: #e0f2f1;
+    color: #00796b;
+}
+
+.tag.ornamental-tree {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.modern-decor {
+    background-color: #e1f5fe;
+    color: #01579b;
+}
+
+/* Flowering & Visual */
+.tag.outdoor-blooms {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.tag.fragrant {
+    background-color: #e1f5fe;
+    color: #0288d1;
+}
+
+.tag.aromatic {
+    background-color: #e0f7fa;
+    color: #0097a7;
+}
+
+.tag.decorative-style {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.tag.home-garden-essentials {
+    background-color: #ede7f6;
+    color: #4527a0;
+}
+
+.tag.colorful {
+    background-color: #f8bbd0;
+    color: #880e4f;
+}
+
+.tag.bright {
+    background-color: #fffde7;
+    color: #fbc02d;
+}
+
+.tag.full-sun {
+    background-color: #fff176;
+    color: #f57f17;
+}
+
+.tag.vibrant {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.tag.graceful {
+    background-color: #f5f5f5;
+    color: #424242;
+}
+
+.tag.cheery {
+    background-color: #fff9c4;
+    color: #fbc02d;
+}
+
+.tag.wildflower-style {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* Growth & Environment */
+.tag.high-germination {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.tag.organic {
+    background-color: #dcedc8;
+    color: #33691e;
+}
+
+.tag.fast-growing {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.tag.high-yield {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.tag.easy-to-grow {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.nutritious {
+    background-color: #f9fbe7;
+    color: #827717;
+}
+
+.tag.disease-resistant {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.tag.climber {
+    background-color: #efebe9;
+    color: #5d4037;
+}
+
+.tag.rapid-growth {
+    background-color: #e0f2f1;
+    color: #00695c;
+}
+
+.tag.hanging-basket {
+    background-color: #e8eaf6;
+    color: #283593;
+}
+
+/* Accessories/Tools Specific */
+.tag.premium-quality {
+    background-color: #ede7f6;
+    color: #4527a0;
+}
+
+.tag.durable {
+    background-color: #eceff1;
+    color: #37474f;
+}
+
+.tag.stylish {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tag.eco-friendly {
+    background-color: #e0f2f1;
+    color: #004d40;
+}
+
+.tag.modern {
+    background-color: #d1c4e9;
+    color: #4527a0;
+}
+
+.tag.sleek-design {
+    background-color: #e1f5fe;
+    color: #01579b;
+}
+
+/* Fertilizer/Soil Specific */
+.tag.fast-acting {
+    background-color: #fff3e0;
+    color: #ff6f00;
+}
+
+.tag.nutrient-rich {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+.tag.soil-booster {
+    background-color: #efebe9;
+    color: #4e342e;
+}
+
+.tag.plant-food {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.bio-fertilizer {
+    background-color: #b2dfdb;
+    color: #00695c;
+}
+
+.tag.premium-mix {
+    background-color: #eceff1;
+    color: #263238;
+}
+
+.tag.well-draining {
+    background-color: #e0f7fa;
+    color: #006064;
+}
+
+.tag.ready-to-use {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.tag.moisture-retaining {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+.tag.nutrient-dense {
+    background-color: #f9fbe7;
+    color: #33691e;
+}
+
+.tag.sterile {
+    background-color: #cfd8dc;
+    color: #455a64;
+}
+
+.tag.pest-repellent {
+    background-color: #efebe9;
+    color: #4e342e;
+}
+
+.item-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.qty-btn {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a5c45;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: #e2f9e9;
+    color: #2d8c6f;
+}
+
+.qty-btn:disabled {
+    color: #cbd5e1;
+    cursor: default;
+}
+
+.qty {
+    width: 34px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #07241f;
+}
+
+.item-price-group {
+    text-align: right;
+}
+
+.price-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.current-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #07241f;
+}
+
+.old-total {
+    font-size: 12px;
+    color: #94a3b8;
+    text-decoration: line-through;
+}
+
+/* Extras */
+.cart-extras {
+    padding: 20px;
+}
+
+.promo-box {
+    background: #f0fff4;
+    border: 1px dashed #2d8c6f;
+    border-radius: 12px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.promo-box i {
+    color: #2d8c6f;
+    font-size: 18px;
+}
+
+.promo-box p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a5c45;
+}
+
+.promo-box span {
+    color: #2d8c6f;
+    font-weight: 800;
+}
+
+.guarantee-box {
+    background: #fffbeb;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.guarantee-box i:first-child {
+    color: #d97706;
+    font-size: 20px;
+}
+
+.guarantee-box p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #92400e;
+    line-height: 1.4;
+    max-width: 200px;
+}
+
+.plant-icon-small {
+    position: absolute;
+    right: 10px;
+    bottom: -10px;
+    font-size: 40px;
+    color: #d97706;
+    opacity: 0.1;
+}
+
+/* Footer */
+.cart-footer {
+    padding: 24px 20px;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.02);
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.summary-line .label {
+    font-size: 16px;
+    font-weight: 800;
+    color: #07241f;
+}
+
+.summary-line .savings {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d8c6f;
+}
+
+.checkout-btn {
+    width: 100%;
+    height: 56px;
+    background: #1a5c45;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: #2d8c6f;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(45, 140, 111, 0.2);
+}
+
+.checkout-btn .divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+}

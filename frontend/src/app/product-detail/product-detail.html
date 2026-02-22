@@ -148,6 +148,11 @@
                         <span class="card-price">₹{{ p.price }}</span>
                         <span class="card-original-price" *ngIf="p.originalPrice">₹{{ p.originalPrice }}</span>
                     </div>
+                    <div class="card-tags" *ngIf="p.tags && p.tags.length > 0">
+                        <span class="tag" [ngClass]="getTagClass(tag)" *ngFor="let tag of p.tags.slice(0, 1)">
+                            {{ tag }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

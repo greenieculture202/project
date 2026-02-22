@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
+import { CartService } from '../services/cart.service';
 
 @Component({
     selector: 'app-navbar',
@@ -20,8 +21,17 @@ export class NavbarComponent {
     constructor(
         private productService: ProductService,
         private router: Router,
-        public authService: AuthService
+        public authService: AuthService,
+        private cartService: CartService
     ) { }
+
+    get cartCount() {
+        return this.cartService.totalItems();
+    }
+
+    toggleCart() {
+        this.cartService.toggle();
+    }
 
     onSearch() {
         if (this.searchTerm.trim().length > 1) {

@@ -6,10 +6,11 @@ import { NavbarComponent } from './navbar/navbar';
 import { CategoryNavComponent } from './category-nav/category-nav';
 import { OffersStripComponent } from './offers-strip/offers-strip';
 import { NotificationModalComponent } from './notification-modal/notification-modal';
+import { CartDrawerComponent } from './cart-drawer/cart-drawer';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, NavbarComponent, CategoryNavComponent, OffersStripComponent, NotificationModalComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, CategoryNavComponent, OffersStripComponent, NotificationModalComponent, CartDrawerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

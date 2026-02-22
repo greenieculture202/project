@@ -19,5 +19,6 @@ export const routes: Routes = [
     { path: 'tool-guide', component: ToolGuideComponent },
     { path: 'flowering-offer', component: FloweringOfferComponent },
     { path: 'login', loadComponent: () => import('./login/login').then(m => m.LoginComponent) },
-    { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) }
+    { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) },
+    { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) }
 ];

@@ -12,6 +12,22 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'greenie-secret-key-123';
 
+// Auth Middleware
+const auth = (req, res, next) => {
+    const token = req.header('x-auth-token');
+    if (!token) {
+        return res.status(401).json({ message: 'No token, authorization denied' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded.user;
+        next();
+    } catch (err) {
+        res.status(401).json({ message: 'Token is not valid' });
+    }
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -98,6 +114,28 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Cart Routes
+app.get('/api/cart', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('cart');
+        res.json(user.cart || []);
+    } catch (err) {
+        console.error('[CART] Fetch error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+app.post('/api/cart', auth, async (req, res) => {
+    try {
+        const { cart } = req.body;
+        await User.findByIdAndUpdate(req.user.id, { cart });
+        res.json({ message: 'Cart updated successfully' });
+    } catch (err) {
+        console.error('[CART] Save error:', err.message);
+        res.status(500).send('Server error');
+    }
+});
+
 // Routes
 app.get('/', (req, res) => {
     res.send('Greenie Culture Backend is running');
@@ -111,7 +149,15 @@ app.get('/api/products', async (req, res) => {
 
         let query = {};
         if (category) {
-            const decodedCategory = decodeURIComponent(category);
+            let decodedCategory = decodeURIComponent(category);
+
+            // Fix for Seeds Plants and Accessories Plants
+            if (decodedCategory.toLowerCase().includes('seeds')) {
+                decodedCategory = 'Seeds';
+            } else if (decodedCategory.toLowerCase().includes('accessories')) {
+                decodedCategory = 'Accessories';
+            }
+
             // Replace hyphens with space or allow for any separator to handle slugs like 'flower-seeds'
             const searchPattern = decodedCategory.replace(/-/g, '[-\\s]');
             const regex = new RegExp(`^${searchPattern}$`, 'i');
@@ -122,16 +168,11 @@ app.get('/api/products', async (req, res) => {
             query = {
                 $or: [
                     { category: { $regex: regex } },
-                    { tags: { $regex: tagRegex } }
+                    { tags: { $regex: tagRegex } },
+                    // If it's a seed category, also match subcategories like 'Vegetable Seeds'
+                    { category: { $regex: new RegExp(`.*${decodedCategory}.*`, 'i') } }
                 ]
             };
-
-            // Fallback: if category is 'Indoor Plants' or 'XL Plants' etc, 
-            // and searchPattern didn't match, try a more direct match
-            if (decodedCategory.toLowerCase().includes('plants')) {
-                const simpleCat = decodedCategory.replace(/[-]/g, ' ');
-                query.$or.push({ category: { $regex: new RegExp(simpleCat, 'i') } });
-            }
         }
 
         let productsQuery = Product.find(query);

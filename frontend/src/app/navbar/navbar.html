@@ -43,6 +43,9 @@
       </button>
     </ng-template>
 
-    <i class="fas fa-shopping-bag" title="Cart"></i>
+    <div class="cart-icon-wrapper" (click)="toggleCart()" title="Cart">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+    </div>
   </div>
 </nav>

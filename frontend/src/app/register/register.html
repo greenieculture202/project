@@ -26,7 +26,7 @@
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
             <div class="compact-grid">
-                <!-- Row 1 -->
+                <!-- 1. Full Name -->
                 <div class="field-box">
                     <label>Full Name</label>
                     <div class="input-container"
@@ -42,6 +42,7 @@
                     </div>
                 </div>
 
+                <!-- 2. Phone Number -->
                 <div class="field-box">
                     <label>Phone Number</label>
                     <div class="input-container"
@@ -57,8 +58,8 @@
                     </div>
                 </div>
 
-                <!-- Row 2 -->
-                <div class="field-box span-2">
+                <!-- 3. Email Address -->
+                <div class="field-box">
                     <label>Email Address</label>
                     <div class="input-container"
                         [class.field-error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
@@ -74,24 +75,8 @@
                     </div>
                 </div>
 
-                <!-- Row 3 -->
-                <div class="field-box span-2">
-                    <label>Residence (Address)</label>
-                    <div class="input-container textarea-box"
-                        [class.field-error]="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">
-                        <i class="fas fa-location-arrow"></i>
-                        <textarea formControlName="address" placeholder="Address, City, State, PIN" rows="1"></textarea>
-                    </div>
-                    <div class="error-tag"
-                        *ngIf="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">
-                        <i class="fas fa-circle-exclamation"></i>
-                        <span *ngIf="registerForm.get('address')?.errors?.['required']">Address is required</span>
-                        <span *ngIf="registerForm.get('address')?.errors?.['minlength']">Min 5 characters</span>
-                    </div>
-                </div>
-
-                <!-- Row 4 -->
-                <div class="field-box span-2">
+                <!-- 4. Create Password -->
+                <div class="field-box">
                     <label>Create Password</label>
                     <div class="input-container"
                         [class.field-error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
@@ -107,6 +92,22 @@
                         <i class="fas fa-circle-exclamation"></i>
                         <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required</span>
                         <span *ngIf="registerForm.get('password')?.errors?.['minlength']">Min 6 characters</span>
+                    </div>
+                </div>
+
+                <!-- 5. Residence (Address) -->
+                <div class="field-box">
+                    <label>Residence (Address)</label>
+                    <div class="input-container textarea-box"
+                        [class.field-error]="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">
+                        <i class="fas fa-location-arrow"></i>
+                        <textarea formControlName="address" placeholder="Address, City, State, PIN" rows="1"></textarea>
+                    </div>
+                    <div class="error-tag"
+                        *ngIf="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span *ngIf="registerForm.get('address')?.errors?.['required']">Address is required</span>
+                        <span *ngIf="registerForm.get('address')?.errors?.['minlength']">Min 5 characters</span>
                     </div>
                 </div>
             </div>

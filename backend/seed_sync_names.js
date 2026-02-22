@@ -18,11 +18,11 @@ if (!match) {
 // Write to a temporary file for processing
 const productsData = `const allProducts = {${match[1]}};
 module.exports = allProducts;`;
-
-fs.writeFileSync('temp_products.js', productsData);
+const tempFilePath = path.join(__dirname, 'temp_products.js');
+fs.writeFileSync(tempFilePath, productsData);
 
 // Load the original products
-const allProducts = require('./temp_products.js');
+const allProducts = require(tempFilePath);
 
 // Flatten all original products
 const productsToSeed = [];
@@ -179,7 +179,7 @@ mongoose.connect(MONGODB_URI)
         console.log('🗑️ Products cleared');
         await Product.insertMany(productsToSeed);
         console.log('🚀 Database Seeded Successfully!');
-        fs.unlinkSync('temp_products.js');
+        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
         process.exit(0);
     })
     .catch(err => {

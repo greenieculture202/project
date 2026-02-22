@@ -1,20 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-.luxury-notification-overlay {
+.oasis-overlay {
     position: fixed;
     inset: 0;
     z-index: 10000;
-    background: rgba(2, 44, 34, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(7, 36, 31, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    animation: luxuryFadeIn 0.4s ease;
+    padding: 24px;
+    animation: oasisOverlayIn 0.5s ease;
 }
 
-@keyframes luxuryFadeIn {
+@keyframes oasisOverlayIn {
     from {
         opacity: 0;
     }
@@ -24,186 +24,430 @@
     }
 }
 
-.luxury-modal-container {
+.oasis-modal-shell {
+    position: relative;
     width: 100%;
-    max-width: 420px;
-    background: #fdfbf7;
-    position: relative;
-    border-radius: 2px;
-    box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.4),
-        0 0 0 1px rgba(194, 154, 91, 0.15);
+    max-width: 440px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.55) 100%);
+    backdrop-filter: blur(32px) saturate(1.4);
+    -webkit-backdrop-filter: blur(32px) saturate(1.4);
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow:
+        0 40px 100px rgba(0, 0, 0, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.3);
     overflow: hidden;
-    animation: luxurySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 40px 32px;
+    animation: oasisModalPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes luxurySlideUp {
+@keyframes oasisModalPop {
     from {
         opacity: 0;
-        transform: translateY(30px) scale(0.98);
+        transform: scale(0.9) translateY(20px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
-/* Decorative Header */
-.luxury-header-decor {
-    height: 60px;
-    background: #064e3b;
+.prism-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(125deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 30%,
+            rgba(45, 140, 111, 0.1) 50%,
+            rgba(255, 255, 255, 0.1) 70%,
+            transparent 100%);
+    background-size: 200% 200%;
+    animation: oasisPrismShift 10s infinite linear;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes oasisPrismShift {
+    0% {
+        background-position: -200% -200%;
+    }
+
+    100% {
+        background-position: 200% 200%;
+    }
+}
+
+.oasis-modal-content {
     position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Visual Badge */
+.oasis-visual-badge {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.gold-seal {
-    width: 48px;
-    height: 48px;
-    background: #c29a5b;
-    color: #fff;
+.badge-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, #2d8c6f 0%, transparent 70%);
+    opacity: 0.2;
+    animation: badgePulse 2s infinite;
+}
+
+.badge-icon {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #2d8c6f 0%, #1a5c45 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 15px rgba(194, 154, 91, 0.5);
-    position: absolute;
-    top: 36px;
-    z-index: 2;
-    border: 3px solid #fdfbf7;
+    color: #fff;
+    font-size: 28px;
+    box-shadow: 0 10px 25px rgba(29, 90, 68, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.8);
 }
 
-.heritage-line {
-    width: 80%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(194, 154, 91, 0.3), transparent);
+@keyframes badgePulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.2;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.3;
+    }
 }
 
-.luxury-modal-content {
-    padding: 60px 40px 40px;
-    text-align: center;
+.oasis-visual-badge.error .badge-icon {
+    background: linear-gradient(135deg, #e05555 0%, #a83232 100%);
+    box-shadow: 0 10px 25px rgba(224, 85, 85, 0.3);
 }
 
-/* Icons */
-.luxury-icon-box {
-    font-size: 2.22rem;
-    margin-bottom: 25px;
+.oasis-visual-badge.error .badge-glow {
+    background: radial-gradient(circle, #e05555 0%, transparent 70%);
 }
 
-.luxury-icon-box.success {
-    color: #064e3b;
+/* Text Content */
+.oasis-text-box {
+    margin-bottom: 32px;
 }
 
-.luxury-icon-box.error {
-    color: #b91c1c;
-}
-
-.luxury-icon-box.info {
-    color: #c29a5b;
-}
-
-.luxury-text-group {
-    margin-bottom: 35px;
-    position: relative;
-}
-
-.luxury-modal-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
-    color: #064e3b;
-    font-weight: 700;
-    margin-bottom: 15px;
+.oasis-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #07241f;
+    margin: 0 0 12px;
     letter-spacing: -0.5px;
 }
 
-.luxury-title-underlay {
+.oasis-divider {
     width: 40px;
-    height: 2px;
-    background: #c29a5b;
+    height: 4px;
+    background: linear-gradient(90deg, #2d8c6f, #1a5c45);
+    border-radius: 2px;
     margin: 0 auto 20px;
 }
 
-.luxury-modal-message {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
-    color: #64748b;
+.oasis-message {
+    font-size: 16px;
+    color: #1f5a4c;
     line-height: 1.6;
+    font-weight: 500;
+    margin: 0;
+    max-width: 300px;
 }
 
-/* Footer & Button */
-.luxury-modal-footer {
-    display: flex;
-    justify-content: center;
+/* Footer Button */
+.oasis-footer {
+    width: 100%;
 }
 
-.luxury-confirm-btn {
-    background: #064e3b;
+.oasis-btn {
+    width: 100%;
+    height: 54px;
+    background: linear-gradient(135deg, #2d8c6f 0%, #1a5c45 100%);
     color: #fff;
-    border: 1px solid #064e3b;
-    padding: 14px 40px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.8rem;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 15px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 15px 35px rgba(29, 90, 68, 0.25);
 }
 
-.luxury-confirm-btn:hover {
-    background: transparent;
-    color: #064e3b;
+.oasis-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 45px rgba(29, 90, 68, 0.35);
 }
 
-.luxury-confirm-btn i {
-    font-size: 0.7rem;
+.oasis-btn i {
+    font-size: 14px;
     transition: transform 0.3s ease;
 }
 
-.luxury-confirm-btn:hover i {
-    transform: translateX(5px);
+.oasis-btn:hover i {
+    transform: translateX(4px);
 }
 
-/* Corner Decorations */
-.luxury-corner {
+/* Accents */
+.oasis-accent-line {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(194, 154, 91, 0.2);
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(45, 140, 111, 0.3), transparent);
+}
+
+.oasis-accent-line.top {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.oasis-accent-line.bottom {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@media (max-width: 480px) {
+    .oasis-modal-shell {
+        padding: 40px 24px;
+        margin: 0 16px;
+    }
+}
+
+/* --- Unique Oasis Toast Redesign --- */
+.oasis-toast-wrapper {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 20000;
+    pointer-events: auto;
+}
+
+.oasis-toast-card {
+    position: relative;
+    width: 380px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(25px) saturate(160%);
+    -webkit-backdrop-filter: blur(25px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.12),
+        0 0 20px rgba(45, 140, 111, 0.05);
+    padding: 16px;
+    overflow: hidden;
+    animation: toastSlideUp 0.3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes toastSlideUp {
+    from {
+        transform: translateY(100px) scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.toast-glass-effect {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent);
     pointer-events: none;
 }
 
-.luxury-top-left {
-    top: 10px;
-    left: 10px;
-    border-right: none;
-    border-bottom: none;
+.toast-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 200% 100%;
+    animation: toastShimmer 3s infinite linear;
+    pointer-events: none;
 }
 
-.luxury-bottom-right {
-    bottom: 10px;
-    right: 10px;
-    border-left: none;
-    border-top: none;
+@keyframes toastShimmer {
+    from {
+        background-position: -100% 0;
+    }
+
+    to {
+        background-position: 100% 0;
+    }
 }
 
-/* Specialized Layout Tweaks */
-.layout-cart .luxury-header-decor {
-    background: #065f46;
+.toast-content-box {
+    display: flex;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
 }
 
-.layout-cart .luxury-confirm-btn {
-    background: #c29a5b;
-    border-color: #c29a5b;
+.toast-status-badge {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #2d8c6f, #1a5c45);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    position: relative;
+    box-shadow: 0 8px 16px rgba(45, 140, 111, 0.25);
 }
 
-.layout-cart .luxury-confirm-btn:hover {
-    color: #c29a5b;
-    background: transparent;
+.ripple-ring {
+    position: absolute;
+    inset: -4px;
+    border: 2px solid #2d8c6f;
+    border-radius: 18px;
+    animation: ringRipple 2s infinite ease-out;
+}
+
+@keyframes ringRipple {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+.toast-details {
+    flex: 1;
+}
+
+.toast-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.toast-label-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: #2d8c6f;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.toast-exit-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    transition: 0.3s;
+}
+
+.toast-exit-btn:hover {
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.toast-summary {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #07241f;
+    line-height: 1.4;
+}
+
+.toast-btn-group {
+    margin-top: 4px;
+}
+
+.view-cart-action {
+    background: #07241f;
+    color: white;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+    box-shadow: 0 4px 12px rgba(7, 36, 31, 0.2);
+}
+
+.view-cart-action:hover {
+    background: #2d8c6f;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(45, 140, 111, 0.3);
+}
+
+.toast-timer-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.timer-progress {
+    height: 100%;
+    background: #2d8c6f;
+    width: 0;
+    animation: timerDrain 1.5s linear forwards;
+}
+
+@keyframes timerDrain {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .oasis-toast-wrapper {
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+    }
+
+    .oasis-toast-card {
+        width: auto;
+    }
 }

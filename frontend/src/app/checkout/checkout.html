@@ -1,0 +1,162 @@
+<div class="checkout-page">
+    <div class="checkout-container">
+        <!-- Left Side: Forms -->
+        <div class="checkout-forms">
+            <header class="checkout-header">
+                <div class="brand-logo">
+                    <img src="images/greenie-culture-logo.png" alt="Greenie Culture">
+                </div>
+            </header>
+
+            <section class="form-section">
+                <div class="section-header">
+                    <h2>Contact</h2>
+                    <a routerLink="/login" class="signin-link" *ngIf="!(authService.isLoggedIn$ | async)">Sign in</a>
+                </div>
+                <div class="input-group">
+                    <input type="email" [(ngModel)]="contactEmail" placeholder="Email" class="checkout-input">
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="news" checked>
+                    <label for="news">Email me with news and offers</label>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Delivery</h2>
+                <div class="input-group">
+                    <select class="checkout-input">
+                        <option value="India">India</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <input type="text" [(ngModel)]="firstName" placeholder="First name" class="checkout-input">
+                    <input type="text" [(ngModel)]="lastName" placeholder="Last name" class="checkout-input">
+                </div>
+                <div class="input-group">
+                    <input type="text" [(ngModel)]="address" placeholder="Address" class="checkout-input">
+                </div>
+                <div class="input-row triplet">
+                    <input type="text" [(ngModel)]="city" placeholder="City" class="checkout-input">
+                    <select class="checkout-input" [(ngModel)]="stateName">
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Delhi">Delhi</option>
+                        <!-- Add more states if needed -->
+                    </select>
+                    <input type="text" [(ngModel)]="pinCode" placeholder="PIN code" class="checkout-input">
+                </div>
+                <div class="input-group">
+                    <input type="tel" [(ngModel)]="phone" placeholder="Phone" class="checkout-input">
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="save-info">
+                    <label for="save-info">Save this information for next time</label>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2>Payment</h2>
+                <p class="payment-hint">All transactions are secure and encrypted.</p>
+
+                <div class="payment-options">
+                    <div class="payment-option" [class.selected]="selectedPayment === 'razorpay'"
+                        (click)="selectedPayment = 'razorpay'">
+                        <div class="option-header">
+                            <input type="radio" name="payment" [checked]="selectedPayment === 'razorpay'">
+                            <span>Razorpay Secure (UPI, Cards, Int'l Cards, Wallets)</span>
+                            <div class="payment-icons">
+                                <img src="https://cdn-icons-png.flaticon.com/128/9294/9294963.png" alt="Card">
+                                <img src="https://cdn-icons-png.flaticon.com/128/196/196578.png" alt="Visa">
+                            </div>
+                        </div>
+                        <div class="option-details" *ngIf="selectedPayment === 'razorpay'">
+                            <p>You'll be redirected to Razorpay Secure to complete your purchase.</p>
+                        </div>
+                    </div>
+
+                    <div class="payment-option" [class.selected]="selectedPayment === 'phonepe'"
+                        (click)="selectedPayment = 'phonepe'">
+                        <div class="option-header">
+                            <input type="radio" name="payment" [checked]="selectedPayment === 'phonepe'">
+                            <span>PhonePe Payment Gateway (UPI, Cards & NetBanking)</span>
+                            <div class="payment-icons">
+                                <img src="https://cdn-icons-png.flaticon.com/128/9295/9295058.png" alt="Wallet">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <button class="pay-now-btn" (click)="onPayNow()">Pay now</button>
+        </div>
+
+        <!-- Right Side: Order Summary -->
+        <aside class="order-summary">
+            <div class="summary-content">
+                <div class="items-list">
+                    <div class="summary-item" *ngFor="let item of items()">
+                        <div class="item-img-box">
+                            <img [src]="item.image" [alt]="item.name">
+                            <span class="item-qty-badge">{{ item.quantity }}</span>
+                        </div>
+                        <div class="item-info">
+                            <h3>{{ item.name }}</h3>
+                            <p class="planter-detail" *ngIf="item.planter">{{ item.planter }}</p>
+                        </div>
+                        <div class="item-price">
+                            ₹{{ item.price * item.quantity }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="promo-section">
+                    <input type="text" placeholder="Discount code or gift card" class="promo-input">
+                    <button class="apply-btn">Apply</button>
+                </div>
+
+                <div class="savings-banner">
+                    <i class="fas fa-tag"></i>
+                    <span>SAVE15 - Get 15% OFF</span>
+                    <button class="apply-tag">Apply</button>
+                </div>
+
+                <div class="totals-box">
+                    <div class="total-row">
+                        <span>Subtotal · {{ cartService.totalItems() }} items</span>
+                        <span>₹{{ totalAmount() }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Shipping</span>
+                        <span class="free-text">Enter shipping address</span>
+                    </div>
+                    <div class="total-row main-total">
+                        <span>Total</span>
+                        <div class="final-price">
+                            <span class="currency">INR</span>
+                            <strong>₹{{ totalAmount() }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trust-marks">
+                    <h3>10 Million+ Happy Customers Trust Us!</h3>
+                    <div class="trust-grid">
+                        <div class="trust-item">
+                            <img src="https://cdn-icons-png.flaticon.com/128/1554/1554591.png" alt="Guarantee">
+                            <span>14-Day Replacement</span>
+                        </div>
+                        <div class="trust-item">
+                            <img src="https://cdn-icons-png.flaticon.com/128/628/628324.png" alt="Plant">
+                            <span>Farm-Fresh Plants</span>
+                        </div>
+                        <div class="trust-item">
+                            <img src="https://cdn-icons-png.flaticon.com/128/709/709790.png" alt="Package">
+                            <span>Safe, Secure Packaging</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

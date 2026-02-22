@@ -1,0 +1,100 @@
+<div class="cart-overlay" [class.open]="isOpen" (click)="close()">
+    <div class="cart-drawer" [class.open]="isOpen" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <header class="cart-header">
+            <div class="header-left">
+                <div class="cart-logo-small">
+                    <img src="images/greenie-culture-logo.png" alt="Greenie Culture">
+                </div>
+                <div class="cart-title-container">
+                    <span class="cart-text">CART</span>
+                    <span class="cart-line"></span>
+                </div>
+                <span class="item-count" *ngIf="totalItems > 0">{{ totalItems }} {{ totalItems === 1 ? 'item' : 'items'
+                    }}</span>
+            </div>
+            <button class="close-btn" (click)="close()" title="Close cart">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <div class="cart-body">
+            <!-- Free Delivery Banner -->
+            <div class="delivery-banner" *ngIf="totalItems > 0">
+                <div class="banner-icon">
+                    <i class="fas fa-truck-fast"></i>
+                </div>
+                <div class="banner-text">
+                    Yay! you're getting <span>Free Delivery</span>
+                </div>
+            </div>
+
+            <!-- Empty Cart State -->
+            <div class="empty-cart" *ngIf="totalItems === 0">
+                <div class="empty-icon">
+                    <i class="fas fa-shopping-basket"></i>
+                </div>
+                <h3>Your basket is empty</h3>
+                <p>Start adding some green friends to your home!</p>
+                <button class="shop-now-btn" (click)="close()">SHOP NOW</button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div class="cart-items" *ngIf="totalItems > 0">
+                <div class="cart-item" *ngFor="let item of items">
+                    <div class="item-img">
+                        <img [src]="item.image" [alt]="item.name">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-header">
+                            <h4 class="item-name">{{ item.name }}</h4>
+                            <button class="remove-btn" (click)="removeItem(item)" title="Remove item">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div class="item-meta">
+                            <p class="unit-price" *ngIf="item.quantity > 1">₹{{ item.price }} / unit</p>
+                            <p class="item-details" *ngIf="item.planter">Pot: {{ item.planter | titlecase }}</p>
+                        </div>
+                        <div class="item-tags" *ngIf="item.tags && item.tags.length > 0">
+                            <span class="tag" [ngClass]="getTagClass(tag)" *ngFor="let tag of item.tags.slice(0, 2)">
+                                {{ tag }}
+                            </span>
+                        </div>
+
+                        <div class="item-actions">
+                            <div class="qty-control">
+                                <button class="qty-btn minus" (click)="updateQuantity(item, -1)"
+                                    [disabled]="item.quantity <= 0">-</button>
+                                <span class="qty">{{ item.quantity }}</span>
+                                <button class="qty-btn plus" (click)="updateQuantity(item, 1)">+</button>
+                            </div>
+                            <div class="item-price-group">
+                                <div class="price-stack">
+                                    <span class="current-price">₹{{ item.price * item.quantity }}</span>
+                                    <span class="old-total" *ngIf="item.originalPrice">₹{{ item.originalPrice *
+                                        item.quantity }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="cart-footer" *ngIf="totalItems > 0">
+            <div class="summary-line">
+                <span class="label">To Pay: ₹{{ totalAmount }}</span>
+                <span class="savings" *ngIf="totalSavings > 0">₹{{ totalSavings }} saved!</span>
+            </div>
+            <button class="checkout-btn" (click)="onCheckout()">
+                <span>CHECKOUT</span>
+                <span class="divider"></span>
+                <span>₹{{ totalAmount }}</span>
+            </button>
+        </footer>
+    </div>
+</div>

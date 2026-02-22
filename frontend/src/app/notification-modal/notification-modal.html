@@ -1,39 +1,68 @@
-<div class="luxury-notification-overlay" *ngIf="state.isVisible" (click)="$event.stopPropagation()">
-    <div class="luxury-modal-container" [class]="'layout-' + state.layout" (click)="$event.stopPropagation()">
+<!-- Modern Oasis Notification Overlay -->
+<div class="oasis-overlay" *ngIf="state.isVisible && state.layout !== 'cart'" (click)="onClose()">
+    <div class="oasis-modal-shell" [class]="'layout-' + state.layout" (click)="$event.stopPropagation()">
 
-        <!-- Luxury Decorative Header -->
-        <div class="luxury-header-decor">
-            <div class="gold-seal">
-                <i class="fas fa-certificate"></i>
-            </div>
-            <div class="heritage-line"></div>
-        </div>
+        <div class="prism-shimmer"></div>
 
-        <div class="luxury-modal-content">
-            <!-- Icon Section -->
-            <div class="luxury-icon-box" [ngClass]="state.type">
-                <i class="fas fa-check" *ngIf="state.type === 'success'"></i>
-                <i class="fas fa-info" *ngIf="state.type === 'info'"></i>
-                <i class="fas fa-exclamation" *ngIf="state.type === 'error'"></i>
+        <div class="oasis-modal-content">
+            <div class="oasis-visual-badge" [ngClass]="state.type">
+                <div class="badge-glow"></div>
+                <div class="badge-icon">
+                    <i class="fas fa-check" *ngIf="state.type === 'success'"></i>
+                    <i class="fas fa-info-circle" *ngIf="state.type === 'info'"></i>
+                    <i class="fas fa-exclamation-circle" *ngIf="state.type === 'error'"></i>
+                </div>
             </div>
 
-            <!-- Text Content -->
-            <div class="luxury-text-group">
-                <h3 class="luxury-modal-title">{{ state.title }}</h3>
-                <div class="luxury-title-underlay"></div>
-                <p class="luxury-modal-message">{{ state.message }}</p>
+            <div class="oasis-text-box">
+                <h2 class="oasis-title">{{ state.title }}</h2>
+                <div class="oasis-divider"></div>
+                <p class="oasis-message">{{ state.message }}</p>
             </div>
 
-            <!-- Professional Footer -->
-            <div class="luxury-modal-footer">
-                <button class="luxury-confirm-btn" (click)="onConfirm()">
-                    <span>{{ state.confirmLabel || 'CONTINUE' }}</span>
-                    <i class="fas fa-chevron-right"></i>
+            <footer class="oasis-footer">
+                <button class="oasis-btn" (click)="onConfirm()">
+                    {{ state.confirmLabel || 'CONTINUE' }}
+                    <i class="fas fa-arrow-right"></i>
                 </button>
+            </footer>
+        </div>
+
+        <div class="oasis-accent-line top"></div>
+        <div class="oasis-accent-line bottom"></div>
+    </div>
+</div>
+
+<!-- Premium Oasis Toast (Floating Message) -->
+<div class="oasis-toast-wrapper" *ngIf="state.isVisible && state.layout === 'cart'" [ngClass]="state.type">
+    <div class="oasis-toast-card">
+        <div class="toast-shimmer"></div>
+        <div class="toast-glass-effect"></div>
+
+        <div class="toast-content-box">
+            <div class="toast-status-badge">
+                <i class="fas fa-shopping-bag"></i>
+                <div class="ripple-ring"></div>
+            </div>
+
+            <div class="toast-details">
+                <div class="toast-top-bar">
+                    <span class="toast-label-tag">{{ state.title }}</span>
+                    <button class="toast-exit-btn" (click)="onClose()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="toast-summary">{{ state.message }}</p>
+                <div class="toast-btn-group">
+                    <button class="view-cart-action" (click)="onViewCart()">
+                        VIEW CART <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="luxury-corner luxury-top-left"></div>
-        <div class="luxury-corner luxury-bottom-right"></div>
+        <div class="toast-timer-bar">
+            <div class="timer-progress"></div>
+        </div>
     </div>
 </div>

@@ -416,7 +416,8 @@ export class CategoryNavComponent {
         }
 
         // Default: navigate to the parent category
-        return `/products/${category} Plants`;
+        const suffix = ['Seeds', 'Accessories', 'Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'].includes(category) ? '' : ' Plants';
+        return `/products/${this.productService.createSlug(category + suffix)}`;
     }
 
     getCategoryLink(category: string): string {
@@ -427,9 +428,15 @@ export class CategoryNavComponent {
         }
 
         // For other categories with products
-        const directCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories'];
+        const directCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening'];
         if (directCategories.includes(category)) {
             return `/products/${this.productService.createSlug(category + ' Plants')}`;
+        }
+
+        // For Seeds and Accessories, don't append " Plants"
+        const noSuffixCategories = ['Seeds', 'Accessories'];
+        if (noSuffixCategories.includes(category)) {
+            return `/products/${this.productService.createSlug(category)}`;
         }
 
         // Default

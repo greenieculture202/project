@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { CartService } from '../services/cart.service';
 
 @Component({
     selector: 'app-product-detail',
@@ -20,6 +21,7 @@ export class ProductDetailComponent {
     productService = inject(ProductService);
     authService = inject(AuthService);
     notificationService = inject(NotificationService);
+    cartService = inject(CartService);
 
     activeImageIndex = 0;
     showVideo = false; // State to toggle video view
@@ -173,12 +175,18 @@ export class ProductDetailComponent {
             );
             return;
         }
-        this.notificationService.show(
-            `Successfully added ${this.quantity} x ${this.product?.name} to your botanical collection!`,
-            'Added to Cart',
-            'success',
-            'cart'
-        );
+
+        if (this.product) {
+            this.cartService.addItem(this.product, this.quantity, this.selectedPlanter);
+
+            // Show toast notification instead of opening drawer
+            this.notificationService.show(
+                `"${this.product.name}" (${this.quantity}) has been added to your gardening collection.`,
+                'Added to Cart',
+                'success',
+                'cart'
+            );
+        }
     }
 
     buyNow() {
@@ -232,5 +240,9 @@ export class ProductDetailComponent {
 
     createSlug(name: string): string {
         return this.productService.createSlug(name);
+    }
+
+    getTagClass(tag: string): string {
+        return tag.toLowerCase().replace(/\s+/g, '-');
     }
 }
