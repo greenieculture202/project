@@ -6,11 +6,13 @@ import { IndoorOfferComponent } from './indoor-offer/indoor-offer';
 import { GardenOfferComponent } from './garden-offer/garden-offer';
 import { ToolGuideComponent } from './tool-guide/tool-guide';
 import { FloweringOfferComponent } from './flowering-offer/flowering-offer';
+import { OffersPageComponent } from './offers-page/offers-page';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
     { path: 'products/:category', component: ProductListingComponent },
     { path: 'product/:id', loadComponent: () => import('./product-detail/product-detail').then(m => m.ProductDetailComponent) },
+    { path: 'offers', component: OffersPageComponent },
     { path: 'bogo-offer', component: BogoOfferComponent },
     { path: 'indoor-offer', component: IndoorOfferComponent },
     { path: 'garden-offer', component: GardenOfferComponent },

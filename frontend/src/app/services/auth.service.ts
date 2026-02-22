@@ -7,7 +7,7 @@ import { tap } from 'rxjs/operators';
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:5000/api/auth';
+    private apiUrl = 'http://127.0.0.1:5005/api/auth';
 
     private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
     isLoggedIn$ = this.isLoggedInSubject.asObservable();

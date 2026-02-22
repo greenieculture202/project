@@ -6,25 +6,86 @@
       </button>
 
       <div class="slides-container">
-        <!-- Background image applied via inline style for each slide -->
         <div class="slide" *ngFor="let offer of offers; let i = index" [class.active]="currentSlide === i"
           [class.content-right]="offer.id === 3" [style.backgroundImage]="'url(' + offer.image + ')'">
 
+          <!-- Megaphone badge — premium version -->
+          <div class="megaphone-badge" [class.badge-right]="offer.id !== 3" [style.--badge-color]="offer.ribbonColor">
+
+            <!-- Circle with glow ring + megaphone icon -->
+            <div class="badge-horn">
+              <!-- Animated glow ring -->
+              <div class="horn-ring"></div>
+              <!-- Sparkle rays -->
+              <span class="horn-rays">
+                <span class="ray r1"></span>
+                <span class="ray r2"></span>
+                <span class="ray r3"></span>
+                <span class="ray r4"></span>
+              </span>
+              <!-- Icon: offer emoji -->
+              <span class="horn-icon">{{ offer.offerIcon }}</span>
+            </div>
+
+            <!-- Color ribbon with gradient + shimmer -->
+            <div class="badge-ribbon"
+              [style.background]="'linear-gradient(135deg,' + offer.ribbonColor + ' 0%,' + offer.accentColor + ' 100%)'">
+              <!-- Shimmer sweep -->
+              <div class="ribbon-shimmer"></div>
+              <div class="badge-ribbon-text">
+                <span class="badge-l1">{{ offer.ribbonL1 }}</span>
+                <span class="badge-l2">{{ offer.ribbonL2 }}</span>
+              </div>
+              <div class="badge-arrow"></div>
+            </div>
+          </div>
+
           <div class="slide-content">
             <div class="text-content">
-              <span class="offer-badge">Special Edition</span>
-              <h3 class="offer-title">{{ offer.title }}</h3>
-              <p class="offer-subtitle">{{ offer.subtitle }}</p>
 
-              <div class="discount-wrap">
-                <span class="discount-info">Get upto</span>
-                <span class="discount-val">{{ offer.discount }}</span>
+              <!-- ✅ TOP OFFER IDENTITY ROW -->
+              <div class="offer-identity-row">
+                <!-- Offer Type Pill -->
+                <span class="offer-type-pill" [style.background]="offer.offerTypeColor" [style.color]="'#000'">
+                  <span class="pill-icon">{{ offer.offerIcon }}</span>
+                  {{ offer.offerType }}
+                </span>
+                <!-- Live Deal Badge -->
+                <span class="live-deal-badge">
+                  <span class="live-dot"></span>
+                  LIVE DEAL
+                </span>
               </div>
 
-              <a [routerLink]="offer.link" class="shop-btn">
+              <!-- Main Title -->
+              <h3 class="offer-title">{{ offer.title }}</h3>
+
+              <!-- Tagline -->
+              <p class="offer-tagline">{{ offer.tagLine }}</p>
+
+              <!-- Subtitle -->
+              <p class="offer-subtitle">{{ offer.subtitle }}</p>
+
+              <!-- ✅ BIG SAVINGS BADGE -->
+              <div class="savings-block">
+                <div class="savings-icon-wrap" [style.background]="offer.savingsBadgeBg">
+                  <span class="savings-icon">{{ offer.offerIcon }}</span>
+                </div>
+                <div class="savings-text-wrap">
+                  <span class="savings-label">Special Offer</span>
+                  <span class="savings-value">{{ offer.discount }}</span>
+                  <span class="savings-badge" [style.background]="offer.savingsBadgeBg">
+                    {{ offer.savingsBadge }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- CTA Button -->
+              <a [routerLink]="offer.link" class="shop-btn" [style.background]="offer.accentColor">
                 {{ offer.buttonText }}
-                <i class="fas fa-shopping-cart"></i>
+                <i class="fas fa-arrow-right"></i>
               </a>
+
             </div>
           </div>
         </div>
@@ -35,10 +96,23 @@
       </button>
     </div>
 
-    <div class="dots-container">
-      <button *ngFor="let offer of offers; let i = index" class="dot" [class.active]="currentSlide === i"
-        (click)="goToSlide(i)">
-      </button>
+    <!-- Dots + Slide Indicators -->
+    <div class="bottom-row">
+      <div class="dots-container">
+        <button *ngFor="let offer of offers; let i = index" class="dot" [class.active]="currentSlide === i"
+          (click)="goToSlide(i)"
+          [style.background]="currentSlide === i ? offer.offerTypeColor : 'rgba(255,255,255,0.4)'">
+          <span class="dot-icon" *ngIf="currentSlide === i">{{ offer.offerIcon }}</span>
+        </button>
+      </div>
+
+      <div class="view-all-offers-row">
+        <a routerLink="/offers" class="view-all-offers-btn">
+          <span>View All Offers</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
     </div>
+
   </div>
 </section>

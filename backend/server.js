@@ -16,6 +16,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'greenie-secret-key-123';
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
 mongoose.connect(MONGODB_URI)
@@ -105,14 +111,27 @@ app.get('/api/products', async (req, res) => {
 
         let query = {};
         if (category) {
-            // Match category OR search within tags
-            const regex = new RegExp(category, 'i');
+            const decodedCategory = decodeURIComponent(category);
+            // Replace hyphens with space or allow for any separator to handle slugs like 'flower-seeds'
+            const searchPattern = decodedCategory.replace(/-/g, '[-\\s]');
+            const regex = new RegExp(`^${searchPattern}$`, 'i');
+
+            // Also allow partial match for tags
+            const tagRegex = new RegExp(decodedCategory.replace(/-/g, ' '), 'i');
+
             query = {
                 $or: [
                     { category: { $regex: regex } },
-                    { tags: { $regex: regex } }
+                    { tags: { $regex: tagRegex } }
                 ]
             };
+
+            // Fallback: if category is 'Indoor Plants' or 'XL Plants' etc, 
+            // and searchPattern didn't match, try a more direct match
+            if (decodedCategory.toLowerCase().includes('plants')) {
+                const simpleCat = decodedCategory.replace(/[-]/g, ' ');
+                query.$or.push({ category: { $regex: new RegExp(simpleCat, 'i') } });
+            }
         }
 
         let productsQuery = Product.find(query);
@@ -227,6 +246,6 @@ app.post('/api/auth/forgot-password', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
 });

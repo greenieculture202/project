@@ -12,6 +12,16 @@ interface Offer {
     image: string;
     backgroundColor: string;
     link: string;
+    offerIcon: string;
+    offerType: string;
+    offerTypeColor: string;
+    accentColor: string;
+    tagLine: string;
+    savingsBadge: string;
+    savingsBadgeBg: string;
+    ribbonL1: string;       // corner ribbon line 1
+    ribbonL2: string;       // corner ribbon line 2
+    ribbonColor: string;    // ribbon gradient color
 }
 
 @Component({
@@ -32,12 +42,22 @@ export class OffersSliderComponent implements OnInit {
             id: 1,
             title: 'BOGO OFFER',
             subtitle: 'Buy 2 XL Plants & Get',
-            discount: 'GREENIE MEDIUM PLANT',
+            discount: 'GREENIE MEDIUM PLANT FREE',
             description: 'Get a premium medium plant free with XL plants',
             buttonText: 'GRAB OFFER',
             image: '/images/bogo_offer_v2.jpg',
             backgroundColor: '#064e3b',
-            link: '/bogo-offer'
+            link: '/bogo-offer',
+            offerIcon: '🎁',
+            offerType: 'BUY 2 GET 1',
+            offerTypeColor: '#fbbf24',
+            accentColor: '#10b981',
+            tagLine: '🌿 Exclusive Plant Gift Deal',
+            savingsBadge: 'Save ₹499!',
+            savingsBadgeBg: '#ef4444',
+            ribbonL1: 'BUY 2',
+            ribbonL2: 'GET 1',
+            ribbonColor: '#16a34a'
         },
         {
             id: 2,
@@ -48,7 +68,17 @@ export class OffersSliderComponent implements OnInit {
             buttonText: 'SHOP NOW',
             image: '/images/indoor_jungle_offer.jpg',
             backgroundColor: '#111827',
-            link: '/indoor-offer'
+            link: '/indoor-offer',
+            offerIcon: '🏺',
+            offerType: 'FREE GIFT',
+            offerTypeColor: '#a78bfa',
+            accentColor: '#8b5cf6',
+            tagLine: '🏠 Premium Designer Pot Included',
+            savingsBadge: 'Pot Worth ₹399 FREE',
+            savingsBadgeBg: '#7c3aed',
+            ribbonL1: 'FREE',
+            ribbonL2: 'GIFT',
+            ribbonColor: '#7c3aed'
         },
         {
             id: 3,
@@ -59,7 +89,17 @@ export class OffersSliderComponent implements OnInit {
             buttonText: 'SHOP TOOLKITS',
             image: '/images/garden_essentials_offer.jpg',
             backgroundColor: '#78350f',
-            link: '/garden-offer'
+            link: '/garden-offer',
+            offerIcon: '🛠️',
+            offerType: 'FLAT 40% OFF',
+            offerTypeColor: '#fb923c',
+            accentColor: '#f59e0b',
+            tagLine: '⚒️ Pro-Grade Tools Sale',
+            savingsBadge: '40% OFF Today!',
+            savingsBadgeBg: '#dc2626',
+            ribbonL1: '40%',
+            ribbonL2: 'OFF',
+            ribbonColor: '#dc2626'
         },
         {
             id: 4,
@@ -70,7 +110,17 @@ export class OffersSliderComponent implements OnInit {
             buttonText: 'START PLANTING',
             image: '/images/flowering_bonanza_offer.jpg',
             backgroundColor: '#4c1d95',
-            link: '/flowering-offer'
+            link: '/flowering-offer',
+            offerIcon: '🌸',
+            offerType: '70% OFF + FREE',
+            offerTypeColor: '#f472b6',
+            accentColor: '#ec4899',
+            tagLine: '🌺 Seeds + Free Fertilizer Bundle',
+            savingsBadge: '70% OFF Seeds!',
+            savingsBadgeBg: '#be185d',
+            ribbonL1: '70%',
+            ribbonL2: 'OFF',
+            ribbonColor: '#be185d'
         }
     ];
 
@@ -87,7 +137,7 @@ export class OffersSliderComponent implements OnInit {
     startAutoPlay() {
         this.autoPlayInterval = setInterval(() => {
             this.nextSlide();
-        }, 3000); // Change slide every 3 seconds
+        }, 4000);
     }
 
     stopAutoPlay() {
@@ -98,7 +148,6 @@ export class OffersSliderComponent implements OnInit {
 
     nextSlide() {
         this.currentSlide = (this.currentSlide + 1) % this.offers.length;
-        this.resetAutoPlay();
     }
 
     prevSlide() {
@@ -116,11 +165,6 @@ export class OffersSliderComponent implements OnInit {
         this.startAutoPlay();
     }
 
-    onMouseEnter() {
-        // Removed pause on hover to keep it sliding as requested
-    }
-
-    onMouseLeave() {
-        // Already sliding, no action needed
-    }
+    onMouseEnter() { }
+    onMouseLeave() { }
 }

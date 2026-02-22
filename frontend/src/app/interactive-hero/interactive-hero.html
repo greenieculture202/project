@@ -1,84 +1,106 @@
-<section class="interactive-hero-section">
-    <div class="hero-container">
-        <!-- Left Column: Text Content -->
-        <div class="hero-left">
-            <div class="placement-badge" (click)="scrollToPlacements()">
-                <div class="badge-icon-wrapper">
-                    <span class="badge-text">EXPLORE BY PLACEMENT</span>
-                    <i class="fas fa-play-circle"></i>
-                </div>
+<section class="cinematic-hero">
 
-                <!-- Preview Rail (Tiny Bubbles) -->
-                <div class="preview-rail">
-                    <div class="preview-bubble" *ngFor="let item of previewPlacements" [title]="item.name"
-                        (click)="openVideoPreview(item, $event)">
-                        <img [src]="item.image" [alt]="item.name">
-                        <div class="play-indicator"><i class="fas fa-play"></i></div>
-                    </div>
+    <!-- ── CINEMATIC IMAGE LAYERS (Ken Burns crossfade) ── -->
+    <div class="c-layers">
+        <div class="c-layer cl1"></div>
+        <div class="c-layer cl2"></div>
+        <div class="c-layer cl3"></div>
+        <div class="c-layer cl4"></div>
+        <div class="c-layer cl5"></div>
+    </div>
+
+    <!-- ── OVERLAYS ── -->
+    <div class="c-vignette"></div>
+    <div class="c-gradient-left"></div>
+    <div class="c-gradient-bottom"></div>
+
+    <!-- ── FLOATING PARTICLES ── -->
+    <div class="c-particles" aria-hidden="true">
+        <span class="cp cp1"></span><span class="cp cp2"></span>
+        <span class="cp cp3"></span><span class="cp cp4"></span>
+        <span class="cp cp5"></span><span class="cp cp6"></span>
+        <span class="cp cp7"></span><span class="cp cp8"></span>
+        <span class="cp cp9"></span><span class="cp cp10"></span>
+    </div>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="c-content">
+
+        <!-- LEFT: Text -->
+        <div class="c-left">
+
+            <!-- Placement entry pill -->
+            <div class="c-pill" (click)="scrollToPlacements()">
+                <span class="pill-dot"></span>
+                <span class="pill-label">EXPLORE BY PLACEMENT</span>
+                <i class="fas fa-chevron-right pill-arrow"></i>
+            </div>
+
+            <!-- Preview bubbles -->
+            <div class="c-bubbles">
+                <div class="c-bubble" *ngFor="let item of previewPlacements" [title]="item.name"
+                    (click)="openVideoPreview(item, $event)">
+                    <img [src]="item.image" [alt]="item.name">
+                    <div class="bubble-overlay"><i class="fas fa-play"></i></div>
+                    <span class="bubble-label">{{ item.name }}</span>
                 </div>
             </div>
-            <h4 class="hero-tagline">SELL ANYTHING</h4>
-            <h1 class="hero-title">
-                All you need<br>
-                to power your<br>
-                ecommerce<br>
-                website
+
+            <!-- Hero text -->
+            <div class="c-tagline">🌿 NATURE DELIVERED TO YOUR DOOR</div>
+
+            <h1 class="c-title">
+                <span class="ct-line ct-l1">Where Plants</span>
+                <span class="ct-line ct-l2">Meet <em class="ct-accent">Passion</em></span>
+                <span class="ct-line ct-l3">&amp; Purpose</span>
             </h1>
-            <p class="hero-description">
-                Whether you're just getting started or are an established brand, our powerful platform helps your
-                business grow.
+
+            <p class="c-desc">
+                Curated indoor &amp; outdoor plants, hand-picked for Indian homes.
+                Free delivery · Expert care guides · 60-day happiness guarantee.
             </p>
-            <button class="btn-get-started">GET STARTED</button>
-        </div>
 
-        <!-- Right Column: Product Card Mockup -->
-        <div class="hero-right">
-            <div class="product-card-mockup">
-                <div class="card-layout">
-                    <!-- Image Slider -->
-                    <div class="card-image-area">
-                        <div class="slider-track" [style.transform]="'translateY(' + (currentSlide * 100) + '%)'">
-                            <div *ngFor="let img of heroImages; let i = index" class="slider-image-container">
-                                <div class="slider-image" [class]="imageShapes[i]"
-                                    [style.backgroundImage]="'url(' + img + ')'">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="c-actions">
+                <button class="c-btn-primary" (click)="scrollToPlacements()">
+                    <span>Shop Now</span>
+                    <i class="fas fa-leaf"></i>
+                </button>
+                <button class="c-btn-ghost">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Watch Our Story</span>
+                </button>
+            </div>
 
-                    <!-- Card Details -->
-                    <div class="card-details">
-                        <div class="breadcrumbs">Shop > Orchid</div>
-
-                        <div class="price-tag">$45.00</div>
-                        <h2 class="card-title">Orchid</h2>
-                        <p class="card-desc">
-                            Specifically chosen to thrive indoors and hardy enough to miss a watering or two, our plants
-                            are easy for anyone to care for.
-                        </p>
-
-                        <div class="quantity-selector">
-                            <label>Quantity:</label>
-                            <input type="number" value="1" readonly>
-                        </div>
-
-                        <button class="btn-add-cart">Add to Cart</button>
-                    </div>
+            <!-- Stats row -->
+            <div class="c-stats">
+                <div class="c-stat"><span class="stat-num">10K+</span><span class="stat-lbl">Happy Customers</span>
                 </div>
+                <div class="c-stat-sep"></div>
+                <div class="c-stat"><span class="stat-num">500+</span><span class="stat-lbl">Plant Varieties</span>
+                </div>
+                <div class="c-stat-sep"></div>
+                <div class="c-stat"><span class="stat-num">4.9★</span><span class="stat-lbl">Avg. Rating</span></div>
+            </div>
+        </div>
+
+
+    </div><!-- /c-content -->
+
+    <!-- Scroll indicator -->
+    <div class="c-scroll-hint">
+        <span class="scroll-mouse"><span class="scroll-wheel"></span></span>
+        <span class="scroll-text">Scroll to explore</span>
+    </div>
+
+    <!-- Video Modal -->
+    <div class="c-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="c-modal" (click)="$event.stopPropagation()">
+            <button class="c-modal-close" (click)="closeModal()">✕</button>
+            <h3>{{ selectedPlacementName }}</h3>
+            <div class="c-modal-player">
+                <video [src]="selectedVideo" controls autoplay></video>
             </div>
         </div>
     </div>
 
-    <!-- Video Modal - Immersive Experience -->
-    <div class="video-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
-        <div class="video-modal-content" (click)="$event.stopPropagation()">
-            <button class="modal-close-btn" (click)="closeModal()">&times;</button>
-            <div class="video-header">
-                <h3>{{ selectedPlacementName }} Video</h3>
-            </div>
-            <div class="video-player-box">
-                <video [src]="selectedVideo" controls autoplay class="preview-video"></video>
-            </div>
-        </div>
-    </div>
 </section>

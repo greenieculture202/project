@@ -15,8 +15,8 @@ export class GardenOfferComponent implements OnInit {
     gardenTools: Product[] = [];
 
     ngOnInit() {
-        // Fetch products from 'Garden Toolkits' category, limit to 6
-        this.productService.getProducts('Garden Toolkits', 6).subscribe(products => {
+        // Fetch products from 'Gardening Tools' category, limit to 6
+        this.productService.getProducts('Gardening Tools', 6).subscribe(products => {
             this.gardenTools = products;
         });
     }

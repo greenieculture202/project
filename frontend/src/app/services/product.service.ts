@@ -23,22 +23,58 @@ export interface Product {
 })
 export class ProductService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = 'http://127.0.0.1:5005/api';
 
     // Fallback mock data in case backend is not available
     private fallbackProducts: { [key: string]: Product[] } = {
         'Bestsellers': [
             {
-                name: 'Majestic Zen Garden',
+                name: 'Offline-Majestic Zen Garden',
                 price: '1999',
                 originalPrice: '2499',
                 discount: '20% OFF',
-                discountPercent: 20,
-                image: 'https://tse2.mm.bing.net/th/id/OIP.X3jDS9J58Q4ilo4vgjh-RAHaE5?rs=1&pid=ImgDetMain&o=7&rm=3',
-                hoverImage: 'https://thewowstyle.com/wp-content/uploads/2015/01/nature-images..jpg',
-                category: 'Bestsellers',
-                videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-                tags: ['Easy Care', 'Modern Decor', 'Perfect Gift']
+                image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=600&q=80',
+                category: 'Bestsellers'
+            }
+        ],
+        'XL Plants': [
+            {
+                name: 'Offline-Fiddle Leaf Fig XL',
+                price: '2499',
+                originalPrice: '3299',
+                discount: '24% OFF',
+                image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894?auto=format&fit=crop&w=800&q=80',
+                category: 'XL Plants'
+            }
+        ],
+        'Indoor Plants': [
+            {
+                name: 'Offline-Peace Lily',
+                price: '399',
+                originalPrice: '599',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=600&q=80',
+                category: 'Indoor Plants'
+            }
+        ],
+        'Gardening Tools': [
+            {
+                name: 'Offline-Professional Trowel',
+                price: '499',
+                originalPrice: '799',
+                discount: '37% OFF',
+                image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=600&q=80',
+                category: 'Gardening Tools'
+            }
+        ],
+        'Flower Seeds': [
+            {
+                name: 'Offline-Marigold Seeds',
+                price: '49',
+                originalPrice: '99',
+                discount: '50% OFF',
+                image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=600&q=80',
+                category: 'Flower Seeds'
             }
         ]
     };

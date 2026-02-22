@@ -1,0 +1,126 @@
+<div class="offers-page">
+
+  <!-- Page Hero -->
+  <section class="page-hero">
+    <div class="hero-bg-pattern"></div>
+    <div class="page-hero-content">
+      <span class="hero-eyebrow">🎉 Limited Time Deals</span>
+      <h1>Exclusive <span class="hero-accent">Offers</span></h1>
+      <p class="hero-sub">Handpicked deals for plant lovers — premium quality at unbeatable prices</p>
+      <div class="hero-divider">
+        <span class="leaf-icon">🌿</span>
+        <span class="leaf-icon">🌱</span>
+        <span class="leaf-icon">🌿</span>
+      </div>
+    </div>
+    <div class="floating-shapes">
+      <div class="shape s1"></div>
+      <div class="shape s2"></div>
+      <div class="shape s3"></div>
+      <div class="shape s4"></div>
+    </div>
+  </section>
+
+  <!-- Offer Cards -->
+  <section class="offers-grid-section">
+    <div class="offers-container">
+
+      <div class="offer-card" *ngFor="let offer of offers; let i = index" [class.odd]="i % 2 === 0"
+        [class.even]="i % 2 !== 0">
+
+        <!-- IMAGE PANEL -->
+        <div class="offer-image-panel" [class.img-right]="i % 2 !== 0">
+          <img [src]="offer.image" [alt]="offer.title">
+
+          <!-- Corner fold ribbon — top-right of image -->
+          <div class="corner-ribbon-wrap">
+            <div class="corner-ribbon"
+              [style.background]="'linear-gradient(135deg,' + offer.accentColor + ' 0%,rgba(0,0,0,0.15) 200%)'">
+              <span class="ribbon-l1">{{ offer.tag }}</span>
+            </div>
+          </div>
+
+          <!-- Tag pill — top LEFT -->
+          <div class="tag-pill" [style.background]="offer.tagBg" [style.color]="offer.tagText">
+            {{ offer.timer }}
+          </div>
+
+          <!-- Timer chip — bottom LEFT -->
+          <div class="live-chip" [style.background]="offer.timerBg">
+            <span class="chip-dot"></span>
+            <span [style.color]="offer.accentText">{{ offer.timer }}</span>
+          </div>
+        </div>
+
+        <!-- DIAGONAL SEPARATOR -->
+        <div class="diagonal-sep" [style.background]="offer.cardBg"></div>
+
+        <!-- CONTENT PANEL -->
+        <div class="offer-content-panel" [class.content-left]="i % 2 !== 0" [style.background]="offer.cardBg">
+
+          <!-- Ghost watermark — bottom corner, very subtle -->
+          <div class="content-watermark" [style.color]="offer.accentColor">
+            {{ offer.tag }}
+          </div>
+
+          <!-- Deco circle — bottom corner -->
+          <div class="deco-circle" [style.background]="offer.accentLight"></div>
+
+          <!-- ── Main Content ── -->
+          <div class="offer-content-inner">
+
+            <!-- Badge -->
+            <span class="offer-badge" [style.background]="offer.accentLight" [style.color]="offer.accentText">
+              {{ offer.badge }}
+            </span>
+
+            <!-- Title + subtitle -->
+            <div class="offer-title-block">
+              <h2 class="offer-main-title">{{ offer.title }}</h2>
+              <p class="offer-subtitle">{{ offer.subtitle }}</p>
+            </div>
+
+            <!-- Discount Pill -->
+            <div class="discount-pill" [style.background]="offer.accentLight" [style.color]="offer.accentText"
+              [style.borderColor]="offer.accentColor">
+              🏷️ {{ offer.discountLine }}
+            </div>
+
+            <!-- Features -->
+            <ul class="offer-features">
+              <li *ngFor="let feature of offer.features">
+                <span class="check-icon" [style.background]="offer.accentColor">✓</span>
+                <span>{{ feature }}</span>
+              </li>
+            </ul>
+
+            <!-- Trust strip + CTA row -->
+            <div class="bottom-row">
+              <a [routerLink]="offer.ctaLink" class="offer-cta-btn" [style.background]="offer.accentColor">
+                {{ offer.ctaText }} <span class="arrow-icon">→</span>
+              </a>
+              <div class="trust-strip">
+                <span class="trust-item">🔒 Secure</span>
+                <span class="trust-item">⭐ Premium</span>
+                <span class="trust-item">🚚 Fast</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Banner -->
+  <section class="bottom-banner">
+    <div class="banner-content">
+      <span class="banner-icon">🌱</span>
+      <h3>More offers added every week!</h3>
+      <p>Follow our latest collections to never miss a deal</p>
+      <a routerLink="/" class="banner-btn">← Back to Home</a>
+    </div>
+  </section>
+
+</div>
