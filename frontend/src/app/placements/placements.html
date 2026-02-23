@@ -6,7 +6,7 @@
         <div class="placements-grid">
             <div class="placement-card" *ngFor="let item of placements; let i = index" [class]="'card-' + i">
                 <div class="card-image-wrapper">
-                    <img [src]="item.image" [alt]="item.name" class="placement-image">
+                    <img [src]="item.image" [alt]="item.name" class="placement-image" loading="lazy">
                     <div class="card-overlay">
                         <p class="placement-desc">{{ item.description.substring(0, 60) }}...</p>
                         <button class="video-btn" (click)="openVideo(item)">

@@ -1,23 +1,16 @@
 import { Routes } from '@angular/router';
-import { ProductListingComponent } from './product-listing/product-listing';
 import { HomeComponent } from './home/home';
-import { BogoOfferComponent } from './bogo-offer/bogo-offer';
-import { IndoorOfferComponent } from './indoor-offer/indoor-offer';
-import { GardenOfferComponent } from './garden-offer/garden-offer';
-import { ToolGuideComponent } from './tool-guide/tool-guide';
-import { FloweringOfferComponent } from './flowering-offer/flowering-offer';
-import { OffersPageComponent } from './offers-page/offers-page';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent },
-    { path: 'products/:category', component: ProductListingComponent },
+    { path: 'products/:category', loadComponent: () => import('./product-listing/product-listing').then(m => m.ProductListingComponent) },
     { path: 'product/:id', loadComponent: () => import('./product-detail/product-detail').then(m => m.ProductDetailComponent) },
-    { path: 'offers', component: OffersPageComponent },
-    { path: 'bogo-offer', component: BogoOfferComponent },
-    { path: 'indoor-offer', component: IndoorOfferComponent },
-    { path: 'garden-offer', component: GardenOfferComponent },
-    { path: 'tool-guide', component: ToolGuideComponent },
-    { path: 'flowering-offer', component: FloweringOfferComponent },
+    { path: 'offers', loadComponent: () => import('./offers-page/offers-page').then(m => m.OffersPageComponent) },
+    { path: 'bogo-offer', loadComponent: () => import('./bogo-offer/bogo-offer').then(m => m.BogoOfferComponent) },
+    { path: 'indoor-offer', loadComponent: () => import('./indoor-offer/indoor-offer').then(m => m.IndoorOfferComponent) },
+    { path: 'garden-offer', loadComponent: () => import('./garden-offer/garden-offer').then(m => m.GardenOfferComponent) },
+    { path: 'tool-guide', loadComponent: () => import('./tool-guide/tool-guide').then(m => m.ToolGuideComponent) },
+    { path: 'flowering-offer', loadComponent: () => import('./flowering-offer/flowering-offer').then(m => m.FloweringOfferComponent) },
     { path: 'login', loadComponent: () => import('./login/login').then(m => m.LoginComponent) },
     { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) },
     { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) }

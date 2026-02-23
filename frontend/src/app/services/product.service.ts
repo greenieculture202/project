@@ -136,6 +136,14 @@ export class ProductService {
         }
 
         return this.http.get<Product[]>(url).pipe(
+            map(products => {
+                // Populate cache
+                products.forEach(p => {
+                    const slug = p.slug || this.convertToSlug(p.name);
+                    this.productCache.set(slug, p);
+                });
+                return products;
+            }),
             catchError(error => {
                 console.error('Error fetching products:', error);
                 // Return fallback data if backend is unavailable
@@ -147,6 +155,15 @@ export class ProductService {
     // Get all products grouped by category
     getAllProductsMap(): Observable<{ [key: string]: Product[] }> {
         return this.http.get<{ [key: string]: Product[] }>(`${this.apiUrl}/products/map`).pipe(
+            map(productMap => {
+                Object.values(productMap).forEach(products => {
+                    products.forEach(p => {
+                        const slug = p.slug || this.convertToSlug(p.name);
+                        this.productCache.set(slug, p);
+                    });
+                });
+                return productMap;
+            }),
             catchError(error => {
                 console.error('Error fetching product map:', error);
                 return of(this.fallbackProducts);
@@ -165,13 +182,26 @@ export class ProductService {
 
         return this.http.get<Product>(`${this.apiUrl}/products/slug/${slug}`).pipe(
             map(product => {
-                if (product) {
+                if (product && product._id) {
                     this.productCache.set(slug, product);
+                    return product;
                 }
-                return product;
+                return null;
             }),
             catchError(error => {
                 console.error('Error fetching product by slug:', error);
+
+                // Fallback attempt: if backend fails, check if we have it in our static fallback list
+                for (const category in this.fallbackProducts) {
+                    const found = this.fallbackProducts[category].find(
+                        p => (p.slug === slug) || (this.convertToSlug(p.name) === slug)
+                    );
+                    if (found) {
+                        this.productCache.set(slug, found);
+                        return of(found);
+                    }
+                }
+
                 return of(null);
             })
         );
@@ -210,7 +240,12 @@ export class ProductService {
     searchProducts(term: string): Observable<Product[]> {
         if (!term || term.length < 2) return of([]);
         return this.http.get<Product[]>(`${this.apiUrl}/products/search?q=${encodeURIComponent(term)}`).pipe(
-            map(products => products.map(p => ({ ...p, slug: p.slug || this.convertToSlug(p.name) })))
+            map(products => products.map(p => {
+                const sl = p.slug || this.convertToSlug(p.name);
+                const prod = { ...p, slug: sl };
+                this.productCache.set(sl, prod);
+                return prod;
+            }))
         );
     }
 
@@ -220,6 +255,14 @@ export class ProductService {
             return of([]);
         }
         // Use the limit param in the API call
-        return this.http.get<Product[]>(`${this.apiUrl}/products?category=${encodeURIComponent(category)}&limit=${limit}`);
+        return this.http.get<Product[]>(`${this.apiUrl}/products?category=${encodeURIComponent(category)}&limit=${limit}`).pipe(
+            map(products => {
+                products.forEach(p => {
+                    const slug = p.slug || this.convertToSlug(p.name);
+                    this.productCache.set(slug, p);
+                });
+                return products;
+            })
+        );
     }
 }

@@ -8,8 +8,9 @@
     <div class="product-grid">
         <a class="product-card" *ngFor="let product of products" [routerLink]="['/product', getSlug(product.name)]">
             <div class="image-container">
-                <img [src]="product.image" [alt]="product.name" class="product-img main-img">
-                <img [src]="product.hoverImage || product.image" [alt]="product.name" class="product-img hover-img">
+                <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">
+                <img [src]="product.hoverImage || product.image" [alt]="product.name" class="product-img hover-img"
+                    loading="lazy">
                 <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
             </div>
             <div class="product-info">

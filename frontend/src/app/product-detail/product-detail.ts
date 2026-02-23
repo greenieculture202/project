@@ -1,5 +1,5 @@
 
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
@@ -80,12 +80,15 @@ export class ProductDetailComponent {
     currentPlanterImage = '';
     quantity = 1;
 
-    constructor() {
+    constructor() { }
+
+    ngOnInit() {
         this.route.params.subscribe(params => {
             const slug = params['id'];
             if (slug) {
                 window.scrollTo(0, 0);
                 this.isLoading = true;
+
                 this.productService.getProductBySlug(slug).subscribe({
                     next: (product) => {
                         this.product = product || undefined;

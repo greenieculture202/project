@@ -23,7 +23,7 @@
             <div class="thumbnails-bottom">
                 <div *ngFor="let img of thumbnails; let i = index" class="thumbnail-item"
                     [class.active]="i === activeImageIndex && !showVideo" (click)="setActiveImage(i)">
-                    <img [src]="img" [alt]="product.name">
+                    <img [src]="img" [alt]="product.name" loading="lazy">
                 </div>
 
                 <!-- Video Thumbnail (if product has video) -->
@@ -33,7 +33,7 @@
                         <i class="fas fa-play"></i>
                     </div>
                     <!-- Use main product image as video thumbnail poster -->
-                    <img [src]="product.image" alt="Watch Video">
+                    <img [src]="product.image" alt="Watch Video" loading="lazy">
                 </div>
             </div>
 
@@ -139,7 +139,7 @@
         <div class="related-products-grid">
             <div class="product-card" *ngFor="let p of relatedProducts" [routerLink]="['/product', createSlug(p.name)]">
                 <div class="card-image">
-                    <img [src]="p.image" [alt]="p.name">
+                    <img [src]="p.image" [alt]="p.name" loading="lazy">
                     <span class="card-discount" *ngIf="p.discount">{{ p.discount }}</span>
                 </div>
                 <div class="card-details">
@@ -159,7 +159,7 @@
     </div>
 </div>
 
-<div *ngIf="!product" style="padding: 100px; text-align: center;">
+<div *ngIf="!isLoading && !product" style="padding: 100px; text-align: center;">
     <h2>Product Not Found</h2>
     <p>We couldn't find the product you're looking for.</p>
     <a routerLink="/" style="color: #2e7d32; text-decoration: underline;">Go Back Home</a>
