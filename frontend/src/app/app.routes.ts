@@ -15,5 +15,6 @@ export const routes: Routes = [
     { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) },
     { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) },
     { path: 'about-us', loadComponent: () => import('./about-us/about-us').then(m => m.AboutUsComponent) },
-    { path: 'contact-us', loadComponent: () => import('./contact-us/contact-us').then(m => m.ContactUsComponent) }
+    { path: 'contact-us', loadComponent: () => import('./contact-us/contact-us').then(m => m.ContactUsComponent) },
+    { path: 'placements', loadComponent: () => import('./placements/placements').then(m => m.PlacementsComponent) }
 ];
