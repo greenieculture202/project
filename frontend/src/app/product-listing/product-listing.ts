@@ -29,8 +29,14 @@ export class ProductListingComponent {
         });
     }
 
+    isLoading: boolean = true;
+    error: string = '';
+
     loadProducts() {
-        // Map of slugs to exact category names (for categories with special characters)
+        this.isLoading = true;
+        this.error = '';
+
+        // Map of slugs to exact category names
         const slugToCategoryMap: { [key: string]: string } = {
             'soil--growing-media': 'Soil & Growing Media',
             'soil-growing-media': 'Soil & Growing Media',
@@ -42,10 +48,8 @@ export class ProductListingComponent {
             'gardening-plants': 'Gardening'
         };
 
-        // First check if we have a direct mapping
         let categoryName = slugToCategoryMap[this.displayCategory.toLowerCase()];
 
-        // If no direct mapping, convert slug to proper category name (e.g., 'vegetable-seeds' -> 'Vegetable Seeds')
         if (!categoryName) {
             categoryName = this.displayCategory
                 .split('-')
@@ -53,15 +57,20 @@ export class ProductListingComponent {
                 .join(' ');
         }
 
-        this.productService.getProducts(categoryName).subscribe(products => {
-            this.products = products;
-
-            // If no products found (bad URL), maybe redirect or show empty
-            if (this.products.length === 0) {
-                this.displayCategory = 'Product Not Found';
-            } else {
-                // Update display category to proper name
-                this.displayCategory = categoryName;
+        this.productService.getProducts(categoryName).subscribe({
+            next: (products) => {
+                this.products = products;
+                this.isLoading = false;
+                if (this.products.length === 0) {
+                    this.displayCategory = 'Product Not Found';
+                } else {
+                    this.displayCategory = categoryName;
+                }
+            },
+            error: (err) => {
+                console.error('Error loading listing:', err);
+                this.error = 'Failed to load products. Please check your connection.';
+                this.isLoading = false;
             }
         });
     }

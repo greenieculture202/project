@@ -15,7 +15,7 @@ export class CategoryNavComponent {
     private router = inject(Router);
     categories = [
         'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Soil & Growing Media',
-        'Fertilizers & Nutrients', 'Gardening Tools'
+        'Fertilizers & Nutrients', 'Gardening Tools', 'About Us', 'Contact Us'
     ];
 
     // Map of categories that have specific mega menus
@@ -421,6 +421,12 @@ export class CategoryNavComponent {
     }
 
     getCategoryLink(category: string): string {
+        if (category === 'About Us') {
+            return '/about-us';
+        }
+        if (category === 'Contact Us') {
+            return '/contact-us';
+        }
         // For new gardening categories, navigate to category page
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
         if (gardeningCategories.includes(category)) {

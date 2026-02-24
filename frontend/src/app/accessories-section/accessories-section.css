@@ -1,0 +1,381 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+.accessories-gallery {
+    padding: 40px 0 80px;
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    position: relative;
+    background: #f8f9fa;
+}
+
+.gallery-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 60px;
+}
+
+.main-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #07241f;
+    margin: 0;
+}
+
+.main-title span {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: #2d8c6f;
+}
+
+.intro-text {
+    font-size: 16px;
+    color: #64748b;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+/* Layout */
+.showcase-layout {
+    display: flex;
+    gap: 30px;
+}
+
+/* Feature Card */
+.card-feature {
+    flex: 1.2;
+    height: 600px;
+    position: relative;
+    border-radius: 40px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+.card-image {
+    position: absolute;
+    inset: 0;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(7, 36, 31, 0) 0%,
+            rgba(7, 36, 31, 0.2) 30%,
+            rgba(7, 36, 31, 0.9) 100%);
+}
+
+.boutique-seal {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.boutique-seal svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: rotate-seal 15s linear infinite;
+}
+
+.boutique-seal path {
+    fill: none;
+}
+
+.boutique-seal text {
+    fill: rgba(255, 255, 255, 0.6);
+    font-family: 'Outfit', sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.seal-inner {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes rotate-seal {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 40px;
+    color: white;
+    z-index: 2;
+}
+
+.content-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.luxury-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.category-tag {
+    display: inline-block;
+    padding: 6px 16px;
+    background: white;
+    color: #07241f;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card-content .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    line-height: 1.1;
+}
+
+.card-content .description {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 35px;
+    line-height: 1.6;
+    max-width: 80%;
+}
+
+.premium-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tip-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 15px 25px;
+    border-radius: 20px;
+    font-size: 14px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 70%;
+}
+
+.pulse-icon {
+    width: 35px;
+    height: 35px;
+    background: #86efac;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #07241f;
+    flex-shrink: 0;
+}
+
+.discover-circle {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #07241f;
+    font-size: 20px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.card-feature:hover .discover-circle {
+    transform: rotate(-45deg) scale(1.1);
+    background: #86efac;
+}
+
+.card-feature:hover .card-image img {
+    transform: scale(1.05);
+}
+
+/* Grid for others */
+.cards-grid {
+    flex: 1.8;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.mini-card {
+    background: #f8fafc;
+    border-radius: 30px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border: 1px solid transparent;
+}
+
+.mini-image {
+    width: 100%;
+    height: 160px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.mini-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.mini-content h3 {
+    font-size: 22px;
+    color: #07241f;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.mini-content p {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Unique Card Colors */
+.pots-planters {
+    background: linear-gradient(135deg, #07241f 0%, #1a5c45 100%);
+}
+
+.gardening-tools {
+    background: #f1f5f9;
+    /* Cool Steel */
+    border-left: 6px solid #64748b;
+}
+
+.watering {
+    background: #f0fdfa;
+    /* Fresh Aquamarine */
+    border-left: 6px solid #2d8c6f;
+}
+
+.soil-media {
+    background: #fffaf5;
+    /* Warm Earth/Clay */
+    border-left: 6px solid #d97706;
+}
+
+.decor {
+    background: #fef2f2;
+    /* Soft Rose/Decor */
+    border-left: 6px solid #ef4444;
+}
+
+.explore {
+    font-size: 14px;
+    font-weight: 700;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.3s ease;
+    opacity: 0.8;
+}
+
+/* Update Mini Card Content Colors to be readable on tinted backgrounds */
+.mini-card:hover .explore {
+    opacity: 1;
+}
+
+/* Hover States */
+.card-feature:hover img {
+    transform: scale(1.1);
+}
+
+.mini-card:hover {
+    background: #ffffff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+    border-color: #e2e8f0;
+    transform: translateY(-8px);
+}
+
+.mini-card:hover img {
+    transform: scale(1.1);
+}
+
+.mini-card:hover .explore {
+    gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .showcase-layout {
+        flex-direction: column;
+    }
+
+    .card-feature {
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .gallery-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+}

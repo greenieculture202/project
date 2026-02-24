@@ -13,5 +13,7 @@ export const routes: Routes = [
     { path: 'flowering-offer', loadComponent: () => import('./flowering-offer/flowering-offer').then(m => m.FloweringOfferComponent) },
     { path: 'login', loadComponent: () => import('./login/login').then(m => m.LoginComponent) },
     { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) },
-    { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) }
+    { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) },
+    { path: 'about-us', loadComponent: () => import('./about-us/about-us').then(m => m.AboutUsComponent) },
+    { path: 'contact-us', loadComponent: () => import('./contact-us/contact-us').then(m => m.ContactUsComponent) }
 ];

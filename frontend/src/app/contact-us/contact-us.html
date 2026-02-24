@@ -1,0 +1,183 @@
+<div class="contact-container">
+    <!-- Split Screen Hero -->
+    <div class="contact-hero-split">
+        <div class="hero-image-side">
+            <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=1200&q=80"
+                alt="Lush Greenery">
+            <div class="image-overlay">
+                <div class="floating-badge">
+                    <i class="fas fa-seedling"></i>
+                    <span>Growing since 2024</span>
+                </div>
+
+                <!-- NEW: Interactive Data Points to fill the left space -->
+                <div class="botanical-data-points">
+                    <div class="data-point p1">
+                        <div class="dot"></div>
+                        <div class="label">
+                            <span class="value">98%</span>
+                            <span class="desc">Oxygen Output</span>
+                        </div>
+                    </div>
+                    <div class="data-point p2">
+                        <div class="dot"></div>
+                        <div class="label">
+                            <span class="value">Fresh</span>
+                            <span class="desc">Air Quality</span>
+                        </div>
+                    </div>
+                    <div class="data-point p3">
+                        <div class="dot"></div>
+                        <div class="label">
+                            <span class="value">Vibrant</span>
+                            <span class="desc">Leaf Health</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Dynamic Aura Elements -->
+            <div class="aura aura-1"></div>
+            <div class="aura aura-2"></div>
+        </div>
+
+        <div class="hero-content-side">
+            <div class="content-inner">
+                <span class="pill-tag">TALK TO US</span>
+                <h1>Let's Start Your <br><span class="highlight">Green Journey</span></h1>
+                <p>Whether you're a seasoned gardener or a new plant parent, our team of botanists is ready to help you
+                    thrive.</p>
+
+                <div class="contact-methods">
+                    <div class="method-card">
+                        <div class="m-icon"><i class="fas fa-stethoscope"></i></div>
+                        <div class="m-info">
+                            <h4>Care Concierge</h4>
+                            <p>Personalized bio-climate care routines for your home.</p>
+                        </div>
+                    </div>
+                    <div class="method-card">
+                        <div class="m-icon"><i class="fas fa-leaf-maple"></i></div>
+                        <div class="m-info">
+                            <h4>Eco-Pledge</h4>
+                            <p>Every interaction contributes to our global reforestation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Form Section -->
+    <div class="form-interaction-section">
+        <div class="section-bg-elements">
+            <div class="mesh-blob mb-1"></div>
+            <div class="mesh-blob mb-2"></div>
+        </div>
+
+        <div class="form-container-v2">
+            <div class="form-header">
+                <h2>Send a Message</h2>
+                <div class="header-line"></div>
+            </div>
+
+            <form (ngSubmit)="onSubmit()" #contactForm="ngForm" class="contact-premium-form">
+                <div class="input-grid">
+                    <div class="input-field">
+                        <label>Your Name</label>
+                        <input type="text" name="name" [(ngModel)]="contactData.name" required
+                            placeholder="What should we call you?">
+                        <div class="focus-border"></div>
+                    </div>
+
+                    <div class="input-field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" [(ngModel)]="contactData.email" required
+                            placeholder="Where can we reach you?">
+                        <div class="focus-border"></div>
+                    </div>
+                </div>
+
+                <div class="input-field">
+                    <label>Inquiry Type</label>
+                    <select name="subject" [(ngModel)]="contactData.subject" required>
+                        <option value="" disabled selected>Select a topic</option>
+                        <option value="order">Order Support</option>
+                        <option value="care">Plant Care Advice</option>
+                        <option value="wholesale">B2B & Wholesale</option>
+                        <option value="other">General Inquiry</option>
+                    </select>
+                    <div class="focus-border"></div>
+                </div>
+
+                <div class="input-field">
+                    <label>Your Message</label>
+                    <textarea name="message" [(ngModel)]="contactData.message" required rows="4"
+                        placeholder="How can we help you grow today?"></textarea>
+                    <div class="focus-border"></div>
+                </div>
+
+                <button type="submit" class="submit-button-v2" [disabled]="!contactForm.form.valid">
+                    <div class="btn-content">
+                        <span>Harvest Connection</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="btn-pollen"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botanical Location Section -->
+    <div class="location-aesthetic">
+        <div class="location-card">
+            <div class="loc-content">
+                <span class="loc-tag">VISIT OUR SANCTUARY</span>
+                <h3>The Living Greenhouse</h3>
+                <p>Experience our collection in person. Wander through our tropical corridors and select your next
+                    companion.</p>
+
+                <div class="loc-details">
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>123 Green Avenue, Springfield</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Sat - Sun: 10am - 5pm</span>
+                    </div>
+                </div>
+            </div>
+            <div class="loc-map-glass">
+                <div class="glass-inner">
+                    <i class="fas fa-compass fa-spin"></i>
+                    <span>Interactive Map Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal Popup -->
+    <div class="modal-overlay" *ngIf="showSuccessModal">
+        <div class="success-modal">
+            <div class="modal-glow"></div>
+            <div class="modal-close" (click)="closeModal()">
+                <i class="fas fa-times"></i>
+            </div>
+
+            <div class="modal-icon">
+                <div class="icon-ring"></div>
+                <i class="fas fa-check"></i>
+            </div>
+
+            <div class="modal-body">
+                <h3>Message Harvested!</h3>
+                <p>Your inquiry has been successfully planted in our system. Our botanical experts will sprout a reply
+                    soon.</p>
+
+                <button class="modal-btn" (click)="closeModal()">
+                    <span>Got it, thanks!</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -56,10 +56,7 @@ export class LoginComponent {
                         this.isLoading = false;
                         this.notificationService.show('Welcome back to Greenie Culture!', 'Login Successful', 'success');
                         this.isLoggedInSuccess = true;
-
-                        setTimeout(() => {
-                            this.router.navigate(['/']);
-                        }, 1500);
+                        this.router.navigate(['/']);
                     },
                     error: (err: any) => {
                         this.isLoading = false;

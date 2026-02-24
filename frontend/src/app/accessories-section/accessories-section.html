@@ -1,0 +1,74 @@
+<section class="accessories-gallery">
+
+
+    <div class="gallery-container">
+        <header class="gallery-header">
+            <div class="title-wrap">
+                <span class="eyebrow">The Botanical Boutique</span>
+                <h2 class="main-title">Luxe <span>Garden Essentials</span></h2>
+            </div>
+            <div class="header-action">
+                <p class="intro-text">A curated selection of artisan tools and designer accents to elevate your
+                    botanical lifestyle.</p>
+            </div>
+        </header>
+
+        <div class="showcase-layout">
+            <!-- Large Feature Card -->
+            <div class="card-feature pots-planters" [routerLink]="categories[0].link">
+                <div class="card-image">
+                    <img [src]="categories[0].image" [alt]="categories[0].name">
+                    <div class="card-overlay"></div>
+                </div>
+
+                <div class="boutique-seal">
+                    <svg viewBox="0 0 100 100">
+                        <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"></path>
+                        <text>
+                            <textPath href="#circlePath">ESTD 2026 • PREMIUM BOTANICALS • </textPath>
+                        </text>
+                    </svg>
+                    <div class="seal-inner">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    <div class="content-header">
+                        <span class="category-tag">Atelier Selection</span>
+                        <div class="luxury-line"></div>
+                    </div>
+
+                    <h3 class="title">{{ categories[0].name }}</h3>
+                    <p class="description">{{ categories[0].description }}</p>
+
+                    <div class="premium-footer">
+                        <div class="tip-box">
+                            <div class="pulse-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <span>{{ categories[0].proTip }}</span>
+                        </div>
+                        <div class="discover-circle">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid for others -->
+            <div class="cards-grid">
+                <div [class]="'mini-card ' + cat.id" *ngFor="let cat of categories.slice(1)" [routerLink]="cat.link">
+                    <div class="mini-image">
+                        <img [src]="cat.image" [alt]="cat.name">
+                    </div>
+                    <div class="mini-content">
+                        <h3>{{ cat.name }}</h3>
+                        <p>{{ cat.proTip }}</p>
+                        <span class="explore">Explore <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -4,6 +4,7 @@ import { ProductTabsComponent } from '../product-tabs/product-tabs';
 import { OffersSliderComponent } from '../offers-slider/offers-slider';
 import { SeedCategoriesComponent } from '../seed-categories/seed-categories';
 import { PlacementsComponent } from '../placements/placements';
+import { AccessoriesSection } from '../accessories-section/accessories-section';
 
 @Component({
     selector: 'app-home',
@@ -13,7 +14,8 @@ import { PlacementsComponent } from '../placements/placements';
         ProductTabsComponent,
         OffersSliderComponent,
         SeedCategoriesComponent,
-        PlacementsComponent
+        PlacementsComponent,
+        AccessoriesSection
     ],
     templateUrl: './home.html',
     styleUrl: './home.css'

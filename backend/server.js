@@ -84,7 +84,7 @@ app.post('/api/auth/login', async (req, res) => {
         const { email, password } = req.body;
 
         // Check for user
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).lean();
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -98,7 +98,7 @@ app.post('/api/auth/login', async (req, res) => {
         // Create JWT
         const payload = {
             user: {
-                id: user.id,
+                id: user._id, // User lean() makes it _id instead of id in some contexts, but let's be safe
                 email: user.email,
                 fullName: user.fullName
             }
@@ -117,7 +117,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Cart Routes
 app.get('/api/cart', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('cart');
+        const user = await User.findById(req.user.id).select('cart').lean();
         res.json(user.cart || []);
     } catch (err) {
         console.error('[CART] Fetch error:', err.message);
@@ -175,7 +175,7 @@ app.get('/api/products', async (req, res) => {
             };
         }
 
-        let productsQuery = Product.find(query);
+        let productsQuery = Product.find(query).lean();
 
         if (limit) {
             const limitNum = parseInt(limit);
@@ -204,9 +204,18 @@ app.get('/api/products/search', async (req, res) => {
                 { name: { $regex: regex } },
                 { category: { $regex: regex } }
             ]
-        }).limit(8).select('name category price image'); // Select only needed fields
+        }).limit(8).select('name category price image').lean(); // Select only needed fields and lean extension for speed
 
         res.json(products);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.get('/api/products/categories', async (req, res) => {
+    try {
+        const categories = await Product.distinct('category');
+        res.json(categories);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -232,35 +241,37 @@ app.get('/api/products/map', async (req, res) => {
     }
 });
 
-// Get product by slug (name converted to slug format)
+// Get product by slug (optimized with indexed slug field)
 app.get('/api/products/slug/:slug', async (req, res) => {
     try {
         const rawSlug = decodeURIComponent(req.params.slug);
-        console.log(`[SlugLookup] Attempting to find: "${rawSlug}"`);
+        console.log(`[SlugLookup] Seeking: "${rawSlug}"`);
 
-        // 1. Try an improved regex match that handles non-alphanumeric separators (like parentheses)
-        const nameParts = rawSlug.split(/[-\s]+/);
-        const namePattern = nameParts
-            .filter(part => part.length > 0)
-            .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-            .join('[^a-z0-9]+');
-
-        const regex = new RegExp(`^[^a-z0-9]*${namePattern}[^a-z0-9]*$`, 'i');
-        let product = await Product.findOne({ name: { $regex: regex } });
+        // 1. Direct indexed lookup - Instant
+        let product = await Product.findOne({ slug: rawSlug }).lean();
 
         if (!product) {
-            // 2. Fallback: Try matching name with all parts of the slug (AND condition)
-            const andConditions = nameParts.filter(p => p.length > 0).map(part => ({
-                name: { $regex: new RegExp(part, 'i') }
-            }));
+            console.log(`[SlugLookup] Fast lookup failed for "${rawSlug}", trying fuzzy regex fallback...`);
 
-            if (andConditions.length > 0) {
-                product = await Product.findOne({ $and: andConditions });
+            // 2. Fallback: Improved regex matching (legacy/edge cases)
+            const nameParts = rawSlug.split(/[-\s]+/);
+            const namePattern = nameParts
+                .filter(part => part.length > 0)
+                .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                .join('[^a-z0-9]+');
+
+            const regex = new RegExp(`^[^a-z0-9]*${namePattern}[^a-z0-9]*$`, 'i');
+            product = await Product.findOne({ name: { $regex: regex } }).lean();
+
+            if (!product && nameParts.length > 0) {
+                const andConditions = nameParts.filter(p => p.length > 0).map(part => ({
+                    name: { $regex: new RegExp(part, 'i') }
+                }));
+                product = await Product.findOne({ $and: andConditions }).lean();
             }
         }
 
         if (!product) {
-            console.log(`[SlugLookup] FAILED for: "${rawSlug}"`);
             return res.status(404).json({ message: 'Product not found' });
         }
 

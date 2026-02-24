@@ -5,7 +5,17 @@
         <p class="listing-subtitle">Explore our exclusive collection</p>
     </div>
 
-    <div class="product-grid">
+    <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Fetching beautiful greenery for you...</p>
+    </div>
+
+    <div class="error-state" *ngIf="error && !isLoading">
+        <p>{{ error }}</p>
+        <button (click)="loadProducts()" class="retry-btn">Retry</button>
+    </div>
+
+    <div class="product-grid" *ngIf="!isLoading && !error">
         <a class="product-card" *ngFor="let product of products" [routerLink]="['/product', getSlug(product.name)]">
             <div class="image-container">
                 <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">

@@ -19,7 +19,7 @@ export interface CartItem {
 })
 export class CartService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://127.0.0.1:5000/api/cart';
+    private apiUrl = '/api/cart';
 
     private itemsSignal = signal<CartItem[]>([]);
     private isOpenSignal = signal(false);
@@ -27,7 +27,7 @@ export class CartService {
     items = computed(() => this.itemsSignal());
     isOpen = computed(() => this.isOpenSignal());
 
-    totalItems = computed(() => this.itemsSignal().reduce((acc, item) => acc + item.quantity, 0));
+    totalItems = computed(() => this.itemsSignal().length);
 
     totalAmount = computed(() => this.itemsSignal().reduce((acc, item) => acc + (item.price * item.quantity), 0));
 
@@ -52,24 +52,33 @@ export class CartService {
         this.isOpenSignal.set(!this.isOpenSignal());
     }
     constructor() {
-        // Load initial state from LocalStorage (for guests or quick start)
-        const savedCart = localStorage.getItem('cart_items');
-        if (savedCart) {
-            try {
-                this.itemsSignal.set(JSON.parse(savedCart));
-            } catch (e) {
-                console.error('Error parsing saved cart', e);
+        // Only load initial state from LocalStorage if user is logged in
+        const token = sessionStorage.getItem('auth_token');
+        if (token) {
+            const savedCart = localStorage.getItem('cart_items');
+            if (savedCart) {
+                try {
+                    this.itemsSignal.set(JSON.parse(savedCart));
+                } catch (e) {
+                    console.error('Error parsing saved cart', e);
+                }
             }
+        } else {
+            // If no token, ensure localStorage is clean for this key
+            localStorage.removeItem('cart_items');
         }
 
         // Persist change to LocalStorage and Backend (if logged in)
         effect(() => {
             const currentItems = this.itemsSignal();
-            localStorage.setItem('cart_items', JSON.stringify(currentItems));
+            const currentToken = sessionStorage.getItem('auth_token');
 
-            // Only save to backend if token exists
-            if (sessionStorage.getItem('auth_token')) {
+            if (currentToken) {
+                localStorage.setItem('cart_items', JSON.stringify(currentItems));
                 this.saveToBackend(currentItems);
+            } else {
+                // If logged out, don't persist items to localStorage
+                localStorage.removeItem('cart_items');
             }
         });
     }
@@ -100,6 +109,11 @@ export class CartService {
     }
 
     addItem(product: any, quantity: number, planter?: string) {
+        // Prevent adding items if not logged in
+        if (!sessionStorage.getItem('auth_token')) {
+            return;
+        }
+
         const currentItems = this.itemsSignal();
 
         // Robust price parsing: Extract all digits and decimal points

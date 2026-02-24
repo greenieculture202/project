@@ -1,0 +1,214 @@
+<div class="about-container">
+    <!-- Hero Section with Background Video -->
+    <div class="about-hero">
+        <!-- Unique Moving Mesh Background -->
+        <div class="mesh-container">
+            <div class="mesh-gradient"></div>
+            <div class="noise-overlay"></div>
+            <div class="luminous-grid"></div>
+
+            <!-- Abstract Floating Elements -->
+            <div class="abstract-shapes">
+                <div class="shape s1"></div>
+                <div class="shape s2"></div>
+                <div class="shape s3"></div>
+            </div>
+
+            <div class="aura aura-1"></div>
+            <div class="aura aura-2"></div>
+            <div class="aura aura-3"></div>
+            <div class="aura aura-4"></div>
+        </div>
+
+        <!-- Floating Aura elements remain for depth, but emojis are removed -->
+
+        <div class="hero-overlay">
+            <div class="glass-card">
+                <div class="brand-badge">EST. 2024</div>
+                <div class="brand-content">
+                    <h1 class="brand-title">Greenie Culture</h1>
+                    <div class="brand-divider">
+                        <span class="d-line"></span>
+                        <i class="fas fa-leaf d-icon"></i>
+                        <span class="d-line"></span>
+                    </div>
+                    <p class="brand-tagline">Nurturing Spaces, Empowering Souls</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Fade -->
+        <div class="hero-bottom-fade"></div>
+    </div>
+
+    <!-- Video Modal -->
+    <div class="about-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="about-modal" (click)="$event.stopPropagation()">
+            <button class="modal-close" (click)="closeModal()">✕</button>
+            <div class="modal-player">
+                <video [src]="videoUrl" controls autoplay></video>
+            </div>
+        </div>
+    </div>
+
+    <!-- Our Vision & Mission -->
+    <div class="section-wrapper">
+        <div class="vision-grid">
+            <div class="vision-text animate-on-scroll">
+                <span class="section-tag">OUR JOURNEY</span>
+                <h2>Rooted in Passion, Growing with Purpose</h2>
+                <p>
+                    What started as a small windowsill collection of succulents in a tiny apartment has blossomed into
+                    a nationwide movement. Greenie Culture was born out of a simple realization: in our fast-paced
+                    digital world, we are losing our connection to the living, breathing world around us.
+                </p>
+                <p>
+                    Our journey began in 2024 with a mission to bridge this gap. We spent months traveling to
+                    hidden nurseries, meeting with master botanists, and sourcing the most resilient, vibrant
+                    species that could thrive in modern homes. We didn't just want to sell plants; we wanted
+                    to curate companion experiences that bring peace to your workspace and life to your living room.
+                </p>
+                <p>
+                    Today, Greenie Culture represents more than just a nursery. We are a community-driven
+                    platform that empowers everyone—from "black thumbs" to seasoned gardeners—to nurture their
+                    own indoor jungle. By combining aesthetic design with biological expertise, we ensure
+                    that every leaf delivered is a step toward a more sustainable and tranquil future.
+                </p>
+            </div>
+            <div class="vision-image animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80"
+                    alt="Lush Garden">
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Values -->
+    <div class="values-section">
+        <div class="section-header">
+            <h2>Our Core Values</h2>
+            <div class="divider"></div>
+        </div>
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="icon-circle">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h3>Sustainable Sourcing</h3>
+                <p>We work directly with local nurseries to ensure every plant is raised with love and environmental
+                    responsibility.</p>
+            </div>
+            <div class="value-card">
+                <div class="icon-circle">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <h3>Quality Care</h3>
+                <p>Each product is rigorously tested to meet our high standards of durability and botanical health.</p>
+            </div>
+            <div class="value-card">
+                <div class="icon-circle">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Community First</h3>
+                <p>More than just a store, we are a community of plant lovers sharing knowledge and growth together.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section with Glass Cards -->
+    <div class="stats-premium">
+        <div class="stats-grid-v2">
+            <div class="stat-card-v2">
+                <i class="fas fa-users-viewfinder s-icon"></i>
+                <div class="stat-info">
+                    <span class="stat-number">5k+</span>
+                    <span class="stat-label">Happy Planters</span>
+                </div>
+            </div>
+            <div class="stat-card-v2">
+                <i class="fas fa-seedling s-icon"></i>
+                <div class="stat-info">
+                    <span class="stat-number">200+</span>
+                    <span class="stat-label">Plant Varieties</span>
+                </div>
+            </div>
+            <div class="stat-card-v2">
+                <i class="fas fa-tools s-icon"></i>
+                <div class="stat-info">
+                    <span class="stat-number">1k+</span>
+                    <span class="stat-label">Gardening Tools</span>
+                </div>
+            </div>
+            <div class="stat-card-v2">
+                <i class="fas fa-star s-icon"></i>
+                <div class="stat-info">
+                    <span class="stat-number">4.8★</span>
+                    <span class="stat-label">User Rating</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Team / Founder Message -->
+    <div class="message-section-v2">
+        <div class="message-glass">
+            <i class="fas fa-quote-left q-icon"></i>
+            <blockquote class="founder-quote">
+                "Plants don't just decorate a room; they change how you feel in it. Our goal is to make plant parenthood
+                accessible, joyful, and deeply rewarding for everyone, regardless of their thumb color."
+            </blockquote>
+            <p class="author">— Founder, Greenie Culture</p>
+        </div>
+    </div>
+
+    <!-- Inspirational Quotes Grid -->
+    <div class="inspiration-section">
+        <div class="section-header">
+            <span class="section-tag">WISDOM</span>
+            <h2>Words to Grow By</h2>
+            <div class="divider"></div>
+        </div>
+        <div class="quotes-grid">
+            <div class="quote-card-v3">
+                <p>"To plant a garden is to believe in tomorrow."</p>
+                <span class="quote-author">— Audrey Hepburn</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"Nature does not hurry, yet everything is accomplished."</p>
+                <span class="quote-author">— Lao Tzu</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"He who plants a tree, plants a hope."</p>
+                <span class="quote-author">— Lucy Larcom</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"The earth laughs in flowers."</p>
+                <span class="quote-author">— Ralph Waldo Emerson</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"Look deep into nature, and then you will understand everything better."</p>
+                <span class="quote-author">— Albert Einstein</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"The best time to plant a tree was 20 years ago. The second best time is now."</p>
+                <span class="quote-author">— Chinese Proverb</span>
+            </div>
+            <div class="quote-card-v3">
+                <p>"A beautiful plant is like a soul that breathes."</p>
+                <span class="quote-author">— Anonymous</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact CTA -->
+    <div class="cta-section-v2">
+        <div class="cta-aura-v2"></div>
+        <div class="cta-content-v2">
+            <h2>Ready to start your green journey?</h2>
+            <p>Join thousands of happy gardeners across the country.</p>
+            <button class="cta-btn-v2" onclick="window.location.href='/'">
+                <span>Browse Collection</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>

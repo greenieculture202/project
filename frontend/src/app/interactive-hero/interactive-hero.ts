@@ -15,7 +15,7 @@ export class InteractiveHeroComponent implements OnInit, OnDestroy {
   private intervalId: any;
 
   // Modal related variables
-  selectedVideo: SafeResourceUrl | null = null;
+  selectedVideo: any = null;
   selectedPlacementName: string | null = null;
   isModalOpen = false;
 
@@ -78,7 +78,13 @@ export class InteractiveHeroComponent implements OnInit, OnDestroy {
   openVideoPreview(item: any, event: Event) {
     event.stopPropagation(); // Avoid triggering parent click
     this.selectedPlacementName = item.name;
-    this.selectedVideo = this.sanitizer.bypassSecurityTrustResourceUrl(item.video);
+    this.selectedVideo = item.video;
+    this.isModalOpen = true;
+  }
+
+  watchStory() {
+    this.selectedPlacementName = 'Greenie Culture Story';
+    this.selectedVideo = '/videos/homepagevideo.mp4';
     this.isModalOpen = true;
   }
 

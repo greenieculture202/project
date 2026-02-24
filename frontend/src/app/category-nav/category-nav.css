@@ -28,8 +28,8 @@
     display: flex;
     list-style: none;
     margin: 0;
-    padding: 0 2rem;
-    gap: 1.5rem;
+    padding: 0 1rem;
+    gap: 1rem;
     white-space: nowrap;
     min-width: max-content;
     width: 100%;

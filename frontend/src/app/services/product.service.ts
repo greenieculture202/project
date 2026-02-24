@@ -23,7 +23,7 @@ export interface Product {
 })
 export class ProductService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://127.0.0.1:5000/api';
+    private apiUrl = '/api';
 
     // Fallback mock data in case backend is not available
     private fallbackProducts: { [key: string]: Product[] } = {
@@ -121,6 +121,11 @@ export class ProductService {
 
     // Get all products or products by category
     getProducts(category?: string, limit?: number): Observable<Product[]> {
+        const cacheKey = `${category || 'all'}-${limit || 'none'}`;
+        if (this.categoryCache.has(cacheKey)) {
+            return of(this.categoryCache.get(cacheKey)!);
+        }
+
         let url = `${this.apiUrl}/products`;
         const params: string[] = [];
 
@@ -137,11 +142,13 @@ export class ProductService {
 
         return this.http.get<Product[]>(url).pipe(
             map(products => {
-                // Populate cache
+                // Populate individual cache
                 products.forEach(p => {
                     const slug = p.slug || this.convertToSlug(p.name);
                     this.productCache.set(slug, p);
                 });
+                // Populate category cache
+                this.categoryCache.set(cacheKey, products);
                 return products;
             }),
             catchError(error => {
@@ -170,6 +177,9 @@ export class ProductService {
             })
         );
     }
+
+    // Cache for products by category/query
+    private categoryCache = new Map<string, Product[]>();
 
     // Cache for product details
     private productCache = new Map<string, Product>();
@@ -224,10 +234,23 @@ export class ProductService {
             .replace(/\s+/g, '-'); // Replace spaces with hyphens
     }
 
+    private categoriesCache: string[] | null = null;
+
     // Get categories
     getCategories(): Observable<string[]> {
-        return this.getAllProductsMap().pipe(
-            map(productMap => Object.keys(productMap))
+        if (this.categoriesCache) {
+            return of(this.categoriesCache);
+        }
+        return this.http.get<string[]>(`${this.apiUrl}/products/categories`).pipe(
+            map(categories => {
+                this.categoriesCache = categories;
+                return categories;
+            }),
+            catchError(error => {
+                console.error('Error fetching categories:', error);
+                // Fallback to static list if available
+                return of(Object.keys(this.fallbackProducts));
+            })
         );
     }
 
@@ -254,6 +277,12 @@ export class ProductService {
         if (!category) {
             return of([]);
         }
+
+        const cacheKey = `related-${category}-${limit}`;
+        if (this.categoryCache.has(cacheKey)) {
+            return of(this.categoryCache.get(cacheKey)!);
+        }
+
         // Use the limit param in the API call
         return this.http.get<Product[]>(`${this.apiUrl}/products?category=${encodeURIComponent(category)}&limit=${limit}`).pipe(
             map(products => {
@@ -261,6 +290,7 @@ export class ProductService {
                     const slug = p.slug || this.convertToSlug(p.name);
                     this.productCache.set(slug, p);
                 });
+                this.categoryCache.set(cacheKey, products);
                 return products;
             })
         );
