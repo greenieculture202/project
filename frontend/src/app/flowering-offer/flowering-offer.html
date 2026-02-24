@@ -58,7 +58,7 @@
                 <div class="product-card" *ngFor="let seed of flowerSeeds"
                     [routerLink]="['/product', createSlug(seed.name)]">
                     <div class="card-image">
-                        <img [src]="seed.image" [alt]="seed.name">
+                        <img [src]="seed.image" [alt]="seed.name" loading="lazy">
                         <span class="badge">70% OFF</span>
                     </div>
                     <div class="card-info">

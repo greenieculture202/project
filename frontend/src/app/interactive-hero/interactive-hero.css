@@ -7,7 +7,8 @@
 .cinematic-hero {
     position: relative;
     width: 100%;
-    min-height: 100vh;
+    min-height: 80vh;
+    /* Reduced from 100vh for a shorter hero layout */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -26,6 +27,8 @@
     z-index: 0;
 }
 
+/* Webkit/Blink requires background to be transparent if video is covered */
+
 /* Warm cinematic film grade overlay */
 .c-layers::after {
     content: '';
@@ -40,90 +43,26 @@
             rgba(0, 0, 0, 0.015) 2px,
             rgba(0, 0, 0, 0.015) 4px);
     pointer-events: none;
-    mix-blend-mode: overlay;
+    /* Removed mix-blend-mode as it breaks video visibility on dark backgrounds */
 }
 
-.c-layer {
+/* Video Background */
+.hero-video-bg {
     position: absolute;
-    inset: -8%;
-    /* extra room for zoom travel */
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    animation:
-        kb 5s ease-in infinite,
-        /* Ken Burns zoom */
-        cf 5s linear infinite;
-    /* crossfade in/out */
-    will-change: transform, opacity;
-}
-
-/* ── Each scene: image + staggered delay ── */
-/* 5 scenes × 1s each = 5s total */
-.cl1 {
-    background-image: url('/images/indoor_plants_bg.jpg');
-    animation-delay: 0s, 0s;
-}
-
-.cl2 {
-    background-image: url('/images/ecoscape_outdoors.jpg');
-    animation-delay: -4s, -4s;
-}
-
-.cl3 {
-    background-image: url('/images/smartleaf_indoors_new.jpg');
-    animation-delay: -3s, -3s;
-}
-
-.cl4 {
-    background-image: url('/images/rooftop_garden.jpg');
-    animation-delay: -2s, -2s;
-}
-
-.cl5 {
-    background-image: url('/images/miniheaven_balcony.jpg');
-    animation-delay: -1s, -1s;
-}
-
-/* Ken Burns: dramatic zoom (very visible in just 1s) */
-@keyframes kb {
-    0% {
-        transform: scale(1) translate(0%, 0%);
-    }
-
-    100% {
-        transform: scale(1.10) translate(-1.5%, -1%);
-    }
-}
-
-/* Crossfade: each image occupies 20% of 5s loop */
-/* 0%-6% = fade in, 6%-20% = hold, 20%-26% = fade out */
-@keyframes cf {
-    0% {
-        opacity: 0;
-    }
-
-    /* start invisible */
-    6% {
-        opacity: 1;
-    }
-
-    /* 0.3s fade-in */
-    20% {
-        opacity: 1;
-    }
-
-    /* hold for 1s total */
-    26% {
-        opacity: 0;
-    }
-
-    /* 0.3s fade-out */
-    100% {
-        opacity: 0;
-    }
-
-    /* wait for next cycle */
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    /* Changed from 100vh to respect the new 80vh container */
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+    z-index: 1;
+    /* Elevated from 0 to 1 */
+    pointer-events: none;
+    opacity: 0.8;
+    /* Slight opacity so it blends nicely with the background color */
 }
 
 
@@ -296,7 +235,8 @@
     flex: 1;
     display: flex;
     align-items: center;
-    padding: 100px 5% 80px;
+    padding: 60px 5% 40px;
+    /* Reduced vertical padding */
     gap: 60px;
     max-width: 1440px;
     width: 100%;
@@ -311,6 +251,8 @@
     color: #fff;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    /* Explicitly pin content to the left */
     gap: 0;
 }
 
@@ -388,42 +330,54 @@
     align-items: center;
     gap: 5px;
     cursor: pointer;
+    position: relative;
 }
 
-.c-bubble img {
+.bubble-thumb {
+    position: relative;
     width: 48px;
     height: 48px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.bubble-thumb img {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 }
 
-.c-bubble:hover img {
-    border-color: #4ade80;
+.c-bubble:hover .bubble-thumb {
     transform: scale(1.15) translateY(-4px);
+}
+
+.c-bubble:hover .bubble-thumb img {
+    border-color: #4ade80;
 }
 
 .bubble-overlay {
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s;
-    font-size: 0.65rem;
+    /* Hide by default */
+    font-size: 0.85rem;
     color: #fff;
-}
-
-.c-bubble {
-    position: relative;
+    pointer-events: none;
+    transition: opacity 0.3s, background 0.3s, transform 0.3s;
 }
 
 .c-bubble:hover .bubble-overlay {
     opacity: 1;
+    /* Show on hover */
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .bubble-label {
@@ -1026,5 +980,251 @@
 
     .c-card-name {
         font-size: 1.5rem;
+    }
+}
+
+/* =====================================================
+   PLACEMENT MEGAPHONE BADGE
+   ===================================================== */
+.custom-placement-setup {
+    width: fit-content;
+    margin-bottom: 25px;
+    z-index: 20;
+}
+
+.custom-placement-badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    animation: fadeUp 0.8s ease 0.2s both, floatBadge 5s ease-in-out infinite 1s;
+}
+
+.custom-placement-badge:hover {
+    transform: scale(1.05) translateY(-5px);
+}
+
+@keyframes floatBadge {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.badge-horn {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    flex-shrink: 0;
+    box-shadow:
+        0 0 0 3px var(--badge-color, #16a34a),
+        0 5px 18px rgba(0, 0, 0, 0.28);
+    margin-right: -15px;
+    /* Overlap right ribbon */
+}
+
+/* For right-aligned badge where horn is on right: */
+.custom-placement-badge.badge-right {
+    flex-direction: row-reverse;
+}
+
+.custom-placement-badge.badge-right .badge-horn {
+    margin-right: 0;
+    margin-left: -15px;
+    /* Overlap left ribbon */
+}
+
+.horn-ring {
+    position: absolute;
+    inset: -7px;
+    border-radius: 50%;
+    border: 3px solid var(--badge-color, #16a34a);
+    opacity: 0.5;
+    animation: ring-pulse 2s ease-in-out infinite;
+}
+
+.horn-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    display: block;
+}
+
+.horn-rays {
+    position: absolute;
+    inset: -9px;
+    pointer-events: none;
+}
+
+.ray {
+    position: absolute;
+    background: #fbbf24;
+    border-radius: 3px;
+    box-shadow: 0 0 4px #fbbf24;
+}
+
+.r1 {
+    width: 5px;
+    height: 14px;
+    top: -3px;
+    left: 50%;
+    margin-left: -2px;
+    transform-origin: bottom center;
+    animation: ray-spark 2s ease-in-out 0s infinite;
+}
+
+.r2 {
+    width: 14px;
+    height: 5px;
+    top: 50%;
+    right: -3px;
+    margin-top: -2px;
+    transform-origin: left center;
+    animation: ray-spark 2s ease-in-out 0.5s infinite;
+}
+
+.r3 {
+    width: 5px;
+    height: 12px;
+    top: -2px;
+    right: 12px;
+    transform-origin: bottom center;
+    animation: ray-r3-spark 2s ease-in-out 0.25s infinite;
+}
+
+.r4 {
+    width: 12px;
+    height: 5px;
+    top: 50%;
+    left: -3px;
+    margin-top: -2px;
+    transform-origin: right center;
+    animation: ray-spark 2s ease-in-out 0.75s infinite;
+}
+
+.badge-ribbon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 12px 26px 12px 32px;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 5px 40px 40px 5px;
+    /* Right-curved left-flat default */
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.custom-placement-badge.badge-right .badge-ribbon {
+    flex-direction: row-reverse;
+    padding: 12px 32px 12px 26px;
+    border-radius: 40px 5px 5px 40px;
+    /* Left-curved right-flat */
+}
+
+.ribbon-shimmer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -80%;
+    width: 60%;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.4) 50%, transparent 80%);
+    animation: ribbon-shine 2.5s ease-in-out 1s infinite;
+}
+
+.badge-ribbon-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    position: relative;
+    z-index: 2;
+}
+
+.badge-l1 {
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.badge-l2 {
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 1.45rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    line-height: 1;
+}
+
+/* Animations */
+@keyframes ring-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.45;
+    }
+
+    50% {
+        transform: scale(1.22);
+        opacity: 0.15;
+    }
+}
+
+@keyframes ray-spark {
+
+    0%,
+    100% {
+        transform: scaleY(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scaleY(1.7);
+        opacity: 1;
+    }
+}
+
+@keyframes ray-r3-spark {
+
+    0%,
+    100% {
+        transform: rotate(40deg) scaleY(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: rotate(40deg) scaleY(1.7);
+        opacity: 1;
+    }
+}
+
+@keyframes ribbon-shine {
+    0% {
+        left: -80%;
+    }
+
+    60%,
+    100% {
+        left: 130%;
     }
 }

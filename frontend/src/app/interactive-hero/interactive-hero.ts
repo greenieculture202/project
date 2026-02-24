@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, inject, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
@@ -9,10 +9,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   templateUrl: './interactive-hero.html',
   styleUrl: './interactive-hero.css'
 })
-export class InteractiveHeroComponent implements OnInit, OnDestroy {
+export class InteractiveHeroComponent implements OnInit, OnDestroy, AfterViewInit {
   private sanitizer = inject(DomSanitizer);
   currentSlide = 0;
   private intervalId: any;
+
+  // Video background reference
+  @ViewChild('bgVideo') bgVideo!: ElementRef<HTMLVideoElement>;
 
   // Modal related variables
   selectedVideo: any = null;
@@ -52,6 +55,14 @@ export class InteractiveHeroComponent implements OnInit, OnDestroy {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.startSlider();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId) && this.bgVideo) {
+      // Force play for autoplay policies
+      this.bgVideo.nativeElement.muted = true;
+      this.bgVideo.nativeElement.play().catch(e => console.log('Auto-play prevented:', e));
     }
   }
 

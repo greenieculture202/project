@@ -25,7 +25,7 @@
                 <div class="product-card" *ngFor="let plant of xlPlants"
                     [routerLink]="['/product', createSlug(plant.name)]">
                     <div class="card-image">
-                        <img [src]="plant.image" [alt]="plant.name">
+                        <img [src]="plant.image" [alt]="plant.name" loading="lazy">
                         <span class="badge" *ngIf="plant.discount">{{ plant.discount }}</span>
                     </div>
                     <div class="card-info">

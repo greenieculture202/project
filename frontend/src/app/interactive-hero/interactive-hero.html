@@ -1,12 +1,10 @@
 <section class="cinematic-hero">
 
-    <!-- ── CINEMATIC IMAGE LAYERS (Ken Burns crossfade) ── -->
+    <!-- ── CINEMATIC VIDEO BACKGROUND ── -->
     <div class="c-layers">
-        <div class="c-layer cl1"></div>
-        <div class="c-layer cl2"></div>
-        <div class="c-layer cl3"></div>
-        <div class="c-layer cl4"></div>
-        <div class="c-layer cl5"></div>
+        <video #bgVideo class="hero-video-bg" autoplay loop muted playsinline>
+            <source src="/home-video.mp4" type="video/mp4">
+        </video>
     </div>
 
     <!-- ── OVERLAYS ── -->
@@ -25,23 +23,41 @@
 
     <!-- ── MAIN CONTENT ── -->
     <div class="c-content">
-
         <!-- LEFT: Text -->
         <div class="c-left">
 
-            <!-- Placement entry pill -->
-            <div class="c-pill" (click)="scrollToPlacements()">
-                <span class="pill-dot"></span>
-                <span class="pill-label">EXPLORE BY PLACEMENT</span>
-                <i class="fas fa-chevron-right pill-arrow"></i>
+            <!-- Placement entry badge -->
+            <div class="custom-placement-setup" (click)="scrollToPlacements()" style="--badge-color: #10b981;">
+                <div class="custom-placement-badge badge-right">
+                    <div class="badge-horn">
+                        <div class="horn-ring"></div>
+                        <span class="horn-rays">
+                            <span class="ray r1"></span>
+                            <span class="ray r2"></span>
+                            <span class="ray r3"></span>
+                            <span class="ray r4"></span>
+                        </span>
+                        <span class="horn-icon" style="font-size: 1.8rem;">🪴</span>
+                    </div>
+                    <div class="badge-ribbon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+                        <div class="ribbon-shimmer"></div>
+                        <div class="badge-ribbon-text">
+                            <span class="badge-l1">Explore By</span>
+                            <span class="badge-l2">Placement</span>
+                        </div>
+                        <div class="badge-arrow"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Preview bubbles -->
             <div class="c-bubbles">
                 <div class="c-bubble" *ngFor="let item of previewPlacements" [title]="item.name"
                     (click)="openVideoPreview(item, $event)">
-                    <img [src]="item.image" [alt]="item.name">
-                    <div class="bubble-overlay"><i class="fas fa-play"></i></div>
+                    <div class="bubble-thumb">
+                        <img [src]="item.image" [alt]="item.name" loading="lazy">
+                        <div class="bubble-overlay"><i class="fas fa-play"></i></div>
+                    </div>
                     <span class="bubble-label">{{ item.name }}</span>
                 </div>
             </div>
@@ -50,14 +66,13 @@
             <div class="c-tagline">🌿 NATURE DELIVERED TO YOUR DOOR</div>
 
             <h1 class="c-title">
-                <span class="ct-line ct-l1">Where Plants</span>
-                <span class="ct-line ct-l2">Meet <em class="ct-accent">Passion</em></span>
-                <span class="ct-line ct-l3">&amp; Purpose</span>
+                <span class="ct-line ct-l1">Welcome to</span>
+                <span class="ct-line ct-l2"><em class="ct-accent">Greenie</em> Culture</span>
             </h1>
 
             <p class="c-desc">
-                Curated indoor &amp; outdoor plants, hand-picked for Indian homes.
-                Free delivery · Expert care guides · 60-day happiness guarantee.
+                Transform your spaces with nature's finest. We deliver handpicked, premium plants and elegant
+                gardening essentials directly to your doorstep—crafting a greener, more beautiful lifestyle.
             </p>
 
             <div class="c-actions">
@@ -83,14 +98,7 @@
             </div>
         </div>
 
-
     </div><!-- /c-content -->
-
-    <!-- Scroll indicator -->
-    <div class="c-scroll-hint">
-        <span class="scroll-mouse"><span class="scroll-wheel"></span></span>
-        <span class="scroll-text">Scroll to explore</span>
-    </div>
 
     <!-- Video Modal -->
     <div class="c-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">

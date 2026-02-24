@@ -57,8 +57,17 @@ export class ProductListingComponent {
                 .join(' ');
         }
 
+        // Safety fallback just in case observable never emits
+        const fallbackTimer = setTimeout(() => {
+            if (this.isLoading) {
+                this.isLoading = false;
+                this.error = 'Request timed out or hung indefinitely. Check console.';
+            }
+        }, 8000);
+
         this.productService.getProducts(categoryName).subscribe({
             next: (products) => {
+                clearTimeout(fallbackTimer);
                 this.products = products;
                 this.isLoading = false;
                 if (this.products.length === 0) {
@@ -68,6 +77,7 @@ export class ProductListingComponent {
                 }
             },
             error: (err) => {
+                clearTimeout(fallbackTimer);
                 console.error('Error loading listing:', err);
                 this.error = 'Failed to load products. Please check your connection.';
                 this.isLoading = false;

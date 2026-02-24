@@ -39,7 +39,7 @@
                 <div class="product-card" *ngFor="let item of gardenTools"
                     [routerLink]="['/product', createSlug(item.name)]">
                     <div class="card-image">
-                        <img [src]="item.image" [alt]="item.name">
+                        <img [src]="item.image" [alt]="item.name" loading="lazy">
                         <span class="badge">KIT SAVINGS</span>
                     </div>
                     <div class="card-info">

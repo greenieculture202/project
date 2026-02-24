@@ -7,10 +7,13 @@ const User = require('./models/User');
 const Product = require('./models/Product');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'greenie-secret-key-123';
+const GOOGLE_CLIENT_ID = '245945304873-qv3ci0hquk7q087bljei6dusabaj6c4l.apps.googleusercontent.com';
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Auth Middleware
 const auth = (req, res, next) => {
@@ -111,6 +114,51 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
+    }
+});
+
+app.post('/api/auth/google-login', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: GOOGLE_CLIENT_ID
+        });
+
+        const { email, name, picture } = ticket.getPayload();
+
+        // Check for user
+        let user = await User.findOne({ email }).lean();
+
+        if (!user) {
+            // Create user for first time Google login
+            const newUser = new User({
+                fullName: name,
+                email: email,
+                password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10), // Random dummy password
+                phone: 'Not provided',
+                address: 'Not provided',
+                profilePic: picture
+            });
+            user = await newUser.save();
+        }
+
+        // Create JWT
+        const payload = {
+            user: {
+                id: user._id,
+                email: user.email,
+                fullName: user.fullName
+            }
+        };
+
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+            if (err) throw err;
+            res.json({ token, user: { email: user.email, fullName: user.fullName } });
+        });
+    } catch (err) {
+        console.error('[GOOGLE-AUTH] Error:', err.message);
+        res.status(401).json({ message: 'Google authentication failed' });
     }
 });
 

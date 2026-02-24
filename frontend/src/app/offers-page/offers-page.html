@@ -30,7 +30,7 @@
 
         <!-- IMAGE PANEL -->
         <div class="offer-image-panel" [class.img-right]="i % 2 !== 0">
-          <img [src]="offer.image" [alt]="offer.title">
+          <img [src]="offer.image" [alt]="offer.title" loading="lazy">
 
           <!-- Corner fold ribbon — top-right of image -->
           <div class="corner-ribbon-wrap">

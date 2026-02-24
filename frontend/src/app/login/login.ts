@@ -1,9 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+
+declare var google: any;
 
 @Component({
     selector: 'app-login',
@@ -12,7 +14,7 @@ import { NotificationService } from '../services/notification.service';
     templateUrl: './login.html',
     styleUrl: './login.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
     loginForm: FormGroup;
     isPasswordVisible = false;
     isLoggedInSuccess = false;
@@ -22,11 +24,39 @@ export class LoginComponent {
 
     authService = inject(AuthService);
     notificationService = inject(NotificationService);
+    private ngZone = inject(NgZone);
 
     constructor(private fb: FormBuilder, private router: Router) {
         this.loginForm = this.fb.group({
             email: ['', [Validators.required]],
             password: ['', Validators.required]
+        });
+    }
+
+    ngOnInit() {
+        if (typeof google !== 'undefined') {
+            google.accounts.id.initialize({
+                client_id: '245945304873-qv3ci0hquk7q087bljei6dusabaj6c4l.apps.googleusercontent.com',
+                callback: (response: any) => this.handleCredentialResponse(response)
+            });
+        }
+    }
+
+    handleCredentialResponse(response: any) {
+        this.ngZone.run(() => {
+            this.isLoading = true;
+            this.authService.googleLogin(response.credential).subscribe({
+                next: (res) => {
+                    this.isLoading = false;
+                    this.notificationService.show('Logged in with Google!', 'Success', 'success');
+                    this.router.navigate(['/']);
+                },
+                error: (err) => {
+                    this.isLoading = false;
+                    this.loginError = 'Google Login failed. Please try again.';
+                    this.notificationService.show(this.loginError, 'Error', 'error');
+                }
+            });
         });
     }
 
@@ -84,6 +114,14 @@ export class LoginComponent {
                 });
         } else {
             this.loginForm.markAllAsTouched();
+        }
+    }
+
+    loginWithGoogle() {
+        if (typeof google !== 'undefined') {
+            google.accounts.id.prompt();
+        } else {
+            this.notificationService.show('Google login is not ready yet. Please refresh.', 'Wait', 'info');
         }
     }
 }

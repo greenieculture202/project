@@ -50,6 +50,18 @@ export class AuthService {
         );
     }
 
+    googleLogin(idToken: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/google-login`, { idToken }).pipe(
+            tap(res => {
+                sessionStorage.setItem('auth_token', res.token);
+                sessionStorage.setItem('user_name', res.user.fullName);
+                this.isLoggedInSubject.next(true);
+                this.currentUserSubject.next(res.user.fullName);
+                this.cartService.syncWithBackend();
+            })
+        );
+    }
+
     logout() {
         sessionStorage.removeItem('auth_token');
         sessionStorage.removeItem('user_name');

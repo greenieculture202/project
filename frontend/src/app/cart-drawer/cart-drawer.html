@@ -44,7 +44,7 @@
             <div class="cart-items" *ngIf="totalItems > 0">
                 <div class="cart-item" *ngFor="let item of items">
                     <div class="item-img">
-                        <img [src]="item.image" [alt]="item.name">
+                        <img [src]="item.image" [alt]="item.name" loading="lazy">
                     </div>
                     <div class="item-info">
                         <div class="item-header">

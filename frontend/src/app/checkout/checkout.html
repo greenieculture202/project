@@ -97,7 +97,7 @@
                 <div class="items-list">
                     <div class="summary-item" *ngFor="let item of items()">
                         <div class="item-img-box">
-                            <img [src]="item.image" [alt]="item.name">
+                            <img [src]="item.image" [alt]="item.name" loading="lazy">
                             <span class="item-qty-badge">{{ item.quantity }}</span>
                         </div>
                         <div class="item-info">

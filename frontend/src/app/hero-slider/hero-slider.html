@@ -1,7 +1,7 @@
 <div class="hero-slider">
     <div class="slides-container" [style.transform]="'translateX(-' + currentIndex * 100 + '%)'">
         <div class="slide" *ngFor="let slide of slides; let i = index">
-            <img [src]="slide.image" class="slide-bg" alt="{{ slide.title }}">
+            <img [src]="slide.image" class="slide-bg" alt="{{ slide.title }}" loading="lazy">
             <div class="slide-content">
                 <h2 class="title">{{ slide.title }}</h2>
                 <div class="subtitle-group">

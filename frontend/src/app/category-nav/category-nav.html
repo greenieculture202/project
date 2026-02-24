@@ -36,7 +36,7 @@
                     <ng-template #multiImages>
                         <div class="multi-image-grid">
                             <div class="promo-image-card" *ngFor="let img of menus[cat].images">
-                                <img [src]="img.url" [alt]="img.text">
+                                <img [src]="img.url" [alt]="img.text" loading="lazy">
                                 <div class="promo-text">{{ img.text }}</div>
                             </div>
                         </div>

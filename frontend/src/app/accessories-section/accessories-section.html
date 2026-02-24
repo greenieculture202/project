@@ -60,7 +60,7 @@
             <div class="cards-grid">
                 <div [class]="'mini-card ' + cat.id" *ngFor="let cat of categories.slice(1)" [routerLink]="cat.link">
                     <div class="mini-image">
-                        <img [src]="cat.image" [alt]="cat.name">
+                        <img [src]="cat.image" [alt]="cat.name" loading="lazy">
                     </div>
                     <div class="mini-content">
                         <h3>{{ cat.name }}</h3>

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, timeout } from 'rxjs/operators';
 
 export interface Product {
     _id?: string;
@@ -141,6 +141,7 @@ export class ProductService {
         }
 
         return this.http.get<Product[]>(url).pipe(
+            timeout(10000), // Enforce 10 seconds timeout so spinner clears
             map(products => {
                 // Populate individual cache
                 products.forEach(p => {

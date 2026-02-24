@@ -43,7 +43,7 @@
                 <div class="product-card" *ngFor="let plant of indoorPlants"
                     [routerLink]="['/product', createSlug(plant.name)]">
                     <div class="card-image">
-                        <img [src]="plant.image" [alt]="plant.name">
+                        <img [src]="plant.image" [alt]="plant.name" loading="lazy">
                         <span class="badge">ELITE PICK</span>
                     </div>
                     <div class="card-info">
