@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'greenie-secret-key-123';
 const GOOGLE_CLIENT_ID = '245945304873-qv3ci0hquk7q087bljei6dusabaj6c4l.apps.googleusercontent.com';
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(GOOGLE_CLIENT_ID.trim());
 
 // Auth Middleware
 const auth = (req, res, next) => {
@@ -86,8 +86,8 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check for user
-        const user = await User.findOne({ email }).lean();
+        // Check for user (case-insensitive lookup)
+        const user = await User.findOne({ email: email.toLowerCase() }).lean();
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -126,9 +126,10 @@ app.post('/api/auth/google-login', async (req, res) => {
         });
 
         const { email, name, picture } = ticket.getPayload();
+        console.log(`[GOOGLE-AUTH] Ticket verified for: ${email} (${name})`);
 
-        // Check for user
-        let user = await User.findOne({ email }).lean();
+        // Check for user (case-insensitive lookup)
+        let user = await User.findOne({ email: email.toLowerCase() }).lean();
 
         if (!user) {
             // Create user for first time Google login
@@ -157,8 +158,8 @@ app.post('/api/auth/google-login', async (req, res) => {
             res.json({ token, user: { email: user.email, fullName: user.fullName } });
         });
     } catch (err) {
-        console.error('[GOOGLE-AUTH] Error:', err.message);
-        res.status(401).json({ message: 'Google authentication failed' });
+        console.error('[GOOGLE-AUTH] Error details:', err);
+        res.status(401).json({ message: 'Google authentication failed', details: err.message });
     }
 });
 

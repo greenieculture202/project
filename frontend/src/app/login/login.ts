@@ -45,6 +45,7 @@ export class LoginComponent implements OnInit {
     handleCredentialResponse(response: any) {
         this.ngZone.run(() => {
             this.isLoading = true;
+            console.log('[Google Login] Credential received, sending to backend...');
             this.authService.googleLogin(response.credential).subscribe({
                 next: (res) => {
                     this.isLoading = false;
@@ -53,7 +54,11 @@ export class LoginComponent implements OnInit {
                 },
                 error: (err) => {
                     this.isLoading = false;
-                    this.loginError = 'Google Login failed. Please try again.';
+                    console.error('[Google Login] Backend error:', err);
+                    this.loginError = err.error?.message || 'Google Login failed. Please try again.';
+                    if (err.error?.details) {
+                        console.error('[Google Login] Backend error details:', err.error.details);
+                    }
                     this.notificationService.show(this.loginError, 'Error', 'error');
                 }
             });
