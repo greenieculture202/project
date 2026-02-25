@@ -44,16 +44,19 @@ export class ProductListingComponent {
             'fertilizers-nutrients': 'Fertilizers & Nutrients',
             'gardening-tools': 'Gardening Tools',
             'seeds-plants': 'Seeds',
+            'seeds': 'Seeds',
             'accessories-plants': 'Accessories',
+            'accessories': 'Accessories',
             'gardening-plants': 'Gardening'
         };
 
         let categoryName = slugToCategoryMap[this.displayCategory.toLowerCase()];
 
         if (!categoryName) {
+            // Split by hyphens or spaces, capitalize each word
             categoryName = this.displayCategory
-                .split('-')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .split(/[-\s]+/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                 .join(' ');
         }
 

@@ -4,3 +4,37 @@
 <app-seed-categories></app-seed-categories>
 <app-placements></app-placements>
 <app-accessories-section></app-accessories-section>
+
+<!-- FAQ Section -->
+<section class="home-faq-section" id="faq-section">
+    <div class="home-faq-container">
+        <div class="home-faq-header">
+            <span class="faq-eyebrow">Help Center</span>
+            <h2>Frequently Asked <span>Questions</span></h2>
+            <p>Quick answers to common queries about plants, orders, and delivery</p>
+        </div>
+
+        <div class="home-faq-list">
+            <div class="home-faq-item" *ngFor="let faq of previewFaqs; let i = index" [class.open]="openIndex() === i">
+                <div class="home-faq-q" (click)="toggle(i)">
+                    <div class="hfq-left">
+                        <span class="hfq-badge" [attr.data-cat]="faq.category">{{ faq.category }}</span>
+                        <span class="hfq-text">{{ faq.question }}</span>
+                    </div>
+                    <div class="hfq-icon" [class.active]="openIndex() === i">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="home-faq-answer" *ngIf="openIndex() === i">
+                    <p>{{ faq.answer }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-faq-footer">
+            <a routerLink="/faq/all" class="view-all-faqs-btn">
+                View All FAQs <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>

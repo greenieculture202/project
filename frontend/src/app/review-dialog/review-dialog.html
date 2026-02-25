@@ -1,0 +1,25 @@
+<div class="review-overlay">
+    <div class="review-modal">
+        <div class="modal-header">
+            <h2>Share Your Experience</h2>
+            <button class="close-btn" (click)="close.emit()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <p>How would you rate your order?</p>
+            <div class="star-rating">
+                <i class="fas fa-star" *ngFor="let s of [1,2,3,4,5]" [class.active]="rating >= s"
+                    (click)="setRating(s)"></i>
+            </div>
+
+            <div class="feedback-area">
+                <label>Tell us more (Optional)</label>
+                <textarea [(ngModel)]="description" placeholder="What did you like the most?"></textarea>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="submit-btn" (click)="submit()">Submit Review</button>
+        </div>
+    </div>
+</div>

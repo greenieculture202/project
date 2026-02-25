@@ -1,6 +1,6 @@
 import { Component, signal, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
@@ -10,7 +10,7 @@ declare var google: any;
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, FormsModule],
     templateUrl: './login.html',
     styleUrl: './login.css'
 })
@@ -21,6 +21,12 @@ export class LoginComponent implements OnInit {
     loginError = '';
     isLoading = false;
     isBlooming = false;
+
+    // OTP related
+    showOtpModal = false;
+    otpEmail = '';
+    otpCode = '';
+    tempIdToken = '';
 
     authService = inject(AuthService);
     notificationService = inject(NotificationService);
@@ -45,24 +51,52 @@ export class LoginComponent implements OnInit {
     handleCredentialResponse(response: any) {
         this.ngZone.run(() => {
             this.isLoading = true;
-            console.log('[Google Login] Credential received, sending to backend...');
-            this.authService.googleLogin(response.credential).subscribe({
+            this.tempIdToken = response.credential;
+            console.log('[Google Login] Requesting OTP for email in credential...');
+
+            this.authService.requestGoogleOTP(this.tempIdToken).subscribe({
                 next: (res) => {
                     this.isLoading = false;
-                    this.notificationService.show('Logged in with Google!', 'Success', 'success');
-                    this.router.navigate(['/']);
+                    this.otpEmail = res.email;
+                    this.showOtpModal = true;
+                    this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
                 },
                 error: (err) => {
                     this.isLoading = false;
-                    console.error('[Google Login] Backend error:', err);
-                    this.loginError = err.error?.message || 'Google Login failed. Please try again.';
-                    if (err.error?.details) {
-                        console.error('[Google Login] Backend error details:', err.error.details);
-                    }
+                    console.error('[Google Login] Request error:', err);
+                    this.loginError = err.error?.message || 'Failed to send OTP. Please try again.';
                     this.notificationService.show(this.loginError, 'Error', 'error');
                 }
             });
         });
+    }
+
+    onVerifyOtp() {
+        if (this.otpCode.length !== 6) {
+            this.notificationService.show('Please enter a valid 6-digit OTP', 'Invalid OTP', 'error');
+            return;
+        }
+
+        this.isLoading = true;
+        this.authService.verifyGoogleOTP(this.otpEmail, this.otpCode).subscribe({
+            next: (res) => {
+                this.isLoading = false;
+                this.showOtpModal = false;
+                this.notificationService.show('Logged in with Google!', 'Success', 'success');
+                this.router.navigate(['/']);
+            },
+            error: (err) => {
+                this.isLoading = false;
+                console.error('[Google Verification] Error:', err);
+                const msg = err.error?.message || 'Invalid or expired OTP. Please try again.';
+                this.notificationService.show(msg, 'Verification Failed', 'error');
+            }
+        });
+    }
+
+    closeOtpModal() {
+        this.showOtpModal = false;
+        this.otpCode = '';
     }
 
     togglePasswordVisibility() { this.isPasswordVisible = !this.isPasswordVisible; }

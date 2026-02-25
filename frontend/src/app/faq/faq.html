@@ -1,0 +1,38 @@
+<div class="faq-page">
+    <!-- Hero Banner -->
+    <div class="faq-hero">
+        <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1400&q=80"
+            alt="FAQ Banner" class="hero-img">
+        <div class="hero-content">
+            <span class="hero-badge">Help Center</span>
+            <h1>Frequently Asked<br><span>Questions</span></h1>
+            <p>Everything you need to know about Greenie Culture</p>
+        </div>
+    </div>
+
+    <!-- FAQ List -->
+    <div class="faq-container">
+        <div class="faq-list">
+            <div class="faq-item" *ngFor="let faq of previewFaqs; let i = index" [class.open]="openIndex() === i">
+                <div class="faq-question" (click)="toggle(i)">
+                    <div class="q-left">
+                        <span class="category-tag" [attr.data-cat]="faq.category">{{ faq.category }}</span>
+                        <span class="q-text">{{ faq.question }}</span>
+                    </div>
+                    <i class="fas" [class.fa-plus]="openIndex() !== i" [class.fa-minus]="openIndex() === i"></i>
+                </div>
+                <div class="faq-answer" *ngIf="openIndex() === i">
+                    <p>{{ faq.answer }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View All Button -->
+        <div class="view-all-wrap">
+            <a routerLink="/faq/all" class="view-all-btn">
+                <span>View All FAQs</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>

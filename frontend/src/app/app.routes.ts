@@ -16,5 +16,8 @@ export const routes: Routes = [
     { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) },
     { path: 'about-us', loadComponent: () => import('./about-us/about-us').then(m => m.AboutUsComponent) },
     { path: 'contact-us', loadComponent: () => import('./contact-us/contact-us').then(m => m.ContactUsComponent) },
-    { path: 'placements', loadComponent: () => import('./placements/placements').then(m => m.PlacementsComponent) }
+    { path: 'placements', loadComponent: () => import('./placements/placements').then(m => m.PlacementsComponent) },
+    { path: 'user-panel', loadComponent: () => import('./user-panel/user-panel').then(m => m.UserPanelComponent) },
+    { path: 'faq', loadComponent: () => import('./faq/faq').then(m => m.FaqComponent) },
+    { path: 'faq/all', loadComponent: () => import('./faq-all/faq-all').then(m => m.FaqAllComponent) }
 ];

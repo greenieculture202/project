@@ -1,62 +1,35 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { CartService } from '../services/cart.service';
-import { AuthService } from '../services/auth.service';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ReviewDialogComponent } from '../review-dialog/review-dialog';
-import { ReviewService } from '../services/review.service';
+import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/user.service';
 
 @Component({
-    selector: 'app-checkout',
+    selector: 'app-user-panel',
     standalone: true,
-    imports: [CommonModule, RouterLink, FormsModule, ReviewDialogComponent],
-    templateUrl: './checkout.html',
-    styleUrl: './checkout.css'
+    imports: [CommonModule, RouterModule, FormsModule],
+    templateUrl: './user-panel.html',
+    styleUrl: './user-panel.css'
 })
-export class CheckoutComponent implements OnInit {
-    isProcessing = false;
-    cartService = inject(CartService);
+export class UserPanelComponent implements OnInit {
     authService = inject(AuthService);
-    reviewService = inject(ReviewService);
-    router = inject(Router);
+    private userService = inject(UserService);
+    private router = inject(Router);
 
-    showReviewDialog = false;
-    showSuccessModal = false;
+    dashboardData: any = {
+        stats: { totalOrders: 0, greenPoints: 0 },
+        recentOrders: []
+    };
+    allOrders: any[] = [];
+    activeTab: string = 'dashboard';
+    isLoading = true;
 
-    items = this.cartService.items;
-    totalAmount = this.cartService.totalAmount;
-    totalSavings = this.cartService.totalSavings;
-
-    contactEmail = '';
-    firstName = '';
-    lastName = '';
-    address = '';
+    // Settings fields
+    phone = '';
     city = '';
     stateName = '';
-    pincode = '';
-    phone = '';
-
-    currentStep = 1;
-
-    private _selectedPayment = 'upi';
-    get selectedPayment() { return this._selectedPayment; }
-    set selectedPayment(val: string) {
-        this._selectedPayment = val;
-        if (val === 'upi' && this.currentStep === 3) {
-            this.simulateUPIScan();
-        }
-    }
-
-    simulateUPIScan() {
-        // Simulate a 3-second delay for the user to 'scan'
-        setTimeout(() => {
-            if (this.selectedPayment === 'upi' && this.currentStep === 3) {
-                alert('UPI Scan Successful! Payment Received.');
-                this.finishOrder();
-            }
-        }, 3000);
-    }
+    address = '';
     showStateDropdown = false;
     showCityDropdown = false;
 
@@ -189,86 +162,43 @@ export class CheckoutComponent implements OnInit {
 
     ngOnInit() {
         this.updateIndianCities();
-        // Redirect if cart is empty
-        if (this.cartService.totalItems() === 0) {
-            this.router.navigate(['/']);
-            return;
-        }
-
-        // Pre-fill email if user is logged in
-        const user = this.authService.getCurrentUser();
-        if (user) {
-            // Since we only store fullName, we use a placeholder or hope they fill it
-            this.contactEmail = '';
-        }
+        this.loadDashboard();
+        this.loadAllOrders();
     }
 
-    isStep1Valid(): boolean {
-        return !!(this.firstName && this.lastName && this.contactEmail &&
-            this.phone && this.address && this.city &&
-            this.stateName && this.pincode);
+    setActiveTab(tab: string) {
+        this.activeTab = tab;
     }
 
-    nextStep() {
-        if (this.currentStep === 1 && !this.isStep1Valid()) {
-            alert('Please fill all the details to continue.');
-            return;
-        }
-        if (this.currentStep < 3) {
-            this.currentStep++;
-            window.scrollTo(0, 0);
-
-            // If they just landed on Step 3 and UPI is default, start simulation
-            if (this.currentStep === 3 && this.selectedPayment === 'upi') {
-                this.simulateUPIScan();
+    loadDashboard() {
+        console.log('[UserPanel] Loading dashboard...');
+        this.isLoading = true;
+        this.userService.getDashboardData().subscribe({
+            next: (data: any) => {
+                console.log('[UserPanel] Dashboard data received:', data);
+                this.dashboardData = data;
+                this.isLoading = false;
+            },
+            error: (err: any) => {
+                console.error('[UserPanel] Error loading dashboard:', err);
+                this.isLoading = false;
             }
-        }
-    }
-
-    prevStep() {
-        if (this.currentStep > 1) {
-            this.currentStep--;
-            window.scrollTo(0, 0);
-        }
-    }
-
-    async onPayNow() {
-        if (this.selectedPayment === 'upi') {
-            this.isProcessing = true;
-            setTimeout(() => {
-                this.isProcessing = false;
-                this.showSuccessModal = true;
-            }, 3000);
-        } else {
-            this.showSuccessModal = true;
-        }
-    }
-
-    finishWithReview() {
-        this.showSuccessModal = false;
-        this.cartService.clear();
-        this.showReviewDialog = true;
-    }
-
-    finishWithoutReview() {
-        this.showSuccessModal = false;
-        this.finishOrder();
-    }
-
-    handleReviewSubmit(data: { rating: number, description: string }) {
-        const user = this.authService.getCurrentUser() as any;
-        this.reviewService.addReview({
-            userName: user?.fullName || 'Guest User',
-            rating: data.rating,
-            description: data.description,
-            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         });
-        alert('Thank you for your review!');
-        this.finishOrder();
     }
 
-    finishOrder() {
-        this.cartService.clear();
+    loadAllOrders() {
+        this.userService.getOrders().subscribe({
+            next: (orders: any[]) => {
+                this.allOrders = orders;
+            },
+            error: (err: any) => {
+                console.error('[UserPanel] Error loading all orders:', err);
+            }
+        });
+    }
+
+    logout() {
+        this.authService.logout();
         this.router.navigate(['/']);
     }
 }

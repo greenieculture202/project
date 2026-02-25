@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     cart: {
         type: Array,
         default: []
+    },
+    greenPoints: {
+        type: Number,
+        default: 0
     }
 });
 

@@ -15,7 +15,7 @@ export class CategoryNavComponent {
     private router = inject(Router);
     categories = [
         'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Soil & Growing Media',
-        'Fertilizers & Nutrients', 'Gardening Tools', 'About Us', 'Contact Us'
+        'Fertilizers & Nutrients', 'Gardening Tools', 'About Us', 'Contact Us', "FAQ's"
     ];
 
     // Map of categories that have specific mega menus
@@ -359,6 +359,17 @@ export class CategoryNavComponent {
         event.preventDefault();
         event.stopPropagation();
 
+        if (category === "FAQ's") {
+            this.router.navigate(['/']).then(() => {
+                setTimeout(() => {
+                    const el = document.getElementById('faq-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 120);
+            });
+            this.hideMenu();
+            return;
+        }
+
         const link = this.getCategoryLink(category);
         this.router.navigateByUrl(link);
         this.hideMenu();
@@ -426,6 +437,9 @@ export class CategoryNavComponent {
         }
         if (category === 'Contact Us') {
             return '/contact-us';
+        }
+        if (category === "FAQ's") {
+            return '/';
         }
         // For new gardening categories, navigate to category page
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];

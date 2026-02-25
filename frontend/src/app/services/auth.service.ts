@@ -50,6 +50,22 @@ export class AuthService {
         );
     }
 
+    requestGoogleOTP(idToken: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/google-login/request-otp`, { idToken });
+    }
+
+    verifyGoogleOTP(email: string, otp: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/google-login/verify-otp`, { email, otp }).pipe(
+            tap(res => {
+                sessionStorage.setItem('auth_token', res.token);
+                sessionStorage.setItem('user_name', res.user.fullName);
+                this.isLoggedInSubject.next(true);
+                this.currentUserSubject.next(res.user.fullName);
+                this.cartService.syncWithBackend();
+            })
+        );
+    }
+
     googleLogin(idToken: string): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/google-login`, { idToken }).pipe(
             tap(res => {

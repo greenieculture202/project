@@ -1,162 +1,270 @@
 <div class="checkout-page">
-    <div class="checkout-container">
-        <!-- Left Side: Forms -->
-        <div class="checkout-forms">
-            <header class="checkout-header">
-                <div class="brand-logo">
-                    <img src="images/greenie-culture-logo.png" alt="Greenie Culture">
-                </div>
-            </header>
+    <div class="checkout-layout">
+        <!-- Sidebar Stepper -->
+        <aside class="checkout-sidebar">
+            <div class="sidebar-header">
+                <img src="images/greenie-culture-logo.png" alt="Greenie Culture" class="logo">
+            </div>
 
-            <section class="form-section">
-                <div class="section-header">
-                    <h2>Contact</h2>
-                    <a routerLink="/login" class="signin-link" *ngIf="!(authService.isLoggedIn$ | async)">Sign in</a>
-                </div>
-                <div class="input-group">
-                    <input type="email" [(ngModel)]="contactEmail" placeholder="Email" class="checkout-input">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="news" checked>
-                    <label for="news">Email me with news and offers</label>
-                </div>
-            </section>
-
-            <section class="form-section">
-                <h2>Delivery</h2>
-                <div class="input-group">
-                    <select class="checkout-input">
-                        <option value="India">India</option>
-                    </select>
-                </div>
-                <div class="input-row">
-                    <input type="text" [(ngModel)]="firstName" placeholder="First name" class="checkout-input">
-                    <input type="text" [(ngModel)]="lastName" placeholder="Last name" class="checkout-input">
-                </div>
-                <div class="input-group">
-                    <input type="text" [(ngModel)]="address" placeholder="Address" class="checkout-input">
-                </div>
-                <div class="input-row triplet">
-                    <input type="text" [(ngModel)]="city" placeholder="City" class="checkout-input">
-                    <select class="checkout-input" [(ngModel)]="stateName">
-                        <option value="Gujarat">Gujarat</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                        <option value="Delhi">Delhi</option>
-                        <!-- Add more states if needed -->
-                    </select>
-                    <input type="text" [(ngModel)]="pinCode" placeholder="PIN code" class="checkout-input">
-                </div>
-                <div class="input-group">
-                    <input type="tel" [(ngModel)]="phone" placeholder="Phone" class="checkout-input">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="save-info">
-                    <label for="save-info">Save this information for next time</label>
-                </div>
-            </section>
-
-            <section class="form-section">
-                <h2>Payment</h2>
-                <p class="payment-hint">All transactions are secure and encrypted.</p>
-
-                <div class="payment-options">
-                    <div class="payment-option" [class.selected]="selectedPayment === 'razorpay'"
-                        (click)="selectedPayment = 'razorpay'">
-                        <div class="option-header">
-                            <input type="radio" name="payment" [checked]="selectedPayment === 'razorpay'">
-                            <span>Razorpay Secure (UPI, Cards, Int'l Cards, Wallets)</span>
-                            <div class="payment-icons">
-                                <img src="https://cdn-icons-png.flaticon.com/128/9294/9294963.png" alt="Card">
-                                <img src="https://cdn-icons-png.flaticon.com/128/196/196578.png" alt="Visa">
-                            </div>
-                        </div>
-                        <div class="option-details" *ngIf="selectedPayment === 'razorpay'">
-                            <p>You'll be redirected to Razorpay Secure to complete your purchase.</p>
-                        </div>
+            <div class="vertical-stepper">
+                <div class="step-item" [class.active]="currentStep === 1" [class.completed]="currentStep > 1"
+                    (click)="currentStep = 1">
+                    <div class="step-marker">
+                        <span class="step-num">1</span>
+                        <span class="step-check">✓</span>
                     </div>
-
-                    <div class="payment-option" [class.selected]="selectedPayment === 'phonepe'"
-                        (click)="selectedPayment = 'phonepe'">
-                        <div class="option-header">
-                            <input type="radio" name="payment" [checked]="selectedPayment === 'phonepe'">
-                            <span>PhonePe Payment Gateway (UPI, Cards & NetBanking)</span>
-                            <div class="payment-icons">
-                                <img src="https://cdn-icons-png.flaticon.com/128/9295/9295058.png" alt="Wallet">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <button class="pay-now-btn" (click)="onPayNow()">Pay now</button>
-        </div>
-
-        <!-- Right Side: Order Summary -->
-        <aside class="order-summary">
-            <div class="summary-content">
-                <div class="items-list">
-                    <div class="summary-item" *ngFor="let item of items()">
-                        <div class="item-img-box">
-                            <img [src]="item.image" [alt]="item.name" loading="lazy">
-                            <span class="item-qty-badge">{{ item.quantity }}</span>
-                        </div>
-                        <div class="item-info">
-                            <h3>{{ item.name }}</h3>
-                            <p class="planter-detail" *ngIf="item.planter">{{ item.planter }}</p>
-                        </div>
-                        <div class="item-price">
-                            ₹{{ item.price * item.quantity }}
-                        </div>
+                    <div class="step-label">
+                        <h4>Customer Details</h4>
+                        <p>Name, Email & Address</p>
                     </div>
                 </div>
 
-                <div class="promo-section">
-                    <input type="text" placeholder="Discount code or gift card" class="promo-input">
-                    <button class="apply-btn">Apply</button>
-                </div>
+                <div class="step-line" [class.active]="currentStep >= 2"></div>
 
-                <div class="savings-banner">
-                    <i class="fas fa-tag"></i>
-                    <span>SAVE15 - Get 15% OFF</span>
-                    <button class="apply-tag">Apply</button>
-                </div>
-
-                <div class="totals-box">
-                    <div class="total-row">
-                        <span>Subtotal · {{ cartService.totalItems() }} items</span>
-                        <span>₹{{ totalAmount() }}</span>
+                <div class="step-item" [class.active]="currentStep === 2" [class.completed]="currentStep > 2"
+                    (click)="currentStep >= 2 ? currentStep = 2 : null">
+                    <div class="step-marker">
+                        <span class="step-num">2</span>
+                        <span class="step-check">✓</span>
                     </div>
-                    <div class="total-row">
-                        <span>Shipping</span>
-                        <span class="free-text">Enter shipping address</span>
-                    </div>
-                    <div class="total-row main-total">
-                        <span>Total</span>
-                        <div class="final-price">
-                            <span class="currency">INR</span>
-                            <strong>₹{{ totalAmount() }}</strong>
-                        </div>
+                    <div class="step-label">
+                        <h4>Order Summary</h4>
+                        <p>Review your items</p>
                     </div>
                 </div>
 
-                <div class="trust-marks">
-                    <h3>10 Million+ Happy Customers Trust Us!</h3>
-                    <div class="trust-grid">
-                        <div class="trust-item">
-                            <img src="https://cdn-icons-png.flaticon.com/128/1554/1554591.png" alt="Guarantee">
-                            <span>14-Day Replacement</span>
-                        </div>
-                        <div class="trust-item">
-                            <img src="https://cdn-icons-png.flaticon.com/128/628/628324.png" alt="Plant">
-                            <span>Farm-Fresh Plants</span>
-                        </div>
-                        <div class="trust-item">
-                            <img src="https://cdn-icons-png.flaticon.com/128/709/709790.png" alt="Package">
-                            <span>Safe, Secure Packaging</span>
-                        </div>
+                <div class="step-line" [class.active]="currentStep >= 3"></div>
+
+                <div class="step-item" [class.active]="currentStep === 3"
+                    (click)="currentStep >= 3 ? currentStep = 3 : null">
+                    <div class="step-marker">
+                        <span class="step-num">3</span>
+                        <span class="step-check">✓</span>
+                    </div>
+                    <div class="step-label">
+                        <h4>Payment Method</h4>
+                        <p>Secure checkout</p>
                     </div>
                 </div>
             </div>
+
+            <div class="sidebar-footer">
+                <p>© 2026 Greenie Culture</p>
+            </div>
         </aside>
+
+        <!-- Main Content Area -->
+        <main class="checkout-main">
+            <div class="content-container">
+                <!-- Step 1: Basic Details -->
+                <div class="step-content" *ngIf="currentStep === 1">
+                    <div class="step-header">
+                        <h2>Personal Details</h2>
+                        <a routerLink="/login" class="signin-link" *ngIf="!(authService.isLoggedIn$ | async)">Already
+                            have an account? Sign in</a>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-field">
+                            <label>First Name</label>
+                            <input type="text" [(ngModel)]="firstName" placeholder="e.g. Rahul" class="checkout-input">
+                        </div>
+                        <div class="input-field">
+                            <label>Last Name</label>
+                            <input type="text" [(ngModel)]="lastName" placeholder="e.g. Sharma" class="checkout-input">
+                        </div>
+                        <div class="input-field">
+                            <label>Email Address</label>
+                            <input type="email" [(ngModel)]="contactEmail" placeholder="rahul@example.com"
+                                class="checkout-input">
+                        </div>
+                        <div class="input-field">
+                            <label>Mobile Number</label>
+                            <div class="phone-wrapper">
+                                <span class="prefix">+91</span>
+                                <input type="tel" [(ngModel)]="phone" placeholder="9876543210" class="checkout-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="step-header">
+                        <h2>Shipping Address</h2>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-field full-width">
+                            <label>Complete Address</label>
+                            <input type="text" [(ngModel)]="address" placeholder="Flat No, Apartment, Street name"
+                                class="checkout-input">
+                        </div>
+                        <div class="input-field">
+                            <label>City</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
+                                    placeholder="Search City" class="checkout-input">
+                                <div class="dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+                                    <div class="option" *ngFor="let city of filteredCities" (click)="selectCity(city)">
+                                        {{ city }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-field">
+                            <label>State</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
+                                    (blur)="closeDropdowns()" placeholder="Search State" class="checkout-input">
+                                <div class="dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
+                                    <div class="option" *ngFor="let state of filteredStates"
+                                        (click)="selectState(state)">{{ state }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-field">
+                            <label>Pincode</label>
+                            <input type="text" [(ngModel)]="pincode" placeholder="400001" class="checkout-input">
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button class="primary-btn" [disabled]="!isStep1Valid()" (click)="nextStep()">Continue to
+                            Summary</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Order Summary -->
+                <div class="step-content" *ngIf="currentStep === 2">
+                    <div class="step-header">
+                        <h2>Review Your Order</h2>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="order-items-list">
+                            <div class="cart-item" *ngFor="let item of items()">
+                                <div class="item-visual">
+                                    <img [src]="item.image" [alt]="item.name">
+                                    <span class="qty">{{ item.quantity }}</span>
+                                </div>
+                                <div class="item-details">
+                                    <h3>{{ item.name }}</h3>
+                                    <p *ngIf="item.planter">{{ item.planter }} Planter</p>
+                                </div>
+                                <div class="item-price">
+                                    ₹{{ item.price * item.quantity }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="promo-box">
+                            <input type="text" placeholder="Coupon Code" class="checkout-input">
+                            <button class="secondary-btn">Apply</button>
+                        </div>
+
+                        <div class="billing-summary">
+                            <div class="bill-row">
+                                <span>Subtotal</span>
+                                <span>₹{{ totalAmount() }}</span>
+                            </div>
+                            <div class="bill-row">
+                                <span>Delivery Charges</span>
+                                <span class="success-text">FREE</span>
+                            </div>
+                            <div class="bill-row grand-total">
+                                <span>Amount Payable</span>
+                                <span>₹{{ totalAmount() }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button class="back-link" (click)="prevStep()">Back to Details</button>
+                        <button class="primary-btn" (click)="nextStep()">Continue to Payment</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment Section -->
+                <div class="step-content" *ngIf="currentStep === 3">
+                    <div class="step-header">
+                        <h2>Select Payment Method</h2>
+                    </div>
+
+                    <div class="payment-grid">
+                        <div class="pay-method" [class.selected]="selectedPayment === 'upi'"
+                            (click)="selectedPayment = 'upi'">
+                            <input type="radio" name="pay" [checked]="selectedPayment === 'upi'">
+                            <div class="method-info">
+                                <div class="method-main">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    <span>UPI / Google Pay / PhonePe</span>
+                                </div>
+                                <img src="https://cdn-icons-png.flaticon.com/128/10424/10424075.png" alt="UPI"
+                                    class="icon">
+                            </div>
+                        </div>
+
+                        <!-- QR Scanner Section -->
+                        <div class="qr-scanner-container" *ngIf="selectedPayment === 'upi'">
+                            <div class="qr-card">
+                                <h3>Scan & Pay</h3>
+                                <div class="qr-image">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=greenieculture@upi&pn=GreenieCulture&am={{totalAmount()}}&cu=INR"
+                                        alt="QR Code">
+                                </div>
+                                <p>Open any UPI App to scan</p>
+                                <div class="simulated-payment-info">
+                                    <span class="loader-dot"></span>
+                                    <span>Waiting for payment...</span>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="pay-method" [class.selected]="selectedPayment === 'cod'"
+                            (click)="selectedPayment = 'cod'">
+                            <input type="radio" name="pay" [checked]="selectedPayment === 'cod'">
+                            <div class="method-info">
+                                <div class="method-main">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                    <span>Cash on Delivery</span>
+                                </div>
+                                <img src="https://cdn-icons-png.flaticon.com/128/649/649454.png" alt="COD" class="icon">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button class="back-link" (click)="prevStep()">Review Order</button>
+                        <button class="primary-btn checkout-btn" [disabled]="isProcessing" (click)="onPayNow()">
+                            <span *ngIf="!isProcessing">Place Order - ₹{{ totalAmount() }}</span>
+                            <span *ngIf="isProcessing">Processing Payment...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
+
+<!-- Success Modal -->
+<div class="success-overlay" *ngIf="showSuccessModal">
+    <div class="success-modal">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Order Placed Successfully!</h2>
+        <p>Thank you for shopping with Greenie Culture 🌿</p>
+        <div class="modal-actions">
+            <button class="review-btn" (click)="finishWithReview()">
+                <i class="fas fa-star"></i> Write a Review
+            </button>
+            <button class="skip-btn" (click)="finishWithoutReview()">
+                Skip for now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Review Dialog -->
+<app-review-dialog *ngIf="showReviewDialog" (submitReview)="handleReviewSubmit($event)"
+    (close)="showReviewDialog = false; finishOrder()">
+</app-review-dialog>

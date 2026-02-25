@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+.faq-page {
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    background: #fafbfc;
+}
+
+/* Hero */
+.faq-hero {
+    position: relative;
+    height: 420px;
+    overflow: hidden;
+}
+
+.hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.35);
+}
+
+.hero-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 20px;
+}
+
+.hero-badge {
+    background: rgba(45, 140, 111, 0.9);
+    color: white;
+    padding: 8px 22px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.hero-content h1 {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    color: white;
+}
+
+.hero-content h1 span {
+    color: #10b981;
+}
+
+.hero-content p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* FAQ Container */
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 20px 80px;
+}
+
+/* FAQ List */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 50px;
+}
+
+.faq-item {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.faq-item:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.faq-item.open {
+    border-color: #2d8c6f;
+    box-shadow: 0 8px 24px rgba(45, 140, 111, 0.08);
+}
+
+.faq-question {
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    gap: 20px;
+}
+
+.q-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.category-tag {
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.category-tag[data-cat="Orders"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.category-tag[data-cat="Payment"] {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+.category-tag[data-cat="Delivery"] {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.category-tag[data-cat="Plants"] {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.category-tag[data-cat="Returns"] {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.category-tag[data-cat="Account"] {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.q-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.faq-question i {
+    color: #2d8c6f;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.faq-answer {
+    padding: 0 28px 24px;
+    border-top: 1px solid #f1f5f9;
+    animation: slideDown 0.25s ease-out;
+}
+
+.faq-answer p {
+    margin-top: 16px;
+    color: #64748b;
+    line-height: 1.7;
+    font-size: 15px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* View All Button */
+.view-all-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 44px;
+    background: #2d8c6f;
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 24px rgba(45, 140, 111, 0.2);
+}
+
+.view-all-btn:hover {
+    background: #236e57;
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(45, 140, 111, 0.3);
+}
+
+.view-all-btn i {
+    transition: transform 0.3s ease;
+}
+
+.view-all-btn:hover i {
+    transform: translateX(5px);
+}
+
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 34px;
+    }
+
+    .faq-hero {
+        height: 300px;
+    }
+
+    .q-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

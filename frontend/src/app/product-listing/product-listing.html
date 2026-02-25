@@ -16,7 +16,8 @@
     </div>
 
     <div class="product-grid" *ngIf="!isLoading && !error">
-        <a class="product-card" *ngFor="let product of products" [routerLink]="['/product', getSlug(product.name)]">
+        <a class="product-card" *ngFor="let product of products"
+            [routerLink]="['/product', product.slug || getSlug(product.name)]">
             <div class="image-container">
                 <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">
                 <img [src]="product.hoverImage || product.image" [alt]="product.name" class="product-img hover-img"

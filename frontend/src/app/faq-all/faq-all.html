@@ -1,0 +1,51 @@
+<div class="faq-all-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <a routerLink="/faq" class="back-link"><i class="fas fa-arrow-left"></i> Back to FAQs</a>
+        <h1>All <span>FAQs</span></h1>
+        <p>Browse questions by category</p>
+    </div>
+
+    <!-- Category Filter Tabs (for quick scroll) -->
+    <div class="category-bar">
+        <div class="category-tabs">
+            <button class="cat-tab" *ngFor="let cat of categories" [class.active]="activeCategory() === cat"
+                [attr.data-cat]="cat" (click)="setCategory(cat)">
+                {{ cat }}
+            </button>
+        </div>
+    </div>
+
+    <!-- FAQs grouped by category -->
+    <div class="faq-all-container">
+        <ng-container *ngFor="let cat of categoryGroups">
+            <ng-container *ngIf="activeCategory() === 'All' || activeCategory() === cat.name">
+                <div class="category-section">
+                    <div class="category-section-header">
+                        <span class="section-badge" [attr.data-cat]="cat.name">
+                            <i [class]="cat.icon"></i>
+                        </span>
+                        <div>
+                            <h2>{{ cat.name }}</h2>
+                            <p>{{ cat.faqs.length }} questions</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-list">
+                        <div class="faq-item" *ngFor="let faq of cat.faqs; let i = index"
+                            [class.open]="openKey() === cat.name + i">
+                            <div class="faq-question" (click)="toggle(cat.name + i)">
+                                <span class="q-text">{{ faq.question }}</span>
+                                <i class="fas" [class.fa-plus]="openKey() !== cat.name + i"
+                                    [class.fa-minus]="openKey() === cat.name + i"></i>
+                            </div>
+                            <div class="faq-answer" *ngIf="openKey() === cat.name + i">
+                                <p>{{ faq.answer }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+        </ng-container>
+    </div>
+</div>

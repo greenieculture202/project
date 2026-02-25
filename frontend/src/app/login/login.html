@@ -84,4 +84,31 @@
             </footer>
         </form>
     </div>
+    <!-- OTP Modal Overlay -->
+    <div class="otp-overlay" *ngIf="showOtpModal">
+        <div class="otp-modal">
+            <div class="otp-header">
+                <div class="otp-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h2>Check Your Gmail</h2>
+                <p>We've sent a 6-digit code to <strong>{{ otpEmail }}</strong></p>
+            </div>
+
+            <div class="otp-form">
+                <div class="otp-input-group">
+                    <input type="text" [(ngModel)]="otpCode" placeholder="000000" maxlength="6" class="otp-input-field">
+                </div>
+                <button class="verify-btn" (click)="onVerifyOtp()" [disabled]="isLoading">
+                    {{ isLoading ? 'Verifying...' : 'Verify & Login' }}
+                </button>
+                <button class="cancel-btn" (click)="closeOtpModal()">Cancel</button>
+            </div>
+
+            <div class="otp-footer">
+                <p>Didn't receive the code? Check your spam or <a (click)="showOtpModal = false; loginWithGoogle()">try
+                        again</a></p>
+            </div>
+        </div>
+    </div>
 </div>

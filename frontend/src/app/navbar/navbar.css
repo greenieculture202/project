@@ -370,3 +370,23 @@
     transform: scale(1);
   }
 }
+
+.profile-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.3s ease;
+}
+
+.profile-icon-wrapper i {
+  font-size: 1.6rem;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.profile-icon-wrapper:hover i {
+  color: #1a5d1a;
+  transform: scale(1.1);
+}

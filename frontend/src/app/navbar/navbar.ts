@@ -54,4 +54,15 @@ export class NavbarComponent {
         this.authService.logout();
         this.router.navigate(['/']);
     }
+
+    navigateToFaq() {
+        this.router.navigate(['/']).then(() => {
+            setTimeout(() => {
+                const el = document.getElementById('faq-section');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        });
+    }
 }
