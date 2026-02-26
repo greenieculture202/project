@@ -47,7 +47,7 @@ export class RegisterComponent {
 
             this.authService.registerUser(this.registerForm.value)
                 .subscribe({
-                    next: (res) => {
+                    next: (res: any) => {
                         this.isLoading = false;
                         this.isRegistered = true;
                         this.notificationService.show(
@@ -61,7 +61,7 @@ export class RegisterComponent {
                             this.router.navigate(['/login']);
                         }, 1800);
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.isLoading = false;
                         this.registerError = err.error?.message || 'Registration failed. Please try again.';
                         this.notificationService.show(this.registerError, 'Registration Error', 'error');

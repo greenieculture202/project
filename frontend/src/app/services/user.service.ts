@@ -23,4 +23,13 @@ export class UserService {
     getOrders(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/orders`, { headers: this.getHeaders() });
     }
+
+    // Admin Methods
+    getAllUsers(): Observable<any[]> {
+        return this.http.get<any[]>('/api/admin/users');
+    }
+
+    deleteUser(id: string): Observable<any> {
+        return this.http.delete(`/api/admin/users/${id}`);
+    }
 }

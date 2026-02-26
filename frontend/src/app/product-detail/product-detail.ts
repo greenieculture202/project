@@ -46,7 +46,7 @@ export class ProductDetailComponent implements OnInit {
     constructor() { }
 
     ngOnInit() {
-        this.route.params.subscribe(params => {
+        this.route.params.subscribe((params: any) => {
             const slug = params['id'];
             if (slug) {
                 window.scrollTo(0, 0);
@@ -62,14 +62,14 @@ export class ProductDetailComponent implements OnInit {
                 }
 
                 this.productService.getProductBySlug(slug).subscribe({
-                    next: (product) => {
+                    next: (product: any) => {
                         this.product = product || undefined;
                         this.isLoading = false;
                         if (this.product) {
                             this.setupProductDetails();
                         }
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         console.error('Error loading product', err);
                         this.isLoading = false;
                     }

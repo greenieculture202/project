@@ -30,7 +30,15 @@ export class App {
 
   private updateTopLayoutVisibility(url: string): void {
     const cleanUrl = url.split('?')[0].split('#')[0];
-    const hiddenRoutes = ['/login', '/register'];
-    this.hideTopLayout.set(hiddenRoutes.some((route) => cleanUrl.startsWith(route)));
+    const hiddenRoutes = ['/login', '/register', '/admin-dashboard'];
+    const isHidden = hiddenRoutes.some((route) => cleanUrl.startsWith(route));
+    this.hideTopLayout.set(isHidden);
+
+    // Toggle class on body to handle padding
+    if (isHidden) {
+      document.body.classList.add('no-padding');
+    } else {
+      document.body.classList.remove('no-padding');
+    }
   }
 }

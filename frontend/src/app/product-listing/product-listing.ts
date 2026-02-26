@@ -69,7 +69,7 @@ export class ProductListingComponent {
         }, 8000);
 
         this.productService.getProducts(categoryName).subscribe({
-            next: (products) => {
+            next: (products: any[]) => {
                 clearTimeout(fallbackTimer);
                 this.products = products;
                 this.isLoading = false;
@@ -79,7 +79,7 @@ export class ProductListingComponent {
                     this.displayCategory = categoryName;
                 }
             },
-            error: (err) => {
+            error: (err: any) => {
                 clearTimeout(fallbackTimer);
                 console.error('Error loading listing:', err);
                 this.error = 'Failed to load products. Please check your connection.';

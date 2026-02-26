@@ -1,0 +1,22 @@
+<div class="reviews-section" *ngIf="reviews().length > 0">
+    <div class="reviews-container">
+        <div class="section-header">
+            <h2>What Our Customers Say</h2>
+            <p>Real experiences from our plant community</p>
+        </div>
+        <div class="reviews-grid">
+            <div class="review-card" *ngFor="let review of reviews().slice(0, 3)">
+                <div class="review-stars">
+                    <i class="fas fa-star" *ngFor="let s of [1,2,3,4,5]" [class.filled]="review.rating >= s"></i>
+                </div>
+                <p class="review-text">"{{ review.description }}"</p>
+                <div class="review-author">
+                    <div class="author-info">
+                        <strong>{{ review.userName }}</strong>
+                        <span>{{ review.date }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

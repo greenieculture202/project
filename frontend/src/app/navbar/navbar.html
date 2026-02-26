@@ -30,6 +30,9 @@
     <ng-container *ngIf="authService.isLoggedIn$ | async; else loginBtn">
       <div class="user-profile">
         <span class="welcome-text">Hello, <strong>{{ authService.currentUser$ | async }}</strong></span>
+        <a *ngIf="authService.isAdmin$ | async" routerLink="/admin-dashboard" class="admin-link">
+          <i class="fas fa-user-shield"></i> Admin
+        </a>
         <button class="logout-btn" (click)="logout()">
           <i class="fas fa-sign-out-alt"></i>
           <span>Logout</span>

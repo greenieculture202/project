@@ -15,6 +15,10 @@ body {
     background-color: #fcfcfc;
 }
 
+body.no-padding {
+    padding-top: 0 !important;
+}
+
 /* Ensure images generally behave nicely */
 img {
     max-width: 100%;

@@ -40,11 +40,21 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.initializeGoogleLogin();
+    }
+
+    private initializeGoogleLogin() {
         if (typeof google !== 'undefined') {
             google.accounts.id.initialize({
                 client_id: '245945304873-qv3ci0hquk7q087bljei6dusabaj6c4l.apps.googleusercontent.com',
-                callback: (response: any) => this.handleCredentialResponse(response)
+                callback: (response: any) => this.handleCredentialResponse(response),
+                auto_select: false,
+                cancel_on_tap_outside: true
             });
+            // Try to auto-show One Tap prompt in the top-right
+            google.accounts.id.prompt();
+        } else {
+            setTimeout(() => this.initializeGoogleLogin(), 1000);
         }
     }
 
@@ -55,13 +65,13 @@ export class LoginComponent implements OnInit {
             console.log('[Google Login] Requesting OTP for email in credential...');
 
             this.authService.requestGoogleOTP(this.tempIdToken).subscribe({
-                next: (res) => {
+                next: (res: any) => {
                     this.isLoading = false;
                     this.otpEmail = res.email;
                     this.showOtpModal = true;
                     this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
                 },
-                error: (err) => {
+                error: (err: any) => {
                     this.isLoading = false;
                     console.error('[Google Login] Request error:', err);
                     this.loginError = err.error?.message || 'Failed to send OTP. Please try again.';
@@ -79,13 +89,13 @@ export class LoginComponent implements OnInit {
 
         this.isLoading = true;
         this.authService.verifyGoogleOTP(this.otpEmail, this.otpCode).subscribe({
-            next: (res) => {
+            next: (res: any) => {
                 this.isLoading = false;
                 this.showOtpModal = false;
                 this.notificationService.show('Logged in with Google!', 'Success', 'success');
                 this.router.navigate(['/']);
             },
-            error: (err) => {
+            error: (err: any) => {
                 this.isLoading = false;
                 console.error('[Google Verification] Error:', err);
                 const msg = err.error?.message || 'Invalid or expired OTP. Please try again.';
@@ -112,6 +122,17 @@ export class LoginComponent implements OnInit {
             this.loginError = '';
 
             const rawEmail = this.loginForm.value.email;
+            const password = this.loginForm.value.password;
+
+            // Admin Login Check
+            if (rawEmail === 'admin@greenie.com' && password === 'radheradhe') {
+                this.isLoading = false;
+                this.authService.setAdmin(true);
+                this.notificationService.show('Welcome Admin!', 'Admin Login Successful', 'success');
+                this.router.navigate(['/admin-dashboard']);
+                return;
+            }
+
             const emailPrefix = rawEmail.split('@')[0]; // Strip domain if user typed it
 
             const loginPayload = {
@@ -156,9 +177,25 @@ export class LoginComponent implements OnInit {
         }
     }
 
+
     loginWithGoogle() {
         if (typeof google !== 'undefined') {
-            google.accounts.id.prompt();
+            console.log('[Google Login] Triggering prompt...');
+            google.accounts.id.prompt((notification: any) => {
+                console.log('[Google Login] Prompt notification:', notification);
+                if (notification.isNotDisplayed()) {
+                    const reason = notification.getNotDisplayedReason();
+                    console.warn('[Google Login] Prompt was not displayed:', reason);
+
+                    // If suppressed or dismissed too many times, Google blocks it for a while.
+                    // We notify the user so they aren't confused why 'nothing happens'.
+                    if (reason === 'suppressed_by_user' || reason === 'dismissed') {
+                        this.notificationService.show('Google login prompt was dismissed recently. Please refresh the page or try again in a few minutes.', 'Login Notice', 'info');
+                    } else {
+                        this.notificationService.show('Wait a moment for Google login to load, or refresh the page.', 'Login Notice', 'info');
+                    }
+                }
+            });
         } else {
             this.notificationService.show('Google login is not ready yet. Please refresh.', 'Wait', 'info');
         }

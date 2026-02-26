@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ReviewsComponent } from '../reviews/reviews';
 
 export interface FaqItem {
     question: string;
@@ -11,7 +12,7 @@ export interface FaqItem {
 @Component({
     selector: 'app-faq',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, ReviewsComponent],
     templateUrl: './faq.html',
     styleUrl: './faq.css'
 })

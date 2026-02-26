@@ -242,7 +242,8 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
                 password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10),
                 phone: 'Not provided',
                 address: 'Not provided',
-                profilePic: picture
+                profilePic: picture,
+                method: 'Google'
             });
             user = await newUser.save();
         }
@@ -482,6 +483,26 @@ app.get('/api/user/orders', auth, async (req, res) => {
     try {
         const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
         res.json(orders);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ADMIN API - Get all users
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find({}).sort({ createdAt: -1 }).lean();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ADMIN API - Delete user
+app.delete('/api/admin/users/:id', async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }

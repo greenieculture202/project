@@ -1,0 +1,351 @@
+<div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-container" routerLink="/">
+                <div class="logo-wrapper">
+                    <img src="assets/images/log-removebg-preview.png" alt="Logo" class="admin-logo">
+                </div>
+                <div class="brand-names">
+                    <span class="main-name">Greenie Culture</span>
+                    <span class="sub-name">Admin Dashboard</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="javascript:void(0)" [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'products'" (click)="setTab('products')">
+                <i class="fas fa-box"></i> Products
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
+                <i class="fas fa-users"></i> Users
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
+                <i class="fas fa-shopping-cart"></i> Orders
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+        </nav>
+
+        <div class="logout-section">
+            <button (click)="logout()" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Content -->
+        <ng-container *ngIf="activeTab === 'dashboard'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Dashboard Overview</h1>
+                    <p>Welcome back, Admin! Here's what's happening today.</p>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">A</div>
+                    <span class="admin-name">Administrator</span>
+                </div>
+            </header>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card" *ngFor="let stat of stats" [style.border-left-color]="stat.color">
+                    <div class="stat-info">
+                        <span class="stat-label">{{stat.label}}</span>
+                        <h2 class="stat-value">{{stat.value}}</h2>
+                    </div>
+                    <div class="stat-icon" [style.background-color]="stat.color + '20'" [style.color]="stat.color">
+                        <i class="fas fa-{{stat.icon}}"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Section -->
+            <div class="activity-section">
+                <div class="data-card orders-card">
+                    <div class="card-header">
+                        <h3>Recent Orders</h3>
+                        <button class="btn-view-all">View All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let order of recentOrders">
+                                    <td>{{order.id}}</td>
+                                    <td>{{order.user}}</td>
+                                    <td>{{order.date}}</td>
+                                    <td>
+                                        <span class="status-badge" [ngClass]="order.status.toLowerCase()">
+                                            {{order.status}}
+                                        </span>
+                                    </td>
+                                    <td>{{order.amount}}</td>
+                                    <td><button class="btn-action">Details</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="data-card quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn"><i class="fas fa-plus"></i> Add New Product</button>
+                        <button class="action-btn"><i class="fas fa-percentage"></i> Create Discount</button>
+                        <button class="action-btn"><i class="fas fa-envelope"></i> Send Newsletter</button>
+                        <button class="action-btn"><i class="fas fa-file-export"></i> Export Report</button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Products Management Content -->
+        <ng-container *ngIf="activeTab === 'products'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Product Management</h1>
+                    <p>View and manage all your products by category.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-add-product"><i class="fas fa-plus"></i> Add New Product</button>
+                </div>
+            </header>
+
+            <div class="products-view-container">
+                <div *ngIf="isLoadingProducts" class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i> Loading All Products...
+                </div>
+
+                <!-- Main Group Tabs -->
+                <div class="primary-group-tabs">
+                    <button [class.active]="activeMainCategory === 'Types'" (click)="setMainGroup('Types')">
+                        <i class="fas fa-leaf"></i> Product Types
+                    </button>
+                    <button [class.active]="activeMainCategory === 'Seeds'" (click)="setMainGroup('Seeds')">
+                        <i class="fas fa-seedling"></i> Seeds Collection
+                    </button>
+                </div>
+
+                <!-- Sub-Category Navigation (Filters) -->
+                <div class="category-nav-header" *ngIf="getCategoryList().length > 0">
+                    <div class="category-filters-row">
+                        <button [class.active]="productCategoryFilter === 'All'"
+                            (click)="productCategoryFilter = 'All'">
+                            All {{activeMainCategory}}
+                        </button>
+                        <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
+                            (click)="productCategoryFilter = cat">
+                            {{getCategoryLabel(cat)}}
+                        </button>
+                    </div>
+                    <div class="search-filter">
+                        <input type="text" placeholder="Filter from database...">
+                    </div>
+                </div>
+
+                <div class="category-section" *ngFor="let category of filteredProductCategories">
+                    <div class="category-header">
+                        <h2>{{getCategoryLabel(category)}}</h2>
+                        <span class="count-badge">{{productMap[category].length}} Items</span>
+                    </div>
+
+                    <div class="products-table-card data-card">
+                        <div class="table-responsive">
+                            <table class="products-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Original Price</th>
+                                        <th>Discount</th>
+                                        <th>Stock Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let prod of productMap[category]">
+                                        <td>
+                                            <div class="prod-cell">
+                                                <img [src]="prod.image" class="prod-thumb" alt="Product">
+                                                <div class="prod-info">
+                                                    <span class="prod-name">{{prod.name}}</span>
+                                                    <span class="prod-slug">{{prod.slug || 'N/A'}}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>₹{{prod.price}}</td>
+                                        <td>₹{{prod.originalPrice || '-'}}</td>
+                                        <td><span class="discount-pill" *ngIf="prod.discount">{{prod.discount}}</span>
+                                        </td>
+                                        <td><span class="status-badge delivered">In Stock</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon edit" title="Edit"><i
+                                                    class="far fa-edit"></i></button>
+                                            <button class="btn-icon delete" title="Delete"><i
+                                                    class="far fa-trash-alt"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Users Management Content -->
+        <ng-container *ngIf="activeTab === 'users'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>User Management</h1>
+                    <p>Manage and monitor all registered users from here.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-add-user"><i class="fas fa-user-plus"></i> Add User</button>
+                </div>
+            </header>
+
+            <div class="users-list-container">
+                <div class="data-card">
+                    <div class="card-header">
+                        <div class="title-with-filters">
+                            <h3>All Users ({{filteredUsers.length}})</h3>
+                            <div class="user-filters">
+                                <button [class.active]="userFilter === 'All'" (click)="userFilter = 'All'">All</button>
+                                <button [class.active]="userFilter === 'Google'"
+                                    (click)="userFilter = 'Google'">Google</button>
+                                <button [class.active]="userFilter === 'Website'"
+                                    (click)="userFilter = 'Website'">Website</button>
+                            </div>
+                        </div>
+                        <div class="search-filter">
+                            <input type="text" placeholder="Search users...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <div *ngIf="isLoading && users.length === 0" class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i> Fetching Database Users...
+                        </div>
+                        <table class="users-table" *ngIf="users.length > 0">
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Join Date</th>
+                                    <th>Login Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let user of filteredUsers">
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar">{{user.name.charAt(0)}}</div>
+                                            <div class="user-info">
+                                                <span class="user-name">{{user.name}}</span>
+                                                <span class="user-email">{{user.email}}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{user.date || 'Today'}}</td>
+                                    <td>
+                                        <span class="method-badge" [ngClass]="user.method.toLowerCase()">
+                                            <i class="fab fa-google" *ngIf="user.method === 'Google'"></i>
+                                            <i class="fas fa-globe" *ngIf="user.method === 'Website'"></i>
+                                            {{user.method}}
+                                        </span>
+                                    </td>
+                                    <td><span class="status-dot online"></span> Active</td>
+                                    <td class="action-cell">
+                                        <button (click)="viewUserDetails(user)" class="btn-icon view" title="View"><i
+                                                class="far fa-eye"></i></button>
+                                        <button class="btn-icon edit" title="Edit"><i class="far fa-edit"></i></button>
+                                        <button (click)="deleteUser(user.id, user.name)" class="btn-icon delete"
+                                            title="Delete"><i class="far fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </main>
+
+    <!-- User Details Modal -->
+    <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+        <div class="user-detail-modal" (click)="$event.stopPropagation()">
+            <button class="close-modal" (click)="closeDetailModal()">&times;</button>
+
+            <div class="modal-header">
+                <div class="user-main-info">
+                    <div class="large-avatar" *ngIf="!selectedUser.pic">{{selectedUser.avatar}}</div>
+                    <img [src]="selectedUser.pic" class="large-avatar-img" *ngIf="selectedUser.pic">
+                    <div class="name-status">
+                        <h2>{{selectedUser.name}}</h2>
+                        <span class="user-email">{{selectedUser.email}}</span>
+                        <div class="badges-row">
+                            <span class="method-tag" [ngClass]="selectedUser.method.toLowerCase()">
+                                {{selectedUser.method}} Login
+                            </span>
+                            <span class="status-tag active">Active Account</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label><i class="fas fa-phone"></i> Phone Number</label>
+                        <span>{{selectedUser.phone}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-calendar-alt"></i> Join Date</label>
+                        <span>{{selectedUser.date}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-award"></i> Green Points</label>
+                        <span class="points-text">{{selectedUser.points}} Points</span>
+                    </div>
+                    <div class="info-item full">
+                        <label><i class="fas fa-map-marker-alt"></i> Shipping Address</label>
+                        <span>{{selectedUser.address}}</span>
+                    </div>
+                </div>
+
+                <div class="recent-orders-mini">
+                    <h4><i class="fas fa-history"></i> Recent Activity</h4>
+                    <div class="mini-order-list">
+                        <p class="empty-text">No recent orders found for this user.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="closeDetailModal()">Close</button>
+                <button class="btn-primary-outline"><i class="far fa-envelope"></i> Message User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

@@ -35,7 +35,7 @@ export class NavbarComponent {
 
     onSearch() {
         if (this.searchTerm.trim().length > 1) {
-            this.productService.searchProducts(this.searchTerm).subscribe(results => {
+            this.productService.searchProducts(this.searchTerm).subscribe((results: any[]) => {
                 this.searchResults = results;
                 this.showResults = true;
             });

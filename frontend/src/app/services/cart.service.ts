@@ -89,12 +89,12 @@ export class CartService {
 
         const headers = new HttpHeaders().set('x-auth-token', token);
         this.http.get<CartItem[]>(this.apiUrl, { headers }).subscribe({
-            next: (items) => {
+            next: (items: CartItem[]) => {
                 if (items && items.length > 0) {
                     this.itemsSignal.set(items);
                 }
             },
-            error: (err) => console.error('Error syncing cart from backend:', err)
+            error: (err: any) => console.error('Error syncing cart from backend:', err)
         });
     }
 
@@ -104,7 +104,8 @@ export class CartService {
 
         const headers = new HttpHeaders().set('x-auth-token', token);
         this.http.post(this.apiUrl, { cart: items }, { headers }).subscribe({
-            error: (err) => console.error('Error saving cart to backend:', err)
+            next: (res: any) => { },
+            error: (err: any) => console.error('Error saving cart to backend:', err)
         });
     }
 

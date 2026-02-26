@@ -37,6 +37,13 @@ const userSchema = new mongoose.Schema({
     greenPoints: {
         type: Number,
         default: 0
+    },
+    method: {
+        type: String,
+        default: 'Website' // 'Website' or 'Google'
+    },
+    profilePic: {
+        type: String
     }
 });
 

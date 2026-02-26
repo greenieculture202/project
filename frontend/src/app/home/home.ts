@@ -7,6 +7,7 @@ import { PlacementsComponent } from '../placements/placements';
 import { AccessoriesSection } from '../accessories-section/accessories-section';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ReviewsComponent } from '../reviews/reviews';
 
 @Component({
     selector: 'app-home',
@@ -19,7 +20,8 @@ import { RouterLink } from '@angular/router';
         PlacementsComponent,
         AccessoriesSection,
         CommonModule,
-        RouterLink
+        RouterLink,
+        ReviewsComponent
     ],
     templateUrl: './home.html',
     styleUrl: './home.css'

@@ -29,11 +29,35 @@ export class ProductService {
     private fallbackProducts: { [key: string]: Product[] } = {
         'Bestsellers': [
             {
-                name: 'Offline-Majestic Zen Garden',
-                price: '1999',
-                originalPrice: '2499',
-                discount: '20% OFF',
-                image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=600&q=80',
+                name: 'Peace Lily',
+                price: '399',
+                originalPrice: '599',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=600&q=80',
+                category: 'Bestsellers'
+            },
+            {
+                name: 'Snake Plant',
+                price: '499',
+                originalPrice: '699',
+                discount: '28% OFF',
+                image: 'https://images.unsplash.com/photo-1593418105716-4307a8366dca?auto=format&fit=crop&w=600&q=80',
+                category: 'Bestsellers'
+            },
+            {
+                name: 'Aloe Vera',
+                price: '249',
+                originalPrice: '399',
+                discount: '37% OFF',
+                image: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76d21?auto=format&fit=crop&w=600&q=80',
+                category: 'Bestsellers'
+            },
+            {
+                name: 'Jade Plant',
+                price: '349',
+                originalPrice: '499',
+                discount: '30% OFF',
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80',
                 category: 'Bestsellers'
             }
         ],
@@ -89,22 +113,202 @@ export class ProductService {
         ],
         'Indoor Plants': [
             {
-                name: 'Offline-Peace Lily',
+                name: 'Peace Lily',
                 price: '399',
                 originalPrice: '599',
                 discount: '33% OFF',
                 image: 'https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=600&q=80',
                 category: 'Indoor Plants'
+            },
+            {
+                name: 'Snake Plant',
+                price: '499',
+                originalPrice: '699',
+                discount: '28% OFF',
+                image: 'https://images.unsplash.com/photo-1593418105716-4307a8366dca?auto=format&fit=crop&w=600&q=80',
+                category: 'Indoor Plants'
+            },
+            {
+                name: 'Money Plant',
+                price: '299',
+                originalPrice: '450',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=600&q=80',
+                category: 'Indoor Plants'
+            },
+            {
+                name: 'Areca Palm',
+                price: '899',
+                originalPrice: '1299',
+                discount: '30% OFF',
+                image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894?auto=format&fit=crop&w=600&q=80',
+                category: 'Indoor Plants'
+            },
+            {
+                name: 'Rubber Plant',
+                price: '649',
+                originalPrice: '899',
+                discount: '27% OFF',
+                image: 'https://images.unsplash.com/photo-1520412099561-64839ecd0bb3?auto=format&fit=crop&w=600&q=80',
+                category: 'Indoor Plants'
+            }
+        ],
+        'Outdoor Plants': [
+            {
+                name: 'Ashoka Tree',
+                price: '1499',
+                originalPrice: '1999',
+                discount: '25% OFF',
+                image: 'https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?auto=format&fit=crop&w=600&q=80',
+                category: 'Outdoor Plants'
+            },
+            {
+                name: 'Neem Tree',
+                price: '599',
+                originalPrice: '799',
+                discount: '25% OFF',
+                image: 'https://images.unsplash.com/photo-1617135038936-3bc99d69f6f1?auto=format&fit=crop&w=600&q=80',
+                category: 'Outdoor Plants'
+            },
+            {
+                name: 'Mango Tree',
+                price: '1299',
+                originalPrice: '1799',
+                discount: '27% OFF',
+                image: 'https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=600&q=80',
+                category: 'Outdoor Plants'
+            },
+            {
+                name: 'Tulsi Plant',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
+                category: 'Outdoor Plants'
             }
         ],
         'Gardening Tools': [
             {
-                name: 'Offline-Professional Trowel',
-                price: '499',
-                originalPrice: '799',
+                name: 'Hand Trowel',
+                price: '249',
+                originalPrice: '399',
                 discount: '37% OFF',
                 image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=600&q=80',
                 category: 'Gardening Tools'
+            },
+            {
+                name: 'Pruning Shears',
+                price: '599',
+                originalPrice: '899',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=600&q=80',
+                category: 'Gardening Tools'
+            },
+            {
+                name: 'Garden Fork',
+                price: '299',
+                originalPrice: '450',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1599685315640-9ce50450b27c?auto=format&fit=crop&w=600&q=80',
+                category: 'Gardening Tools'
+            }
+        ],
+        'Flowering Plants': [
+            {
+                name: 'Anthurium Red',
+                price: '899',
+                originalPrice: '1299',
+                discount: '30% OFF',
+                image: 'https://images.unsplash.com/photo-1512423924558-124e4d50937c?auto=format&fit=crop&w=360&q=80',
+                category: 'Flowering Plants'
+            },
+            {
+                name: 'Orchid Pink',
+                price: '1499',
+                originalPrice: '1999',
+                discount: '25% OFF',
+                image: 'https://images.unsplash.com/photo-1534073737927-85f1df9605d2?auto=format&fit=crop&w=600&q=80',
+                category: 'Flowering Plants'
+            },
+            {
+                name: 'Jasmine Plant',
+                price: '299',
+                originalPrice: '450',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1598910008544-77e48b894170?auto=format&fit=crop&w=600&q=80',
+                category: 'Flowering Plants'
+            }
+        ],
+        'Gardening': [
+            {
+                name: 'Rose Plant',
+                price: '349',
+                originalPrice: '499',
+                discount: '30% OFF',
+                image: 'https://images.unsplash.com/photo-1558036117-15d82e90bd9d?auto=format&fit=crop&w=600&q=80',
+                category: 'Gardening'
+            },
+            {
+                name: 'Hibiscus Red',
+                price: '249',
+                originalPrice: '399',
+                discount: '37% OFF',
+                image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
+                category: 'Gardening'
+            }
+        ],
+        'Accessories': [
+            {
+                name: 'Ceramic Pot White',
+                price: '499',
+                originalPrice: '799',
+                discount: '37% OFF',
+                image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=600&q=80',
+                category: 'Accessories'
+            },
+            {
+                name: 'Watering Can',
+                price: '399',
+                originalPrice: '599',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=600&q=80',
+                category: 'Accessories'
+            }
+        ],
+        'Soil & Growing Media': [
+            {
+                name: 'Organic Potting Mix',
+                price: '299',
+                originalPrice: '499',
+                discount: '40% OFF',
+                image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
+                category: 'Soil & Growing Media'
+            },
+            {
+                name: 'Coco Peat Block',
+                price: '199',
+                originalPrice: '299',
+                discount: '33% OFF',
+                image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
+                category: 'Soil & Growing Media'
+            }
+        ],
+        'Fertilizers & Nutrients': [
+            {
+                name: 'Organic Liquid Fertilizer',
+                price: '349',
+                originalPrice: '499',
+                discount: '30% OFF',
+                image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=600&q=80',
+                category: 'Fertilizers & Nutrients'
+            },
+            {
+                name: 'Vermicompost Bag',
+                price: '249',
+                originalPrice: '399',
+                discount: '37% OFF',
+                image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=600&q=80',
+                category: 'Fertilizers & Nutrients'
             }
         ],
         'Flower Seeds': [
@@ -115,6 +319,40 @@ export class ProductService {
                 discount: '50% OFF',
                 image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=600&q=80',
                 category: 'Flower Seeds'
+            }
+        ],
+        'Seeds Kit': [
+            {
+                name: 'Zinnia Elegans Seeds',
+                price: '199',
+                originalPrice: '599',
+                discount: '71% OFF',
+                image: 'https://images.unsplash.com/photo-1592419044706-39796d40f98c?w=400&h=400&fit=crop',
+                category: 'Seeds Kit'
+            },
+            {
+                name: 'Marigold French Seeds',
+                price: '89',
+                originalPrice: '299',
+                discount: '70% OFF',
+                image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=400&fit=crop',
+                category: 'Seeds Kit'
+            },
+            {
+                name: 'Cosmos Mixed Seeds',
+                price: '79',
+                originalPrice: '299',
+                discount: '73% OFF',
+                image: 'https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=400&fit=crop',
+                category: 'Seeds Kit'
+            },
+            {
+                name: 'Sunflower Dwarf Seeds',
+                price: '119',
+                originalPrice: '399',
+                discount: '70% OFF',
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?w=400&h=400&fit=crop',
+                category: 'Seeds Kit'
             }
         ]
     };
