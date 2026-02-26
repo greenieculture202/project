@@ -401,12 +401,49 @@
     font-size: 14px;
 }
 
+.simulated-payment-info.payment-done {
+    color: #10b981;
+}
+
+.simulated-payment-info .success-icon {
+    font-size: 18px;
+}
+
 .loader-dot {
     width: 8px;
     height: 8px;
     background: #2d8c6f;
     border-radius: 50%;
     animation: pulse 1.5s infinite;
+}
+
+.payment-success-msg {
+    text-align: center;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 320px;
+}
+
+.success-icon-wrapper {
+    font-size: 48px;
+    color: #10b981;
+    margin-bottom: 15px;
+}
+
+.payment-success-msg h3 {
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.payment-success-msg p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 @keyframes pulse {

@@ -187,32 +187,6 @@ export class ProductService {
                 category: 'Outdoor Plants'
             }
         ],
-        'Gardening Tools': [
-            {
-                name: 'Hand Trowel',
-                price: '249',
-                originalPrice: '399',
-                discount: '37% OFF',
-                image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=600&q=80',
-                category: 'Gardening Tools'
-            },
-            {
-                name: 'Pruning Shears',
-                price: '599',
-                originalPrice: '899',
-                discount: '33% OFF',
-                image: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=600&q=80',
-                category: 'Gardening Tools'
-            },
-            {
-                name: 'Garden Fork',
-                price: '299',
-                originalPrice: '450',
-                discount: '33% OFF',
-                image: 'https://images.unsplash.com/photo-1599685315640-9ce50450b27c?auto=format&fit=crop&w=600&q=80',
-                category: 'Gardening Tools'
-            }
-        ],
         'Flowering Plants': [
             {
                 name: 'Anthurium Red',
@@ -255,60 +229,6 @@ export class ProductService {
                 discount: '37% OFF',
                 image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
                 category: 'Gardening'
-            }
-        ],
-        'Accessories': [
-            {
-                name: 'Ceramic Pot White',
-                price: '499',
-                originalPrice: '799',
-                discount: '37% OFF',
-                image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=600&q=80',
-                category: 'Accessories'
-            },
-            {
-                name: 'Watering Can',
-                price: '399',
-                originalPrice: '599',
-                discount: '33% OFF',
-                image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=600&q=80',
-                category: 'Accessories'
-            }
-        ],
-        'Soil & Growing Media': [
-            {
-                name: 'Organic Potting Mix',
-                price: '299',
-                originalPrice: '499',
-                discount: '40% OFF',
-                image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
-                category: 'Soil & Growing Media'
-            },
-            {
-                name: 'Coco Peat Block',
-                price: '199',
-                originalPrice: '299',
-                discount: '33% OFF',
-                image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
-                category: 'Soil & Growing Media'
-            }
-        ],
-        'Fertilizers & Nutrients': [
-            {
-                name: 'Organic Liquid Fertilizer',
-                price: '349',
-                originalPrice: '499',
-                discount: '30% OFF',
-                image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=600&q=80',
-                category: 'Fertilizers & Nutrients'
-            },
-            {
-                name: 'Vermicompost Bag',
-                price: '249',
-                originalPrice: '399',
-                discount: '37% OFF',
-                image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=600&q=80',
-                category: 'Fertilizers & Nutrients'
             }
         ],
         'Flower Seeds': [
@@ -531,6 +451,17 @@ export class ProductService {
                 });
                 this.categoryCache.set(cacheKey, products);
                 return products;
+            })
+        );
+    }
+
+    // ADMIN - Add new product
+    addProduct(product: any): Observable<Product> {
+        return this.http.post<Product>(`${this.apiUrl}/admin/products`, product).pipe(
+            map(newProd => {
+                // Clear cache so it re-fetches with new product
+                this.categoryCache.clear();
+                return newProd;
             })
         );
     }

@@ -1079,3 +1079,199 @@ td {
         margin-left: 80px;
     }
 }
+
+/* Premium Add Product Modal */
+.product-modal {
+    max-width: 650px;
+    background: #ffffff;
+    border-radius: 24px !important;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0 !important;
+}
+
+.product-modal .modal-header {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+.product-modal .modal-header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.product-modal .modal-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+    color: white;
+}
+
+.product-modal .modal-header p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.product-modal .close-modal {
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-modal .close-modal:hover {
+    background: white;
+    color: #064e3b;
+    transform: rotate(90deg);
+}
+
+.product-modal .modal-body {
+    padding: 2rem;
+}
+
+.product-modal .modal-footer {
+    padding: 1.5rem 2rem 2.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.product-modal .btn-primary {
+    padding: 1rem 2rem;
+    background: #10b981;
+    color: white;
+    font-weight: 700;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.product-modal .btn-primary:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+.product-modal .btn-primary:disabled {
+    opacity: 0.5;
+    background: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.product-modal .btn-secondary {
+    padding: 1rem 2rem;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+    border-radius: 14px;
+    border: 2px solid #f1f5f9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.product-modal .btn-secondary:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Premium Form Elements */
+.info-item input,
+.info-item select {
+    padding: 0.875rem 1.25rem;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.info-item input:hover,
+.info-item select:hover {
+    border-color: #cbd5e1;
+    background: #fdfdfd;
+}
+
+.info-item input:focus,
+.info-item select:focus {
+    background: #ffffff;
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.01);
+    outline: none;
+}
+
+.info-item select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25rem;
+    padding-right: 3rem;
+    cursor: pointer;
+}
+
+
+/* Modal Overlay Animation */
+.modal-overlay {
+    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.4);
+    animation: fadeInModal 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
+}
+
+.product-modal {
+    animation: slideUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpModal {
+    from {
+        transform: translateY(30px) scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}

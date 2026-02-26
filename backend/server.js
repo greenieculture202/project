@@ -24,8 +24,11 @@ const otpStore = new Map();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.GMAIL_USER || 'your-email@gmail.com',
+        user: process.env.GMAIL_USER || 'greenieculture202@gmail.com',
         pass: process.env.GMAIL_PASS || 'your-app-password'
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
@@ -495,6 +498,45 @@ app.get('/api/admin/users', async (req, res) => {
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ADMIN API - Add new product
+app.post('/api/admin/products', async (req, res) => {
+    try {
+        const { name, price, originalPrice, discount, category, image, tags } = req.body;
+
+        if (!name || !price || !category || !image) {
+            return res.status(400).json({ message: 'Name, price, category, and image are required.' });
+        }
+
+        // Generate unique slug with short random suffix to avoid duplicate key errors
+        const baseSlug = name.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-');
+        const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+        const newProduct = new Product({
+            name,
+            slug,
+            price,
+            originalPrice,
+            discount,
+            category,
+            image,
+            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : [])
+        });
+
+        const savedProduct = await newProduct.save();
+        console.log('[AdminAPI] Product created:', savedProduct.name, '| Category:', savedProduct.category);
+        res.status(201).json(savedProduct);
+    } catch (err) {
+        console.error('[AdminAPI] Product creation error:', err.message);
+        if (err.code === 11000) {
+            return res.status(400).json({ message: 'A product with this name already exists. Please use a different name.' });
+        }
+        res.status(500).json({ message: 'Server error: ' + err.message });
     }
 });
 

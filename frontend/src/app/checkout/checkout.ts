@@ -39,21 +39,24 @@ export class CheckoutComponent implements OnInit {
 
     currentStep = 1;
 
+    paymentReceived = false;
     private _selectedPayment = 'upi';
     get selectedPayment() { return this._selectedPayment; }
     set selectedPayment(val: string) {
         this._selectedPayment = val;
         if (val === 'upi' && this.currentStep === 3) {
             this.simulateUPIScan();
+        } else {
+            this.paymentReceived = false;
         }
     }
 
     simulateUPIScan() {
+        this.paymentReceived = false;
         // Simulate a 3-second delay for the user to 'scan'
         setTimeout(() => {
             if (this.selectedPayment === 'upi' && this.currentStep === 3) {
-                alert('UPI Scan Successful! Payment Received.');
-                this.finishOrder();
+                this.paymentReceived = true;
             }
         }, 3000);
     }
@@ -195,11 +198,62 @@ export class CheckoutComponent implements OnInit {
             return;
         }
 
-        // Pre-fill email if user is logged in
+        // Load persisted state
+        this.loadCheckoutState();
+
+        // Pre-fill email if user is logged in and state is empty
         const user = this.authService.getCurrentUser();
-        if (user) {
-            // Since we only store fullName, we use a placeholder or hope they fill it
+        if (user && !this.contactEmail) {
             this.contactEmail = '';
+        }
+    }
+
+    getQRCodeUrl() {
+        const amount = this.totalAmount().toFixed(2);
+        const name = encodeURIComponent('Nikita Tank');
+        const upiId = 'tanknikita982@oksbi';
+        const upiUri = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUri)}`;
+    }
+
+    saveCheckoutState() {
+        const state = {
+            firstName: this.firstName,
+            lastName: this.lastName,
+            contactEmail: this.contactEmail,
+            phone: this.phone,
+            address: this.address,
+            city: this.city,
+            stateName: this.stateName,
+            pincode: this.pincode,
+            currentStep: this.currentStep,
+            selectedPayment: this.selectedPayment
+        };
+        localStorage.setItem('checkout_state', JSON.stringify(state));
+    }
+
+    loadCheckoutState() {
+        const savedState = localStorage.getItem('checkout_state');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                this.firstName = state.firstName || '';
+                this.lastName = state.lastName || '';
+                this.contactEmail = state.contactEmail || '';
+                this.phone = state.phone || '';
+                this.address = state.address || '';
+                this.city = state.city || '';
+                this.stateName = state.stateName || '';
+                this.pincode = state.pincode || '';
+                this.currentStep = state.currentStep || 1;
+                this._selectedPayment = state.selectedPayment || 'upi';
+
+                if (this.currentStep === 3 && this.selectedPayment === 'upi') {
+                    this.simulateUPIScan();
+                }
+            } catch (e) {
+                console.error('Error loading checkout state', e);
+            }
         }
     }
 
@@ -216,6 +270,7 @@ export class CheckoutComponent implements OnInit {
         }
         if (this.currentStep < 3) {
             this.currentStep++;
+            this.saveCheckoutState();
             window.scrollTo(0, 0);
 
             // If they just landed on Step 3 and UPI is default, start simulation
@@ -228,6 +283,7 @@ export class CheckoutComponent implements OnInit {
     prevStep() {
         if (this.currentStep > 1) {
             this.currentStep--;
+            this.saveCheckoutState();
             window.scrollTo(0, 0);
         }
     }
@@ -246,7 +302,7 @@ export class CheckoutComponent implements OnInit {
 
     finishWithReview() {
         this.showSuccessModal = false;
-        this.cartService.clear();
+        this.finishOrder(); // Clear state before showing review
         this.showReviewDialog = true;
     }
 
@@ -264,10 +320,11 @@ export class CheckoutComponent implements OnInit {
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         });
         alert('Thank you for your review!');
-        this.finishOrder();
+        this.router.navigate(['/']);
     }
 
     finishOrder() {
+        localStorage.removeItem('checkout_state');
         this.cartService.clear();
         this.router.navigate(['/']);
     }

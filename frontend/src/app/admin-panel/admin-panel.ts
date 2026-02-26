@@ -5,10 +5,12 @@ import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { ProductService } from '../services/product.service';
 
+import { FormsModule } from '@angular/forms';
+
 @Component({
     selector: 'app-admin-panel',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, FormsModule],
     templateUrl: './admin-panel.html',
     styleUrl: './admin-panel.css'
 })
@@ -33,11 +35,7 @@ export class AdminPanelComponent implements OnInit {
             { key: 'Outdoor Plants', label: 'Outdoor' },
             { key: 'Bestsellers', label: 'Bestsellers' },
             { key: 'Flowering Plants', label: 'Flowering' },
-            { key: 'Gardening', label: 'Gardening' },
-            { key: 'Accessories', label: 'Accessories' },
-            { key: 'Soil & Growing Media', label: 'Soil & Growing Media' },
-            { key: 'Fertilizers & Nutrients', label: 'Fertilizers & Nutrients' },
-            { key: 'Gardening Tools', label: 'Gardening Tools' }
+            { key: 'Gardening', label: 'Gardening' }
         ],
         'Seeds': [
             { key: 'Vegetable Seeds', label: 'Vegetable Seeds' },
@@ -50,7 +48,18 @@ export class AdminPanelComponent implements OnInit {
     };
 
     showDetailModal: boolean = false;
+    showAddProductModal: boolean = false;
     selectedUser: any = null;
+
+    newProduct: any = {
+        name: '',
+        price: '',
+        originalPrice: '',
+        discount: '',
+        category: '',
+        image: '',
+        tags: ''
+    };
 
     get filteredUsers() {
         if (this.userFilter === 'All') return this.users;
@@ -184,5 +193,42 @@ export class AdminPanelComponent implements OnInit {
                 }
             });
         }
+    }
+
+    openAddProductModal() {
+        this.newProduct = {
+            name: '',
+            price: '',
+            originalPrice: '',
+            discount: '',
+            category: this.productCategoryFilter !== 'All' ? this.productCategoryFilter : '',
+            image: '',
+            tags: ''
+        };
+        this.showAddProductModal = true;
+    }
+
+    closeAddProductModal() {
+        this.showAddProductModal = false;
+    }
+
+    submitProduct() {
+        if (!this.newProduct.name || !this.newProduct.price || !this.newProduct.category || !this.newProduct.image) {
+            alert('Please fill in all required fields (Name, Price, Category, Image)');
+            return;
+        }
+
+        this.productService.addProduct(this.newProduct).subscribe({
+            next: (res: any) => {
+                alert('Product added successfully! ✅');
+                this.closeAddProductModal();
+                this.loadProducts(); // Reload to show the new product
+            },
+            error: (err: any) => {
+                console.error('Error adding product:', err);
+                const msg = err?.error?.message || 'Failed to add product. Please check the server and try again.';
+                alert('Error: ' + msg);
+            }
+        });
     }
 }

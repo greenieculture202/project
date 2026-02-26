@@ -123,7 +123,8 @@
                     <p>View and manage all your products by category.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-add-product"><i class="fas fa-plus"></i> Add New Product</button>
+                    <button class="btn-add-product" (click)="openAddProductModal()"><i class="fas fa-plus"></i> Add New
+                        Product</button>
                 </div>
             </header>
 
@@ -288,59 +289,71 @@
         </ng-container>
     </main>
 
-    <!-- User Details Modal -->
-    <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
-        <div class="user-detail-modal" (click)="$event.stopPropagation()">
-            <button class="close-modal" (click)="closeDetailModal()">&times;</button>
+    <!-- User Details Modal ... existing ... -->
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" *ngIf="showAddProductModal" (click)="closeAddProductModal()">
+        <div class="user-detail-modal product-modal" (click)="$event.stopPropagation()">
+            <button class="close-modal" (click)="closeAddProductModal()">&times;</button>
 
             <div class="modal-header">
-                <div class="user-main-info">
-                    <div class="large-avatar" *ngIf="!selectedUser.pic">{{selectedUser.avatar}}</div>
-                    <img [src]="selectedUser.pic" class="large-avatar-img" *ngIf="selectedUser.pic">
-                    <div class="name-status">
-                        <h2>{{selectedUser.name}}</h2>
-                        <span class="user-email">{{selectedUser.email}}</span>
-                        <div class="badges-row">
-                            <span class="method-tag" [ngClass]="selectedUser.method.toLowerCase()">
-                                {{selectedUser.method}} Login
-                            </span>
-                            <span class="status-tag active">Active Account</span>
-                        </div>
-                    </div>
-                </div>
+                <h2>New Masterpiece Product</h2>
+                <p>Curate and add a professional-grade product to your digital inventory.</p>
             </div>
 
             <div class="modal-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label><i class="fas fa-phone"></i> Phone Number</label>
-                        <span>{{selectedUser.phone}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label><i class="fas fa-calendar-alt"></i> Join Date</label>
-                        <span>{{selectedUser.date}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label><i class="fas fa-award"></i> Green Points</label>
-                        <span class="points-text">{{selectedUser.points}} Points</span>
-                    </div>
+                <form (ngSubmit)="submitProduct()" #productForm="ngForm" class="info-grid">
                     <div class="info-item full">
-                        <label><i class="fas fa-map-marker-alt"></i> Shipping Address</label>
-                        <span>{{selectedUser.address}}</span>
+                        <label>Exquisite Product Name *</label>
+                        <input type="text" [(ngModel)]="newProduct.name" name="name" required
+                            placeholder="e.g. Rare Emerald Fern">
                     </div>
-                </div>
 
-                <div class="recent-orders-mini">
-                    <h4><i class="fas fa-history"></i> Recent Activity</h4>
-                    <div class="mini-order-list">
-                        <p class="empty-text">No recent orders found for this user.</p>
+                    <div class="info-item">
+                        <label>Investment Value (₹) *</label>
+                        <input type="text" [(ngModel)]="newProduct.price" name="price" required placeholder="e.g. 1499">
                     </div>
-                </div>
-            </div>
 
-            <div class="modal-footer">
-                <button class="btn-secondary" (click)="closeDetailModal()">Close</button>
-                <button class="btn-primary-outline"><i class="far fa-envelope"></i> Message User</button>
+                    <div class="info-item">
+                        <label>Original Value (₹)</label>
+                        <input type="text" [(ngModel)]="newProduct.originalPrice" name="originalPrice"
+                            placeholder="e.g. 1999">
+                    </div>
+
+                    <div class="info-item">
+                        <label>Inventory Category *</label>
+                        <select [(ngModel)]="newProduct.category" name="category" required>
+                            <option value="" disabled>Select Category</option>
+                            <option *ngFor="let cat of mainCategoryGroups[activeMainCategory]" [value]="cat.key">
+                                {{cat.label}}{{activeMainCategory === 'Seeds' ? ' Seeds' : ''}}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="info-item">
+                        <label>Exclusive Offer Label</label>
+                        <input type="text" [(ngModel)]="newProduct.discount" name="discount"
+                            placeholder="e.g. 15% EXCLUSIVE">
+                    </div>
+
+                    <div class="info-item full">
+                        <label>Artisan Image URL *</label>
+                        <input type="text" [(ngModel)]="newProduct.image" name="image" required
+                            placeholder="https://images.unsplash.com/...">
+                    </div>
+
+                    <div class="info-item full">
+                        <label>Defining Attributes (Tags)</label>
+                        <input type="text" [(ngModel)]="newProduct.tags" name="tags"
+                            placeholder="Indoor, Luxurious, Air Purifying">
+                    </div>
+
+                    <div class="modal-footer full">
+                        <button type="button" class="btn-secondary" (click)="closeAddProductModal()">Discard</button>
+                        <button type="submit" class="btn-primary" [disabled]="!productForm.form.valid">Publish
+                            Product</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
