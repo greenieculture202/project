@@ -93,7 +93,8 @@ export class ProductDetailComponent implements OnInit {
 
     get thumbnails(): string[] {
         if (!this.product) return [];
-        return [this.product.image, ...this.planters.map(p => p.image)];
+        const additionalImages = this.product.images || [];
+        return [this.product.image, ...additionalImages, ...this.planters.map(p => p.image)];
     }
 
     get displayImage(): string {
@@ -107,10 +108,21 @@ export class ProductDetailComponent implements OnInit {
     setActiveImage(index: number) {
         this.showVideo = false;
         this.activeImageIndex = index;
+
+        const additionalImages = this.product?.images || [];
+        const totalProductPics = 1 + additionalImages.length;
+
         if (index === 0) {
             this.currentPlanterImage = this.product?.image || '';
-        } else if (this.planters[index - 1]) {
-            this.selectPlanter(this.planters[index - 1].id);
+        } else if (index < totalProductPics) {
+            // It's one of the additional images
+            this.currentPlanterImage = additionalImages[index - 1];
+        } else {
+            // It's a planter image
+            const planterIndex = index - totalProductPics;
+            if (this.planters[planterIndex]) {
+                this.selectPlanter(this.planters[planterIndex].id);
+            }
         }
     }
 
@@ -120,7 +132,11 @@ export class ProductDetailComponent implements OnInit {
         if (planter) {
             this.selectedPrice = planter.price;
             this.currentPlanterImage = planter.image;
-            this.activeImageIndex = this.planters.findIndex(p => p.id === planterId) + 1;
+
+            const additionalImages = this.product?.images || [];
+            const totalProductPics = 1 + additionalImages.length;
+
+            this.activeImageIndex = totalProductPics + this.planters.findIndex(p => p.id === planterId);
             this.showVideo = false;
         }
     }

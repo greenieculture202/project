@@ -9,8 +9,10 @@ const productSchema = new mongoose.Schema({
     discountPercent: { type: Number },
     image: { type: String, required: true },
     hoverImage: { type: String },
+    images: [{ type: String }],
     category: { type: String, required: true, index: true },
     videoUrl: { type: String },
+    description: { type: String },
     tags: [{ type: String }]
 });
 

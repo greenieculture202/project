@@ -14,6 +14,8 @@ export interface Product {
     discountPercent?: number;
     category?: string;
     videoUrl?: string;
+    description?: string;
+    images?: string[];
     tags?: string[];
     slug?: string;
 }
@@ -462,6 +464,30 @@ export class ProductService {
                 // Clear cache so it re-fetches with new product
                 this.categoryCache.clear();
                 return newProd;
+            })
+        );
+    }
+
+    // ADMIN - Delete product
+    deleteProduct(id: string): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/admin/products/${id}`).pipe(
+            map(res => {
+                this.categoryCache.clear();
+                return res;
+            })
+        );
+    }
+
+    // ADMIN - Update product
+    updateProduct(id: string, product: any): Observable<Product> {
+        return this.http.put<Product>(`${this.apiUrl}/admin/products/${id}`, product).pipe(
+            map(updatedProd => {
+                this.categoryCache.clear();
+                // Update specific product cache if it exists
+                if (updatedProd.slug) {
+                    this.productCache.set(updatedProd.slug, updatedProd);
+                }
+                return updatedProd;
             })
         );
     }

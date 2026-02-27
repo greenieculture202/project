@@ -40,13 +40,8 @@
             <!-- ABOUT PRODUCT Section -->
             <div class="about-section">
                 <h3 class="section-title">About The Product</h3>
-                <p class="about-text">
-                    Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just
-                    its
-                    care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its
-                    reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting
-                    option
-                    that works as a personal pick-me-up!
+                <p class="about-text"
+                    [innerHTML]="product.description || 'Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just its care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting option that works as a personal pick-me-up!'">
                 </p>
 
                 <!-- Go to Home Button (Moved here for better layout) -->

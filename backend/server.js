@@ -501,10 +501,60 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
+// ADMIN API - Update product
+app.put('/api/admin/products/:id', async (req, res) => {
+    try {
+        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
+
+        const updateData = {
+            name,
+            price,
+            originalPrice,
+            discount,
+            category,
+            image,
+            images,
+            description,
+            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : [])
+        };
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        console.log('[AdminAPI] Product updated:', updatedProduct.name);
+        res.json(updatedProduct);
+    } catch (err) {
+        console.error('[AdminAPI] Product update error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - Delete product
+app.delete('/api/admin/products/:id', async (req, res) => {
+    try {
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deletedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        console.log('[AdminAPI] Product deleted:', deletedProduct.name);
+        res.json({ message: 'Product deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] Product deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
 // ADMIN API - Add new product
 app.post('/api/admin/products', async (req, res) => {
     try {
-        const { name, price, originalPrice, discount, category, image, tags } = req.body;
+        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
 
         if (!name || !price || !category || !image) {
             return res.status(400).json({ message: 'Name, price, category, and image are required.' });
@@ -525,6 +575,8 @@ app.post('/api/admin/products', async (req, res) => {
             discount,
             category,
             image,
+            images: Array.isArray(images) ? images : [],
+            description: description || '',
             tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : [])
         });
 

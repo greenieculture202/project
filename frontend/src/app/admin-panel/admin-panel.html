@@ -17,8 +17,15 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="javascript:void(0)" [class.active]="activeTab === 'products'" (click)="setTab('products')">
+            <a href="javascript:void(0)"
+                [class.active]="activeTab === 'products' && activeMainCategory !== 'Accessories'"
+                (click)="setTab('products', 'Plants')">
                 <i class="fas fa-box"></i> Products
+            </a>
+            <a href="javascript:void(0)"
+                [class.active]="activeTab === 'products' && activeMainCategory === 'Accessories'"
+                (click)="setTab('products', 'Accessories')">
+                <i class="fas fa-tools"></i> Accessories
             </a>
             <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
                 <i class="fas fa-users"></i> Users
@@ -133,22 +140,46 @@
                     <i class="fas fa-spinner fa-spin"></i> Loading All Products...
                 </div>
 
-                <!-- Main Group Tabs -->
-                <div class="primary-group-tabs">
-                    <button [class.active]="activeMainCategory === 'Types'" (click)="setMainGroup('Types')">
-                        <i class="fas fa-leaf"></i> Product Types
+                <!-- Main Group Tabs (Plants & Seeds) -->
+                <div class="primary-group-tabs" *ngIf="activeMainCategory !== 'Accessories'">
+                    <button [class.active]="activeMainCategory === 'Plants'" (click)="setMainGroup('Plants')">
+                        <i class="fas fa-leaf"></i> Plants
                     </button>
                     <button [class.active]="activeMainCategory === 'Seeds'" (click)="setMainGroup('Seeds')">
-                        <i class="fas fa-seedling"></i> Seeds Collection
+                        <i class="fas fa-seedling"></i> Seeds
                     </button>
                 </div>
 
-                <!-- Sub-Category Navigation (Filters) -->
-                <div class="category-nav-header" *ngIf="getCategoryList().length > 0">
+                <!-- Accessories Specialized Main Group Tabs -->
+                <div class="primary-group-tabs" *ngIf="activeMainCategory === 'Accessories'">
+                    <button [class.active]="activeAccessoryGroup === 'All'"
+                        (click)="activeAccessoryGroup = 'All'; productCategoryFilter = 'All'">
+                        <i class="fas fa-th-large"></i> All
+                    </button>
+                    <button [class.active]="activeAccessoryGroup === 'Accessories'"
+                        (click)="activeAccessoryGroup = 'Accessories'; productCategoryFilter = 'All'">
+                        <i class="fas fa-magic"></i> Accessories
+                    </button>
+                    <button [class.active]="activeAccessoryGroup === 'Soil & Growing Media'"
+                        (click)="activeAccessoryGroup = 'Soil & Growing Media'; productCategoryFilter = 'All'">
+                        <i class="fas fa-mountain"></i> Soil & Media
+                    </button>
+                    <button [class.active]="activeAccessoryGroup === 'Fertilizers & Nutrients'"
+                        (click)="activeAccessoryGroup = 'Fertilizers & Nutrients'; productCategoryFilter = 'All'">
+                        <i class="fas fa-vial"></i> Fertilizers
+                    </button>
+                    <button [class.active]="activeAccessoryGroup === 'Gardening Tools'"
+                        (click)="activeAccessoryGroup = 'Gardening Tools'; productCategoryFilter = 'All'">
+                        <i class="fas fa-tools"></i> Tools
+                    </button>
+                </div>
+
+                <!-- Sub-Category Navigation (Pills style) -->
+                <div class="category-nav-header">
                     <div class="category-filters-row">
                         <button [class.active]="productCategoryFilter === 'All'"
                             (click)="productCategoryFilter = 'All'">
-                            All {{activeMainCategory}}
+                            All {{activeAccessoryGroup !== 'All' ? activeAccessoryGroup : activeMainCategory}}
                         </button>
                         <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
                             (click)="productCategoryFilter = cat">
@@ -156,14 +187,16 @@
                         </button>
                     </div>
                     <div class="search-filter">
-                        <input type="text" placeholder="Filter from database...">
+                        <i class="fas fa-search"></i>
+                        <input type="text"
+                            [placeholder]="activeMainCategory === 'Accessories' ? 'Search accessories...' : 'Filter from database...'">
                     </div>
                 </div>
 
                 <div class="category-section" *ngFor="let category of filteredProductCategories">
                     <div class="category-header">
                         <h2>{{getCategoryLabel(category)}}</h2>
-                        <span class="count-badge">{{productMap[category].length}} Items</span>
+                        <span class="count-badge">{{getProductsForCategory(category).length}} Items</span>
                     </div>
 
                     <div class="products-table-card data-card">
@@ -180,7 +213,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let prod of productMap[category]">
+                                    <tr *ngFor="let prod of getProductsForCategory(category)">
                                         <td>
                                             <div class="prod-cell">
                                                 <img [src]="prod.image" class="prod-thumb" alt="Product">
@@ -196,9 +229,11 @@
                                         </td>
                                         <td><span class="status-badge delivered">In Stock</span></td>
                                         <td class="action-cell">
-                                            <button class="btn-icon edit" title="Edit"><i
+                                            <button class="btn-icon edit" title="Edit"
+                                                (click)="openEditProductModal(prod)"><i
                                                     class="far fa-edit"></i></button>
-                                            <button class="btn-icon delete" title="Delete"><i
+                                            <button class="btn-icon delete" title="Delete"
+                                                (click)="deleteProduct(prod._id, prod.name)"><i
                                                     class="far fa-trash-alt"></i></button>
                                         </td>
                                     </tr>
@@ -294,64 +329,102 @@
     <!-- Add Product Modal -->
     <div class="modal-overlay" *ngIf="showAddProductModal" (click)="closeAddProductModal()">
         <div class="user-detail-modal product-modal" (click)="$event.stopPropagation()">
-            <button class="close-modal" (click)="closeAddProductModal()">&times;</button>
-
             <div class="modal-header">
-                <h2>New Masterpiece Product</h2>
-                <p>Curate and add a professional-grade product to your digital inventory.</p>
+                <h2>{{ isEditingProduct ? 'Edit Product' : 'New Masterpiece Product' }}</h2>
+                <p>{{ isEditingProduct ? 'Refine and update the details of this existing product.' : 'Curate and add a
+                    professional-grade product to your digital inventory.' }}</p>
+                <button class="close-modal" (click)="closeAddProductModal()">&times;</button>
             </div>
-
             <div class="modal-body">
-                <form (ngSubmit)="submitProduct()" #productForm="ngForm" class="info-grid">
-                    <div class="info-item full">
-                        <label>Exquisite Product Name *</label>
-                        <input type="text" [(ngModel)]="newProduct.name" name="name" required
-                            placeholder="e.g. Rare Emerald Fern">
+                <form (ngSubmit)="submitProduct()" #productForm="ngForm">
+                    <!-- Section 1: Identity -->
+                    <div class="form-section">
+                        <div class="section-tag">01. Identity</div>
+                        <div class="info-grid">
+                            <div class="info-item full">
+                                <label><i class="fas fa-signature"></i> Exquisite Product Name *</label>
+                                <input type="text" [(ngModel)]="newProduct.name" name="name" required
+                                    placeholder="e.g. Rare Emerald Fern">
+                            </div>
+                            <div class="info-item">
+                                <label><i class="fas fa-tags"></i> Inventory Category *</label>
+                                <select [(ngModel)]="newProduct.category" name="category" required>
+                                    <option value="" disabled>Select Category</option>
+                                    <ng-container *ngFor="let group of mainCategoryGroups | keyvalue">
+                                        <optgroup [label]="group.key">
+                                            <option *ngFor="let cat of group.value" [value]="cat.key">
+                                                {{cat.label}}
+                                            </option>
+                                        </optgroup>
+                                    </ng-container>
+                                </select>
+                            </div>
+                            <div class="info-item">
+                                <label><i class="fas fa-percent"></i> Offer Label</label>
+                                <input type="text" [(ngModel)]="newProduct.discount" name="discount"
+                                    placeholder="e.g. 15% EXCLUSIVE">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="info-item">
-                        <label>Investment Value (₹) *</label>
-                        <input type="text" [(ngModel)]="newProduct.price" name="price" required placeholder="e.g. 1499">
+                    <!-- Section 2: Economics -->
+                    <div class="form-section">
+                        <div class="section-tag">02. Economics</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label><i class="fas fa-coins"></i> Investment Value (₹) *</label>
+                                <input type="text" [(ngModel)]="newProduct.price" name="price" required
+                                    placeholder="e.g. 1499">
+                            </div>
+                            <div class="info-item">
+                                <label><i class="fas fa-history"></i> Original Value (₹)</label>
+                                <input type="text" [(ngModel)]="newProduct.originalPrice" name="originalPrice"
+                                    placeholder="e.g. 1999">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="info-item">
-                        <label>Original Value (₹)</label>
-                        <input type="text" [(ngModel)]="newProduct.originalPrice" name="originalPrice"
-                            placeholder="e.g. 1999">
+                    <!-- Section 3: Visual Elements -->
+                    <div class="form-section">
+                        <div class="section-tag">03. Visual Assets</div>
+                        <div class="info-grid">
+                            <div class="info-item full">
+                                <label><i class="fas fa-image"></i> Main Product Image URL *</label>
+                                <input type="text" [(ngModel)]="newProduct.image" name="image" required
+                                    placeholder="https://images.unsplash.com/...">
+                            </div>
+                            <div class="info-item" *ngFor="let img of newProduct.images; let i = index">
+                                <label><i class="fas fa-images"></i> Alt Image {{i + 1}}</label>
+                                <input type="text" [(ngModel)]="newProduct.images[i]" name="image{{i}}"
+                                    placeholder="Optional angle URL">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="info-item">
-                        <label>Inventory Category *</label>
-                        <select [(ngModel)]="newProduct.category" name="category" required>
-                            <option value="" disabled>Select Category</option>
-                            <option *ngFor="let cat of mainCategoryGroups[activeMainCategory]" [value]="cat.key">
-                                {{cat.label}}{{activeMainCategory === 'Seeds' ? ' Seeds' : ''}}
-                            </option>
-                        </select>
+                    <!-- Section 4: Narrative -->
+                    <div class="form-section">
+                        <div class="section-tag">04. Narrative</div>
+                        <div class="info-grid">
+                            <div class="info-item full">
+                                <label><i class="fas fa-pen-fancy"></i> Product Story (Description)</label>
+                                <textarea [(ngModel)]="newProduct.description" name="description" rows="3"
+                                    placeholder="Tell the story of this exquisite plant..."></textarea>
+                            </div>
+                            <div class="info-item full">
+                                <label><i class="fas fa-search-plus"></i> Metadata Tags</label>
+                                <input type="text" [(ngModel)]="newProduct.tags" name="tags"
+                                    placeholder="e.g. Indoor, Luxurious, Air Purifying">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="info-item">
-                        <label>Exclusive Offer Label</label>
-                        <input type="text" [(ngModel)]="newProduct.discount" name="discount"
-                            placeholder="e.g. 15% EXCLUSIVE">
-                    </div>
-
-                    <div class="info-item full">
-                        <label>Artisan Image URL *</label>
-                        <input type="text" [(ngModel)]="newProduct.image" name="image" required
-                            placeholder="https://images.unsplash.com/...">
-                    </div>
-
-                    <div class="info-item full">
-                        <label>Defining Attributes (Tags)</label>
-                        <input type="text" [(ngModel)]="newProduct.tags" name="tags"
-                            placeholder="Indoor, Luxurious, Air Purifying">
-                    </div>
-
-                    <div class="modal-footer full">
-                        <button type="button" class="btn-secondary" (click)="closeAddProductModal()">Discard</button>
-                        <button type="submit" class="btn-primary" [disabled]="!productForm.form.valid">Publish
-                            Product</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" (click)="closeAddProductModal()">Discard
+                            Changes</button>
+                        <button type="button" class="btn-primary" (click)="submitProduct()">
+                            <i class="fas" [ngClass]="isEditingProduct ? 'fa-save' : 'fa-rocket'"></i>
+                            {{ isEditingProduct ? 'Save Changes' : 'Publish Product' }}
+                        </button>
                     </div>
                 </form>
             </div>
