@@ -25,7 +25,19 @@
             <a href="javascript:void(0)"
                 [class.active]="activeTab === 'products' && activeMainCategory === 'Accessories'"
                 (click)="setTab('products', 'Accessories')">
-                <i class="fas fa-tools"></i> Accessories
+                <i class="fas fa-spa"></i> Plant Companions
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'offers'" (click)="setTab('offers')">
+                <i class="fas fa-percent"></i> Offers
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'placements'" (click)="setTab('placements')">
+                <i class="fas fa-video"></i> Placements
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'faqs'" (click)="setTab('faqs')">
+                <i class="fas fa-question-circle"></i> FAQ's
+            </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'about-us'" (click)="setTab('about-us')">
+                <i class="fas fa-info-circle"></i> About Us
             </a>
             <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
                 <i class="fas fa-users"></i> Users
@@ -126,12 +138,16 @@
         <ng-container *ngIf="activeTab === 'products'">
             <header class="top-header">
                 <div class="welcome">
-                    <h1>Product Management</h1>
-                    <p>View and manage all your products by category.</p>
+                    <h1>{{ activeMainCategory === 'Accessories' ? 'Plant Companions' : 'Product Management' }}</h1>
+                    <p>{{ activeMainCategory === 'Accessories' ? 'Curate your garden essentials and companion products.'
+                        : 'View and manage all your products by category.' }}</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-add-product" (click)="openAddProductModal()"><i class="fas fa-plus"></i> Add New
-                        Product</button>
+                    <button class="add-floating-btn" (click)="openAddProductModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add New Product</span>
+                    </button>
+                    <span class="view-mode-badge">{{activeTab | uppercase}}</span>
                 </div>
             </header>
 
@@ -150,93 +166,120 @@
                     </button>
                 </div>
 
-                <!-- Accessories Specialized Main Group Tabs -->
+                <!-- Accessoriesized/Plant Companions Main Group Tabs -->
                 <div class="primary-group-tabs" *ngIf="activeMainCategory === 'Accessories'">
-                    <button [class.active]="activeAccessoryGroup === 'All'"
-                        (click)="activeAccessoryGroup = 'All'; productCategoryFilter = 'All'">
-                        <i class="fas fa-th-large"></i> All
+                    <button [class.active]="activeCompanionGroup === 'Accessories'"
+                        (click)="activeCompanionGroup = 'Accessories'; productCategoryFilter = 'All'">
+                        <i class="fas fa-bucket"></i> Accessories
                     </button>
-                    <button [class.active]="activeAccessoryGroup === 'Accessories'"
-                        (click)="activeAccessoryGroup = 'Accessories'; productCategoryFilter = 'All'">
-                        <i class="fas fa-magic"></i> Accessories
+                    <button [class.active]="activeCompanionGroup === 'Soil & Growing Media'"
+                        (click)="activeCompanionGroup = 'Soil & Growing Media'; productCategoryFilter = 'All'">
+                        <i class="fas fa-mountain-sun"></i> Soil & Growing Media
                     </button>
-                    <button [class.active]="activeAccessoryGroup === 'Soil & Growing Media'"
-                        (click)="activeAccessoryGroup = 'Soil & Growing Media'; productCategoryFilter = 'All'">
-                        <i class="fas fa-mountain"></i> Soil & Media
+                    <button [class.active]="activeCompanionGroup === 'Fertilizers & Nutrients'"
+                        (click)="activeCompanionGroup = 'Fertilizers & Nutrients'; productCategoryFilter = 'All'">
+                        <i class="fas fa-vial-circle-check"></i> Fertilizers & Nutrients
                     </button>
-                    <button [class.active]="activeAccessoryGroup === 'Fertilizers & Nutrients'"
-                        (click)="activeAccessoryGroup = 'Fertilizers & Nutrients'; productCategoryFilter = 'All'">
-                        <i class="fas fa-vial"></i> Fertilizers
-                    </button>
-                    <button [class.active]="activeAccessoryGroup === 'Gardening Tools'"
-                        (click)="activeAccessoryGroup = 'Gardening Tools'; productCategoryFilter = 'All'">
-                        <i class="fas fa-tools"></i> Tools
+                    <button [class.active]="activeCompanionGroup === 'Gardening Tools'"
+                        (click)="activeCompanionGroup = 'Gardening Tools'; productCategoryFilter = 'All'">
+                        <i class="fas fa-hand-holding-hand"></i> Gardening Tools
                     </button>
                 </div>
 
-                <!-- Sub-Category Navigation (Pills style) -->
-                <div class="category-nav-header">
-                    <div class="category-filters-row">
-                        <button [class.active]="productCategoryFilter === 'All'"
-                            (click)="productCategoryFilter = 'All'">
-                            All {{activeAccessoryGroup !== 'All' ? activeAccessoryGroup : activeMainCategory}}
-                        </button>
-                        <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
-                            (click)="productCategoryFilter = cat">
-                            {{getCategoryLabel(cat)}}
-                        </button>
+                <!-- Unified Control Bar (Responsive Fix) -->
+                <div class="admin-control-bar-vertical">
+                    <div class="search-row">
+                        <div class="search-box-premium wide">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" [(ngModel)]="searchTerm"
+                                [placeholder]="'Search in ' + (productCategoryFilter === 'All' ? activeMainCategory : getCategoryLabel(productCategoryFilter)) + '...'"
+                                class="search-field">
+                            <button class="clear-btn" *ngIf="searchTerm" (click)="searchTerm = ''">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="search-filter">
-                        <i class="fas fa-search"></i>
-                        <input type="text"
-                            [placeholder]="activeMainCategory === 'Accessories' ? 'Search accessories...' : 'Filter from database...'">
+
+                    <div class="filter-row">
+                        <div class="category-filters-row">
+                            <button [class.active]="productCategoryFilter === 'All'"
+                                (click)="productCategoryFilter = 'All'">
+                                All {{activeMainCategory === 'Accessories' ? activeCompanionGroup : activeMainCategory}}
+                            </button>
+                            <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
+                                (click)="productCategoryFilter = cat">
+                                {{getCategoryLabel(cat)}}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="category-section" *ngFor="let category of filteredProductCategories">
-                    <div class="category-header">
-                        <h2>{{getCategoryLabel(category)}}</h2>
-                        <span class="count-badge">{{getProductsForCategory(category).length}} Items</span>
-                    </div>
+                <!-- Search Results Indicator -->
+                <div class="search-status-bar" *ngIf="searchTerm">
+                    <span><i class="fas fa-search"></i> Searching for <strong>"{{searchTerm}}"</strong> in
+                        {{productCategoryFilter === 'All' ? 'Current Tab' :
+                        getCategoryLabel(productCategoryFilter)}}</span>
+                    <button (click)="searchTerm = ''">Clear Search</button>
+                </div>
 
+                <div class="category-explorer-grid" *ngIf="productCategoryFilter === 'All' && !searchTerm">
+                    <div class="type-card" *ngFor="let category of filteredProductCategories"
+                        (click)="productCategoryFilter = category">
+                        <div class="type-info">
+                            <i class="fas" [ngClass]="getCategoryIcon(category)"></i>
+                            <h3>{{getCategoryLabel(category)}}</h3>
+                        </div>
+                        <div class="type-badge" [ngClass]="getTypeBadgeClass(getProductsForCategory(category).length)">
+                            {{getProductsForCategory(category).length}} Products
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Tables (Only shown when a specific category is selected) -->
+                <!-- Unified Product Table (Fixed Alignment & Search) -->
+                <div class="category-section" [class.hidden]="productCategoryFilter === 'All' && !searchTerm">
                     <div class="products-table-card data-card">
                         <div class="table-responsive">
                             <table class="products-table">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Price</th>
-                                        <th>Original Price</th>
-                                        <th>Discount</th>
-                                        <th>Stock Status</th>
-                                        <th>Actions</th>
+                                        <th style="width: 35%;">Product</th>
+                                        <th style="width: 12%;">Price</th>
+                                        <th style="width: 15%;">Original Price</th>
+                                        <th style="width: 15%;">Discount</th>
+                                        <th style="width: 12%;">Status</th>
+                                        <th style="width: 11%;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let prod of getProductsForCategory(category)">
-                                        <td>
-                                            <div class="prod-cell">
-                                                <img [src]="prod.image" class="prod-thumb" alt="Product">
-                                                <div class="prod-info">
-                                                    <span class="prod-name">{{prod.name}}</span>
-                                                    <span class="prod-slug">{{prod.slug || 'N/A'}}</span>
+                                    <ng-container *ngFor="let category of filteredProductCategories">
+                                        <tr *ngFor="let prod of getProductsForCategory(category)">
+                                            <td>
+                                                <div class="prod-cell">
+                                                    <img [src]="prod.image" class="prod-thumb" alt="Product">
+                                                    <div class="prod-info">
+                                                        <span class="prod-name">{{prod.name}}</span>
+                                                        <span class="prod-slug">{{prod.slug || 'N/A'}}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>₹{{prod.price}}</td>
-                                        <td>₹{{prod.originalPrice || '-'}}</td>
-                                        <td><span class="discount-pill" *ngIf="prod.discount">{{prod.discount}}</span>
-                                        </td>
-                                        <td><span class="status-badge delivered">In Stock</span></td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon edit" title="Edit"
-                                                (click)="openEditProductModal(prod)"><i
-                                                    class="far fa-edit"></i></button>
-                                            <button class="btn-icon delete" title="Delete"
-                                                (click)="deleteProduct(prod._id, prod.name)"><i
-                                                    class="far fa-trash-alt"></i></button>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td class="price-cell">₹{{prod.price}}</td>
+                                            <td class="price-cell text-muted">₹{{prod.originalPrice || '-'}}</td>
+                                            <td><span class="discount-pill"
+                                                    *ngIf="prod.discount">{{prod.discount}}</span></td>
+                                            <td><span class="status-badge delivered">In Stock</span></td>
+                                            <td class="action-cell">
+                                                <button class="btn-icon edit" title="Edit"
+                                                    (click)="openEditProductModal(prod)">
+                                                    <i class="far fa-edit"></i>
+                                                </button>
+                                                <button class="btn-icon delete" title="Delete"
+                                                    (click)="deleteProduct(prod._id, prod.name)">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </ng-container>
                                 </tbody>
                             </table>
                         </div>
@@ -322,6 +365,416 @@
                 </div>
             </div>
         </ng-container>
+
+        <!-- Offers Management Content -->
+        <ng-container *ngIf="activeTab === 'offers'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1><i class="fas fa-fire" style="color: #f97316; margin-right: 8px;"></i>Offers Management</h1>
+                    <p>Create and manage promotional offers and deals.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="add-floating-btn" (click)="openAddOfferModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add New Offer</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Row -->
+            <div class="offer-stats-row" *ngIf="offers.length > 0">
+                <div class="offer-stat-chip">
+                    <div class="stat-chip-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-value">{{ offers.length }}</span>
+                        <span class="stat-chip-label">Total Offers</span>
+                    </div>
+                </div>
+                <div class="offer-stat-chip">
+                    <div class="stat-chip-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-value">{{ offers.length }}</span>
+                        <span class="stat-chip-label">Active Deals</span>
+                    </div>
+                </div>
+                <div class="offer-stat-chip">
+                    <div class="stat-chip-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-value">Live</span>
+                        <span class="stat-chip-label">Status</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="offers-admin-container">
+                <!-- Loading -->
+                <div *ngIf="isLoadingOffers" class="offers-loading-state">
+                    <div class="offers-loader-spinner"></div>
+                    <p>Loading your offers...</p>
+                </div>
+
+                <!-- Empty -->
+                <div class="offers-empty-state" *ngIf="!isLoadingOffers && offers.length === 0">
+                    <div class="offers-empty-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <h3>No Offers Yet</h3>
+                    <p>Create your first promotional offer to attract more customers and boost sales.</p>
+                    <button class="offers-empty-btn" (click)="openAddOfferModal()">
+                        <i class="fas fa-plus"></i> Create First Offer
+                    </button>
+                </div>
+
+                <!-- Offers Grid -->
+                <div class="offers-grid" *ngIf="!isLoadingOffers && offers.length > 0">
+                    <div class="offer-admin-card" *ngFor="let offer of offers; let i = index"
+                        [style.--accent]="offer.accentColor" [style.--accent-light]="offer.accentLight || '#f0fdf4'"
+                        [style.--card-bg]="offer.cardBg || '#ffffff'">
+
+                        <!-- Card Glow -->
+                        <div class="offer-card-glow" [style.background]="offer.accentColor"></div>
+
+                        <!-- Header with Image -->
+                        <div class="offer-card-visual">
+                            <img [src]="offer.image" [alt]="offer.title" class="offer-card-img">
+                            <div class="offer-card-overlay">
+                                <span class="offer-card-tag" [style.background]="offer.tagBg"
+                                    [style.color]="offer.tagText">
+                                    {{ offer.tag }}
+                                </span>
+                            </div>
+                            <div class="offer-card-number">#{{ i + 1 }}</div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="offer-card-body">
+                            <!-- Badge -->
+                            <span class="offer-card-badge" [style.background]="offer.accentLight"
+                                [style.color]="offer.accentText">
+                                {{ offer.badge }}
+                            </span>
+
+                            <!-- Title -->
+                            <h3 class="offer-card-title">{{ offer.title }}</h3>
+                            <p class="offer-card-subtitle">{{ offer.subtitle }}</p>
+
+                            <!-- Discount Strip -->
+                            <div class="offer-discount-strip"
+                                [style.background]="'linear-gradient(135deg, ' + offer.accentColor + ', ' + (offer.accentLight || '#dcfce7') + ')'">
+                                <i class="fas fa-tag"></i>
+                                <span>{{ offer.discountLine }}</span>
+                            </div>
+
+                            <!-- Features Preview -->
+                            <div class="offer-features-preview" *ngIf="offer.features && offer.features.length > 0">
+                                <span class="offer-feature-dot" *ngFor="let feat of offer.features | slice:0:3"
+                                    [style.borderColor]="offer.accentColor">
+                                    <i class="fas fa-check" [style.color]="offer.accentColor"></i>
+                                    {{ feat }}
+                                </span>
+                            </div>
+
+                            <!-- Timer -->
+                            <div class="offer-timer-row" *ngIf="offer.timer">
+                                <span class="offer-timer-dot"></span>
+                                <span class="offer-timer-text">{{ offer.timer }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Actions -->
+                        <div class="offer-card-actions">
+                            <button class="offer-action-btn offer-edit-btn" (click)="openEditOfferModal(offer)">
+                                <i class="far fa-edit"></i> Edit
+                            </button>
+                            <button class="offer-action-btn offer-delete-btn"
+                                (click)="deleteOfferAdmin(offer._id!, offer.title, offer.image)">
+                                <i class="far fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Placements Management Content -->
+        <ng-container *ngIf="activeTab === 'placements'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1><i class="fas fa-video" style="color: #8b5cf6; margin-right: 8px;"></i>Video Placements</h1>
+                    <p>Manage promotional videos and their target destinations.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="add-floating-btn" (click)="openAddPlacementModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Video Placement</span>
+                    </button>
+                    <span class="view-mode-badge">PLACEMENTS</span>
+                </div>
+            </header>
+
+            <div class="offer-stats-row">
+                <div class="offer-stat-chip">
+                    <div class="stat-chip-icon" style="background: #8b5cf6;">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-value">{{placements.length}}</span>
+                        <span class="stat-chip-label">Total Videos</span>
+                    </div>
+                </div>
+                <div class="offer-stat-chip">
+                    <div class="stat-chip-icon" style="background: #10b981;">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-value">{{placements.length}}</span>
+                        <span class="stat-chip-label">Active Placements</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="offers-loading" *ngIf="isLoadingPlacements">
+                <div class="spinner"></div>
+                <p>Loading your masterpiece videos...</p>
+            </div>
+
+            <div class="offers-empty-state" *ngIf="!isLoadingPlacements && placements.length === 0">
+                <div class="offers-empty-icon">
+                    <i class="fas fa-video-slash"></i>
+                </div>
+                <h3>No Video Placements Yet</h3>
+                <p>Start by creating your first promotional video experience.</p>
+                <button class="offers-empty-btn" (click)="openAddPlacementModal()">
+                    <i class="fas fa-plus"></i> Create First Placement
+                </button>
+            </div>
+
+            <div class="offers-grid placement-mode" *ngIf="!isLoadingPlacements && placements.length > 0">
+                <div class="placement-admin-card" *ngFor="let plac of placements; let i = index"
+                    [style.--accent]="'#8b5cf6'" [style.--accent-light]="'#f5f3ff'" [style.--card-bg]="'#ffffff'">
+
+                    <div class="offer-card-glow" [style.background]="'#8b5cf6'"></div>
+
+                    <div class="offer-card-visual">
+                        <img [src]="plac.image" [alt]="plac.name" class="offer-card-img">
+                        <div class="offer-card-overlay">
+                            <span class="offer-card-tag" [style.background]="'#8b5cf6'" [style.color]="'#fff'">
+                                VIDEO #{{i+1}}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="offer-card-body">
+                        <span class="offer-card-badge" [style.background]="'#ede9fe'" [style.color]="'#5b21b6'">
+                            {{ plac.badge }}
+                        </span>
+                        <h3 class="offer-card-title">{{ plac.name }}</h3>
+                        <p class="offer-card-subtitle">{{ plac.description | slice:0:80 }}...</p>
+
+                        <div class="offer-discount-strip"
+                            [style.background]="'linear-gradient(135deg, #8b5cf6, #c4b5fd)'">
+                            <i class="fas fa-link"></i>
+                            <span>{{ plac.categoryRoute }}</span>
+                        </div>
+                    </div>
+
+                    <div class="offer-card-actions">
+                        <button class="offer-action-btn placement-edit-btn" (click)="openEditPlacementModal(plac)">
+                            <i class="far fa-edit"></i> Edit
+                        </button>
+                        <button class="offer-action-btn placement-delete-btn"
+                            (click)="deletePlacement(plac._id!, plac.name, plac.image)">
+                            <i class="far fa-trash-alt"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- FAQ's Management Content -->
+        <ng-container *ngIf="activeTab === 'faqs'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Frequently Asked Questions</h1>
+                    <p>Manage community help content and support guides</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-primary" (click)="openAddFaqModal()">
+                        <i class="fas fa-plus"></i> New FAQ
+                    </button>
+                </div>
+            </header>
+
+            <!-- Categorized Navigation for FAQs -->
+            <div class="category-filters-row" style="margin-top: 20px;">
+                <button class="category-pill" [class.active]="faqCategoryFilter === 'All'"
+                    (click)="faqCategoryFilter = 'All'">
+                    All Categories
+                </button>
+                <button class="category-pill" *ngFor="let cat of faqCategories"
+                    [class.active]="faqCategoryFilter === cat" (click)="faqCategoryFilter = cat">
+                    {{cat}}
+                </button>
+            </div>
+
+            <div class="offers-admin-container">
+                <!-- Loading -->
+                <div *ngIf="isLoadingFaqs" class="offers-loading-state">
+                    <div class="offers-loader-spinner"></div>
+                    <p>Loading All FAQs...</p>
+                </div>
+
+                <!-- Category Explorer (Shown only when 'All Categories' is selected) -->
+                <div class="category-explorer-grid" *ngIf="!isLoadingFaqs && faqCategoryFilter === 'All'">
+                    <div class="type-card" *ngFor="let cat of faqCategories" (click)="faqCategoryFilter = cat">
+                        <div class="type-info">
+                            <i class="fas" [ngClass]="getFaqCategoryIcon(cat)"></i>
+                            <h3>{{cat}}</h3>
+                        </div>
+                        <div class="type-badge" [ngClass]="getTypeBadgeClass(getFaqsForCategory(cat).length)">
+                            {{getFaqsForCategory(cat).length}} FAQs
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty (No FAQs at all) -->
+                <div class="offers-empty-state" *ngIf="!isLoadingFaqs && faqs.length === 0">
+                    <div class="offers-empty-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3>No FAQs Yet</h3>
+                    <p>Create helpful questions and answers to assist your users.</p>
+                    <button class="offers-empty-btn" (click)="openAddFaqModal()">
+                        <i class="fas fa-plus"></i> Create First FAQ
+                    </button>
+                </div>
+
+                <!-- Empty (Filtered result is empty) -->
+                <div class="offers-empty-state"
+                    *ngIf="!isLoadingFaqs && faqs.length > 0 && faqCategoryFilter !== 'All' && getFaqsForCategory(faqCategoryFilter).length === 0">
+                    <div class="offers-empty-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>No FAQs Found</h3>
+                    <p>There are no FAQs under the <strong>{{faqCategoryFilter}}</strong> category yet.</p>
+                    <button class="offers-empty-btn" (click)="openAddFaqModal()">
+                        <i class="fas fa-plus"></i> Add One Now
+                    </button>
+                </div>
+
+                <!-- FAQs List (Only shown when a specific category is selected) -->
+                <div class="offers-grid"
+                    *ngIf="!isLoadingFaqs && faqCategoryFilter !== 'All' && getFaqsForCategory(faqCategoryFilter).length > 0">
+                    <div class="offer-admin-card faq-admin-card"
+                        *ngFor="let faq of getFaqsForCategory(faqCategoryFilter); let i = index">
+                        <div class="offer-card-glow" style="background: #8b5cf6"></div>
+
+                        <div class="offer-card-body">
+                            <span class="offer-card-tag"
+                                style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; margin-bottom: 12px; display: inline-block;">
+                                {{ faq.category }}
+                            </span>
+                            <h3 style="color: #1e293b; margin-bottom: 8px;">{{ faq.question }}</h3>
+                            <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">{{ faq.answer }}</p>
+
+                            <div class="offer-discount-strip"
+                                style="background: linear-gradient(135deg, #8b5cf6, #c4b5fd); margin-top: 15px;">
+                                <i class="fas fa-sort-numeric-down"></i>
+                                <span>Order: {{ faq.order }}</span>
+                            </div>
+                        </div>
+
+                        <div class="offer-card-actions">
+                            <button class="offer-action-btn placement-edit-btn" (click)="openEditFaqModal(faq)">
+                                <i class="far fa-edit"></i> Edit
+                            </button>
+                            <button class="offer-action-btn placement-delete-btn"
+                                (click)="deleteFaqAdmin(faq._id!, faq.question)">
+                                <i class="far fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+        </ng-container>
+
+        <!-- About Us Management Content -->
+        <ng-container *ngIf="activeTab === 'about-us'">
+            <div class="offers-management">
+                <header class="offers-header">
+                    <div class="offers-title">
+                        <h2>About Us Management</h2>
+                        <p>Manage the content sections of your About Us page.</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="offers-count" *ngIf="aboutSections.length > 0">
+                            <strong>{{aboutSections.length}}</strong> Section{{aboutSections.length === 1 ? '' : 's'}}
+                        </div>
+                        <button class="btn-add-offer" (click)="openAddAboutModal()">
+                            <i class="fas fa-plus"></i> Add New Section
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Loading State -->
+                <div class="offers-loading-state" *ngIf="isLoadingAbout">
+                    <div class="offers-loader-spinner"></div>
+                    <p>Loading sections...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="offers-empty-state" *ngIf="!isLoadingAbout && aboutSections.length === 0">
+                    <div class="offers-empty-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <h3>No Sections Yet</h3>
+                    <p>Create content sections to build your About Us page.</p>
+                    <button class="offers-empty-btn" (click)="openAddAboutModal()">
+                        <i class="fas fa-plus"></i> Create First Section
+                    </button>
+                </div>
+
+                <!-- Sections List -->
+                <div class="offers-grid" *ngIf="!isLoadingAbout && aboutSections.length > 0">
+                    <div class="offer-admin-card" *ngFor="let section of aboutSections; let i = index">
+                        <div class="offer-card-glow" [style.background]="'#10b981'"></div>
+
+                        <div class="offer-card-body">
+                            <span class="offer-card-tag"
+                                style="background: rgba(16, 185, 129, 0.1); color: #10b981; margin-bottom: 12px; display: inline-block; text-transform: uppercase;">
+                                {{ section.type }}
+                            </span>
+                            <h3 style="color: #1e293b; margin-bottom: 8px;">{{ section.title }}</h3>
+                            <p
+                                style="color: #64748b; font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; overflow: hidden;">
+                                {{ section.content }}
+                            </p>
+
+                            <div class="offer-discount-strip"
+                                style="background: linear-gradient(135deg, #10b981, #34d399); margin-top: 15px;">
+                                <i class="fas" [ngClass]="section.icon || 'fa-info-circle'"></i>
+                                <span>Order: {{ section.order }}</span>
+                            </div>
+                        </div>
+
+                        <div class="offer-card-actions">
+                            <button class="offer-action-btn placement-edit-btn" (click)="openEditAboutModal(section)">
+                                <i class="far fa-edit"></i> Edit
+                            </button>
+                            <button class="offer-action-btn placement-delete-btn"
+                                (click)="deleteAboutAdmin(section._id!, section.title)">
+                                <i class="far fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
     </main>
 
     <!-- User Details Modal ... existing ... -->
@@ -350,13 +803,11 @@
                                 <label><i class="fas fa-tags"></i> Inventory Category *</label>
                                 <select [(ngModel)]="newProduct.category" name="category" required>
                                     <option value="" disabled>Select Category</option>
-                                    <ng-container *ngFor="let group of mainCategoryGroups | keyvalue">
-                                        <optgroup [label]="group.key">
-                                            <option *ngFor="let cat of group.value" [value]="cat.key">
-                                                {{cat.label}}
-                                            </option>
-                                        </optgroup>
-                                    </ng-container>
+                                    <optgroup [label]="getMainCategoryLabel(activeMainCategory)">
+                                        <option *ngFor="let cat of getFilteredCategoriesForModal()" [value]="cat.key">
+                                            {{cat.label}}
+                                        </option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="info-item">
@@ -421,17 +872,503 @@
                     <div class="modal-footer">
                         <button type="button" class="btn-secondary" (click)="closeAddProductModal()">Discard
                             Changes</button>
-                        <button type="button" class="btn-primary" (click)="submitProduct()">
-                            <i class="fas" [ngClass]="isEditingProduct ? 'fa-save' : 'fa-rocket'"></i>
-                            {{ isEditingProduct ? 'Save Changes' : 'Publish Product' }}
+                        <button type="button" class="btn-primary" (click)="submitProduct()" [disabled]="isSubmitting">
+                            <i class="fas"
+                                [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : (isEditingProduct ? 'fa-save' : 'fa-rocket')"></i>
+                            {{ isSubmitting ? 'Publishing...' : (isEditingProduct ? 'Save Changes' : 'Publish Product')
+                            }}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Add/Edit Offer Modal -->
+    <div class="modal-overlay" *ngIf="showAddOfferModal" (click)="closeAddOfferModal()">
+        <div class="user-detail-modal product-modal offer-editor-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header offer-editor-header"
+                [style.background]="'linear-gradient(135deg, ' + newOffer.accentColor + ' 0%, #000 150%)'">
+                <div class="header-content">
+                    <h2>{{ isEditingOffer ? 'Edit Offer' : 'Create New Offer' }}</h2>
+                    <p>Configure the visual details and promotional content of this offer.</p>
+                </div>
+                <button class="close-modal" (click)="closeAddOfferModal()">&times;</button>
+            </div>
+            <div class="modal-body offer-editor-body">
+                <!-- Dual Layout: Form on Left, Preview on Right -->
+                <div class="offer-editor-layout">
+                    <!-- Form Side -->
+                    <div class="offer-form-side">
+                        <form (ngSubmit)="submitOffer()">
+
+                            <div class="form-section">
+                                <div class="section-tag">01. Main Content</div>
+                                <div class="info-grid">
+                                    <div class="info-item full">
+                                        <label>Offer Title *</label>
+                                        <input type="text" [(ngModel)]="newOffer.title" name="title" required
+                                            placeholder="e.g. BOGO OFFER">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Subtitle *</label>
+                                        <input type="text" [(ngModel)]="newOffer.subtitle" name="subtitle" required
+                                            placeholder="e.g. Buy 2 XL Plants">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Discount Line</label>
+                                        <input type="text" [(ngModel)]="newOffer.discountLine" name="discountLine"
+                                            placeholder="e.g. & GET 1 MEDIUM PLANT FREE">
+                                    </div>
+                                    <div class="info-item full">
+                                        <label>Description</label>
+                                        <textarea [(ngModel)]="newOffer.description" name="description" rows="2"
+                                            placeholder="Detail the offer..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="section-tag">02. Tags & Visuals</div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <label>Badge Text</label>
+                                        <input type="text" [(ngModel)]="newOffer.badge" name="badge"
+                                            placeholder="e.g. 🌿 EXCLUSIVE DEAL">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Offer Tag</label>
+                                        <input type="text" [(ngModel)]="newOffer.tag" name="tag"
+                                            placeholder="e.g. BOGO">
+                                    </div>
+                                    <div class="info-item full">
+                                        <label>Image URL *</label>
+                                        <input type="text" [(ngModel)]="newOffer.image" name="image" required
+                                            placeholder="https://...">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>CTA Text</label>
+                                        <input type="text" [(ngModel)]="newOffer.ctaText" name="ctaText"
+                                            placeholder="GRAB THIS DEAL">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>CTA Link</label>
+                                        <input type="text" [(ngModel)]="newOffer.ctaLink" name="ctaLink"
+                                            placeholder="/bogo-offer">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="section-tag">03. Features (Optional)</div>
+                                <div class="info-grid">
+                                    <div class="info-item"
+                                        *ngFor="let feat of newOffer.features; let i = index; trackBy: trackByIndex">
+                                        <label>Feature {{i+1}}</label>
+                                        <input type="text" [(ngModel)]="newOffer.features[i]" name="feature_input_{{i}}"
+                                            placeholder="e.g. Limited time offer">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-secondary"
+                                    style="margin-top: 10px; width: auto; padding: 5px 15px;"
+                                    (click)="newOffer.features.push('')">
+                                    <i class="fas fa-plus"></i> Add Another Feature
+                                </button>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="section-tag">04. Design Tokens (Colors)</div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <label>Card Background</label>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="color" [(ngModel)]="newOffer.cardBg" name="cardBg"
+                                                style="width: 40px; padding: 0; height: 40px; cursor: pointer;">
+                                            <input type="text" [(ngModel)]="newOffer.cardBg" name="cardBgText"
+                                                placeholder="#ffffff" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Accent Color</label>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="color" [(ngModel)]="newOffer.accentColor" name="accentColor"
+                                                style="width: 40px; padding: 0; height: 40px; cursor: pointer;">
+                                            <input type="text" [(ngModel)]="newOffer.accentColor" name="accentColorText"
+                                                placeholder="#16a34a" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Tag Background</label>
+                                        <input type="color" [(ngModel)]="newOffer.tagBg" name="tagBg"
+                                            style="width: 100%;">
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Tag Text Color</label>
+                                        <input type="color" [(ngModel)]="newOffer.tagText" name="tagText"
+                                            style="width: 100%;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary"
+                                    (click)="closeAddOfferModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" [disabled]="isSubmitting">
+                                    <i class="fas" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                                    {{ isSubmitting ? 'Saving...' : 'Save Offer' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Live Preview Side (Right) -->
+                    <div class="offer-preview-side">
+                        <div class="preview-header">
+                            <h3>Live Preview</h3>
+                            <p>How it will look on your website</p>
+                        </div>
+
+                        <!-- Mini Demo Card -->
+                        <div class="offer-admin-card preview-card" [style.--accent]="newOffer.accentColor"
+                            [style.--accent-light]="newOffer.accentLight || '#f0fdf4'"
+                            [style.--card-bg]="newOffer.cardBg || '#ffffff'">
+
+                            <div class="offer-card-glow" [style.background]="newOffer.accentColor"></div>
+                            <div class="offer-card-visual">
+                                <img *ngIf="newOffer.image" [src]="newOffer.image" class="offer-card-img">
+                                <div class="offer-card-overlay">
+                                    <span class="offer-card-tag" [style.background]="newOffer.tagBg"
+                                        [style.color]="newOffer.tagText">
+                                        {{ newOffer.tag }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="offer-card-body">
+                                <span class="offer-card-badge" [style.background]="newOffer.accentLight"
+                                    [style.color]="newOffer.accentText">
+                                    {{ newOffer.badge }}
+                                </span>
+                                <h3 class="offer-card-title">{{ newOffer.title || 'Offer Title' }}</h3>
+                                <p class="offer-card-subtitle">{{ newOffer.subtitle || 'Offer Subtitle' }}</p>
+
+                                <div class="offer-discount-strip"
+                                    [style.background]="'linear-gradient(135deg, ' + newOffer.accentColor + ', ' + (newOffer.accentLight || '#dcfce7') + ')'">
+                                    <i class="fas fa-tag"></i>
+                                    <span>{{ newOffer.discountLine || 'Discount Details' }}</span>
+                                </div>
+
+                                <div class="offer-features-preview"
+                                    *ngIf="newOffer.features && newOffer.features.length > 0">
+                                    <span class="offer-feature-dot" *ngFor="let feat of newOffer.features | slice:0:3"
+                                        [style.borderColor]="newOffer.accentColor">
+                                        {{ feat }}
+                                    </span>
+                                </div>
+
+                                <div class="offer-timer-row" *ngIf="newOffer.timer">
+                                    <span class="offer-timer-dot"></span>
+                                    <span class="offer-timer-text">{{ newOffer.timer }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-info-box">
+                            <i class="fas fa-lightbulb"></i>
+                            <p>Changes you make in the form are instantly visible here. Try adjusting colors to match
+                                your brand!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Video Placement Modal -->
+    <div class="modal-overlay" *ngIf="showAddPlacementModal" (click)="closeAddPlacementModal()">
+        <div class="user-detail-modal product-modal" style="max-width: 700px;" (click)="$event.stopPropagation()">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <h2>{{ isEditingPlacement ? 'Edit Video Placement' : 'New Video Placement' }}</h2>
+                <p>Configure how and where your promotional video is displayed.</p>
+                <button class="close-modal" (click)="closeAddPlacementModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form (ngSubmit)="submitPlacement()">
+                    <div class="form-section">
+                        <div class="section-tag">Basic Info</div>
+                        <div class="info-grid">
+                            <div class="info-item full">
+                                <label>Placement Name *</label>
+                                <input type="text" [(ngModel)]="newPlacement.name" name="plac_name" required
+                                    placeholder="e.g. Living Room Oasis">
+                            </div>
+                            <div class="info-item full">
+                                <label>Description *</label>
+                                <textarea [(ngModel)]="newPlacement.description" name="plac_desc" rows="3" required
+                                    placeholder="Describe the vibe..."></textarea>
+                            </div>
+                            <div class="info-item">
+                                <label>Badge Text</label>
+                                <input type="text" [(ngModel)]="newPlacement.badge" name="plac_badge"
+                                    placeholder="e.g. LUSH INDOORS">
+                            </div>
+                            <div class="info-item">
+                                <label>Redirect Route</label>
+                                <input type="text" [(ngModel)]="newPlacement.categoryRoute" name="plac_route"
+                                    placeholder="e.g. /products/indoor-plants">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-tag">Media Assets</div>
+                        <div class="info-grid">
+                            <div class="info-item full">
+                                <label>Video URL * (MP4 link or YouTube)</label>
+                                <input type="text" [(ngModel)]="newPlacement.videoUrl" name="plac_video" required
+                                    placeholder="https://...">
+                            </div>
+                            <div class="info-item full">
+                                <label>Thumbnail Image URL *</label>
+                                <input type="text" [(ngModel)]="newPlacement.image" name="plac_image" required
+                                    placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-tag">Key Features</div>
+                        <div class="info-grid">
+                            <div class="info-item"
+                                *ngFor="let feat of newPlacement.features; let i = index; trackBy: trackByIndex">
+                                <label>Feature {{i+1}}</label>
+                                <input type="text" [(ngModel)]="newPlacement.features[i]" name="plac_feat_{{i}}"
+                                    placeholder="e.g. UV Resistant">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary"
+                            style="margin-top: 10px; width: auto; padding: 5px 15px;"
+                            (click)="newPlacement.features.push('')">
+                            <i class="fas fa-plus"></i> Add Feature
+                        </button>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" (click)="closeAddPlacementModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" [disabled]="isSubmitting"
+                            [style.background]="'#8b5cf6'">
+                            <i class="fas" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                            {{ isSubmitting ? 'Saving...' : 'Save Placement' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Add/Edit Modal -->
+    <div class="modal-overlay" *ngIf="showAddFaqModal" (click)="closeAddFaqModal()">
+        <div class="user-detail-modal product-modal" style="max-width: 650px;" (click)="$event.stopPropagation()">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <h2>{{ isEditingFaq ? 'Edit FAQ' : 'New FAQ' }}</h2>
+                <p>Provide helpful information to your community.</p>
+                <button class="close-modal" (click)="closeAddFaqModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form (ngSubmit)="submitFaq()">
+                    <div class="form-section">
+                        <div class="section-tag">Basic Info</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Category *</label>
+                                <select [(ngModel)]="newFaq.category" name="faq_cat" required>
+                                    <option value="Orders">Orders</option>
+                                    <option value="Payment">Payment</option>
+                                    <option value="Delivery">Delivery</option>
+                                    <option value="Plants">Plants</option>
+                                    <option value="Returns">Returns</option>
+                                    <option value="Account">Account</option>
+                                </select>
+                            </div>
+                            <div class="info-item">
+                                <label>Display Order</label>
+                                <input type="number" [(ngModel)]="newFaq.order" name="faq_order" placeholder="e.g. 1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-tag">Content</div>
+                        <div class="info-item full">
+                            <label>Question *</label>
+                            <input type="text" [(ngModel)]="newFaq.question" name="faq_ques" required
+                                placeholder="e.g. How do I track my order?">
+                        </div>
+                        <div class="info-item full" style="margin-top: 15px;">
+                            <label>Answer *</label>
+                            <textarea [(ngModel)]="newFaq.answer" name="faq_ans" rows="5" required
+                                placeholder="Provide a detailed answer..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" (click)="closeAddFaqModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" [disabled]="isSubmitting">
+                            <span *ngIf="!isSubmitting">Save FAQ</span>
+                            <span *ngIf="isSubmitting">Saving...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Us Add/Edit Modal -->
+    <div class="modal-overlay" *ngIf="showAddAboutModal" (click)="closeAddAboutModal()">
+        <div class="user-detail-modal product-modal" style="max-width: 750px;" (click)="$event.stopPropagation()">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <h2>{{ isEditingAbout ? 'Edit About Section' : 'New About Section' }}</h2>
+                <p>Craft a compelling narrative for your About Us page.</p>
+                <button class="close-modal" (click)="closeAddAboutModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form (ngSubmit)="submitAboutSection()">
+                    <div class="form-section">
+                        <div class="section-tag">Basic Configuration</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Section Type *</label>
+                                <select [(ngModel)]="newAboutSection.type" name="about_type" required>
+                                    <option *ngFor="let type of aboutSectionTypes" [value]="type">{{type | titlecase}}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="info-item">
+                                <label>Display Order</label>
+                                <input type="number" [(ngModel)]="newAboutSection.order" name="about_order"
+                                    placeholder="e.g. 1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-tag">Content & Identity</div>
+                        <div class="info-item full">
+                            <label>Title *</label>
+                            <input type="text" [(ngModel)]="newAboutSection.title" name="about_title" required
+                                placeholder="e.g. Rooted in Passion, Growing with Purpose">
+                        </div>
+
+                        <div class="info-grid" style="margin-top: 15px;">
+                            <div class="info-item">
+                                <label>Icon (FontAwesome Class)</label>
+                                <input type="text" [(ngModel)]="newAboutSection.icon" name="about_icon"
+                                    placeholder="e.g. fa-leaf">
+                            </div>
+                            <div class="info-item">
+                                <label>Image URL</label>
+                                <input type="text" [(ngModel)]="newAboutSection.image" name="about_image"
+                                    placeholder="Image URL">
+                            </div>
+                        </div>
+
+                        <div class="info-item full" style="margin-top: 15px;"
+                            *ngIf="newAboutSection.type === 'quote' || newAboutSection.type === 'founder'">
+                            <label>Author / Speaker</label>
+                            <input type="text" [(ngModel)]="newAboutSection.author" name="about_author"
+                                placeholder="e.g. Audrey Hepburn">
+                        </div>
+
+                        <div class="info-item full" style="margin-top: 15px;">
+                            <label>Content / Description *</label>
+                            <textarea [(ngModel)]="newAboutSection.content" name="about_content" rows="6" required
+                                placeholder="Provide the main text content for this section..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" (click)="closeAddAboutModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" [disabled]="isSubmitting"
+                            style="background: #10b981;">
+                            <i class="fas" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                            {{ isSubmitting ? 'Saving...' : 'Save Section' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay success-overlay" *ngIf="showSuccessModal" (click)="closeSuccessModal()">
+        <div class="success-modal" (click)="$event.stopPropagation()">
+            <div class="success-icon-animation">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="success-content">
+                <h3>Product {{ successModalData.type === 'added' ? 'Created' : 'Updated' }}!</h3>
+                <p><strong>{{successModalData.name}}</strong> has been successfully {{successModalData.type}} to
+                    your
+                    digital garden.</p>
+
+                <div class="product-path-box">
+                    <span class="path-label">Storage Location:</span>
+                    <span class="path-value">{{successModalData.path}}</span>
+                </div>
+
+                <div class="product-preview-mini" *ngIf="successModalData.image">
+                    <img [src]="successModalData.image" alt="Preview">
+                </div>
+
+                <button class="btn-success-ok" (click)="closeSuccessModal()">
+                    Everything Looks Good!
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay delete-overlay" *ngIf="showDeleteModal" (click)="!deleteSuccess && cancelDelete()">
+        <div class="delete-modal" (click)="$event.stopPropagation()">
+
+            <!-- Confirmation View -->
+            <ng-container *ngIf="!deleteSuccess">
+                <div class="delete-icon-animation">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div class="delete-content">
+                    <h3 style="text-transform: capitalize;">Delete {{ deleteTarget.type || 'Product' }}?</h3>
+                    <p>You are about to permanently remove <strong>{{deleteTarget.name}}</strong> from your
+                        inventory.
+                    </p>
+                    <p class="delete-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be
+                        undone.
+                    </p>
+                    <div class="delete-actions">
+                        <button class="btn-cancel-delete" (click)="cancelDelete()">
+                            <i class="fas fa-arrow-left"></i> Keep It
+                        </button>
+                        <button class="btn-confirm-delete" (click)="confirmDelete()">
+                            <i class="fas fa-trash-alt"></i> Yes, Delete
+                        </button>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- Success View -->
+            <ng-container *ngIf="deleteSuccess">
+                <div class="delete-success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="delete-content">
+                    <h3>Deleted!</h3>
+                    <p><strong>{{deleteTarget.name}}</strong> has been removed from inventory.</p>
+                </div>
+            </ng-container>
+
+        </div>
+    </div>
+
+    <!-- Add FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </div>
-
-
-<!-- Add FontAwesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

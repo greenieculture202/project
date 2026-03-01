@@ -47,7 +47,10 @@ export class ProductListingComponent {
             'seeds': 'Seeds',
             'accessories-plants': 'Accessories',
             'accessories': 'Accessories',
-            'gardening-plants': 'Gardening'
+            'gardening-plants': 'Gardening',
+            'pots-planters': 'Pots & Planters',
+            'designer-pots': 'Pots & Planters',
+            'pots--planters': 'Pots & Planters'
         };
 
         let categoryName = slugToCategoryMap[this.displayCategory.toLowerCase()];

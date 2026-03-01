@@ -56,13 +56,6 @@ export class NavbarComponent {
     }
 
     navigateToFaq() {
-        this.router.navigate(['/']).then(() => {
-            setTimeout(() => {
-                const el = document.getElementById('faq-section');
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 100);
-        });
+        this.router.navigateByUrl('/faq/all');
     }
 }

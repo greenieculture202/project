@@ -21,8 +21,24 @@
     </div>
   </section>
 
+  <!-- Loading State -->
+  <section class="offers-grid-section" *ngIf="isLoading" style="text-align: center; padding: 80px 20px;">
+    <div style="font-size: 2rem; color: #16a34a; margin-bottom: 16px;">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p style="color: #64748b; font-size: 1.1rem;">Loading exclusive offers...</p>
+  </section>
+
+  <!-- No Offers State -->
+  <section class="offers-grid-section" *ngIf="!isLoading && offers.length === 0"
+    style="text-align: center; padding: 80px 20px;">
+    <div style="font-size: 3rem; margin-bottom: 16px;">🌿</div>
+    <h2 style="color: #334155; margin-bottom: 8px;">No offers available right now</h2>
+    <p style="color: #64748b;">Check back soon — we add new deals every week!</p>
+  </section>
+
   <!-- Offer Cards -->
-  <section class="offers-grid-section">
+  <section class="offers-grid-section" *ngIf="!isLoading && offers.length > 0">
     <div class="offers-container">
 
       <div class="offer-card" *ngFor="let offer of offers; let i = index" [class.odd]="i % 2 === 0"

@@ -360,12 +360,7 @@ export class CategoryNavComponent {
         event.stopPropagation();
 
         if (category === "FAQ's") {
-            this.router.navigate(['/']).then(() => {
-                setTimeout(() => {
-                    const el = document.getElementById('faq-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 120);
-            });
+            this.router.navigateByUrl('/faq/all');
             this.hideMenu();
             return;
         }
@@ -439,7 +434,7 @@ export class CategoryNavComponent {
             return '/contact-us';
         }
         if (category === "FAQ's") {
-            return '/';
+            return '/faq/all';
         }
         // For new gardening categories, navigate to category page
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];

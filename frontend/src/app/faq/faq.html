@@ -10,10 +10,28 @@
         </div>
     </div>
 
+    <!-- FAQ Filters -->
+    <div class="faq-filters" *ngIf="!isLoading">
+        <button class="filter-pill" [class.active]="selectedCategory() === 'All'" (click)="setCategory('All')">
+            All
+        </button>
+        <button class="filter-pill" *ngFor="let cat of categories" [class.active]="selectedCategory() === cat"
+            (click)="setCategory(cat)">
+            {{ cat }}
+        </button>
+    </div>
+
     <!-- FAQ List -->
     <div class="faq-container">
         <div class="faq-list">
-            <div class="faq-item" *ngFor="let faq of previewFaqs; let i = index" [class.open]="openIndex() === i">
+            <!-- Loading -->
+            <div *ngIf="isLoading" style="text-align: center; padding: 40px;">
+                <div class="spinner"></div>
+                <p style="color: #666; margin-top: 15px;">Loading FAQs...</p>
+            </div>
+
+            <!-- FAQ Items -->
+            <div class="faq-item" *ngFor="let faq of filteredFaqs; let i = index" [class.open]="openIndex() === i">
                 <div class="faq-question" (click)="toggle(i)">
                     <div class="q-left">
                         <span class="category-tag" [attr.data-cat]="faq.category">{{ faq.category }}</span>
@@ -24,6 +42,16 @@
                 <div class="faq-answer" *ngIf="openIndex() === i">
                     <p>{{ faq.answer }}</p>
                 </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!isLoading && faqs.length > 0 && filteredFaqs.length === 0"
+                style="text-align: center; padding: 40px; color: #666;">
+                <p>No FAQs available in this category yet.</p>
+            </div>
+
+            <div *ngIf="!isLoading && faqs.length === 0" style="text-align: center; padding: 40px; color: #666;">
+                <p>No FAQs available at the moment.</p>
             </div>
         </div>
 

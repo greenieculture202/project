@@ -6,6 +6,10 @@ require('dotenv').config();
 const User = require('./models/User');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
+const Offer = require('./models/Offer');
+const Placement = require('./models/Placement');
+const Faq = require('./models/Faq');
+const AboutSection = require('./models/AboutSection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -19,6 +23,14 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID.trim());
 
 // Temporary store for OTPs (in production, use Redis or DB with expiry)
 const otpStore = new Map();
+
+const fs = require('fs');
+const path = require('path');
+const debugLog = (msg) => {
+    const logPath = path.join(__dirname, 'debug_otp.log');
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${timestamp}] ${msg}\n`);
+};
 
 // Email Transporter Setup
 const transporter = nodemailer.createTransport({
@@ -155,10 +167,11 @@ app.post('/api/auth/google-login/request-otp', async (req, res) => {
         });
 
         console.log(`[GOOGLE-OTP] Generated ${otp} for ${email}`);
+        debugLog(`Generated OTP: ${otp} for ${email}`);
 
         // Send professional email
         const mailOptions = {
-            from: `"Greenie Culture" <${process.env.GMAIL_USER || 'greenieculture202@gmail.com'}>`,
+            from: `"Greenie Culture" <${process.env.GMAIL_USER}>`,
             to: email,
             subject: `${otp} is your Greenie Culture verification code`,
             html: `
@@ -194,12 +207,8 @@ app.post('/api/auth/google-login/request-otp', async (req, res) => {
             res.json({ message: 'OTP sent to your Gmail', email });
         } catch (mailError) {
             console.error('[GOOGLE-OTP] Mail error:', mailError.message);
-            // Fallback for development if no SMTP credentials
-            res.json({
-                message: 'OTP generated (Dev Mode: Check server console)',
-                email,
-                devMode: true
-            });
+            debugLog(`Mail error for ${email}: ${mailError.message}`);
+            res.status(500).json({ message: 'Failed to send verification email. Please check server configuration.' });
         }
     } catch (err) {
         res.status(401).json({ message: 'Google verification failed', details: err.message });
@@ -306,33 +315,39 @@ app.get('/api/products', async (req, res) => {
         if (category) {
             let decodedCategory = decodeURIComponent(category).trim();
 
-            // Normalize category naming
-            if (decodedCategory.toLowerCase().includes('seeds')) {
-                decodedCategory = 'Seeds';
-            } else if (decodedCategory.toLowerCase().includes('accessories')) {
-                decodedCategory = 'Accessories';
+            // Broaden search for main categories
+            let usePartial = false;
+            if (['seeds', 'plants', 'accessories', 'soil'].some(c => decodedCategory.toLowerCase().includes(c))) {
+                usePartial = true;
             }
 
-            // 1. Sanitize the string for regex
-            let escaped = decodedCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Normalize names for better matching
+            let normalized = decodedCategory.replace(/[-\s]+/g, '[-\\s]+');
+            const regex = new RegExp(`^${normalized}$`, 'i');
 
-            // 2. Replace hyphens and spaces with flexible match
-            const searchPattern = escaped.replace(/[-\s]+/g, '[-\\s]+');
-
-            const regex = new RegExp(`^${searchPattern}$`, 'i');
-
-            // For partial matches (tags/category), be even more flexible
-            const partialPattern = escaped.replace(/[-\s]+/g, '.*');
+            // Partial regex for matching tags or nested category strings
+            const partialPattern = decodedCategory.replace(/[-\s]+/g, '.*');
             const partialRegex = new RegExp(partialPattern, 'i');
 
-            query = {
-                $or: [
-                    { category: { $regex: regex } },
-                    { tags: { $regex: partialRegex } },
-                    { category: { $regex: partialRegex } }
-                ]
-            };
-            console.log(`[ProductsAPI] Regex used: ${regex.source}`);
+            if (usePartial) {
+                // If it's a major category, pull EVERYTHING that matches the term anywhere
+                query = {
+                    $or: [
+                        { category: { $regex: partialRegex } },
+                        { tags: { $regex: partialRegex } }
+                    ]
+                };
+            } else {
+                // For specific sub-categories, be more precise but still allow tag matches
+                query = {
+                    $or: [
+                        { category: { $regex: regex } },
+                        { tags: { $regex: regex } },
+                        { category: { $regex: new RegExp(`.*${decodedCategory.replace(/[-\s]+/g, '.*')}.*`, 'i') } }
+                    ]
+                };
+            }
+            console.log(`[ProductsAPI] Querying for: "${decodedCategory}" (Partial: ${usePartial})`);
         }
 
         let productsQuery = Product.find(query).lean();
@@ -491,6 +506,238 @@ app.get('/api/user/orders', auth, async (req, res) => {
     }
 });
 
+// ADMIN API - Offers
+app.get('/api/admin/offers', async (req, res) => {
+    try {
+        const offers = await Offer.find({}).sort({ createdAt: -1 }).lean();
+        res.json(offers);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.post('/api/admin/offers', async (req, res) => {
+    try {
+        const newOffer = new Offer(req.body);
+        const savedOffer = await newOffer.save();
+        console.log('[AdminAPI] Offer created:', savedOffer.title);
+        res.status(201).json(savedOffer);
+    } catch (err) {
+        console.error('[AdminAPI] Offer creation error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.put('/api/admin/offers/:id', async (req, res) => {
+    try {
+        const updatedOffer = await Offer.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!updatedOffer) {
+            return res.status(404).json({ message: 'Offer not found' });
+        }
+        console.log('[AdminAPI] Offer updated:', updatedOffer.title);
+        res.json(updatedOffer);
+    } catch (err) {
+        console.error('[AdminAPI] Offer update error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/offers/:id', async (req, res) => {
+    try {
+        const deletedOffer = await Offer.findByIdAndDelete(req.params.id);
+        if (!deletedOffer) {
+            return res.status(404).json({ message: 'Offer not found' });
+        }
+        console.log('[AdminAPI] Offer deleted:', deletedOffer.title);
+        res.json({ message: 'Offer deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] Offer deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - Placements (Videos)
+app.get('/api/admin/placements', async (req, res) => {
+    try {
+        const placements = await Placement.find({}).sort({ createdAt: -1 }).lean();
+        res.json(placements);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.post('/api/admin/placements', async (req, res) => {
+    try {
+        const newPlacement = new Placement(req.body);
+        const savedPlacement = await newPlacement.save();
+        console.log('[AdminAPI] Placement created:', savedPlacement.name);
+        res.status(201).json(savedPlacement);
+    } catch (err) {
+        console.error('[AdminAPI] Placement creation error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.put('/api/admin/placements/:id', async (req, res) => {
+    try {
+        const updatedPlacement = await Placement.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!updatedPlacement) {
+            return res.status(404).json({ message: 'Placement not found' });
+        }
+        console.log('[AdminAPI] Placement updated:', updatedPlacement.name);
+        res.json(updatedPlacement);
+    } catch (err) {
+        console.error('[AdminAPI] Placement update error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/placements/:id', async (req, res) => {
+    try {
+        const deletedPlacement = await Placement.findByIdAndDelete(req.params.id);
+        if (!deletedPlacement) {
+            return res.status(404).json({ message: 'Placement not found' });
+        }
+        console.log('[AdminAPI] Placement deleted:', deletedPlacement.name);
+        res.json({ message: 'Placement deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] Placement deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// Public API for Placements
+app.get('/api/placements', async (req, res) => {
+    try {
+        const placements = await Placement.find({}).sort({ createdAt: -1 }).lean();
+        res.json(placements);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Public API for FAQ
+app.get('/api/faqs', async (req, res) => {
+    try {
+        const faqs = await Faq.find({}).sort({ order: 1, createdAt: -1 }).lean();
+        res.json(faqs);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - FAQs
+app.get('/api/admin/faqs', async (req, res) => {
+    try {
+        const faqs = await Faq.find({}).sort({ order: 1, createdAt: -1 }).lean();
+        res.json(faqs);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.post('/api/admin/faqs', async (req, res) => {
+    try {
+        const newFaq = new Faq(req.body);
+        const savedFaq = await newFaq.save();
+        res.status(201).json(savedFaq);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.put('/api/admin/faqs/:id', async (req, res) => {
+    try {
+        const updatedFaq = await Faq.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(updatedFaq);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/faqs/:id', async (req, res) => {
+    try {
+        await Faq.findByIdAndDelete(req.params.id);
+        res.json({ message: 'FAQ deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// Public API for About Us Sections
+app.get('/api/about-sections', async (req, res) => {
+    try {
+        const sections = await AboutSection.find({}).sort({ order: 1, createdAt: -1 }).lean();
+        res.json(sections);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - About Us Sections
+app.get('/api/admin/about-sections', async (req, res) => {
+    try {
+        const sections = await AboutSection.find({}).sort({ order: 1, createdAt: -1 }).lean();
+        res.json(sections);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.post('/api/admin/about-sections', async (req, res) => {
+    try {
+        const newSection = new AboutSection(req.body);
+        const saved = await newSection.save();
+        console.log('[AdminAPI] About section created:', saved.title);
+        res.status(201).json(saved);
+    } catch (err) {
+        console.error('[AdminAPI] About section creation error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.put('/api/admin/about-sections/:id', async (req, res) => {
+    try {
+        const updated = await AboutSection.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updated) return res.status(404).json({ message: 'Section not found' });
+        console.log('[AdminAPI] About section updated:', updated.title);
+        res.json(updated);
+    } catch (err) {
+        console.error('[AdminAPI] About section update error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/about-sections/:id', async (req, res) => {
+    try {
+        const deleted = await AboutSection.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ message: 'Section not found' });
+        console.log('[AdminAPI] About section deleted:', deleted.title);
+        res.json({ message: 'Section deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] About section deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// Public API for Offers
+app.get('/api/offers', async (req, res) => {
+    try {
+        const offers = await Offer.find({}).sort({ createdAt: -1 }).lean();
+        res.json(offers);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ADMIN API - Get all users
 app.get('/api/admin/users', async (req, res) => {
     try {
@@ -498,6 +745,52 @@ app.get('/api/admin/users', async (req, res) => {
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ADMIN API - Update user
+app.put('/api/admin/users/:id', async (req, res) => {
+    try {
+        const { fullName, email, phone, address, greenPoints } = req.body;
+
+        const updateData = {
+            fullName,
+            email,
+            phone,
+            address,
+            greenPoints: Number(greenPoints) || 0
+        };
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('[AdminAPI] User updated:', updatedUser.fullName);
+        res.json(updatedUser);
+    } catch (err) {
+        console.error('[AdminAPI] User update error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - Delete user
+app.delete('/api/admin/users/:id', async (req, res) => {
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        console.log('[AdminAPI] User deleted:', deletedUser.fullName);
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] User deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
     }
 });
 
@@ -602,7 +895,128 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// Seed default placements if none exist
+const seedPlacements = async () => {
+    try {
+        const count = await Placement.countDocuments();
+        if (count < 6) {
+            // If we have fewer than 6, let's reset to ensure user gets all original 6
+            if (count > 0) {
+                await Placement.deleteMany({});
+                console.log('[SEED] Clearing old placements for fresh full seed...');
+            }
+
+            const defaultPlacements = [
+                {
+                    name: 'SmartLeaf Indoors',
+                    description: 'The living room is the heart of your home. Adding plants here creates a welcoming atmosphere and naturally purifies the air.',
+                    image: '/images/smartleaf_indoors.jpg',
+                    videoUrl: '/videos/living-room.mp4',
+                    features: ['Air Purifying', 'Low Maintenance', 'Stunning Decor'],
+                    badge: 'LIVING SPACES',
+                    categoryRoute: '/products/indoor-plants'
+                },
+                {
+                    name: 'EcoScape Outdoors',
+                    description: 'Transform your garden or balcony with plants that thrive under the open sky and enhance your outdoor living.',
+                    image: '/images/outdoor_vibe_new.jpg',
+                    videoUrl: '/videos/outdoor.mp4',
+                    features: ['Weather Resistant', 'Sun Loving', 'Natural Growth'],
+                    badge: 'OUTDOOR LIVING',
+                    categoryRoute: '/products/outdoor-plants'
+                },
+                {
+                    name: 'Gardening',
+                    description: 'Start your own green journey. Our gardening kits and plants are perfect for both beginners and experts.',
+                    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
+                    videoUrl: '/videos/gardening.mp4',
+                    features: ['Beginner Friendly', 'Complete Kits', 'Sustainable'],
+                    badge: 'START GROWING',
+                    categoryRoute: '/products/gardening'
+                },
+                {
+                    name: 'EcoHaven Rooftop',
+                    description: 'Elevate your urban living with a sustainable rooftop garden that brings nature closer to the sky.',
+                    image: '/images/rooftop_garden.jpg',
+                    videoUrl: '/videos/ecohaven.mp4',
+                    features: ['Sustainable Living', 'Urban Oasis', 'Low Carbon Footprint'],
+                    badge: 'ECO FRIENDLY',
+                    categoryRoute: '/products/outdoor-plants'
+                },
+                {
+                    name: 'miniheaven balcony',
+                    description: 'Create your own mini heaven in your balcony with our curated collection of outdoor plants that flourish in open spaces.',
+                    image: '/images/miniheaven_balcony.jpg',
+                    videoUrl: '/videos/home_balcony.mp4',
+                    features: ['Sun Loving', 'Urban Oasis', 'Low Maintenance'],
+                    badge: 'BALCONY GARDEN',
+                    categoryRoute: '/products/flowering-plants'
+                },
+                {
+                    name: 'kitchen',
+                    description: 'Fresh herbs and air-purifying plants make your kitchen a more vibrant and healthy place to cook and gather.',
+                    image: '/images/kitchen_image.jpg',
+                    videoUrl: '/videos/kitchen.mp4',
+                    features: ['Culinary Herbs', 'Air Purifying', 'Compact Size'],
+                    badge: 'FRESH COOKING',
+                    categoryRoute: '/products/indoor-plants'
+                }
+            ];
+            await Placement.insertMany(defaultPlacements);
+            console.log('[SEED] Default placements seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding placements:', err.message);
+    }
+};
+
+const seedFaqs = async () => {
+    try {
+        const count = await Faq.countDocuments();
+        if (count === 0) {
+            const defaultFaqs = [
+                {
+                    category: 'Orders',
+                    question: 'How do I track my order?',
+                    answer: 'Once your order is shipped, you will receive a tracking link via email and SMS. You can also track it from your User Dashboard under "My Orders".',
+                    order: 1
+                },
+                {
+                    category: 'Payment',
+                    question: 'What payment methods do you accept?',
+                    answer: 'We accept UPI (Google Pay, PhonePe, Paytm) and Cash on Delivery. All transactions are 100% secure.',
+                    order: 2
+                },
+                {
+                    category: 'Delivery',
+                    question: 'How long does delivery take?',
+                    answer: 'We deliver within 3–7 business days depending on your location. Metro cities usually receive orders within 2–3 days.',
+                    order: 3
+                },
+                {
+                    category: 'Plants',
+                    question: 'Are the plants safe for pets?',
+                    answer: 'Some plants are pet-friendly and some are not. Check the individual product page for a "Pet Safe" badge. Commonly safe plants include Spider Plant, Boston Fern, and Areca Palm.',
+                    order: 4
+                },
+                {
+                    category: 'Returns',
+                    question: 'What is your return policy?',
+                    answer: 'We have a 7-day return/replacement policy. If the plant arrives damaged or dead, simply send us a photo within 7 days and we will send a free replacement.',
+                    order: 5
+                }
+            ];
+            await Faq.insertMany(defaultFaqs);
+            console.log('[SEED] Default FAQs seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding FAQs:', err.message);
+    }
+};
+
 // Start Server
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
+Promise.all([seedPlacements(), seedFaqs()]).then(() => {
+    app.listen(PORT, '127.0.0.1', () => {
+        console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
+    });
 });

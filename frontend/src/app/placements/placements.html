@@ -3,7 +3,12 @@
         <h2 class="section-title">Plants By Placement</h2>
         <div class="title-underline"></div>
 
-        <div class="placements-grid">
+        <div class="offers-loading" *ngIf="isLoading" style="text-align: center; padding: 50px;">
+            <div class="spinner"></div>
+            <p>Curating your green experiences...</p>
+        </div>
+
+        <div class="placements-grid" *ngIf="!isLoading">
             <div class="placement-card" *ngFor="let item of placements; let i = index" [class]="'card-' + i">
                 <div class="card-image-wrapper">
                     <img [src]="item.image" [alt]="item.name" class="placement-image" loading="lazy">

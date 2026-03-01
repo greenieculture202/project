@@ -69,13 +69,19 @@ export class LoginComponent implements OnInit {
                     this.isLoading = false;
                     this.otpEmail = res.email;
                     this.showOtpModal = true;
-                    this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
+
+                    if (res.devMode) {
+                        this.notificationService.show(res.message, 'Dev Mode Active', 'info');
+                    } else {
+                        this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
+                    }
                 },
                 error: (err: any) => {
                     this.isLoading = false;
                     console.error('[Google Login] Request error:', err);
-                    this.loginError = err.error?.message || 'Failed to send OTP. Please try again.';
-                    this.notificationService.show(this.loginError, 'Error', 'error');
+                    const errorMsg = err.error?.message || 'Failed to send OTP. Please try again.';
+                    this.loginError = errorMsg;
+                    this.notificationService.show(errorMsg, 'Error', 'error');
                 }
             });
         });
