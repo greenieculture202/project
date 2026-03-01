@@ -3,4 +3,45 @@
 <app-offers-slider></app-offers-slider>
 <app-seed-categories></app-seed-categories>
 <app-placements></app-placements>
+
+<!-- Accessories & Plant Companions Section -->
+<app-accessories-section></app-accessories-section>
+
+<!-- Home FAQ Section -->
+<section class="home-faq-section">
+    <div class="home-faq-container">
+        <header class="home-faq-header">
+            <div class="container--mini">
+                <span class="faq-eyebrow">HELP CENTER</span>
+                <h2>Common <span>Questions</span></h2>
+                <p>Everything you need to know about our curated botanical products & services.</p>
+            </div>
+        </header>
+
+        <div class="home-faq-list">
+            <div class="home-faq-item" *ngFor="let faq of previewFaqs; let i = index" [class.open]="openIndex() === i">
+                <div class="home-faq-q" (click)="toggle(i)">
+                    <div class="hfq-left">
+                        <span class="hfq-badge" [attr.data-cat]="faq.category">{{faq.category}}</span>
+                        <span class="hfq-text">{{faq.question}}</span>
+                    </div>
+                    <div class="hfq-icon" [class.active]="openIndex() === i">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="home-faq-answer" *ngIf="openIndex() === i">
+                    <p>{{faq.answer}}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-faq-footer">
+            <a routerLink="/faqs" class="view-all-faqs-btn">
+                <span>View Full Knowledge Base</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
 <app-reviews></app-reviews>
