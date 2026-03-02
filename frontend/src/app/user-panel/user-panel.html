@@ -1,8 +1,9 @@
 <div class="user-panel-container">
     <div class="sidebar">
         <div class="user-info">
-            <div class="avatar">
-                <i class="fas fa-user"></i>
+            <div class="avatar" [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : ''"
+                [style.background-size]="'cover'">
+                <i class="fas fa-user" *ngIf="!profilePicPreview"></i>
             </div>
             <h3>{{ authService.currentUser$ | async }}</h3>
             <p>Premium Member</p>
@@ -121,56 +122,115 @@
                 <p>Update your personal information and preferences.</p>
             </header>
 
-            <div class="settings-card">
-                <div class="settings-form">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" [value]="authService.currentUser$ | async" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" value="user@example.com" readonly>
-                        <small>Email cannot be changed.</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <div class="phone-input-container">
-                            <span class="country-prefix">+91</span>
-                            <input type="text" [(ngModel)]="phone" placeholder="Enter your phone number"
+            <div class="settings-layout">
+                <!-- Main Form (Left) -->
+                <div class="settings-card">
+                    <div class="settings-form">
+                        <!-- Profile Photo Section -->
+                        <div class="profile-photo-section">
+                            <div class="photo-preview"
+                                [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : ''">
+                                <i class="fas fa-user" *ngIf="!profilePicPreview"></i>
+                            </div>
+                            <div class="photo-actions">
+                                <h3>Profile Picture</h3>
+                                <p>PNG, JPG or GIF. Max 500KB.</p>
+                                <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*"
+                                    style="display: none;">
+                                <button class="btn-upload" (click)="fileInput.click()">
+                                    <i class="fas fa-camera"></i> Change Photo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" [(ngModel)]="fullName" placeholder="Enter your full name"
                                 class="settings-input">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>City</label>
-                        <div class="state-autocomplete-container">
-                            <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
-                                placeholder="City" class="settings-input">
-                            <div class="state-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
-                                <div class="state-option" *ngFor="let city of filteredCities"
-                                    (click)="selectCity(city)">
-                                    {{ city }}
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" [(ngModel)]="email" readonly>
+                            <small>Email cannot be changed.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <div class="phone-input-container">
+                                <span class="country-prefix">+91</span>
+                                <input type="text" [(ngModel)]="phone" placeholder="Enter your phone number"
+                                    class="settings-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>City</label>
+                            <div class="state-autocomplete-container">
+                                <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
+                                    placeholder="City" class="settings-input">
+                                <div class="state-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+                                    <div class="state-option" *ngFor="let city of filteredCities"
+                                        (click)="selectCity(city)">
+                                        {{ city }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <div class="state-autocomplete-container">
-                            <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
-                                (blur)="closeDropdowns()" placeholder="State" class="settings-input">
-                            <div class="state-dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
-                                <div class="state-option" *ngFor="let state of filteredStates"
-                                    (click)="selectState(state)">
-                                    {{ state }}
+                        <div class="form-group">
+                            <label>State</label>
+                            <div class="state-autocomplete-container">
+                                <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
+                                    (blur)="closeDropdowns()" placeholder="State" class="settings-input">
+                                <div class="state-dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
+                                    <div class="state-option" *ngFor="let state of filteredStates"
+                                        (click)="selectState(state)">
+                                        {{ state }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label>Shipping Address</label>
+                            <textarea rows="3" [(ngModel)]="address" placeholder="Enter full address"></textarea>
+                        </div>
+                        <button class="save-btn" (click)="saveSettings()" [disabled]="isSaving">
+                            <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+                            {{ isSaving ? 'Saving...' : 'Save Changes' }}
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>Shipping Address</label>
-                        <textarea rows="3" [(ngModel)]="address" placeholder="Enter full address"></textarea>
+                </div>
+
+                <!-- Summary/Status (Right) -->
+                <div class="settings-sidebar">
+                    <div class="summary-card">
+                        <h3>Account Overview</h3>
+                        <div class="summary-item">
+                            <div class="sum-icon points">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="sum-info">
+                                <span>Green Points</span>
+                                <strong>{{ dashboardData.stats.greenPoints }}</strong>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="sum-icon member">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="sum-info">
+                                <span>Status</span>
+                                <strong>Premium Member</strong>
+                            </div>
+                        </div>
+                        <div class="membership-badge">
+                            <i class="fas fa-shield-alt"></i> Verified Account
+                        </div>
                     </div>
-                    <button class="save-btn">Save Changes</button>
+
+                    <div class="promotion-card">
+                        <i class="fas fa-seedling"></i>
+                        <h4>Go Green!</h4>
+                        <p>Share your garden progress and earn more points.</p>
+                        <button class="btn-share">Share Now</button>
+                    </div>
                 </div>
             </div>
         </ng-container>

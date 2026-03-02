@@ -24,6 +24,14 @@ export class UserService {
         return this.http.get<any[]>(`${this.apiUrl}/orders`, { headers: this.getHeaders() });
     }
 
+    getUserProfile(): Observable<any> {
+        return this.http.get(`${this.apiUrl}/profile`, { headers: this.getHeaders() });
+    }
+
+    updateUserProfile(profileData: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/profile`, profileData, { headers: this.getHeaders() });
+    }
+
     // Admin Methods
     getAllUsers(): Observable<any[]> {
         return this.http.get<any[]>('/api/admin/users');

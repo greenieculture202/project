@@ -20,11 +20,21 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true
+        default: 'Not provided',
+        trim: true
     },
     address: {
         type: String,
-        required: true
+        default: 'Not provided',
+        trim: true
+    },
+    city: {
+        type: String,
+        default: ''
+    },
+    state: {
+        type: String,
+        default: ''
     },
     createdAt: {
         type: Date,

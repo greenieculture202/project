@@ -19,6 +19,9 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<string | null>(this.getUserName());
     currentUser$ = this.currentUserSubject.asObservable();
 
+    private profilePicSubject = new BehaviorSubject<string | null>(sessionStorage.getItem('user_pic'));
+    profilePic$ = this.profilePicSubject.asObservable();
+
     private cartService = inject(CartService);
 
     constructor(private http: HttpClient) { }
@@ -43,11 +46,13 @@ export class AuthService {
                 // Save token and user info in sessionStorage (for browser-close logout)
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
 
                 this.isLoggedInSubject.next(true);
                 this.isAdminSubject.next(false);
                 this.currentUserSubject.next(res.user.fullName);
+                this.profilePicSubject.next(res.user.profilePic || null);
 
                 // Sync cart from backend after login
                 this.cartService.syncWithBackend();
@@ -104,11 +109,22 @@ export class AuthService {
     logout() {
         sessionStorage.removeItem('auth_token');
         sessionStorage.removeItem('user_name');
+        sessionStorage.removeItem('user_pic');
         sessionStorage.removeItem('is_admin');
         this.isLoggedInSubject.next(false);
         this.isAdminSubject.next(false);
         this.currentUserSubject.next(null);
+        this.profilePicSubject.next(null);
         this.cartService.clear();
+    }
+
+    updateUserLocalInfo(name: string, pic?: string) {
+        sessionStorage.setItem('user_name', name);
+        this.currentUserSubject.next(name);
+        if (pic !== undefined) {
+            sessionStorage.setItem('user_pic', pic);
+            this.profilePicSubject.next(pic);
+        }
     }
 
     getCurrentUser(): string | null {

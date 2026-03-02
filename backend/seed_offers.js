@@ -1,18 +1,17 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-
 const Offer = require('./models/Offer');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
 
-const existingOffers = [
+const initialOffers = [
     {
         badge: '🌿 EXCLUSIVE DEAL',
         title: 'BOGO OFFER',
         subtitle: 'Buy 2 XL Plants',
         discountLine: '& GET 1 MEDIUM PLANT FREE',
-        description: 'Upgrade your home jungle with our majestic XL plant collection. Buy any 2 and we\'ll gift you a premium Greenie Medium Plant — absolutely free!',
-        features: ['Any 2 XL Plants qualify', 'Free plant worth ₹499+', 'Auto added to cart', 'Limited time offer'],
+        description: 'Double the green, double the joy! Our BOGO offer is here to help you expand your garden effortlessly.',
+        features: ['Premium XL Quality', 'Healthy Root Systems', 'Free Medium Plant', 'Expert Care Guide'],
         ctaText: 'GRAB THIS DEAL',
         ctaLink: '/bogo-offer',
         image: '/images/bogo_offer_v2.jpg',
@@ -31,9 +30,9 @@ const existingOffers = [
         title: 'INDOOR JUNGLE',
         subtitle: 'Buy Any 2 Indoor Plants',
         discountLine: '& GET A DESIGNER CERAMIC POT FREE',
-        description: 'Transform your living space into a lush indoor sanctuary. Select any 2 premium indoor plants and receive a beautiful hand-glazed ceramic pot as our gift to you!',
-        features: ['Choose from 4 pot colors', 'Pot worth ₹399 FREE', 'Air purifying plants', 'Beginner friendly'],
-        ctaText: 'CHOOSE YOUR PLANTS',
+        description: 'Create your own indoor oasis with our stunning collection of low-maintenance indoor plants.',
+        features: ['Air Purifying', 'Low Maintenance', 'Designer Ceramic Pot', 'Safe Packaging'],
+        ctaText: 'SHOP INDOOR',
         ctaLink: '/indoor-offer',
         image: '/images/indoor_jungle_offer.jpg',
         cardBg: '#f5f3ff',
@@ -42,74 +41,69 @@ const existingOffers = [
         accentText: '#4c1d95',
         tag: 'FREE POT',
         tagBg: '#a78bfa',
-        tagText: '#ffffff',
-        timer: 'Hot Deal!',
+        tagText: '#fff',
+        timer: 'Limited Time',
         timerBg: '#ede9fe'
     },
     {
-        badge: '🛠️ PRO TOOLKIT SALE',
-        title: 'GARDEN ESSENTIALS',
-        subtitle: 'Professional Garden Toolkits',
-        discountLine: 'FLAT 40% OFF — ALL KITS',
-        description: 'Stop buying individual tools that don\'t match. Get our curated professional-grade toolkits, perfectly assembled for every gardening need — now at a massive 40% discount!',
-        features: ['Professional grade steel', 'Ergonomic handles', 'Complete starter to pro kits', 'Free carrying case'],
-        ctaText: 'SHOP TOOLKITS NOW',
+        badge: '🛠️ GARDEN TOOLS',
+        title: 'PRO GARDENER',
+        subtitle: 'Essential Tool Kit',
+        discountLine: '25% OFF ON ALL TOOLS',
+        description: 'Level up your gardening game with professional-grade tools designed for comfort and efficiency.',
+        features: ['Ergonomic Design', 'Stainless Steel', 'Lifetime Warranty', 'Beginner Friendly'],
+        ctaText: 'VIEW TOOLS',
         ctaLink: '/garden-offer',
-        image: '/images/garden_essentials_offer.jpg',
-        cardBg: '#fffbeb',
-        accentColor: '#d97706',
-        accentLight: '#fef3c7',
-        accentText: '#78350f',
-        tag: '40% OFF',
+        image: '/images/garden_tools_offer.jpg',
+        cardBg: '#fff7ed',
+        accentColor: '#ea580c',
+        accentLight: '#ffedd5',
+        accentText: '#7c2d12',
+        tag: '25% OFF',
         tagBg: '#f97316',
-        tagText: '#ffffff',
-        timer: 'Best Seller!',
-        timerBg: '#fef3c7'
+        tagText: '#fff',
+        timer: 'Big Savings',
+        timerBg: '#ffedd5'
     },
     {
-        badge: '🌸 FLOWERING BONANZA',
-        title: 'FLOWERING BONANZA',
-        subtitle: 'Premium Flower Seeds @ 70% OFF',
-        discountLine: '+ FREE ORGANIC FERTILIZER PACK',
-        description: 'Grow a riot of colors in your garden! Our premium flower seeds are at an all-time low price of 70% off — plus we\'re adding a 100g Organic Nutri-Boost fertilizer to every order, free!',
-        features: ['95% germination rate', 'Non-GMO & organic', '100g fertilizer FREE (₹99 value)', '15+ vibrant varieties'],
-        ctaText: 'START PLANTING',
+        badge: '🌸 FLOWERING SPECIAL',
+        title: 'FLOWER BONANZA',
+        subtitle: 'Premium Flower Seeds',
+        discountLine: 'BUY 3 GET 2 FREE',
+        description: 'Bring vibrant colors to your balcony or garden with our curated selection of high-germination flower seeds.',
+        features: ['High Germination', 'Tested Varieties', 'Growing Guide', 'Organic Seeds'],
+        ctaText: 'GET SEEDS',
         ctaLink: '/flowering-offer',
-        image: '/images/flowering_bonanza_offer.jpg',
+        image: '/images/flowering_seeds_offer.jpg',
         cardBg: '#fdf2f8',
         accentColor: '#db2777',
         accentLight: '#fce7f3',
         accentText: '#831843',
-        tag: '70% OFF',
+        tag: '3+2 FREE',
         tagBg: '#f472b6',
-        tagText: '#ffffff',
-        timer: 'Limited Stock!',
+        tagText: '#fff',
+        timer: 'Seasonal',
         timerBg: '#fce7f3'
     }
 ];
 
-async function seedOffers() {
+async function seedData() {
     try {
         await mongoose.connect(MONGODB_URI);
-        console.log('MongoDB connected for offer seeding');
+        console.log('Connected to MongoDB for seeding...');
 
-        // Check if offers already exist
-        const count = await Offer.countDocuments();
-        if (count > 0) {
-            console.log(`⚠️  ${count} offers already exist in the database. Skipping seed to avoid duplicates.`);
-            console.log('To re-seed, delete existing offers first.');
-        } else {
-            const result = await Offer.insertMany(existingOffers);
-            console.log(`✅ Successfully seeded ${result.length} offers into database!`);
-            result.forEach(o => console.log(`   → ${o.title} (${o.tag})`));
-        }
+        // Remove existing offers to avoid duplicates during seeding
+        await Offer.deleteMany({});
+        console.log('Cleared existing offers.');
 
-        await mongoose.disconnect();
-        console.log('Done!');
+        await Offer.insertMany(initialOffers);
+        console.log('Successfully seeded 4 initial offers.');
+
+        process.exit();
     } catch (err) {
-        console.error('❌ Seed error:', err.message);
+        console.error('Seeding error:', err);
         process.exit(1);
     }
 }
 
-seedOffers();
+seedData();

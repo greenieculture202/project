@@ -235,11 +235,51 @@ export class ProductService {
         ],
         'Flower Seeds': [
             {
-                name: 'Offline-Marigold Seeds',
+                name: 'Marigold (Genda) Seeds',
                 price: '49',
                 originalPrice: '99',
                 discount: '50% OFF',
                 image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=600&q=80',
+                category: 'Flower Seeds'
+            },
+            {
+                name: 'Sunflower Seeds',
+                price: '59',
+                originalPrice: '120',
+                discount: '51% OFF',
+                image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?w=600&h=600&fit=crop',
+                category: 'Flower Seeds'
+            },
+            {
+                name: 'Zinnia Elegans Seeds',
+                price: '79',
+                originalPrice: '199',
+                discount: '60% OFF',
+                image: 'https://images.unsplash.com/photo-1592419044706-39796d40f98c?w=400&h=400&fit=crop',
+                category: 'Flower Seeds'
+            },
+            {
+                name: 'Petunia Mixed Seeds',
+                price: '89',
+                originalPrice: '250',
+                discount: '64% OFF',
+                image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=600&q=80',
+                category: 'Flower Seeds'
+            },
+            {
+                name: 'Cosmos Seeds',
+                price: '69',
+                originalPrice: '180',
+                discount: '62% OFF',
+                image: 'https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=400&fit=crop',
+                category: 'Flower Seeds'
+            },
+            {
+                name: 'Rose Flower Seeds',
+                price: '129',
+                originalPrice: '399',
+                discount: '68% OFF',
+                image: 'https://images.unsplash.com/photo-1558036117-15d82e90bd9d?auto=format&fit=crop&w=600&q=80',
                 category: 'Flower Seeds'
             }
         ],

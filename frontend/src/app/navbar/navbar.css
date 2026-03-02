@@ -415,3 +415,19 @@
   color: #1a5d1a;
   transform: scale(1.1);
 }
+
+.nav-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.profile-icon-wrapper:hover .nav-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(26, 93, 26, 0.15);
+}

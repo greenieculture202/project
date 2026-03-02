@@ -40,7 +40,12 @@
       </div>
 
       <div class="profile-icon-wrapper" routerLink="/user-panel" title="User Dashboard">
-        <i class="fas fa-user-circle"></i>
+        <div class="nav-avatar" *ngIf="authService.profilePic$ | async as pic; else defaultUserIcon"
+          [style.background-image]="'url(' + pic + ')'">
+        </div>
+        <ng-template #defaultUserIcon>
+          <i class="fas fa-user-circle"></i>
+        </ng-template>
       </div>
     </ng-container>
 

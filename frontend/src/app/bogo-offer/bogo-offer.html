@@ -53,4 +53,33 @@
             </ul>
         </div>
     </section>
+
+    <!-- More Special Offers Section -->
+    <section class="special-offers-section" *ngIf="offers && offers.length > 0">
+        <div class="container">
+            <div class="section-header">
+                <h2>Other Exclusive <span style="color: #16a34a;">Offers</span></h2>
+                <p>Don't miss out on these other amazing deals!</p>
+            </div>
+
+            <div class="offers-simple-grid">
+                <div class="offer-minimal-card" *ngFor="let offer of offers" [style.background]="offer.cardBg">
+                    <div class="card-tag" [style.background]="offer.tagBg" [style.color]="offer.tagText">{{ offer.tag }}
+                    </div>
+                    <div class="card-img-wrap">
+                        <img [src]="offer.image" [alt]="offer.title">
+                    </div>
+                    <div class="card-content">
+                        <span class="badge-mini" [style.background]="offer.accentLight"
+                            [style.color]="offer.accentText">{{ offer.badge }}</span>
+                        <h3>{{ offer.title }}</h3>
+                        <p>{{ offer.subtitle }}</p>
+                        <div class="discount-pill-mini" [style.color]="offer.accentText">{{ offer.discountLine }}</div>
+                        <a [routerLink]="offer.ctaLink" class="btn-grab" [style.background]="offer.accentColor">VIEW
+                            OFFER</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

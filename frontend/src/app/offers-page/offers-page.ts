@@ -37,11 +37,7 @@ export class OffersPageComponent implements OnInit {
     offerService = inject(OfferService);
     private cdr = inject(ChangeDetectorRef);
     private ngZone = inject(NgZone);
-    offers: any[] = [];
-    isLoading: boolean = true;
-
-    // Fallback if API is unreachable
-    private fallbackOffers: any[] = [
+    offers: any[] = [
         {
             badge: '🌿 EXCLUSIVE DEAL', title: 'BOGO OFFER', subtitle: 'Buy 2 XL Plants',
             discountLine: '& GET 1 MEDIUM PLANT FREE',
@@ -79,23 +75,26 @@ export class OffersPageComponent implements OnInit {
             tag: '70% OFF', tagBg: '#f472b6', tagText: '#fff', timer: 'Limited Stock!', timerBg: '#fce7f3'
         }
     ];
+    isLoading: boolean = false;
+
+    // Fallback if API is unreachable
+    private fallbackOffers: any[] = []; // (Already moved to initial state)
 
     ngOnInit() {
         this.offerService.getOffers().subscribe({
             next: (data) => {
                 this.ngZone.run(() => {
-                    this.offers = data.length > 0 ? data : this.fallbackOffers;
+                    if (data && data.length > 0) {
+                        this.offers = data;
+                    }
                     this.isLoading = false;
                     this.cdr.detectChanges();
                 });
             },
             error: (err) => {
                 console.error('Error fetching offers:', err);
-                this.ngZone.run(() => {
-                    this.offers = this.fallbackOffers;
-                    this.isLoading = false;
-                    this.cdr.detectChanges();
-                });
+                this.isLoading = false;
+                this.cdr.detectChanges();
             }
         });
     }

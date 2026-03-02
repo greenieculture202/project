@@ -24,12 +24,18 @@ export class UserPanelComponent implements OnInit {
     allOrders: any[] = [];
     activeTab: string = 'dashboard';
     isLoading = true;
+    isSaving = false;
+    userProfile: any = null;
 
     // Settings fields
+    fullName = '';
+    email = '';
     phone = '';
     city = '';
     stateName = '';
     address = '';
+    profilePic = '';
+    profilePicPreview = '';
     showStateDropdown = false;
     showCityDropdown = false;
 
@@ -163,11 +169,97 @@ export class UserPanelComponent implements OnInit {
     ngOnInit() {
         this.updateIndianCities();
         this.loadDashboard();
+        this.loadProfile();
         this.loadAllOrders();
+    }
+
+    loadProfile() {
+        console.log('[UserPanel] Fetching profile...');
+        this.userService.getUserProfile().subscribe({
+            next: (profile: any) => {
+                console.log('[UserPanel] Profile data received:', profile);
+                this.userProfile = profile;
+                if (profile) {
+                    this.fullName = profile.fullName || '';
+                    this.email = profile.email || '';
+                    this.phone = profile.phone || '';
+                    this.address = profile.address || '';
+                    this.city = profile.city || '';
+                    this.stateName = profile.state || '';
+                    this.profilePic = profile.profilePic || '';
+                    this.profilePicPreview = profile.profilePic || '';
+                }
+            },
+            error: (err) => {
+                console.error('[UserPanel] Error loading profile:', err);
+                if (err.status === 401) {
+                    console.log('[UserPanel] Unauthorized - might need to re-login');
+                }
+            }
+        });
+    }
+
+    onFileSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            // Limit to 500KB to stay within safe payload sizes for NoSQL/JSON
+            if (file.size > 512 * 1024) {
+                alert('File is too large! Please choose an image smaller than 500KB.');
+                return;
+            }
+
+            console.log(`[UserPanel] Selected file: ${file.name}, Size: ${file.size} bytes`);
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                this.profilePicPreview = e.target.result;
+                this.profilePic = e.target.result; // Send base64 to server
+                console.log('[UserPanel] Base64 image generated');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    saveSettings() {
+        this.isSaving = true;
+        const profileData = {
+            fullName: this.fullName,
+            phone: this.phone,
+            address: this.address,
+            city: this.city,
+            state: this.stateName,
+            profilePic: this.profilePic
+        };
+
+        this.userService.updateUserProfile(profileData).subscribe({
+            next: (res) => {
+                this.isSaving = false;
+                this.authService.updateUserLocalInfo(this.fullName, this.profilePic);
+                alert('Profile updated successfully!');
+                this.loadProfile(); // Refresh
+                // If it's the dashboard, maybe need to update name in sidebar? 
+                // Currently sidebar uses authService.currentUser$
+            },
+            error: (err) => {
+                this.isSaving = false;
+                console.error('[UserPanel] Update failed:', err);
+
+                if (err.status === 401) {
+                    alert('Your session has expired. Please log in again.');
+                    this.logout();
+                    return;
+                }
+
+                const errorMsg = err.error?.message || err.error?.error || 'Database sync failed. Please check your inputs.';
+                alert(`Error: ${errorMsg}`);
+            }
+        });
     }
 
     setActiveTab(tab: string) {
         this.activeTab = tab;
+        if (tab === 'dashboard') this.loadDashboard();
+        if (tab === 'orders') this.loadAllOrders();
+        if (tab === 'settings') this.loadProfile();
     }
 
     loadDashboard() {

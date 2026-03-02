@@ -62,7 +62,8 @@ const auth = (req, res, next) => {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -136,9 +137,9 @@ app.post('/api/auth/login', async (req, res) => {
             }
         };
 
-        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { email: user.email, fullName: user.fullName } });
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
         });
     } catch (err) {
         console.error(err.message);
@@ -268,9 +269,9 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
             }
         };
 
-        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { email: user.email, fullName: user.fullName } });
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
         });
 
     } catch (err) {
@@ -503,6 +504,55 @@ app.get('/api/user/orders', auth, async (req, res) => {
         res.json(orders);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// User Profile API
+app.get('/api/user/profile', auth, async (req, res) => {
+    try {
+        console.log(`[ProfileAPI] Loading profile for ID: ${req.user.id}`);
+        const user = await User.findById(req.user.id).select('-password').lean();
+        if (!user) {
+            console.log(`[ProfileAPI] User not found: ${req.user.id}`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        console.error('[ProfileAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/user/profile', auth, async (req, res) => {
+    try {
+        console.log(`[ProfileAPI] Update attempt for ID: ${req.user.id}`);
+        const { fullName, phone, address, profilePic, city, state } = req.body;
+        console.log(`[ProfileAPI] Fields received: ${Object.keys(req.body).join(', ')}`);
+
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+        if (phone) updateData.phone = phone;
+        if (address) updateData.address = address;
+        if (profilePic) updateData.profilePic = profilePic;
+        if (city !== undefined) updateData.city = city;
+        if (state !== undefined) updateData.state = state;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).select('-password').lean();
+
+        if (!updatedUser) {
+            console.log(`[ProfileAPI] User not found for update: ${req.user.id}`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('[ProfileAPI] Profile updated successfully');
+        res.json(updatedUser);
+    } catch (err) {
+        console.error('[ProfileAPI] Update error details:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
