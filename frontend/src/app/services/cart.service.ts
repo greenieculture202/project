@@ -11,6 +11,8 @@ export interface CartItem {
     quantity: number;
     size?: string;
     planter?: string;
+    weight?: string;
+    isGift?: boolean;
     tags?: string[];
 }
 
@@ -109,7 +111,7 @@ export class CartService {
         });
     }
 
-    addItem(product: any, quantity: number, planter?: string) {
+    addItem(product: any, quantity: number, planter?: string, weight?: string, isGift?: boolean) {
         // Prevent adding items if not logged in
         if (!sessionStorage.getItem('auth_token')) {
             return;
@@ -129,7 +131,10 @@ export class CartService {
 
         const productId = product.id || product._id;
         const existingItemIndex = currentItems.findIndex(item =>
-            item.productId === productId && item.planter === planter
+            item.productId === productId &&
+            item.planter === planter &&
+            item.weight === weight &&
+            item.isGift === isGift
         );
 
         if (existingItemIndex > -1) {
@@ -146,6 +151,8 @@ export class CartService {
                 image: product.image,
                 quantity: quantity,
                 planter: planter,
+                weight: weight,
+                isGift: isGift,
                 tags: product.tags
             };
             this.itemsSignal.set([...currentItems, newItem]);

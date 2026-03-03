@@ -10,9 +10,13 @@ export class UserService {
     private apiUrl = '/api/user';
 
     private getHeaders() {
-        const token = sessionStorage.getItem('auth_token');
+        // Try sessionStorage first (normal login), fall back to localStorage
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token') || '';
+        if (!token) {
+            console.warn('[UserService] No auth token found in sessionStorage or localStorage!');
+        }
         return new HttpHeaders({
-            'x-auth-token': token || ''
+            'x-auth-token': token
         });
     }
 
@@ -22,6 +26,10 @@ export class UserService {
 
     getOrders(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/orders`, { headers: this.getHeaders() });
+    }
+
+    placeOrder(orderData: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/orders`, orderData, { headers: this.getHeaders() });
     }
 
     getUserProfile(): Observable<any> {
@@ -34,10 +42,10 @@ export class UserService {
 
     // Admin Methods
     getAllUsers(): Observable<any[]> {
-        return this.http.get<any[]>('/api/admin/users');
+        return this.http.get<any[]>('/api/admin/users', { headers: this.getHeaders() });
     }
 
     deleteUser(id: string): Observable<any> {
-        return this.http.delete(`/api/admin/users/${id}`);
+        return this.http.delete(`/api/admin/users/${id}`, { headers: this.getHeaders() });
     }
 }

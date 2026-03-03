@@ -18,6 +18,7 @@ export interface Product {
     images?: string[];
     tags?: string[];
     slug?: string;
+    variants?: { name: string; price: string; originalPrice?: string; }[];
 }
 
 @Injectable({
@@ -26,6 +27,11 @@ export interface Product {
 export class ProductService {
     private http = inject(HttpClient);
     private apiUrl = '/api';
+
+    private getHeaders() {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token') || '';
+        return { 'x-auth-token': token };
+    }
 
     // Fallback mock data in case backend is not available
     private fallbackProducts: { [key: string]: Product[] } = {
@@ -499,7 +505,7 @@ export class ProductService {
 
     // ADMIN - Add new product
     addProduct(product: any): Observable<Product> {
-        return this.http.post<Product>(`${this.apiUrl}/admin/products`, product).pipe(
+        return this.http.post<Product>(`${this.apiUrl}/admin/products`, product, { headers: this.getHeaders() }).pipe(
             map(newProd => {
                 // Clear cache so it re-fetches with new product
                 this.categoryCache.clear();
@@ -510,7 +516,7 @@ export class ProductService {
 
     // ADMIN - Delete product
     deleteProduct(id: string): Observable<any> {
-        return this.http.delete(`${this.apiUrl}/admin/products/${id}`).pipe(
+        return this.http.delete(`${this.apiUrl}/admin/products/${id}`, { headers: this.getHeaders() }).pipe(
             map(res => {
                 this.categoryCache.clear();
                 return res;
@@ -520,7 +526,7 @@ export class ProductService {
 
     // ADMIN - Update product
     updateProduct(id: string, product: any): Observable<Product> {
-        return this.http.put<Product>(`${this.apiUrl}/admin/products/${id}`, product).pipe(
+        return this.http.put<Product>(`${this.apiUrl}/admin/products/${id}`, product, { headers: this.getHeaders() }).pipe(
             map(updatedProd => {
                 this.categoryCache.clear();
                 // Update specific product cache if it exists

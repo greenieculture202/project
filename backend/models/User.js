@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
         default: 'Not provided',
         trim: true
     },
+    alternatePhone: {
+        type: String,
+        default: '',
+        trim: true
+    },
     address: {
         type: String,
         default: 'Not provided',

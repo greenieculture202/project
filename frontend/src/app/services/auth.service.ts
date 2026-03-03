@@ -10,7 +10,7 @@ import { CartService } from './cart.service';
 export class AuthService {
     private apiUrl = '/api/auth';
 
-    private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
+    private isLoggedInSubject = new BehaviorSubject<boolean>(this.isLoggedIn());
     isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
     private isAdminSubject = new BehaviorSubject<boolean>(sessionStorage.getItem('is_admin') === 'true');
@@ -24,9 +24,17 @@ export class AuthService {
 
     private cartService = inject(CartService);
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {
+        // Safeguard: Clear legacy mock token if it still exists in browser session
+        if (sessionStorage.getItem('auth_token') === 'admin-token') {
+            sessionStorage.removeItem('auth_token');
+            sessionStorage.removeItem('is_admin');
+            this.isLoggedInSubject.next(false);
+            this.isAdminSubject.next(false);
+        }
+    }
 
-    private hasToken(): boolean {
+    isLoggedIn(): boolean {
         return !!sessionStorage.getItem('auth_token');
     }
 
@@ -64,7 +72,6 @@ export class AuthService {
         if (isAdmin) {
             sessionStorage.setItem('is_admin', 'true');
             sessionStorage.setItem('user_name', 'Admin');
-            sessionStorage.setItem('auth_token', 'admin-token'); // Mock token for admin
             this.isLoggedInSubject.next(true);
             this.isAdminSubject.next(true);
             this.currentUserSubject.next('Admin');
@@ -83,10 +90,12 @@ export class AuthService {
             tap(res => {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
                 this.isLoggedInSubject.next(true);
                 this.isAdminSubject.next(false);
                 this.currentUserSubject.next(res.user.fullName);
+                this.profilePicSubject.next(res.user.profilePic || null);
                 this.cartService.syncWithBackend();
             })
         );
@@ -97,10 +106,12 @@ export class AuthService {
             tap(res => {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
                 this.isLoggedInSubject.next(true);
                 this.isAdminSubject.next(false);
                 this.currentUserSubject.next(res.user.fullName);
+                this.profilePicSubject.next(res.user.profilePic || null);
                 this.cartService.syncWithBackend();
             })
         );

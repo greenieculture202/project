@@ -9,6 +9,11 @@
             <p>Premium Member</p>
         </div>
         <nav class="side-nav">
+            <a class="nav-item website-link" routerLink="/">
+                <i class="fas fa-home"></i>
+                <span>Go to Website</span>
+            </a>
+            <div class="nav-separator"></div>
             <a class="nav-item" [class.active]="activeTab === 'dashboard'" (click)="setActiveTab('dashboard')">
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
@@ -69,7 +74,7 @@
                     <button class="view-all" (click)="setActiveTab('orders')">View All</button>
                 </div>
                 <div class="orders-list">
-                    <div class="order-item" *ngFor="let order of dashboardData.recentOrders">
+                    <div class="order-item" *ngFor="let order of (dashboardData.recentOrders | slice:0:5)">
                         <div class="order-info">
                             <span class="order-id">{{ order.orderId }}</span>
                             <span class="order-date">{{ order.orderDate | date:'mediumDate' }}</span>
@@ -79,6 +84,12 @@
                     </div>
                     <div class="no-orders" *ngIf="dashboardData.recentOrders.length === 0">
                         <p>No orders yet. Start your garden today!</p>
+                    </div>
+                    <!-- View All button at bottom if more than 5 orders -->
+                    <div class="view-all-row" *ngIf="dashboardData.recentOrders.length > 5">
+                        <button class="view-all-large" (click)="setActiveTab('orders')">
+                            <i class="fas fa-list"></i> View All {{ dashboardData.recentOrders.length }} Orders
+                        </button>
                     </div>
                 </div>
             </section>
@@ -99,8 +110,20 @@
                             <span class="order-date">{{ order.orderDate | date:'longDate' }}</span>
                         </div>
                         <div class="order-items-preview">
-                            <div class="item-pic" *ngFor="let item of order.items">
-                                <img [src]="item.image" [alt]="item.name" title="{{item.name}}">
+                            <div class="item-detail-row" *ngFor="let item of order.items">
+                                <div class="item-pic">
+                                    <img [src]="item.image" [alt]="item.name" title="{{item.name}}">
+                                </div>
+                                <div class="item-text-info">
+                                    <span class="item-name">{{ item.name }} x{{ item.quantity }}</span>
+                                    <span class="item-meta">
+                                        {{ item.weight ? 'Weight: ' + item.weight : '' }}
+                                        {{ item.planter ? (item.weight ? ' | ' : '') + item.planter + ' Planter' : '' }}
+                                        <span class="gift-badge" *ngIf="item.isGift">
+                                            <i class="fas fa-gift"></i> Gift
+                                        </span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

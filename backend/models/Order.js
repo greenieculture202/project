@@ -4,17 +4,22 @@ const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true,
+        index: true
     },
     items: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product'
+            ref: 'Product',
+            required: false  // Optional - some products may not have a DB ID
         },
         name: String,
         price: Number,
         quantity: Number,
-        image: String
+        image: String,
+        weight: String,
+        isGift: Boolean,
+        planter: String
     }],
     totalAmount: {
         type: Number,
@@ -22,12 +27,17 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Processing', 'Completed', 'Cancelled', 'Shipped'],
+        enum: ['Processing', 'Shipped', 'Delivered', 'Completed', 'Cancelled'],
         default: 'Processing'
     },
     orderDate: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: -1
+    },
+    paymentMethod: {
+        type: String,
+        default: 'UPI'
     },
     orderId: {
         type: String,

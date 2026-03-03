@@ -19,6 +19,5 @@ export const routes: Routes = [
     { path: 'placements', loadComponent: () => import('./placements/placements').then(m => m.PlacementsComponent) },
     { path: 'user-panel', loadComponent: () => import('./user-panel/user-panel').then(m => m.UserPanelComponent) },
     { path: 'admin-dashboard', loadComponent: () => import('./admin-panel/admin-panel').then(m => m.AdminPanelComponent) },
-    { path: 'faq', loadComponent: () => import('./faq/faq').then(m => m.FaqComponent) },
-    { path: 'faq/all', loadComponent: () => import('./faq-all/faq-all').then(m => m.FaqAllComponent) }
+    { path: 'faq', loadComponent: () => import('./faq/faq').then(m => m.FaqComponent) }
 ];

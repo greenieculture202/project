@@ -1,6 +1,7 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { ProductService } from '../services/product.service';
@@ -27,8 +28,10 @@ export class AdminPanelComponent implements OnInit {
     faqService = inject(FaqService);
     aboutService = inject(AboutService);
     router = inject(Router);
+    route = inject(ActivatedRoute);
     cdr = inject(ChangeDetectorRef);
     ngZone = inject(NgZone);
+    http = inject(HttpClient);
 
     activeTab: string = 'dashboard';
     faqs: Faq[] = [];
@@ -46,6 +49,13 @@ export class AdminPanelComponent implements OnInit {
     faqCategories: string[] = ['Orders', 'Payment', 'Delivery', 'Plants', 'Returns', 'Account'];
     userFilter: string = 'All';
     users: any[] = [];
+    orders: any[] = [];
+    selectedOrder: any = null;
+    showOrderModal: boolean = false;
+    showInvoiceModal: boolean = false;
+    orderSearchQuery: string = '';
+    orderStatusFilter: string = 'All';
+    isLoadingOrders: boolean = false;
     isLoading: boolean = false;
     productMap: { [key: string]: any[] } = {};
     isLoadingProducts: boolean = false;
@@ -411,19 +421,25 @@ export class AdminPanelComponent implements OnInit {
         { label: 'Pending Reviews', value: '12', icon: 'star', color: '#ef4444' }
     ];
 
-    recentOrders = [
-        { id: '#ORD-7721', user: 'Rahul Sharma', date: '2024-03-20', status: 'Delivered', amount: '₹1,250' },
-        { id: '#ORD-7722', user: 'Priya Patel', date: '2024-03-21', status: 'Processing', amount: '₹2,100' },
-        { id: '#ORD-7723', user: 'Amit Kumar', date: '2024-03-21', status: 'Shipped', amount: '₹850' },
-        { id: '#ORD-7724', user: 'Sneha Gupta', date: '2024-03-22', status: 'Pending', amount: '₹3,400' }
-    ];
-
     ngOnInit() {
         if (!this.authService.isAdmin()) {
             this.router.navigate(['/login']);
             return;
         }
-        this.loadUsers();
+
+        // Listen for tab changes in the URL to persist state on refresh/back/forward
+        this.route.queryParams.subscribe(params => {
+            const tab = params['tab'];
+            const mainCat = params['mainCat'];
+
+            if (tab) {
+                // Use a internal flag to prevent redundant navigation
+                this.setTab(tab, mainCat, false);
+            } else {
+                // Default to dashboard
+                this.setTab('dashboard', undefined, false);
+            }
+        });
     }
 
     loadUsers() {
@@ -468,8 +484,41 @@ export class AdminPanelComponent implements OnInit {
         this.selectedUser = null;
     }
 
-    setTab(tab: string, mainCategory?: string) {
+    viewOrderDetails(order: any) {
+        this.selectedOrder = order;
+        this.showOrderModal = true;
+    }
+
+    closeOrderModal() {
+        this.showOrderModal = false;
+        this.selectedOrder = null;
+    }
+
+    viewInvoice(order: any) {
+        this.selectedOrder = order;
+        this.showInvoiceModal = true;
+    }
+
+    closeInvoiceModal() {
+        this.showInvoiceModal = false;
+        this.selectedOrder = null;
+    }
+
+    printInvoice() {
+        window.print();
+    }
+
+    setTab(tab: string, mainCategory?: string, updateUrl: boolean = true) {
         this.activeTab = tab;
+
+        // Update URL to persist tab state across refreshes
+        if (updateUrl) {
+            this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { tab: tab, mainCat: mainCategory || null },
+                queryParamsHandling: 'merge'
+            });
+        }
         if (mainCategory) {
             this.activeMainCategory = mainCategory;
             this.activeCompanionGroup = mainCategory === 'Accessories' ? 'Accessories' : 'All';
@@ -477,7 +526,7 @@ export class AdminPanelComponent implements OnInit {
             this.searchTerm = '';
         }
 
-        if (tab === 'users') {
+        if (tab === 'dashboard' || tab === 'users') {
             this.loadUsers();
         } else if (tab === 'products') {
             this.loadProducts();
@@ -490,6 +539,8 @@ export class AdminPanelComponent implements OnInit {
             this.loadFaqs();
         } else if (tab === 'about-us') {
             this.loadAboutSections();
+        } else if (tab === 'orders') {
+            this.loadOrders();
         }
     }
 
@@ -1377,6 +1428,136 @@ export class AdminPanelComponent implements OnInit {
         };
         return iconMap[category] || 'fa-question-circle';
     }
+
+    getFaqCategoryColor(category: string): string {
+        const colorMap: { [key: string]: string } = {
+            'Orders': '#2563eb',
+            'Payment': '#a16207',
+            'Delivery': '#166534',
+            'Plants': '#15803d',
+            'Returns': '#b91c1c',
+            'Account': '#7e22ce'
+        };
+        return colorMap[category] || '#10b981';
+    }
+
+    // ==========================================
+    // ORDER MANAGEMENT METHODS
+    // ==========================================
+
+    get filteredOrdersV2() {
+        let filtered = this.orders;
+
+        // Filter by Status
+        if (this.orderStatusFilter !== 'All') {
+            filtered = filtered.filter(o => o.status === this.orderStatusFilter);
+        }
+
+        // Search by ID, Customer Name, or Email
+        if (this.orderSearchQuery && this.orderSearchQuery.trim() !== '') {
+            const query = this.orderSearchQuery.toLowerCase();
+            filtered = filtered.filter(o =>
+                o.orderId.toLowerCase().includes(query) ||
+                (o.userId?.fullName?.toLowerCase() || '').includes(query) ||
+                (o.userId?.email?.toLowerCase() || '').includes(query) ||
+                (o.userId?.phone || '').includes(query)
+            );
+        }
+
+        return filtered;
+    }
+
+    getTotalRevenue() {
+        return this.orders.reduce((acc, order) => {
+            if (this.getStatusClass(order.status) !== 'status-cancelled') {
+                return acc + (order.totalAmount || 0);
+            }
+            return acc;
+        }, 0).toLocaleString();
+    }
+
+    getOrdersByStatus(status: string) {
+        return this.orders.filter(o => o.status === status);
+    }
+
+    getStatusIcon(status: string) {
+        const icons: { [key: string]: string } = {
+            'Processing': 'fa-sync-alt',
+            'Shipped': 'fa-truck-fast',
+            'Delivered': 'fa-circle-check',
+            'Cancelled': 'fa-circle-xmark'
+        };
+        return icons[status] || 'fa-box';
+    }
+
+    isNewOrder(order: any) {
+        const orderDate = new Date(order.orderDate);
+        const now = new Date();
+        const diffInMs = now.getTime() - orderDate.getTime();
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        return diffInHours < 24;
+    }
+
+    loadOrders() {
+        this.isLoadingOrders = true;
+        this.cdr.detectChanges();
+
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) {
+            this.isLoadingOrders = false;
+            return;
+        }
+
+        this.http.get('/api/admin/orders', { headers: { 'x-auth-token': token } }).subscribe({
+            next: (data: any) => {
+                this.ngZone.run(() => {
+                    this.orders = data;
+                    this.isLoadingOrders = false;
+
+                    // Update main dashboard stats dynamically
+                    this.stats[1].value = this.orders.length.toString();
+                    this.stats[2].value = '₹' + this.getTotalRevenue();
+
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error loading orders:', err);
+                this.isLoadingOrders = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    updateOrderStatus(orderId: string, newStatus: string) {
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) return;
+
+        this.http.put(`/api/admin/orders/${orderId}/status`, { status: newStatus }, { headers: { 'x-auth-token': token } })
+            .subscribe({
+                next: (updatedOrder: any) => {
+                    this.ngZone.run(() => {
+                        const idx = this.orders.findIndex(o => o._id === orderId);
+                        if (idx !== -1) {
+                            this.orders[idx] = updatedOrder;
+                            this.cdr.detectChanges();
+                        }
+                    });
+                },
+                error: (err) => console.error('Error updating order:', err)
+            });
+    }
+
+    getStatusClass(status: string): string {
+        switch (status) {
+            case 'Processing': return 'status-processing';
+            case 'Shipped': return 'status-shipped';
+            case 'Delivered': return 'status-delivered';
+            case 'Cancelled': return 'status-cancelled';
+            default: return 'status-unknown';
+        }
+    }
+
 
     deleteFaqAdmin(id: string, question: string) {
         this.deleteTarget = { id, name: question, type: 'faq' };

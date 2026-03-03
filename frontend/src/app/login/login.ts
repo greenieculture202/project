@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } 
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { HttpClient } from '@angular/common/http';
 
 declare var google: any;
 
@@ -31,6 +32,7 @@ export class LoginComponent implements OnInit {
     authService = inject(AuthService);
     notificationService = inject(NotificationService);
     private ngZone = inject(NgZone);
+    private http = inject(HttpClient);
 
     constructor(private fb: FormBuilder, private router: Router) {
         this.loginForm = this.fb.group({
@@ -130,12 +132,22 @@ export class LoginComponent implements OnInit {
             const rawEmail = this.loginForm.value.email;
             const password = this.loginForm.value.password;
 
-            // Admin Login Check
+            // Admin Login Check — calls real backend to get a JWT
             if (rawEmail === 'admin@greenie.com' && password === 'radheradhe') {
-                this.isLoading = false;
-                this.authService.setAdmin(true);
-                this.notificationService.show('Welcome Admin!', 'Admin Login Successful', 'success');
-                this.router.navigate(['/admin-dashboard']);
+                this.http.post<any>('/api/auth/admin-login', { email: rawEmail, password }).subscribe({
+                    next: (res) => {
+                        this.isLoading = false;
+                        // Store the real JWT so admin API calls work
+                        sessionStorage.setItem('auth_token', res.token);
+                        this.authService.setAdmin(true);
+                        this.notificationService.show('Welcome Admin!', 'Admin Login Successful', 'success');
+                        this.router.navigate(['/admin-dashboard']);
+                    },
+                    error: () => {
+                        this.isLoading = false;
+                        this.loginError = 'Admin login failed. Please try again.';
+                    }
+                });
                 return;
             }
 

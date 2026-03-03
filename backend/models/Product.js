@@ -13,7 +13,12 @@ const productSchema = new mongoose.Schema({
     category: { type: String, required: true, index: true },
     videoUrl: { type: String },
     description: { type: String },
-    tags: [{ type: String }]
+    tags: [{ type: String }],
+    variants: [{
+        name: { type: String }, // e.g. "250g", "500g", "1kg", "2kg", "5kg"
+        price: { type: String },
+        originalPrice: { type: String }
+    }]
 });
 
 module.exports = mongoose.model('Product', productSchema);

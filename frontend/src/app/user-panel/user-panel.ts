@@ -168,9 +168,23 @@ export class UserPanelComponent implements OnInit {
 
     ngOnInit() {
         this.updateIndianCities();
-        this.loadDashboard();
-        this.loadProfile();
-        this.loadAllOrders();
+
+        // Restore active tab from session storage if it exists
+        const savedTab = sessionStorage.getItem('user_panel_tab');
+        if (savedTab) {
+            this.activeTab = savedTab;
+        }
+
+        // Set initial preview from session storage to avoid blank UI on refresh
+        this.profilePicPreview = sessionStorage.getItem('user_pic') || '';
+
+        // Load data based on restored tab
+        if (this.activeTab === 'dashboard') this.loadDashboard();
+        else if (this.activeTab === 'orders') this.loadAllOrders();
+        else if (this.activeTab === 'settings') this.loadProfile();
+
+        // Always load profile in background to sync name/pic
+        if (this.activeTab !== 'settings') this.loadProfile();
     }
 
     loadProfile() {
@@ -257,6 +271,7 @@ export class UserPanelComponent implements OnInit {
 
     setActiveTab(tab: string) {
         this.activeTab = tab;
+        sessionStorage.setItem('user_panel_tab', tab);
         if (tab === 'dashboard') this.loadDashboard();
         if (tab === 'orders') this.loadAllOrders();
         if (tab === 'settings') this.loadProfile();

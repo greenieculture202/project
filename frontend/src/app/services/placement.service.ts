@@ -21,6 +21,11 @@ export class PlacementService {
     private http = inject(HttpClient);
     private apiUrl = '/api';
 
+    private getHeaders() {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token') || '';
+        return { 'x-auth-token': token };
+    }
+
     // Public API
     getPlacements(): Observable<Placement[]> {
         return this.http.get<Placement[]>(`${this.apiUrl}/placements`);
@@ -28,18 +33,18 @@ export class PlacementService {
 
     // Admin API
     getAdminPlacements(): Observable<Placement[]> {
-        return this.http.get<Placement[]>(`${this.apiUrl}/admin/placements`);
+        return this.http.get<Placement[]>(`${this.apiUrl}/admin/placements`, { headers: this.getHeaders() });
     }
 
     addPlacement(placement: Placement): Observable<Placement> {
-        return this.http.post<Placement>(`${this.apiUrl}/admin/placements`, placement);
+        return this.http.post<Placement>(`${this.apiUrl}/admin/placements`, placement, { headers: this.getHeaders() });
     }
 
     updatePlacement(id: string, placement: Placement): Observable<Placement> {
-        return this.http.put<Placement>(`${this.apiUrl}/admin/placements/${id}`, placement);
+        return this.http.put<Placement>(`${this.apiUrl}/admin/placements/${id}`, placement, { headers: this.getHeaders() });
     }
 
     deletePlacement(id: string): Observable<any> {
-        return this.http.delete(`${this.apiUrl}/admin/placements/${id}`);
+        return this.http.delete(`${this.apiUrl}/admin/placements/${id}`, { headers: this.getHeaders() });
     }
 }

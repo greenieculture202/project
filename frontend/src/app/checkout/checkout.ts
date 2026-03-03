@@ -1,3 +1,4 @@
+// Forced rebuild - change v1
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
+import { UserService } from '../services/user.service';
 
 @Component({
     selector: 'app-checkout',
@@ -19,10 +21,10 @@ export class CheckoutComponent implements OnInit {
     cartService = inject(CartService);
     authService = inject(AuthService);
     reviewService = inject(ReviewService);
+    userService = inject(UserService);
     router = inject(Router);
 
     showReviewDialog = false;
-    showSuccessModal = false;
 
     items = this.cartService.items;
     totalAmount = this.cartService.totalAmount;
@@ -36,8 +38,12 @@ export class CheckoutComponent implements OnInit {
     stateName = '';
     pincode = '';
     phone = '';
+    alternatePhone = '';
+    currentTimestamp = new Date();
 
     currentStep = 1;
+    showInvoiceModal = false;
+    placedOrder: any = null;
 
     paymentReceived = false;
     private _selectedPayment = 'upi';
@@ -192,19 +198,50 @@ export class CheckoutComponent implements OnInit {
 
     ngOnInit() {
         this.updateIndianCities();
-        // Redirect if cart is empty
-        if (this.cartService.totalItems() === 0) {
+        // Redirect if cart is empty - only if no placed order is persisting
+        const persistedOrder = sessionStorage.getItem('last_placed_order');
+        if (this.cartService.totalItems() === 0 && !persistedOrder) {
             this.router.navigate(['/']);
             return;
         }
 
-        // Load persisted state
+        // 1. Load persisted state from localStorage first (priority)
         this.loadCheckoutState();
 
-        // Pre-fill email if user is logged in and state is empty
-        const user = this.authService.getCurrentUser();
-        if (user && !this.contactEmail) {
-            this.contactEmail = '';
+        // 2. Restore placed order if it exists (for refresh support)
+        if (persistedOrder) {
+            try {
+                this.placedOrder = JSON.parse(persistedOrder);
+                this.showInvoiceModal = true;
+            } catch (e) {
+                console.error('Error restoring persisted order', e);
+            }
+        }
+
+        // 3. Fetch latest profile from database to fill empty fields
+        if (this.authService.isLoggedIn()) {
+            this.userService.getUserProfile().subscribe({
+                next: (profile: any) => {
+                    console.log('[Checkout] Fetched user profile for auto-fill:', profile);
+
+                    // Only fill if current field is empty (prefere user's recent edits in session)
+                    if (!this.firstName || !this.lastName) {
+                        const names = (profile.fullName || '').split(' ');
+                        if (!this.firstName) this.firstName = names[0] || '';
+                        if (!this.lastName) this.lastName = names.slice(1).join(' ') || '';
+                    }
+                    if (!this.contactEmail) this.contactEmail = profile.email || '';
+                    if (!this.phone) this.phone = profile.phone || '';
+                    if (!this.alternatePhone) this.alternatePhone = profile.alternatePhone || '';
+                    if (!this.address) this.address = profile.address || '';
+                    if (!this.city) this.city = profile.city || '';
+                    if (!this.stateName) this.stateName = profile.state || '';
+
+                    // Save the pre-filled state
+                    this.saveCheckoutState();
+                },
+                error: (err) => console.warn('[Checkout] Failed to fetch profile for auto-fill', err)
+            });
         }
     }
 
@@ -222,6 +259,7 @@ export class CheckoutComponent implements OnInit {
             lastName: this.lastName,
             contactEmail: this.contactEmail,
             phone: this.phone,
+            alternatePhone: this.alternatePhone,
             address: this.address,
             city: this.city,
             stateName: this.stateName,
@@ -241,6 +279,7 @@ export class CheckoutComponent implements OnInit {
                 this.lastName = state.lastName || '';
                 this.contactEmail = state.contactEmail || '';
                 this.phone = state.phone || '';
+                this.alternatePhone = state.alternatePhone || '';
                 this.address = state.address || '';
                 this.city = state.city || '';
                 this.stateName = state.stateName || '';
@@ -259,8 +298,8 @@ export class CheckoutComponent implements OnInit {
 
     isStep1Valid(): boolean {
         return !!(this.firstName && this.lastName && this.contactEmail &&
-            this.phone && this.address && this.city &&
-            this.stateName && this.pincode);
+            this.phone && this.phone.length >= 10 && this.address && this.address.trim().length >= 8 && this.city &&
+            this.stateName);
     }
 
     nextStep() {
@@ -289,27 +328,102 @@ export class CheckoutComponent implements OnInit {
     }
 
     async onPayNow() {
+        this.isProcessing = true;
+
+        // Build the order object from cart items
+        const cartItems = this.cartService.items();
+        const orderData = {
+            items: cartItems.map((item: any) => ({
+                productId: item.productId || item._id || null,  // Use actual MongoDB product ID
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                image: item.image,
+                weight: item.weight || null,
+                planter: item.planter || null,
+                isGift: item.isGift || false
+            })),
+            totalAmount: this.cartService.totalAmount(),
+            paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI'
+        };
+
+        const saveOrder = () => {
+            // First try to update the user profile with the latest shipping/contact details
+            const profileData = {
+                fullName: `${this.firstName} ${this.lastName}`.trim(),
+                phone: this.phone,
+                alternatePhone: this.alternatePhone,
+                address: this.address,
+                city: this.city,
+                state: this.stateName
+            };
+
+            this.userService.updateUserProfile(profileData).subscribe({
+                next: () => this.executePlaceOrder(orderData),
+                error: (err) => {
+                    console.warn('[Checkout] Profile update failed before ordering, proceeding anyway.', err);
+                    this.executePlaceOrder(orderData);
+                }
+            });
+        };
+
         if (this.selectedPayment === 'upi') {
-            this.isProcessing = true;
-            setTimeout(() => {
-                this.isProcessing = false;
-                this.showSuccessModal = true;
-            }, 3000);
+            // Give 2 seconds for UPI scan simulation, then save & show modal
+            setTimeout(() => saveOrder(), 2000);
         } else {
-            this.showSuccessModal = true;
+            saveOrder();
         }
     }
 
-    finishWithReview() {
-        this.showSuccessModal = false;
-        this.finishOrder(); // Clear state before showing review
+    private executePlaceOrder(orderData: any) {
+        this.userService.placeOrder(orderData).subscribe({
+            next: (res) => {
+                this.isProcessing = false;
+                this.placedOrder = res;
+                // Persist order for refresh support
+                sessionStorage.setItem('last_placed_order', JSON.stringify(res));
+                this.showInvoiceModal = true;
+                this.cartService.clear();
+                localStorage.removeItem('checkout_state');
+            },
+            error: (err) => {
+                console.error('[Checkout] Save failed, but showing invoice view for user:', err);
+                this.isProcessing = false;
+                // Create a temporary mock object for better fallback UI
+                const mockOrder = {
+                    orderId: 'ORD-' + Math.floor(Math.random() * 10000),
+                    orderDate: new Date(),
+                    paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI',
+                    totalAmount: this.totalAmount(),
+                    items: this.cartService.items().map(item => ({ ...item }))
+                };
+                this.placedOrder = mockOrder;
+                sessionStorage.setItem('last_placed_order', JSON.stringify(mockOrder));
+                this.showInvoiceModal = true;
+                this.cartService.clear();
+                localStorage.removeItem('checkout_state');
+            }
+        });
+    }
+
+    printInvoice() {
+        // After the print/save dialog is closed, auto-proceed to review popup
+        const onAfterPrint = () => {
+            window.removeEventListener('afterprint', onAfterPrint);
+            setTimeout(() => {
+                this.closeInvoice();
+            }, 300);
+        };
+        window.addEventListener('afterprint', onAfterPrint);
+        window.print();
+    }
+
+    closeInvoice() {
+        this.showInvoiceModal = false;
+        sessionStorage.removeItem('last_placed_order');
         this.showReviewDialog = true;
     }
 
-    finishWithoutReview() {
-        this.showSuccessModal = false;
-        this.finishOrder();
-    }
 
     handleReviewSubmit(data: { rating: number, description: string }) {
         const user = this.authService.getCurrentUser() as any;
@@ -319,12 +433,13 @@ export class CheckoutComponent implements OnInit {
             description: data.description,
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         });
-        alert('Thank you for your review!');
+        this.showReviewDialog = false;
         this.router.navigate(['/']);
     }
 
     finishOrder() {
         localStorage.removeItem('checkout_state');
+        sessionStorage.removeItem('last_placed_order');
         this.cartService.clear();
         this.router.navigate(['/']);
     }

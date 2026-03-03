@@ -58,14 +58,15 @@
                 <i class="fas fa-star"></i> 4.8 | 195
             </div>
             <div class="price-block">
-                <span class="current-price">₹{{ product.price }}</span>
+                <span class="current-price">{{ selectedPrice }}</span>
                 <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
                 <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
             </div>
             <span class="taxes-text">(Incl. of all taxes)</span>
 
-            <!-- SELECT PLANTER - Ugaoo Style -->
-            <div class="planter-section">
+            <!-- SELECT PLANTER - Ugaoo Style (Hide for weight-based products) -->
+            <div class="planter-section"
+                *ngIf="!product.category?.includes('Seeds') && !product.category?.includes('Soil') && !product.category?.includes('Fertilizers') && !product.category?.includes('Nutrients')">
                 <p class="section-label">SELECT PLANTER</p>
                 <div class="planter-options">
                     <div *ngFor="let planter of planters; let i = index" class="planter-option"
@@ -90,8 +91,24 @@
                 </div>
             </div>
 
+            <!-- SELECT WEIGHT - For weight-based products -->
+            <div class="weight-section"
+                *ngIf="product.category?.includes('Seeds') || product.category?.includes('Soil') || product.category?.includes('Fertilizers') || product.category?.includes('Nutrients')">
+                <p class="section-label">SELECT WEIGHT</p>
+                <div class="weight-options">
+                    <div *ngFor="let weight of seedWeights" class="weight-option"
+                        [class.selected]="selectedWeight === weight.name" (click)="selectWeight(weight.name)">
+                        <span class="weight-name">{{ weight.name }}</span>
+                        <span class="weight-price">{{ weight.price }}</span>
+                        <div class="check-mark" *ngIf="selectedWeight === weight.name">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <label class="gift-option">
-                <input type="checkbox"> Make This a Gift
+                <input type="checkbox" [(ngModel)]="isGift"> Make This a Gift
             </label>
 
             <div class="actions">

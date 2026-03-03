@@ -56,6 +56,10 @@
                         <div class="item-meta">
                             <p class="unit-price" *ngIf="item.quantity > 1">₹{{ item.price }} / unit</p>
                             <p class="item-details" *ngIf="item.planter">Pot: {{ item.planter | titlecase }}</p>
+                            <p class="item-details" *ngIf="item.weight">Weight: {{ item.weight }}</p>
+                            <p class="item-details gift-tag" *ngIf="item.isGift">
+                                <i class="fas fa-gift"></i> Marked as Gift
+                            </p>
                         </div>
                         <div class="item-tags" *ngIf="item.tags && item.tags.length > 0">
                             <span class="tag" [ngClass]="getTagClass(tag)" *ngFor="let tag of item.tags.slice(0, 2)">

@@ -87,6 +87,14 @@
                                     placeholder="9876543210" class="checkout-input">
                             </div>
                         </div>
+                        <div class="input-field">
+                            <label>Alternate Mobile Number (Optional)</label>
+                            <div class="phone-wrapper">
+                                <span class="prefix">+91</span>
+                                <input type="tel" [(ngModel)]="alternatePhone" (ngModelChange)="saveCheckoutState()"
+                                    placeholder="Optional alternate number" class="checkout-input">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="section-divider"></div>
@@ -98,7 +106,10 @@
                         <div class="input-field full-width">
                             <label>Complete Address</label>
                             <input type="text" [(ngModel)]="address" (ngModelChange)="saveCheckoutState()"
-                                placeholder="Flat No, Apartment, Street name" class="checkout-input">
+                                placeholder="Flat No, Apartment, Street name" class="checkout-input"
+                                [class.invalid-field]="address && address.trim().length < 8">
+                            <span class="validation-msg" *ngIf="address && address.trim().length < 8">Address must
+                                contain at least 8 characters</span>
                         </div>
                         <div class="input-field">
                             <label>City</label>
@@ -125,11 +136,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="input-field">
-                            <label>Pincode</label>
-                            <input type="text" [(ngModel)]="pincode" (ngModelChange)="saveCheckoutState()"
-                                placeholder="400001" class="checkout-input">
-                        </div>
+
                     </div>
 
                     <div class="action-bar">
@@ -154,16 +161,15 @@
                                 <div class="item-details">
                                     <h3>{{ item.name }}</h3>
                                     <p *ngIf="item.planter">{{ item.planter }} Planter</p>
+                                    <p *ngIf="item.weight">Weight: {{ item.weight }}</p>
+                                    <p class="gift-text" *ngIf="item.isGift">
+                                        <i class="fas fa-gift"></i> Marked as Gift
+                                    </p>
                                 </div>
                                 <div class="item-price">
                                     ₹{{ item.price * item.quantity }}
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="promo-box">
-                            <input type="text" placeholder="Coupon Code" class="checkout-input">
-                            <button class="secondary-btn">Apply</button>
                         </div>
 
                         <div class="billing-summary">
@@ -183,7 +189,8 @@
                     </div>
 
                     <div class="action-bar">
-                        <button class="back-link" (click)="prevStep()">Back to Details</button>
+                        <button class="back-link" (click)="prevStep()"><i class="fas fa-arrow-left"></i> Back to
+                            Details</button>
                         <button class="primary-btn" (click)="nextStep()">Continue to Payment</button>
                     </div>
                 </div>
@@ -261,20 +268,137 @@
     </div>
 </div>
 
-<!-- Success Modal -->
-<div class="success-overlay" *ngIf="showSuccessModal">
-    <div class="success-modal">
-        <div class="success-icon">
-            <i class="fas fa-check-circle"></i>
+<!-- LUXURY GLASSMORPHISM INVOICE MODAL -->
+<div class="invoice-luxury-overlay no-print" *ngIf="showInvoiceModal">
+    <div class="luxury-bill-card printable-area">
+        <!-- Floating Brand Jewel (Visual Flair) -->
+        <div class="luxury-jewel-header no-print">
+            <div class="jewel-logo">
+                <img src="assets/images/log-removebg-preview.png" alt="Greenie Logo">
+            </div>
+            <div class="jewel-text">
+                <h3>PREMIUM DIGITAL SLIP</h3>
+                <p>GREENIE CULTURE • OFFICIAL TRANSACTION</p>
+            </div>
         </div>
-        <h2>Order Placed Successfully!</h2>
-        <p>Thank you for shopping with Greenie Culture 🌿</p>
-        <div class="modal-actions">
-            <button class="review-btn" (click)="finishWithReview()">
-                <i class="fas fa-star"></i> Write a Review
+
+        <div class="luxury-glass-container">
+            <!-- Professional Integrated Branding (Inside Slip) -->
+            <div class="integrated-branding">
+                <div class="brand-top">
+                    <h1 class="brand-h1">GREENIE CULTURE 🌿</h1>
+                    <p class="brand-subtitle">EXQUISITE BOTANICALS & PREMIUM DECOR</p>
+                </div>
+                <div class="brand-details">
+                    <p>123 Botanical Avenue, Green City, 400001</p>
+                    <p>Contact: support@greenieculture.com | +91 9876543210</p>
+                </div>
+            </div>
+
+            <!-- Invoice Header Section -->
+            <div class="luxury-header">
+                <div class="order-slug">
+                    <span class="label">ORDER NUMBER</span>
+                    <h2 class="order-id">#{{ placedOrder?.orderId }}</h2>
+                </div>
+                <div class="date-slug">
+                    <span class="label">TRANSACTION DATE</span>
+                    <span class="value">{{ placedOrder?.orderDate | date:'MMMM dd, yyyy' }}</span>
+                </div>
+            </div>
+
+            <!-- Customer & Payment Info -->
+            <div class="luxury-info-grid">
+                <div class="info-pill">
+                    <div class="pill-icon"><i class="fas fa-user-tie"></i></div>
+                    <div class="pill-content">
+                        <label>DELIVER TO</label>
+                        <h4>{{ firstName }} {{ lastName }}</h4>
+                        <p class="pill-sub">{{ address }}</p>
+                        <p class="pill-sub">{{ city }}, {{ stateName }}</p>
+                    </div>
+                </div>
+                <div class="info-pill">
+                    <div class="pill-icon"><i class="fas fa-credit-card"></i></div>
+                    <div class="pill-content">
+                        <label>PAYMENT METHOD</label>
+                        <h4>{{ placedOrder?.paymentMethod }}</h4>
+                        <span class="status-indicator confirmed">
+                            <i class="fas fa-certificate"></i> VERIFIED SECURE
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Summary Table -->
+            <div class="luxury-items-section">
+                <table class="luxury-invoice-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left">OFFICIAL PRODUCT PARTICULARS</th>
+                            <th class="text-center">QTY</th>
+                            <th class="text-right">UNIT VAL</th>
+                            <th class="text-right">SUBTOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of placedOrder?.items">
+                            <td class="text-left">
+                                <div class="table-item-info">
+                                    <span class="item-name">{{ item.name }}</span>
+                                    <span class="item-meta" *ngIf="item.weight || item.planter">
+                                        {{ item.weight }} <span *ngIf="item.weight && item.planter">|</span> {{
+                                        item.planter }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-right">₹{{ item.price }}</td>
+                            <td class="text-right font-bold">₹{{ item.quantity * item.price }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Financial Totals -->
+            <div class="luxury-summary-card">
+                <div class="summary-rows">
+                    <div class="summary-row">
+                        <span class="label">BASE AMOUNT</span>
+                        <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">SHIPPING CHARGES</span>
+                        <span class="value">₹0.00 (COMPLIMENTARY)</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row accent">
+                        <span class="label">NET PAYABLE AMOUNT</span>
+                        <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                    </div>
+                </div>
+                <div class="luxury-thanks">
+                    <i class="fas fa-heart"></i>
+                    <span>Thank you for choosing Greenie Culture!</span>
+                </div>
+            </div>
+
+            <!-- Footnote/Legal -->
+            <div class="luxury-footer">
+                <div class="legal-text">
+                    <p>© 2026 GREENIE CULTURE • PRIVACY SECURED</p>
+                    <p>This is a computer-generated transaction certificate.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Actions -->
+        <div class="luxury-actions no-print">
+            <button class="lux-btn secondary" (click)="printInvoice()">
+                <i class="fas fa-print"></i> PRINT INVOICE
             </button>
-            <button class="skip-btn" (click)="finishWithoutReview()">
-                Skip for now
+            <button class="lux-btn primary" (click)="closeInvoice()">
+                CONTINUE TO REVIEW <i class="fas fa-arrow-right"></i>
             </button>
         </div>
     </div>

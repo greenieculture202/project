@@ -77,6 +77,21 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.error('MongoDB connection error:', err));
 
+// Admin Login - returns a real JWT for admin dashboard API calls
+app.post('/api/auth/admin-login', async (req, res) => {
+    const { email, password } = req.body;
+    if (email === 'admin@greenie.com' && password === 'radheradhe') {
+        // Create a special admin JWT (using a fixed admin ID)
+        const token = jwt.sign(
+            { user: { id: 'admin-special-id', isAdmin: true } },
+            JWT_SECRET,
+            { expiresIn: '8h' }
+        );
+        return res.json({ token, isAdmin: true });
+    }
+    return res.status(401).json({ message: 'Invalid admin credentials' });
+});
+
 // Auth Routes
 app.post('/api/auth/register', async (req, res) => {
     try {
@@ -497,7 +512,7 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
     }
 });
 
-// User Orders API
+// User Orders API - GET all orders for current user
 app.get('/api/user/orders', auth, async (req, res) => {
     try {
         const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
@@ -506,6 +521,94 @@ app.get('/api/user/orders', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// User Orders API - POST place new order
+app.post('/api/user/orders', auth, async (req, res) => {
+    try {
+        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot } = req.body;
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'Order must have at least one item' });
+        }
+
+        const newOrder = new Order({
+            userId: req.user.id,
+            items: items,
+            totalAmount: totalAmount,
+            paymentMethod: paymentMethod || 'UPI',
+            status: 'Processing',
+            transactionId: transactionId || '',
+            paymentScreenshot: paymentScreenshot || '',
+            paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending'
+        });
+
+        const savedOrder = await newOrder.save();
+        console.log(`[OrdersAPI] New order placed: ${savedOrder.orderId} for user ${req.user.id}`);
+        res.status(201).json(savedOrder);
+    } catch (err) {
+        console.error('[OrdersAPI] Error placing order:', err.message);
+        res.status(500).json({ message: 'Failed to place order' });
+    }
+});
+
+// Admin Orders API
+app.get('/api/admin/orders', auth, async (req, res) => {
+    try {
+        // Fetch all orders, populate user details
+        const orders = await Order.find({})
+            .populate('userId', 'fullName email phone alternatePhone address city state')
+            .sort({ orderDate: -1 })
+            .lean();
+        res.json(orders);
+    } catch (err) {
+        console.error('[AdminOrdersAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['Processing', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status update' });
+        }
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        ).populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        res.json(order);
+    } catch (err) {
+        console.error('[AdminOrdersAPI] Update error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
+    try {
+        const { paymentStatus } = req.body;
+        if (!['Pending', 'Received', 'Failed'].includes(paymentStatus)) {
+            return res.status(400).json({ message: 'Invalid payment status' });
+        }
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { paymentStatus },
+            { new: true }
+        ).populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        console.log(`[AdminOrdersAPI] Payment verified for Order ${order.orderId}: ${paymentStatus}`);
+        res.json(order);
+    } catch (err) {
+        console.error('[AdminOrdersAPI] Payment status update error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // User Profile API
 app.get('/api/user/profile', auth, async (req, res) => {
@@ -526,12 +629,13 @@ app.get('/api/user/profile', auth, async (req, res) => {
 app.put('/api/user/profile', auth, async (req, res) => {
     try {
         console.log(`[ProfileAPI] Update attempt for ID: ${req.user.id}`);
-        const { fullName, phone, address, profilePic, city, state } = req.body;
+        const { fullName, phone, alternatePhone, address, profilePic, city, state } = req.body;
         console.log(`[ProfileAPI] Fields received: ${Object.keys(req.body).join(', ')}`);
 
         const updateData = {};
         if (fullName) updateData.fullName = fullName;
         if (phone) updateData.phone = phone;
+        if (alternatePhone !== undefined) updateData.alternatePhone = alternatePhone;
         if (address) updateData.address = address;
         if (profilePic) updateData.profilePic = profilePic;
         if (city !== undefined) updateData.city = city;
@@ -557,7 +661,7 @@ app.put('/api/user/profile', auth, async (req, res) => {
 });
 
 // ADMIN API - Offers
-app.get('/api/admin/offers', async (req, res) => {
+app.get('/api/admin/offers', auth, async (req, res) => {
     try {
         const offers = await Offer.find({}).sort({ createdAt: -1 }).lean();
         res.json(offers);
@@ -566,7 +670,7 @@ app.get('/api/admin/offers', async (req, res) => {
     }
 });
 
-app.post('/api/admin/offers', async (req, res) => {
+app.post('/api/admin/offers', auth, async (req, res) => {
     try {
         const newOffer = new Offer(req.body);
         const savedOffer = await newOffer.save();
@@ -578,7 +682,7 @@ app.post('/api/admin/offers', async (req, res) => {
     }
 });
 
-app.put('/api/admin/offers/:id', async (req, res) => {
+app.put('/api/admin/offers/:id', auth, async (req, res) => {
     try {
         const updatedOffer = await Offer.findByIdAndUpdate(
             req.params.id,
@@ -596,7 +700,7 @@ app.put('/api/admin/offers/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/offers/:id', async (req, res) => {
+app.delete('/api/admin/offers/:id', auth, async (req, res) => {
     try {
         const deletedOffer = await Offer.findByIdAndDelete(req.params.id);
         if (!deletedOffer) {
@@ -611,7 +715,7 @@ app.delete('/api/admin/offers/:id', async (req, res) => {
 });
 
 // ADMIN API - Placements (Videos)
-app.get('/api/admin/placements', async (req, res) => {
+app.get('/api/admin/placements', auth, async (req, res) => {
     try {
         const placements = await Placement.find({}).sort({ createdAt: -1 }).lean();
         res.json(placements);
@@ -620,7 +724,7 @@ app.get('/api/admin/placements', async (req, res) => {
     }
 });
 
-app.post('/api/admin/placements', async (req, res) => {
+app.post('/api/admin/placements', auth, async (req, res) => {
     try {
         const newPlacement = new Placement(req.body);
         const savedPlacement = await newPlacement.save();
@@ -632,7 +736,7 @@ app.post('/api/admin/placements', async (req, res) => {
     }
 });
 
-app.put('/api/admin/placements/:id', async (req, res) => {
+app.put('/api/admin/placements/:id', auth, async (req, res) => {
     try {
         const updatedPlacement = await Placement.findByIdAndUpdate(
             req.params.id,
@@ -650,7 +754,7 @@ app.put('/api/admin/placements/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/placements/:id', async (req, res) => {
+app.delete('/api/admin/placements/:id', auth, async (req, res) => {
     try {
         const deletedPlacement = await Placement.findByIdAndDelete(req.params.id);
         if (!deletedPlacement) {
@@ -685,7 +789,7 @@ app.get('/api/faqs', async (req, res) => {
 });
 
 // ADMIN API - FAQs
-app.get('/api/admin/faqs', async (req, res) => {
+app.get('/api/admin/faqs', auth, async (req, res) => {
     try {
         const faqs = await Faq.find({}).sort({ order: 1, createdAt: -1 }).lean();
         res.json(faqs);
@@ -694,7 +798,7 @@ app.get('/api/admin/faqs', async (req, res) => {
     }
 });
 
-app.post('/api/admin/faqs', async (req, res) => {
+app.post('/api/admin/faqs', auth, async (req, res) => {
     try {
         const newFaq = new Faq(req.body);
         const savedFaq = await newFaq.save();
@@ -704,7 +808,7 @@ app.post('/api/admin/faqs', async (req, res) => {
     }
 });
 
-app.put('/api/admin/faqs/:id', async (req, res) => {
+app.put('/api/admin/faqs/:id', auth, async (req, res) => {
     try {
         const updatedFaq = await Faq.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(updatedFaq);
@@ -733,7 +837,7 @@ app.get('/api/about-sections', async (req, res) => {
 });
 
 // ADMIN API - About Us Sections
-app.get('/api/admin/about-sections', async (req, res) => {
+app.get('/api/admin/about-sections', auth, async (req, res) => {
     try {
         const sections = await AboutSection.find({}).sort({ order: 1, createdAt: -1 }).lean();
         res.json(sections);
@@ -742,7 +846,7 @@ app.get('/api/admin/about-sections', async (req, res) => {
     }
 });
 
-app.post('/api/admin/about-sections', async (req, res) => {
+app.post('/api/admin/about-sections', auth, async (req, res) => {
     try {
         const newSection = new AboutSection(req.body);
         const saved = await newSection.save();
@@ -754,7 +858,7 @@ app.post('/api/admin/about-sections', async (req, res) => {
     }
 });
 
-app.put('/api/admin/about-sections/:id', async (req, res) => {
+app.put('/api/admin/about-sections/:id', auth, async (req, res) => {
     try {
         const updated = await AboutSection.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updated) return res.status(404).json({ message: 'Section not found' });
@@ -766,7 +870,7 @@ app.put('/api/admin/about-sections/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/about-sections/:id', async (req, res) => {
+app.delete('/api/admin/about-sections/:id', auth, async (req, res) => {
     try {
         const deleted = await AboutSection.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ message: 'Section not found' });
@@ -789,7 +893,7 @@ app.get('/api/offers', async (req, res) => {
 });
 
 // ADMIN API - Get all users
-app.get('/api/admin/users', async (req, res) => {
+app.get('/api/admin/users', auth, async (req, res) => {
     try {
         const users = await User.find({}).sort({ createdAt: -1 }).lean();
         res.json(users);
@@ -799,7 +903,7 @@ app.get('/api/admin/users', async (req, res) => {
 });
 
 // ADMIN API - Update user
-app.put('/api/admin/users/:id', async (req, res) => {
+app.put('/api/admin/users/:id', auth, async (req, res) => {
     try {
         const { fullName, email, phone, address, greenPoints } = req.body;
 
@@ -845,7 +949,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 });
 
 // ADMIN API - Update product
-app.put('/api/admin/products/:id', async (req, res) => {
+app.put('/api/admin/products/:id', auth, async (req, res) => {
     try {
         const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
 
@@ -880,7 +984,7 @@ app.put('/api/admin/products/:id', async (req, res) => {
 });
 
 // ADMIN API - Delete product
-app.delete('/api/admin/products/:id', async (req, res) => {
+app.delete('/api/admin/products/:id', auth, async (req, res) => {
     try {
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
         if (!deletedProduct) {
@@ -895,7 +999,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 });
 
 // ADMIN API - Add new product
-app.post('/api/admin/products', async (req, res) => {
+app.post('/api/admin/products', auth, async (req, res) => {
     try {
         const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
 

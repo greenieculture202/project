@@ -32,6 +32,11 @@ export class OfferService {
     private http = inject(HttpClient);
     private apiUrl = '/api';
 
+    private getHeaders() {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token') || '';
+        return { 'x-auth-token': token };
+    }
+
     // Public API
     getOffers(): Observable<Offer[]> {
         return this.http.get<Offer[]>(`${this.apiUrl}/offers`);
@@ -39,18 +44,18 @@ export class OfferService {
 
     // Admin API
     getAllOffersAdmin(): Observable<Offer[]> {
-        return this.http.get<Offer[]>(`${this.apiUrl}/admin/offers`);
+        return this.http.get<Offer[]>(`${this.apiUrl}/admin/offers`, { headers: this.getHeaders() });
     }
 
     addOffer(offer: Offer): Observable<Offer> {
-        return this.http.post<Offer>(`${this.apiUrl}/admin/offers`, offer);
+        return this.http.post<Offer>(`${this.apiUrl}/admin/offers`, offer, { headers: this.getHeaders() });
     }
 
     updateOffer(id: string, offer: Offer): Observable<Offer> {
-        return this.http.put<Offer>(`${this.apiUrl}/admin/offers/${id}`, offer);
+        return this.http.put<Offer>(`${this.apiUrl}/admin/offers/${id}`, offer, { headers: this.getHeaders() });
     }
 
     deleteOffer(id: string): Observable<any> {
-        return this.http.delete(`${this.apiUrl}/admin/offers/${id}`);
+        return this.http.delete(`${this.apiUrl}/admin/offers/${id}`, { headers: this.getHeaders() });
     }
 }

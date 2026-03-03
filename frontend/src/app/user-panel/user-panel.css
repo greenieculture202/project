@@ -68,6 +68,24 @@
     cursor: pointer;
 }
 
+.nav-item.website-link {
+    color: #1a5d1a;
+    background: #f0fdf4;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.nav-item.website-link:hover {
+    background: #dcfce7;
+    transform: translateX(5px);
+}
+
+.nav-separator {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 0.5rem 1rem 1rem;
+}
+
 .nav-item i {
     font-size: 1.1rem;
     width: 20px;
@@ -214,6 +232,34 @@
     border-color: #cbd5e1;
 }
 
+.view-all-row {
+    text-align: center;
+    padding: 1rem 0 0;
+    border-top: 1px dashed #e2e8f0;
+    margin-top: 0.5rem;
+}
+
+.view-all-large {
+    background: #f0fdf4;
+    color: #1a5d1a;
+    border: 1.5px solid #bbf7d0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-all-large:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    transform: translateY(-2px);
+}
+
 .orders-list {
     display: flex;
     flex-direction: column;
@@ -347,7 +393,19 @@
 
 .order-items-preview {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.item-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
 }
 
 .item-pic img {
@@ -356,6 +414,40 @@
     border-radius: 8px;
     object-fit: cover;
     border: 1px solid #e2e8f0;
+}
+
+.item-text-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.item-text-info .item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.item-text-info .item-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.gift-badge {
+    background: #f0fdf4;
+    color: #1a5d1a;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid #dcfce7;
 }
 
 .status-price-group {

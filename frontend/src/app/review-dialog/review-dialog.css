@@ -121,10 +121,30 @@
 
 .modal-footer {
     margin-top: 30px;
+    display: flex;
+    gap: 15px;
+}
+
+.skip-btn {
+    flex: 1;
+    padding: 16px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.skip-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
 }
 
 .submit-btn {
-    width: 100%;
+    flex: 2;
     padding: 16px;
     background: #2d8c6f;
     color: white;

@@ -1343,6 +1343,81 @@ td {
     padding: 1rem 1.5rem;
 }
 
+.order-modal .modal-body {
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+/* -------------------------------------
+ * Printable Invoice Styles
+ * ------------------------------------- */
+
+.invoice-modal {
+    max-width: 800px;
+    /* Slightly wider for the invoice */
+}
+
+/* Specific scrolling for invoice on-screen view */
+.invoice-modal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+@media print {
+
+    /* Hide everything on the page except the printable invoice */
+    body * {
+        visibility: hidden !important;
+    }
+
+    .printable-invoice,
+    .printable-invoice * {
+        visibility: visible !important;
+    }
+
+    /* Position the printable area at the absolute top left */
+    .printable-invoice {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: white !important;
+    }
+
+    /* Hide modal elements we don't want on paper */
+    .no-print {
+        display: none !important;
+    }
+
+    /* Reset background colors and shadows for printing */
+    .modal-overlay {
+        position: static !important;
+        background: none !important;
+        display: block !important;
+    }
+
+    .invoice-modal {
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* Ensure backgrounds print correctly if the browser allows it */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
 .info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4022,4 +4097,862 @@ td {
 .btn-outline:hover {
     background: #16a34a;
     color: white;
+}
+
+/* --- FAQ Categorized View --- */
+.all-faqs-grouped-list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    animation: fadeIn 0.5s ease-out;
+    padding: 20px;
+}
+
+.category-group-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.category-group-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--slate-200);
+}
+
+.category-group-header i {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    color: var(--primary-green);
+    border-radius: 12px;
+    font-size: 1.2rem;
+}
+
+.category-group-header h3 {
+    margin: 0 !important;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--slate-900);
+}
+
+.faq-admin-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+}
+
+/* --- Unique & Attractive New FAQ Button --- */
+.btn-faq-new {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+    position: relative;
+    overflow: hidden;
+    outline: none;
+}
+
+.btn-faq-new::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn-faq-new:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 30px -8px rgba(16, 185, 129, 0.45);
+    background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+}
+
+.btn-faq-new:hover::before {
+    left: 100%;
+}
+
+.btn-faq-new:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-faq-new i {
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.2);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: transform 0.3s;
+}
+
+.btn-faq-new:hover i {
+    transform: rotate(90deg);
+}
+
+
+/* --- Premium Admin FAQ Card Styles (Pots & Planters inspired) --- */
+.faq-admin-card-premium {
+    background: white;
+    padding: 30px 25px;
+    border-radius: 20px;
+    border: 1.5px solid #f1f5f9;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    min-height: 250px;
+}
+
+.faq-admin-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.faq-admin-card-premium .card-blob {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 100px;
+    height: 100px;
+    opacity: 0.15;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.faq-admin-card-premium .card-icon-box {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #10b981;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 2;
+}
+
+.faq-card-content {
+    position: relative;
+    z-index: 2;
+    flex-grow: 1;
+}
+
+.faq-card-content h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.faq-card-content p {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.faq-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.order-badge {
+    padding: 6px 14px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.faq-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+
+.action-btn.edit {
+    color: #2563eb;
+}
+
+.action-btn.delete {
+    color: #ef4444;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+/* ============================================================
+   PREMIUM ORDERS DASHBOARD 2.0 (Glassmorphism & High-End Card UI)
+   ============================================================ */
+
+.orders-dashboard-wrapper {
+    padding: 10px 0;
+    animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Orders Summary Grid */
+.orders-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.order-summary-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.order-summary-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+}
+
+.order-summary-card .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    transition: all 0.3s;
+}
+
+.order-summary-card.total .card-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.order-summary-card.revenue .card-icon {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.order-summary-card.pending .card-icon {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.order-summary-card.completed .card-icon {
+    background: #f5f3ff;
+    color: #8b5cf6;
+}
+
+.order-summary-card:hover .card-icon {
+    transform: rotate(-10deg) scale(1.1);
+}
+
+.order-summary-card .card-details .label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--slate-500);
+    margin-bottom: 4px;
+}
+
+.order-summary-card .card-details .value {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--slate-900);
+    letter-spacing: -1px;
+}
+
+.order-summary-card .card-graph {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+}
+
+.order-summary-card.total .mini-bar-total {
+    width: 100%;
+    height: 100%;
+    background: #3b82f6;
+    opacity: 0.3;
+}
+
+.order-summary-card.revenue .mini-bar-revenue {
+    width: 100%;
+    height: 100%;
+    background: #10b981;
+    opacity: 0.3;
+}
+
+.order-summary-card.pending .mini-bar-pending {
+    width: 100%;
+    height: 100%;
+    background: #f59e0b;
+    opacity: 0.3;
+}
+
+.order-summary-card.completed .mini-bar-completed {
+    width: 100%;
+    height: 100%;
+    background: #8b5cf6;
+    opacity: 0.3;
+}
+
+/* Control Bar */
+.orders-control-bar {
+    background: white;
+    border-radius: 24px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border: 1px solid var(--slate-200);
+    box-shadow: var(--card-shadow);
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.search-wrap-premium {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-wrap-premium i {
+    position: absolute;
+    left: 18px;
+    color: var(--slate-400);
+    font-size: 1.1rem;
+}
+
+.search-wrap-premium input {
+    width: 100%;
+    padding: 14px 18px 14px 50px;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--slate-900);
+    outline: none;
+    transition: all 0.3s;
+}
+
+.search-wrap-premium input:focus {
+    background: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.status-tabs-premium {
+    display: flex;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 16px;
+    gap: 4px;
+}
+
+.status-tabs-premium button {
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--slate-500);
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-tabs-premium button.active {
+    background: white;
+    color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Orders List & Cards */
+.orders-list-premium {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.order-card-premium {
+    background: white;
+    border-radius: 28px;
+    border: 1px solid var(--slate-200);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.order-card-premium:hover {
+    transform: translateX(10px);
+    border-color: #3b82f6;
+    box-shadow: -10px 20px 40px -20px rgba(59, 130, 246, 0.2);
+}
+
+.order-card-premium.new-order::before {
+    content: 'NEW';
+    position: absolute;
+    top: 20px;
+    left: -35px;
+    background: #f59e0b;
+    color: white;
+    padding: 5px 40px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    transform: rotate(-45deg);
+    z-index: 5;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+
+.order-card-header {
+    padding: 24px 30px;
+    border-bottom: 1px dashed #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+}
+
+.order-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-id {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--slate-900);
+    letter-spacing: -0.5px;
+}
+
+.order-timestamp {
+    font-size: 0.85rem;
+    color: var(--slate-500);
+    font-weight: 500;
+}
+
+.order-badge-v2 {
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.order-badge-v2.processing {
+    background: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fde68a;
+}
+
+.order-badge-v2.shipped {
+    background: #eff6ff;
+    color: #3b82f6;
+    border: 1px solid #bfdbfe;
+}
+
+.order-badge-v2.delivered {
+    background: #f0fdf4;
+    color: #10b981;
+    border: 1px solid #bbf7d0;
+}
+
+.order-badge-v2.cancelled {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
+
+.order-card-content {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+/* Customer Section */
+.customer-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.customer-avatar {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.4);
+}
+
+.customer-info h4 {
+    margin: 0 0 6px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--slate-900);
+}
+
+.customer-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--slate-500);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.6;
+}
+
+/* Items Section */
+.items-section-premium {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mini-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.mini-item img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.mini-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.mini-item-info .name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--slate-800);
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-item-info .qty {
+    font-size: 0.7rem;
+    color: var(--slate-500);
+    font-weight: 600;
+}
+
+.more-items-badge {
+    background: white;
+    border: 1px dashed var(--slate-300);
+    padding: 8px 15px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--slate-500);
+}
+
+/* Financials Section */
+.financials-section {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.amount-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--slate-400);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.total-amount {
+    margin: 4px 0;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #1e293b;
+    letter-spacing: -1px;
+}
+
+.payment-mode {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Footer Action Bar */
+.order-card-footer-premium {
+    padding: 20px 30px;
+    background: #fcfcfd;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modern-select-admin {
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    background: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--slate-700);
+    outline: none;
+    cursor: pointer;
+    min-width: 180px;
+    transition: all 0.2s;
+}
+
+.modern-select-admin:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.action-buttons-v2 {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-invoice {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid var(--slate-200);
+    color: var(--slate-600);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-invoice:hover {
+    background: #f8fafc;
+    color: #3b82f6;
+    border-color: #3b82f6;
+    transform: rotate(5deg);
+}
+
+.btn-details-v2 {
+    padding: 0 25px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--slate-900);
+    color: white;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+
+.btn-details-v2:hover {
+    background: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-details-v2 i {
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+}
+
+.btn-details-v2:hover i {
+    transform: translateX(4px);
+}
+
+/* Loading State v2 */
+.orders-loading-v2 {
+    padding: 100px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.loader-ring {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f1f5f9;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Fixes */
+@media (max-width: 1024px) {
+    .order-card-content {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .financials-section {
+        grid-column: span 2;
+        text-align: left;
+        align-items: flex-start;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px dashed #f1f5f9;
+    }
+}
+
+@media (max-width: 640px) {
+    .order-card-content {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .financials-section {
+        grid-column: span 1;
+    }
+
+    .order-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .order-card-footer-premium {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .modern-select-admin {
+        width: 100%;
+    }
+}
+
+/* --- Premium Order Details Button --- */
+.btn-details-v2 {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-details-v2:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, #059669, #047857);
+}
+
+.btn-details-v2 i {
+    font-size: 0.85rem;
+    transition: transform 0.3s;
+}
+
+.btn-details-v2:hover i {
+    transform: translateX(4px);
 }

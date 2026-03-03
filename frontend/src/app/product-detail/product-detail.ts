@@ -1,6 +1,7 @@
 
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
@@ -10,7 +11,7 @@ import { CartService } from '../services/cart.service';
 @Component({
     selector: 'app-product-detail',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, FormsModule],
     templateUrl: './product-detail.html',
     styleUrl: './product-detail.css'
 })
@@ -39,9 +40,13 @@ export class ProductDetailComponent implements OnInit {
     ];
 
     selectedPlanter = 'gropot';
+    selectedWeight = '';
     selectedPrice = '';
     currentPlanterImage = '';
     quantity = 1;
+    isGift = false;
+
+    seedWeights: any[] = [];
 
     constructor() { }
 
@@ -81,14 +86,50 @@ export class ProductDetailComponent implements OnInit {
     setupProductDetails() {
         if (!this.product) return;
         this.planters[0].price = this.product.price;
-        this.selectedPrice = this.product.price;
-        this.currentPlanterImage = (this.product as any).hoverImage || this.product.image;
+
+        const cat = this.product.category || '';
+        const isWeightBased = cat.includes('Seeds') ||
+            cat.includes('Soil') ||
+            cat.includes('Fertilizers') ||
+            cat.includes('Nutrients');
+
+        if (isWeightBased) {
+            this.setupWeightVariants();
+        } else {
+            // Default to GroPot for non-weight items
+            this.selectedPlanter = this.planters[0].id;
+            this.selectedPrice = this.planters[0].price;
+            this.currentPlanterImage = this.product.image;
+        }
 
         if (this.product.category) {
             this.productService.getRelatedProducts(this.product.category, 4).subscribe(related => {
                 this.relatedProducts = related;
             });
         }
+    }
+
+    setupWeightVariants() {
+        if (!this.product) return;
+
+        // If product has variants from backend, use them
+        if (this.product.variants && this.product.variants.length > 0) {
+            this.seedWeights = this.product.variants;
+        } else {
+            // Default weights
+            const basePrice = parseFloat(String(this.product.price).replace(/[^\d.]/g, '')) || 50;
+            this.seedWeights = [
+                { name: '250g', price: `₹${basePrice}` },
+                { name: '500g', price: `₹${Math.round(basePrice * 1.8)}` },
+                { name: '1kg', price: `₹${Math.round(basePrice * 3.2)}` },
+                { name: '2kg', price: `₹${Math.round(basePrice * 6)}` },
+                { name: '5kg', price: `₹${Math.round(basePrice * 14)}` },
+                { name: '10kg', price: `₹${Math.round(basePrice * 26)}` }
+            ];
+        }
+
+        this.selectedWeight = this.seedWeights[0].name;
+        this.selectedPrice = this.seedWeights[0].price;
     }
 
     get thumbnails(): string[] {
@@ -141,6 +182,14 @@ export class ProductDetailComponent implements OnInit {
         }
     }
 
+    selectWeight(weightName: string) {
+        this.selectedWeight = weightName;
+        const weight = this.seedWeights.find(w => w.name === weightName);
+        if (weight) {
+            this.selectedPrice = weight.price;
+        }
+    }
+
     increaseQuantity() { this.quantity++; }
     decreaseQuantity() { if (this.quantity > 1) this.quantity--; }
 
@@ -157,7 +206,19 @@ export class ProductDetailComponent implements OnInit {
             return;
         }
         if (this.product) {
-            this.cartService.addItem(this.product, this.quantity, this.selectedPlanter);
+            const cat = this.product.category || '';
+            const isWeightBased = cat.includes('Seeds') ||
+                cat.includes('Soil') ||
+                cat.includes('Fertilizers') ||
+                cat.includes('Nutrients');
+
+            const weight = isWeightBased ? this.selectedWeight : undefined;
+            const planter = isWeightBased ? undefined : this.selectedPlanter;
+
+            // Create a modified product object with selected price
+            const productToBag = { ...this.product, price: this.selectedPrice };
+
+            this.cartService.addItem(productToBag, this.quantity, planter, weight, this.isGift);
             this.notificationService.show(`"${this.product.name}" added to cart.`, 'Success', 'success', 'cart');
         }
     }
@@ -168,8 +229,19 @@ export class ProductDetailComponent implements OnInit {
             return;
         }
         if (this.product) {
-            // Add to cart and push to checkout
-            this.cartService.addItem(this.product, this.quantity, this.selectedPlanter);
+            const cat = this.product.category || '';
+            const isWeightBased = cat.includes('Seeds') ||
+                cat.includes('Soil') ||
+                cat.includes('Fertilizers') ||
+                cat.includes('Nutrients');
+
+            const weight = isWeightBased ? this.selectedWeight : undefined;
+            const planter = isWeightBased ? undefined : this.selectedPlanter;
+
+            // Create a modified product object with selected price
+            const productToBag = { ...this.product, price: this.selectedPrice };
+
+            this.cartService.addItem(productToBag, this.quantity, planter, weight, this.isGift);
             this.router.navigate(['/checkout']);
         }
     }
