@@ -544,135 +544,6 @@ export class AdminPanelComponent implements OnInit {
         }
     }
 
-    viewOfferCards(code: string) {
-        this.activeOfferCode = code;
-        this.isLoadingProducts = true;
-        this.showAssociatedProductsModal = true;
-        this.associatedProducts = [];
-
-        // Find metadata for this code
-        const offerMeta = this.offerSectionCodes.find(o => o.code === code);
-        const limit = offerMeta ? offerMeta.cardsCount : 6;
-        this.activeOfferBadge = offerMeta ? offerMeta.badge : '';
-
-        // Define padding categories to match user panel components
-        const paddingCategories: { [key: string]: string } = {
-            'G-BOGO-6-SECTION': 'XL Plants',
-            'G-INDOOR-6-SEC': 'Indoor Plants',
-            'G-GARDEN-6-SEC': 'Gardening Tools',
-            'G-FLOWER-6-SEC': 'Flowering Plants'
-        };
-        const paddingCategory = paddingCategories[code] || 'Plants';
-
-        this.productService.getProducts(code, limit).subscribe({
-            next: (products) => {
-                this.ngZone.run(() => {
-                    if (products && products.length > 0) {
-                        this.associatedProducts = products;
-
-                        // Critical Synchronization: Pad if less than expected count
-                        if (products.length < limit) {
-                            if (code === 'G-BOGO-6-SECTION') {
-                                // For BOGO, use our specific fallbacks instead of category
-                                const fallbacks = this.getFallbackProductsForCode(code);
-                                const needed = limit - products.length;
-                                this.associatedProducts = [...products, ...fallbacks.slice(0, needed)];
-                                this.isLoadingProducts = false;
-                                this.cdr.detectChanges();
-                            } else {
-                                const needed = limit - products.length;
-                                this.productService.getProducts(paddingCategory, needed).subscribe(extra => {
-                                    this.associatedProducts = [...this.associatedProducts, ...extra];
-                                    this.isLoadingProducts = false;
-                                    this.cdr.detectChanges();
-                                });
-                            }
-                        } else {
-                            this.isLoadingProducts = false;
-                            this.cdr.detectChanges();
-                        }
-                    } else {
-                        // Full fallback path
-                        if (code === 'G-BOGO-6-SECTION') {
-                            this.associatedProducts = this.getFallbackProductsForCode(code).slice(0, limit);
-                            this.isLoadingProducts = false;
-                            this.cdr.detectChanges();
-                        } else {
-                            this.productService.getProducts(paddingCategory, limit).subscribe(p => {
-                                if (p && p.length > 0) {
-                                    this.associatedProducts = p;
-                                } else {
-                                    this.associatedProducts = this.getFallbackProductsForCode(code).slice(0, limit);
-                                }
-                                this.isLoadingProducts = false;
-                                this.cdr.detectChanges();
-                            });
-                        }
-                    }
-                });
-            },
-            error: (err) => {
-                console.error('Error fetching associated products:', err);
-                this.associatedProducts = this.getFallbackProductsForCode(code).slice(0, limit);
-                this.isLoadingProducts = false;
-                this.cdr.detectChanges();
-            }
-        });
-    }
-
-    getFallbackProductsForCode(code: string): any[] {
-        const fallbacks: { [key: string]: any[] } = {
-            'G-BOGO-6-SECTION': [
-                { name: 'Fiddle Leaf Fig XL', price: '2499', originalPrice: '3299', image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894', category: 'XL Plants', isFallback: true },
-                { name: 'Rubber Plant XL', price: '1999', originalPrice: '2799', image: 'https://images.unsplash.com/photo-1520412099561-64839ecd0bb3', category: 'XL Plants', isFallback: true },
-                { name: 'Monstera Deliciosa XL', price: '2999', originalPrice: '3999', image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b', category: 'XL Plants', isFallback: true },
-                { name: 'Bird of Paradise XL', price: '3499', originalPrice: '4499', image: 'https://images.unsplash.com/photo-1617135038936-3bc99d69f6f1', category: 'XL Plants', isFallback: true }
-            ],
-            'G-INDOOR-6-SEC': [
-                { name: 'Peace Lily', price: '399', originalPrice: '599', image: 'https://images.unsplash.com/photo-1593696954577-ab3d39317b97', category: 'Indoor Plants', isFallback: true },
-                { name: 'Snake Plant', price: '499', originalPrice: '699', image: 'https://images.unsplash.com/photo-1593418105716-4307a8366dca', category: 'Indoor Plants', isFallback: true },
-                { name: 'Areca Palm', price: '899', originalPrice: '1299', image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894', category: 'Indoor Plants', isFallback: true },
-                { name: 'Money Plant', price: '199', originalPrice: '299', image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b', category: 'Indoor Plants', isFallback: true },
-                { name: 'Spider Plant', price: '249', originalPrice: '399', image: 'https://images.unsplash.com/photo-1545241047-6083a3684587', category: 'Indoor Plants', isFallback: true },
-                { name: 'Zade Plant', price: '149', originalPrice: '249', image: 'https://images.unsplash.com/photo-1520412099561-64839ecd0bb3', category: 'Indoor Plants', isFallback: true }
-            ],
-            'G-GARDEN-6-SEC': [
-                { name: 'Professional Tool Kit', price: '1299', originalPrice: '2199', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b', category: 'Gardening Tools', isFallback: true },
-                { name: 'Bonsai Tool Set', price: '899', originalPrice: '1499', image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d', category: 'Gardening Tools', isFallback: true },
-                { name: 'Garden Pruner', price: '450', originalPrice: '699', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b', category: 'Gardening Tools', isFallback: true },
-                { name: 'Watering Can', price: '599', originalPrice: '850', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b', category: 'Gardening Tools', isFallback: true },
-                { name: 'Hand Trowel', price: '199', originalPrice: '350', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b', category: 'Gardening Tools', isFallback: true },
-                { name: 'Garden Gloves', price: '149', originalPrice: '299', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b', category: 'Gardening Tools', isFallback: true }
-            ],
-            'G-FLOWER-6-SEC': [
-                { name: 'Marigold Seeds', price: '49', originalPrice: '99', image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2', category: 'Flower Seeds', isFallback: true },
-                { name: 'Sunflower Seeds', price: '59', originalPrice: '120', image: 'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea', category: 'Flower Seeds', isFallback: true },
-                { name: 'Zinnia Seeds', price: '79', originalPrice: '150', image: 'https://images.unsplash.com/photo-1592419044706-39796d40f98c', category: 'Flower Seeds', isFallback: true },
-                { name: 'Petunia Seeds', price: '69', originalPrice: '130', image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735', category: 'Flower Seeds', isFallback: true },
-                { name: 'Rose Seeds', price: '89', originalPrice: '180', image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735', category: 'Flower Seeds', isFallback: true },
-                { name: 'Daisy Seeds', price: '55', originalPrice: '110', image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735', category: 'Flower Seeds', isFallback: true }
-            ]
-        };
-        return fallbacks[code] || [];
-    }
-
-    closeAssociatedProductsModal() {
-        this.showAssociatedProductsModal = false;
-        this.associatedProducts = [];
-        this.activeOfferCode = '';
-    }
-
-    getOfferCodeByLink(link: string | undefined): string | null {
-        if (!link) return null;
-        const mapping: { [key: string]: string } = {
-            '/bogo-offer': 'G-BOGO-6-SECTION',
-            '/indoor-offer': 'G-INDOOR-6-SEC',
-            '/garden-offer': 'G-GARDEN-6-SEC',
-            '/flowering-offer': 'G-FLOWER-6-SEC'
-        };
-        return mapping[link] || null;
-    }
-
     loadPlacements() {
         this.isLoadingPlacements = true;
         this.placementService.getAdminPlacements().subscribe({
@@ -1496,6 +1367,11 @@ export class AdminPanelComponent implements OnInit {
         const diffInMs = now.getTime() - orderDate.getTime();
         const diffInHours = diffInMs / (1000 * 60 * 60);
         return diffInHours < 24;
+    }
+
+    getOfferBadgeFromCode(code: string): string | null {
+        const offer = this.offerSectionCodes.find(o => o.code === code);
+        return offer ? offer.badge : null;
     }
 
     loadOrders() {

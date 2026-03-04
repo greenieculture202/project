@@ -44,6 +44,91 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Helper: Send Order Confirmation Email
+const sendOrderConfirmationEmail = async (user, order) => {
+    try {
+        const itemsHtml = order.items.map(item => `
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
+                    <img src="${item.image}" alt="${item.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">
+                    <span style="font-weight: 500;">${item.name} ${item.isGift ? '<span style="color: #d97706; font-size: 0.8em;">(FREE GIFT)</span>' : ''}</span>
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: 600;">₹${item.price}</td>
+            </tr>
+        `).join('');
+
+        const mailOptions = {
+            from: `"Greenie Culture" <${process.env.GMAIL_USER || 'greenieculture202@gmail.com'}>`,
+            to: user.email,
+            subject: `Hooray! Your order ${order.orderId} is confirmed 🌿`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f3; border-radius: 16px; overflow: hidden;">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #2d8c6f, #1a5d1a); padding: 40px 20px; text-align: center; color: white;">
+                        <h1 style="margin: 0; font-size: 32px; letter-spacing: -0.5px;">Greenie Culture</h1>
+                        <p style="margin: 10px 0 0; opacity: 0.9; font-size: 16px;">🌱 Your Green Journey Just Got Better!</p>
+                    </div>
+
+                    <!-- Content -->
+                    <div style="padding: 30px;">
+                        <h2 style="color: #1a5d1a; margin-top: 0;">Order Confirmed!</h2>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${user.fullName.split(' ')[0]},</p>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">We've received your order <strong>${order.orderId}</strong>. Our team is already busy picking out the healthiest plants for you!</p>
+
+                        <!-- Order Details Box -->
+                        <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin: 25px 0;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">
+                                <span style="color: #6b7280; font-size: 14px;">ORDER ID: <strong>${order.orderId}</strong></span>
+                                <span style="color: #6b7280; font-size: 14px;">DATE: <strong>${new Date().toLocaleDateString()}</strong></span>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding: 10px 0; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Items</th>
+                                        <th style="text-align: center; padding: 10px 0; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Qty</th>
+                                        <th style="text-align: right; padding: 10px 0; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHtml}
+                                </tbody>
+                            </table>
+
+                            <div style="margin-top: 20px; text-align: right;">
+                                <p style="margin: 5px 0; color: #6b7280;">Payment Method: <strong>${order.paymentMethod}</strong></p>
+                                <p style="margin: 10px 0; color: #1a5d1a; font-size: 20px; font-weight: 800;">Total: ₹${order.totalAmount}</p>
+                            </div>
+                        </div>
+
+                        <!-- Thank You Note -->
+                        <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #f3f4f6;">
+                            <p style="font-size: 18px; color: #2d8c6f; font-weight: 700; margin-bottom: 5px;">Thank you for buying!</p>
+                            <p style="color: #6b7280; font-size: 14px;">We'll notify you as soon as your plants leave our greenhouse.</p>
+                            
+                            <div style="margin-top: 25px;">
+                                <a href="http://localhost:4200/my-account/orders" style="background-color: #2d8c6f; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Track My Order</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+                        <p>Need help? Contact us at support@greenieculture.com</p>
+                        <p>&copy; 2026 Greenie Culture. All rights reserved.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`[EMAIL] Order invoice sent to ${user.email} for ${order.orderId}`);
+    } catch (err) {
+        console.error('[EMAIL-ERROR] Failed to send invoice:', err.message);
+    }
+};
+
 // Auth Middleware
 const auth = (req, res, next) => {
     const token = req.header('x-auth-token');
@@ -389,17 +474,23 @@ app.get('/api/products/search', async (req, res) => {
         const { q } = req.query;
         if (!q || q.length < 2) return res.json([]);
 
-        // Search in name or category
-        const regex = new RegExp(q, 'i');
+        console.log(`[Backend Search] Processing query: "${q}"`);
+        const searchTerms = q.split(' ').filter(term => term.length > 0);
+        const regexes = searchTerms.map(term => new RegExp(term, 'i'));
+
+        // Search in name, category, or tags
         const products = await Product.find({
             $or: [
-                { name: { $regex: regex } },
-                { category: { $regex: regex } }
+                { name: { $regex: new RegExp(q, 'i') } },
+                { category: { $regex: new RegExp(q, 'i') } },
+                { tags: { $regex: new RegExp(q, 'i') } },
+                ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
             ]
-        }).limit(8).select('name category price image').lean(); // Select only needed fields and lean extension for speed
+        }).limit(10).select('name category price image slug').lean();
 
         res.json(products);
     } catch (err) {
+        console.error('[SearchAPI] Error:', err.message);
         res.status(500).json({ message: err.message });
     }
 });
@@ -525,7 +616,7 @@ app.get('/api/user/orders', auth, async (req, res) => {
 // User Orders API - POST place new order
 app.post('/api/user/orders', auth, async (req, res) => {
     try {
-        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot } = req.body;
+        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Order must have at least one item' });
@@ -539,11 +630,17 @@ app.post('/api/user/orders', auth, async (req, res) => {
             status: 'Processing',
             transactionId: transactionId || '',
             paymentScreenshot: paymentScreenshot || '',
-            paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending'
+            paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending',
+            appliedOfferCode: appliedOfferCode || null,
+            offerBenefit: offerBenefit || null
         });
 
         const savedOrder = await newOrder.save();
         console.log(`[OrdersAPI] New order placed: ${savedOrder.orderId} for user ${req.user.id}`);
+
+        // Asynchronously send the invoice email
+        sendOrderConfirmationEmail(req.user, savedOrder);
+
         res.status(201).json(savedOrder);
     } catch (err) {
         console.error('[OrdersAPI] Error placing order:', err.message);

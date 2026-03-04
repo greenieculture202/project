@@ -74,7 +74,7 @@
                     <button class="view-all" (click)="setActiveTab('orders')">View All</button>
                 </div>
                 <div class="orders-list">
-                    <div class="order-item" *ngFor="let order of (dashboardData.recentOrders | slice:0:5)">
+                    <div class="order-item" *ngFor="let order of recentOrdersSlice">
                         <div class="order-info">
                             <span class="order-id">{{ order.orderId }}</span>
                             <span class="order-date">{{ order.orderDate | date:'mediumDate' }}</span>

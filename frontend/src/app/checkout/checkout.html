@@ -153,7 +153,7 @@
 
                     <div class="summary-card">
                         <div class="order-items-list">
-                            <div class="cart-item" *ngFor="let item of items()">
+                            <div class="cart-item" *ngFor="let item of items()" [class.hidden-gift]="item.isGift">
                                 <div class="item-visual">
                                     <img [src]="item.image" [alt]="item.name">
                                     <span class="qty">{{ item.quantity }}</span>
@@ -167,10 +167,50 @@
                                     </p>
                                 </div>
                                 <div class="item-price">
-                                    ₹{{ item.price * item.quantity }}
+                                    <div class="price-stack">
+                                        <span class="original-strike" *ngIf="item.originalPrice">₹{{ item.originalPrice
+                                            * item.quantity }}</span>
+                                        <span class="current-price">₹{{ item.price * item.quantity }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Applied Offer Section -->
+                        <div class="applied-offer-box" *ngIf="appliedOffer">
+                            <div class="offer-header-row">
+                                <div class="offer-icon">
+                                    <i class="fas fa-tag"></i>
+                                </div>
+                                <div class="offer-details">
+                                    <span class="offer-code">Offer Applied: <strong>{{ appliedOffer.name
+                                            }}</strong></span>
+                                    <span class="offer-benefit">{{ appliedOffer.benefit }}</span>
+                                </div>
+                                <div class="offer-badge">
+                                    SELECTED
+                                </div>
+                            </div>
+
+                            <!-- Nested Gift Product -->
+                            <div class="nested-gift-wrapper" *ngIf="appliedOffer.freeProduct">
+                                <div class="cart-item gift-item">
+                                    <div class="item-visual">
+                                        <img [src]="appliedOffer.freeProduct.image"
+                                            [alt]="appliedOffer.freeProduct.name">
+                                        <span class="qty">1</span>
+                                    </div>
+                                    <div class="item-details">
+                                        <h3>{{ appliedOffer.freeProduct.name }}</h3>
+                                        <p>Included with your offer</p>
+                                    </div>
+                                    <div class="item-price">
+                                        ₹0
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
 
                         <div class="billing-summary">
                             <div class="bill-row">
@@ -296,100 +336,117 @@
             </div>
 
             <!-- Invoice Header Section -->
-            <div class="luxury-header">
-                <div class="order-slug">
-                    <span class="label">ORDER NUMBER</span>
-                    <h2 class="order-id">#{{ placedOrder?.orderId }}</h2>
+            <div class="invoice-body">
+                <div class="luxury-header">
+                    <div class="order-slug">
+                        <span class="label">ORDER NUMBER</span>
+                        <h2 class="order-id">#{{ placedOrder?.orderId }}</h2>
+                    </div>
+                    <div class="date-slug">
+                        <span class="label">TRANSACTION DATE</span>
+                        <span class="value">{{ placedOrder?.orderDate | date:'MMMM dd, yyyy' }}</span>
+                    </div>
                 </div>
-                <div class="date-slug">
-                    <span class="label">TRANSACTION DATE</span>
-                    <span class="value">{{ placedOrder?.orderDate | date:'MMMM dd, yyyy' }}</span>
-                </div>
-            </div>
 
-            <!-- Customer & Payment Info -->
-            <div class="luxury-info-grid">
-                <div class="info-pill">
-                    <div class="pill-icon"><i class="fas fa-user-tie"></i></div>
-                    <div class="pill-content">
-                        <label>DELIVER TO</label>
-                        <h4>{{ firstName }} {{ lastName }}</h4>
-                        <p class="pill-sub">{{ address }}</p>
-                        <p class="pill-sub">{{ city }}, {{ stateName }}</p>
+                <!-- Offer Badge in Invoice (if any) -->
+                <div class="invoice-offer-banner" *ngIf="placedOrder?.appliedOfferCode">
+                    <div class="banner-content">
+                        <i class="fas fa-gift"></i>
+                        <span>OFFER APPLIED: <strong>{{ placedOrder.appliedOfferCode }}</strong>
+                            ({{ placedOrder.offerBenefit }})</span>
                     </div>
                 </div>
-                <div class="info-pill">
-                    <div class="pill-icon"><i class="fas fa-credit-card"></i></div>
-                    <div class="pill-content">
-                        <label>PAYMENT METHOD</label>
-                        <h4>{{ placedOrder?.paymentMethod }}</h4>
-                        <span class="status-indicator confirmed">
-                            <i class="fas fa-certificate"></i> VERIFIED SECURE
-                        </span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Professional Summary Table -->
-            <div class="luxury-items-section">
-                <table class="luxury-invoice-table">
-                    <thead>
-                        <tr>
-                            <th class="text-left">OFFICIAL PRODUCT PARTICULARS</th>
-                            <th class="text-center">QTY</th>
-                            <th class="text-right">UNIT VAL</th>
-                            <th class="text-right">SUBTOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let item of placedOrder?.items">
-                            <td class="text-left">
-                                <div class="table-item-info">
-                                    <span class="item-name">{{ item.name }}</span>
-                                    <span class="item-meta" *ngIf="item.weight || item.planter">
-                                        {{ item.weight }} <span *ngIf="item.weight && item.planter">|</span> {{
-                                        item.planter }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="text-center">{{ item.quantity }}</td>
-                            <td class="text-right">₹{{ item.price }}</td>
-                            <td class="text-right font-bold">₹{{ item.quantity * item.price }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
 
-            <!-- Financial Totals -->
-            <div class="luxury-summary-card">
-                <div class="summary-rows">
-                    <div class="summary-row">
-                        <span class="label">BASE AMOUNT</span>
-                        <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                <!-- Customer & Payment Info -->
+                <div class="luxury-info-grid">
+                    <div class="info-pill">
+                        <div class="pill-icon"><i class="fas fa-user-tie"></i></div>
+                        <div class="pill-content">
+                            <label>DELIVER TO</label>
+                            <h4>{{ firstName }} {{ lastName }}</h4>
+                            <p class="pill-sub">{{ address }}</p>
+                            <p class="pill-sub">{{ city }}, {{ stateName }}</p>
+                        </div>
                     </div>
-                    <div class="summary-row">
-                        <span class="label">SHIPPING CHARGES</span>
-                        <span class="value">₹0.00 (COMPLIMENTARY)</span>
-                    </div>
-                    <div class="summary-divider"></div>
-                    <div class="summary-row accent">
-                        <span class="label">NET PAYABLE AMOUNT</span>
-                        <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                    <div class="info-pill">
+                        <div class="pill-icon"><i class="fas fa-credit-card"></i></div>
+                        <div class="pill-content">
+                            <label>PAYMENT METHOD</label>
+                            <h4>{{ placedOrder?.paymentMethod }}</h4>
+                            <span class="status-indicator confirmed">
+                                <i class="fas fa-certificate"></i> VERIFIED SECURE
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div class="luxury-thanks">
-                    <i class="fas fa-heart"></i>
-                    <span>Thank you for choosing Greenie Culture!</span>
-                </div>
-            </div>
 
-            <!-- Footnote/Legal -->
-            <div class="luxury-footer">
-                <div class="legal-text">
-                    <p>© 2026 GREENIE CULTURE • PRIVACY SECURED</p>
-                    <p>This is a computer-generated transaction certificate.</p>
+                <!-- Professional Summary Table -->
+                <div class="luxury-items-section">
+                    <table class="luxury-invoice-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">OFFICIAL PRODUCT PARTICULARS</th>
+                                <th class="text-center">QTY</th>
+                                <th class="text-right">UNIT VAL</th>
+                                <th class="text-right">SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of placedOrder?.items">
+                                <td class="text-left">
+                                    <div class="table-item-info">
+                                        <span class="item-name">
+                                            {{ item.name }}
+                                            <span class="free-badge" *ngIf="item.price === 0 || item.isGift">FREE</span>
+                                        </span>
+                                        <span class="item-meta" *ngIf="item.weight || item.planter">
+                                            {{ item.weight }} <span *ngIf="item.weight && item.planter">|</span> {{
+                                            item.planter }}
+                                            <span class="gift-sticker" *ngIf="item.isGift">🎁 Gift Product</span>
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-right">₹{{ item.price }}</td>
+                                <td class="text-right font-bold">₹{{ item.quantity * item.price }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+
+                <!-- Financial Totals -->
+                <div class="luxury-summary-card">
+                    <div class="summary-rows">
+                        <div class="summary-row">
+                            <span class="label">BASE AMOUNT</span>
+                            <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">SHIPPING CHARGES</span>
+                            <span class="value">₹0.00 (COMPLIMENTARY)</span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row accent">
+                            <span class="label">NET PAYABLE AMOUNT</span>
+                            <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                        </div>
+                    </div>
+                    <div class="luxury-thanks">
+                        <i class="fas fa-heart"></i>
+                        <span>Thank you for choosing Greenie Culture!</span>
+                    </div>
+                </div>
+
+                <!-- Footnote/Legal -->
+                <div class="luxury-footer">
+                    <div class="legal-text">
+                        <p>© 2026 GREENIE CULTURE • PRIVACY SECURED</p>
+                        <p>This is a computer-generated transaction certificate.</p>
+                    </div>
+                </div> <!-- /luxury-footer -->
+            </div> <!-- /invoice-body -->
         </div>
 
         <!-- Interactive Actions -->

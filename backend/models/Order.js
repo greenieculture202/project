@@ -42,6 +42,14 @@ const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         unique: true
+    },
+    appliedOfferCode: {
+        type: String,
+        default: null
+    },
+    offerBenefit: {
+        type: String,
+        default: null
     }
 });
 

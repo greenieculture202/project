@@ -14,6 +14,7 @@ export interface CartItem {
     weight?: string;
     isGift?: boolean;
     tags?: string[];
+    category?: string;
 }
 
 @Injectable({
@@ -153,7 +154,8 @@ export class CartService {
                 planter: planter,
                 weight: weight,
                 isGift: isGift,
-                tags: product.tags
+                tags: product.tags,
+                category: product.category
             };
             this.itemsSignal.set([...currentItems, newItem]);
         }

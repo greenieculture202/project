@@ -1,5 +1,5 @@
 // Forced rebuild - change v1
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../services/cart.service';
@@ -26,8 +26,41 @@ export class CheckoutComponent implements OnInit {
 
     showReviewDialog = false;
 
-    items = this.cartService.items;
-    totalAmount = this.cartService.totalAmount;
+    items = computed(() => {
+        const cartItems = this.cartService.items();
+        const offer = this.detectedOffer;
+
+        // 1. Apply any discounts to original items (e.g. Garden Essentials 40%)
+        const processedItems = cartItems.map(item => {
+            const newItem = { ...item };
+            const itemTags = item.tags || [];
+            const itemCategory = item.category || '';
+
+            // If the overall detected offer is Garden Essentials, apply discount to qualifying items
+            if (offer?.code === 'G-GARDEN-6-SEC' && (itemTags.includes('G-GARDEN-6-SEC') || itemCategory === 'Gardening Tools')) {
+                newItem.originalPrice = item.price;
+                newItem.price = Math.round(item.price * (1 - (offer.discount || 0)));
+            }
+            return newItem;
+        });
+
+        // 2. Add gift product if applicable
+        if (offer && offer.freeProduct) {
+            return [...processedItems, {
+                ...offer.freeProduct,
+                id: 'GIFT-' + offer.code,
+                productId: null,
+                quantity: 1,
+                weight: 'Standard',
+                planter: 'Basic',
+                isGift: true
+            }];
+        }
+        return processedItems;
+    });
+    totalAmount = computed(() => {
+        return this.items().reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+    });
     totalSavings = this.cartService.totalSavings;
 
     contactEmail = '';
@@ -40,6 +73,87 @@ export class CheckoutComponent implements OnInit {
     phone = '';
     alternatePhone = '';
     currentTimestamp = new Date();
+
+    // Offer Mapping with multi-condition support
+    private readonly offerBenefitMap: { [key: string]: { name: string, benefit: string, discount?: number, freeProduct?: any, minQty?: number } } = {
+        'G-BOGO-6-SECTION': {
+            name: 'BOGO XL Plants',
+            benefit: 'Buy 2 XL Plants, Get 1 Medium Plant FREE',
+            minQty: 2,
+            freeProduct: { name: 'Gift: Bonus Medium Plant', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d' }
+        },
+        'G-INDOOR-6-SEC': {
+            name: 'Indoor Jungle',
+            benefit: 'Buy 2 Indoor Plants, Get 1 Ceramic Pot FREE',
+            minQty: 2,
+            freeProduct: { name: 'Gift: Premium Ceramic Pot', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45' }
+        },
+        'G-GARDEN-6-SEC': {
+            name: 'Garden Essentials',
+            benefit: 'Buy 2+, Get Flat 40% Instant Discount',
+            discount: 0.40,
+            minQty: 2
+        },
+        'G-FLOWER-6-SEC': {
+            name: 'Flowering Bonanza',
+            benefit: 'Buy 2+, Get Free Professional Fertilizer Pack',
+            freeProduct: { name: 'Gift: Organic Fertilizer (1kg)', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d' },
+            minQty: 2
+        }
+    };
+
+    // Map categories to Offer Codes for automatic detection
+    private readonly categoryToOfferMap: { [key: string]: string } = {
+        'XL Plants': 'G-BOGO-6-SECTION',
+        'Indoor Plants': 'G-INDOOR-6-SEC',
+        'Gardening Tools': 'G-GARDEN-6-SEC',
+        'Flowering Plants': 'G-FLOWER-6-SEC'
+    };
+
+    get appliedOffer() {
+        return this.detectedOffer;
+    }
+
+    get detectedOffer() {
+        const cartItems = this.cartService.items();
+        if (!cartItems || cartItems.length === 0) return null;
+
+        const offerCounts: { [key: string]: number } = {};
+
+        for (const item of cartItems) {
+            let codesForItem: string[] = [];
+
+            // 1. Strict Tag Check (The most reliable way)
+            if (item.tags && Array.isArray(item.tags)) {
+                codesForItem = [...item.tags];
+            }
+
+            // 2. Exact Category Mapping
+            if (item.category && this.categoryToOfferMap[item.category]) {
+                codesForItem.push(this.categoryToOfferMap[item.category]);
+            }
+
+            // Deduplicate and increment counts
+            [...new Set(codesForItem)].forEach(code => {
+                if (this.offerBenefitMap[code]) {
+                    offerCounts[code] = (offerCounts[code] || 0) + (item.quantity || 1);
+                }
+            });
+        }
+
+        // Evaluate counts against requirements
+        const priorityOrder = ['G-BOGO-6-SECTION', 'G-INDOOR-6-SEC', 'G-GARDEN-6-SEC', 'G-FLOWER-6-SEC'];
+        for (const code of priorityOrder) {
+            const count = offerCounts[code] || 0;
+            const benefit = this.offerBenefitMap[code];
+            if (count >= (benefit.minQty || 1)) {
+                return { code, ...benefit };
+            }
+        }
+
+        return null;
+    }
+
 
     currentStep = 1;
     showInvoiceModal = false;
@@ -327,14 +441,14 @@ export class CheckoutComponent implements OnInit {
         }
     }
 
-    async onPayNow() {
+    onPayNow() {
         this.isProcessing = true;
 
-        // Build the order object from cart items
-        const cartItems = this.cartService.items();
+        // Build the order object using component's computed items (with  /gifts)
+        const cartItems = this.items();
         const orderData = {
             items: cartItems.map((item: any) => ({
-                productId: item.productId || item._id || null,  // Use actual MongoDB product ID
+                productId: item.productId || item._id || null,
                 name: item.name,
                 price: item.price,
                 quantity: item.quantity,
@@ -343,8 +457,10 @@ export class CheckoutComponent implements OnInit {
                 planter: item.planter || null,
                 isGift: item.isGift || false
             })),
-            totalAmount: this.cartService.totalAmount(),
-            paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI'
+            totalAmount: this.totalAmount(),
+            paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI',
+            appliedOfferCode: this.appliedOffer?.code || null,
+            offerBenefit: this.appliedOffer?.benefit || null
         };
 
         const saveOrder = () => {
@@ -378,11 +494,11 @@ export class CheckoutComponent implements OnInit {
     private executePlaceOrder(orderData: any) {
         this.userService.placeOrder(orderData).subscribe({
             next: (res) => {
-                this.isProcessing = false;
                 this.placedOrder = res;
-                // Persist order for refresh support
-                sessionStorage.setItem('last_placed_order', JSON.stringify(res));
                 this.showInvoiceModal = true;
+                this.isProcessing = false;
+
+                sessionStorage.setItem('last_placed_order', JSON.stringify(res));
                 this.cartService.clear();
                 localStorage.removeItem('checkout_state');
             },

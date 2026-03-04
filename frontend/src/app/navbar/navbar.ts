@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { CartService } from '../services/cart.service';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-navbar',
@@ -13,10 +14,12 @@ import { CartService } from '../services/cart.service';
     templateUrl: './navbar.html',
     styleUrl: './navbar.css'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
     searchTerm: string = '';
     searchResults: Product[] = [];
     showResults: boolean = false;
+    private searchSubject = new Subject<string>();
+    private destroy$ = new Subject<void>();
 
     constructor(
         private productService: ProductService,
@@ -24,6 +27,37 @@ export class NavbarComponent {
         public authService: AuthService,
         private cartService: CartService
     ) { }
+
+    ngOnInit() {
+        // Setup debounced search
+        this.searchSubject.pipe(
+            debounceTime(400),
+            distinctUntilChanged(),
+            switchMap(term => {
+                if (term.trim().length > 1) {
+                    return this.productService.searchProducts(term);
+                } else {
+                    return [];
+                }
+            }),
+            takeUntil(this.destroy$)
+        ).subscribe({
+            next: (results) => {
+                console.warn(`[Search-Backend] Received ${results.length} products from server`);
+                this.searchResults = results;
+                this.showResults = this.searchResults.length > 0 || this.searchTerm.trim().length > 1;
+            },
+            error: (err) => {
+                console.error('Search error:', err);
+                this.showResults = false;
+            }
+        });
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
 
     get cartCount() {
         return this.cartService.totalItems();
@@ -34,17 +68,12 @@ export class NavbarComponent {
     }
 
     onSearch() {
-        if (this.searchTerm.trim().length > 1) {
-            this.productService.searchProducts(this.searchTerm).subscribe((results: any[]) => {
-                this.searchResults = results;
-                this.showResults = true;
-            });
-        } else {
-            this.showResults = false;
-        }
+        console.log(`[Search-Input] User typed: "${this.searchTerm}"`);
+        this.searchSubject.next(this.searchTerm);
     }
 
     selectProduct(product: Product) {
+        console.warn(`[Search] Selected product: ${product.name}`);
         this.router.navigate(['/product', product.slug || '']);
         this.showResults = false;
         this.searchTerm = '';

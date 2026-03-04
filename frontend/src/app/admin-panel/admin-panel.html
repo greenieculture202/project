@@ -36,9 +36,7 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'faqs'" (click)="setTab('faqs')">
                 <i class="fas fa-question-circle"></i> FAQ's
             </a>
-            <a href="javascript:void(0)" [class.active]="activeTab === 'offer-codes'" (click)="setTab('offer-codes')">
-                <i class="fas fa-barcode"></i> Offer Section Codes
-            </a>
+
             <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
                 <i class="fas fa-users"></i> Users
             </a>
@@ -373,10 +371,6 @@
 
         <!-- Orders Management Content -->
         <ng-container *ngIf="activeTab === 'orders'">
-            <div
-                style="background: yellow; color: black; padding: 10px; text-align: center; font-weight: bold; border: 2px solid black; margin-bottom: 20px;">
-                DEBUG: ORDERS TAB CONTAINER TRIGGERED
-            </div>
             <header class="top-header">
                 <div class="welcome">
                     <h1>Order Management</h1>
@@ -467,6 +461,10 @@
                             <div class="order-meta">
                                 <span class="order-id">#{{order.orderId}}</span>
                                 <span class="order-timestamp">{{order.orderDate | date:'medium'}}</span>
+                                <span class="offer-pill" *ngIf="order.appliedOfferCode">
+                                    <i class="fas fa-gift"></i>
+                                    {{ getOfferBadgeFromCode(order.appliedOfferCode) }}
+                                </span>
                             </div>
                             <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">
                                 <i class="fas" [ngClass]="getStatusIcon(order.status)"></i>
@@ -483,22 +481,22 @@
                                     <p><i class="far fa-envelope"></i> {{order.userId?.email || 'N/A'}}</p>
                                     <p *ngIf="order.userId?.phone">
                                         <i class="fas fa-phone-alt"></i> {{order.userId?.phone}}
-                                        <span *ngIf="order.userId?.alternatePhone"
-                                            style="margin-left: 8px; color: #64748b; font-size: 0.9em; display: inline-flex; align-items: center; gap: 4px;">
-                                            <i class="fas fa-phone" style="font-size: 0.8em;"></i>
-                                            {{order.userId?.alternatePhone}}
-                                        </span>
                                     </p>
+                                    <div class="offer-benefit-text" *ngIf="order.offerBenefit">
+                                        <i class="fas fa-sparkles"></i> {{order.offerBenefit}}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Items Summary -->
                             <div class="items-section-premium">
-                                <div class="mini-item" *ngFor="let item of order.items | slice:0:3">
+                                <div class="mini-item" *ngFor="let item of order.items | slice:0:3"
+                                    [class.gift-item]="$any(item).isGift">
                                     <img [src]="$any(item).image" [alt]="$any(item).name">
                                     <div class="mini-item-info">
                                         <span class="name">{{$any(item).name}}</span>
                                         <span class="qty">{{$any(item).quantity}} x ₹{{$any(item).price}}</span>
+                                        <span class="gift-label" *ngIf="$any(item).isGift">FREE GIFT</span>
                                     </div>
                                 </div>
                                 <div class="more-items-badge" *ngIf="order.items.length > 3">
@@ -510,7 +508,14 @@
                             <div class="financials-section">
                                 <span class="amount-label">Total Amount</span>
                                 <h3 class="total-amount">₹{{order.totalAmount}}</h3>
-                                <span class="payment-mode"><i class="fas fa-shield-alt"></i> Secure Payment</span>
+
+                                <div class="payment-indicator"
+                                    [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'cod-badge' : 'online-badge'">
+                                    <i class="fas"
+                                        [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'fa-hand-holding-dollar' : 'fa-circle-check'"></i>
+                                    {{ order.paymentMethod === 'Cash on Delivery' ? 'Cash on Delivery' : 'Paid Online
+                                    (UPI)' }}
+                                </div>
                             </div>
                         </div>
 
@@ -909,53 +914,7 @@
             </div>
         </ng-container>
 
-        <!-- Offer Codes Content -->
-        <ng-container *ngIf="activeTab === 'offer-codes'">
-            <header class="top-header">
-                <div class="welcome">
-                    <h1><i class="fas fa-barcode" style="color: #4f46e5; margin-right: 8px;"></i>Offer Section Codes
-                    </h1>
-                    <p>Internal tracking codes for 6-card offer sections. (Admin Only)</p>
-                </div>
-            </header>
 
-            <div class="offers-admin-container">
-                <div class="offers-grid">
-                    <div class="offer-admin-card" *ngFor="let item of offerSectionCodes"
-                        style="--accent: #4f46e5; --accent-light: #eef2ff; --card-bg: #ffffff;">
-                        <div class="offer-card-glow" style="background: #4f46e5"></div>
-                        <div class="offer-card-body">
-                            <span class="offer-card-badge" style="background: #eef2ff; color: #4338ca;">
-                                {{ item.cardsCount }} CARDS SECTION
-                            </span>
-                            <h3 class="offer-card-title">{{ item.name }}</h3>
-                            <p class="offer-card-subtitle">Page: {{ item.page }}</p>
-
-                            <div class="offer-discount-strip"
-                                style="background: linear-gradient(135deg, #4f46e5, #818cf8); margin-top: 20px;">
-                                <i class="fas fa-code"></i>
-                                <span style="font-family: monospace; letter-spacing: 1px;">{{ item.code }}</span>
-                            </div>
-
-                            <p style="margin-top: 15px; font-size: 0.85rem; color: #4338ca; font-weight: 500;">
-                                <i class="fas fa-info-circle"></i> {{ item.instruction }}
-                            </p>
-
-                            <p style="margin-top: 10px; font-size: 0.8rem; color: #64748b; margin-bottom: 20px;">
-                                * Use this code in the <strong>Products</strong> tab to control which 6 items appear on
-                                this page.
-                            </p>
-
-                            <button class="offers-empty-btn"
-                                style="width: 100%; justify-content: center; background: #4f46e5; margin-top: auto;"
-                                (click)="viewOfferCards(item.code)">
-                                <i class="fas fa-th"></i> Show Associated Cards
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </ng-container>
 
         <!-- About Us Management Content -->
         <ng-container *ngIf="activeTab === 'about-us'">

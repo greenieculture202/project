@@ -21,4 +21,20 @@ const productSchema = new mongoose.Schema({
     }]
 });
 
+// Create text index for searching
+productSchema.index({
+    name: 'text',
+    category: 'text',
+    tags: 'text',
+    description: 'text'
+}, {
+    weights: {
+        name: 10,
+        category: 5,
+        tags: 3,
+        description: 1
+    },
+    name: "ProductTextIndex"
+});
+
 module.exports = mongoose.model('Product', productSchema);

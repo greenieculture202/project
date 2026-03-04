@@ -17,10 +17,14 @@ export class UserPanelComponent implements OnInit {
     private userService = inject(UserService);
     private router = inject(Router);
 
-    dashboardData: any = {
+    dashboardData: { stats: { totalOrders: number; greenPoints: number }; recentOrders: any[] } = {
         stats: { totalOrders: 0, greenPoints: 0 },
         recentOrders: []
     };
+
+    get recentOrdersSlice(): any[] {
+        return this.dashboardData.recentOrders.slice(0, 5);
+    }
     allOrders: any[] = [];
     activeTab: string = 'dashboard';
     isLoading = true;
