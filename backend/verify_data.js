@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
+const MONGO_URI = process.env.MONGODB_URI;
+if (!MONGO_URI) {
+    console.error('FATAL ERROR: MONGODB_URI is not defined in .env');
+    process.exit(1);
+}
 
 async function verify() {
     try {

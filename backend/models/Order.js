@@ -7,6 +7,11 @@ const orderSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    userName: {
+        type: String,
+        required: true,
+        default: 'Guest Customer'
+    },
     items: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,

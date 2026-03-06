@@ -159,7 +159,11 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    console.error('FATAL ERROR: MONGODB_URI is not defined in .env');
+    process.exit(1);
+}
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.error('MongoDB connection error:', err));
@@ -630,6 +634,7 @@ app.post('/api/user/orders', auth, async (req, res) => {
 
         const newOrder = new Order({
             userId: req.user.id,
+            userName: req.user.fullName || 'User',
             items: items,
             totalAmount: totalAmount,
             paymentMethod: paymentMethod || 'UPI',
