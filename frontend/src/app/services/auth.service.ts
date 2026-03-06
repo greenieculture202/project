@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { CartService } from './cart.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
     providedIn: 'root'
@@ -23,6 +24,7 @@ export class AuthService {
     profilePic$ = this.profilePicSubject.asObservable();
 
     private cartService = inject(CartService);
+    private notificationService = inject(NotificationService);
 
     constructor(private http: HttpClient) {
         // Safeguard: Clear legacy mock token if it still exists in browser session
@@ -54,6 +56,7 @@ export class AuthService {
                 // Save token and user info in sessionStorage (for browser-close logout)
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_id', res.user._id);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
 
@@ -64,6 +67,7 @@ export class AuthService {
 
                 // Sync cart from backend after login
                 this.cartService.syncWithBackend();
+                this.notificationService.refresh();
             })
         );
     }
@@ -90,6 +94,7 @@ export class AuthService {
             tap(res => {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_id', res.user._id);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
                 this.isLoggedInSubject.next(true);
@@ -97,6 +102,7 @@ export class AuthService {
                 this.currentUserSubject.next(res.user.fullName);
                 this.profilePicSubject.next(res.user.profilePic || null);
                 this.cartService.syncWithBackend();
+                this.notificationService.refresh();
             })
         );
     }
@@ -113,6 +119,7 @@ export class AuthService {
                 this.currentUserSubject.next(res.user.fullName);
                 this.profilePicSubject.next(res.user.profilePic || null);
                 this.cartService.syncWithBackend();
+                this.notificationService.refresh();
             })
         );
     }
@@ -120,6 +127,7 @@ export class AuthService {
     logout() {
         sessionStorage.removeItem('auth_token');
         sessionStorage.removeItem('user_name');
+        sessionStorage.removeItem('user_id');
         sessionStorage.removeItem('user_pic');
         sessionStorage.removeItem('is_admin');
         this.isLoggedInSubject.next(false);
@@ -140,6 +148,10 @@ export class AuthService {
 
     getCurrentUser(): string | null {
         return this.currentUserSubject.value;
+    }
+
+    get currentUserId(): string | null {
+        return sessionStorage.getItem('user_id');
     }
 
     isAdmin(): boolean {

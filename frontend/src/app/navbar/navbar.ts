@@ -7,6 +7,8 @@ import { AuthService } from '../services/auth.service';
 import { CartService } from '../services/cart.service';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 
+import { NotificationService, Notification } from '../services/notification.service';
+
 @Component({
     selector: 'app-navbar',
     standalone: true,
@@ -18,6 +20,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     searchTerm: string = '';
     searchResults: Product[] = [];
     showResults: boolean = false;
+    showNotifications: boolean = false;
+    unreadCount: number = 0;
+    notifications: Notification[] = [];
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
 
@@ -25,7 +30,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         private productService: ProductService,
         private router: Router,
         public authService: AuthService,
-        private cartService: CartService
+        private cartService: CartService,
+        private notificationService: NotificationService
     ) { }
 
     ngOnInit() {
@@ -51,6 +57,34 @@ export class NavbarComponent implements OnInit, OnDestroy {
                 console.error('Search error:', err);
                 this.showResults = false;
             }
+        });
+
+        // Notifications subscription
+        this.notificationService.notifications$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(notifications => {
+            this.notifications = notifications;
+            this.unreadCount = notifications.filter(n => !n.isRead).length;
+        });
+    }
+
+    toggleNotifications() {
+        this.showNotifications = !this.showNotifications;
+    }
+
+    markAsRead(notification: Notification) {
+        if (!notification.isRead) {
+            this.notificationService.markAsRead(notification._id).subscribe(() => {
+                this.notificationService.refresh();
+            });
+        }
+        this.showNotifications = false;
+        // Optionally navigate to the inquiry/details
+    }
+
+    clearAllNotifications() {
+        this.notificationService.clearAll().subscribe(() => {
+            this.notificationService.refresh();
         });
     }
 

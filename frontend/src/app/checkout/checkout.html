@@ -67,24 +67,24 @@
                         <div class="input-field">
                             <label>First Name</label>
                             <input type="text" [(ngModel)]="firstName" (ngModelChange)="saveCheckoutState()"
-                                placeholder="e.g. Rahul" class="checkout-input">
+                                placeholder="e.g. Rahul" class="checkout-input" maxlength="50" pattern="[A-Za-z\s]+">
                         </div>
                         <div class="input-field">
                             <label>Last Name</label>
                             <input type="text" [(ngModel)]="lastName" (ngModelChange)="saveCheckoutState()"
-                                placeholder="e.g. Sharma" class="checkout-input">
+                                placeholder="e.g. Sharma" class="checkout-input" maxlength="50" pattern="[A-Za-z\s]+">
                         </div>
                         <div class="input-field">
                             <label>Email Address</label>
                             <input type="email" [(ngModel)]="contactEmail" (ngModelChange)="saveCheckoutState()"
-                                placeholder="rahul@example.com" class="checkout-input">
+                                placeholder="rahul@example.com" class="checkout-input" maxlength="100">
                         </div>
                         <div class="input-field">
                             <label>Mobile Number</label>
                             <div class="phone-wrapper">
                                 <span class="prefix">+91</span>
                                 <input type="tel" [(ngModel)]="phone" (ngModelChange)="saveCheckoutState()"
-                                    placeholder="9876543210" class="checkout-input">
+                                    placeholder="9876543210" class="checkout-input" maxlength="10" pattern="[0-9]{10}">
                             </div>
                         </div>
                         <div class="input-field">
@@ -92,7 +92,8 @@
                             <div class="phone-wrapper">
                                 <span class="prefix">+91</span>
                                 <input type="tel" [(ngModel)]="alternatePhone" (ngModelChange)="saveCheckoutState()"
-                                    placeholder="Optional alternate number" class="checkout-input">
+                                    placeholder="Optional alternate number" class="checkout-input" maxlength="10"
+                                    pattern="[0-9]{10}">
                             </div>
                         </div>
                     </div>
@@ -451,8 +452,8 @@
 
         <!-- Interactive Actions -->
         <div class="luxury-actions no-print">
-            <button class="lux-btn secondary" (click)="printInvoice()">
-                <i class="fas fa-print"></i> PRINT INVOICE
+            <button class="lux-btn secondary" (click)="downloadInvoice()">
+                <i class="fas fa-download"></i> DOWNLOAD BILL
             </button>
             <button class="lux-btn primary" (click)="closeInvoice()">
                 CONTINUE TO REVIEW <i class="fas fa-arrow-right"></i>

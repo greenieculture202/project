@@ -21,7 +21,9 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
         isVisible: false,
         title: '',
         message: '',
-        type: 'info'
+        type: 'info',
+        layout: 'standard',
+        confirmLabel: 'CONTINUE'
     };
 
     private sub: Subscription | undefined;

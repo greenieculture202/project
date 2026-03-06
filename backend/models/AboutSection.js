@@ -4,7 +4,7 @@ const AboutSectionSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['journey', 'value', 'stat', 'quote', 'founder']
+        enum: ['journey', 'value', 'stat', 'quote', 'founder', 'vision', 'mission', 'accolade']
     },
     title: {
         type: String,

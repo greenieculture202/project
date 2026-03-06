@@ -6,6 +6,40 @@
     background: #fafbfc;
 }
 
+/* Back to Website Button */
+.back-to-home {
+    position: fixed;
+    bottom: 30px;
+    left: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    color: #1e293b;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.back-to-home:hover {
+    background: #2d8c6f;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(45, 140, 111, 0.3);
+}
+
+.back-to-home i {
+    font-size: 14px;
+}
+
 /* Hero */
 .faq-hero {
     position: relative;
@@ -62,7 +96,46 @@
     color: rgba(255, 255, 255, 0.75);
 }
 
+/* --- Category Filter Pills --- */
+.category-pills-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    max-width: 900px;
+    margin: 28px auto 10px;
+    padding: 0 20px;
+}
+
+.cat-pill {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 1.5px solid #d1d5db;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+    white-space: nowrap;
+}
+
+.cat-pill:hover {
+    border-color: #2d8c6f;
+    color: #2d8c6f;
+    background: #f0fdf4;
+}
+
+.cat-pill.active {
+    background: #2d8c6f;
+    color: white;
+    border-color: #2d8c6f;
+    box-shadow: 0 4px 12px rgba(45, 140, 111, 0.25);
+}
+
 /* --- Category Explorer Grid --- */
+
 .category-explorer {
     max-width: 1200px;
     margin: -60px auto 40px;

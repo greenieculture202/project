@@ -1,144 +1,203 @@
-<div class="about-container">
+<div class="fnp-about-container">
     <!-- Back to Website Button -->
-    <a routerLink="/" class="back-to-home">
-        <i class="fas fa-house-chimney-window"></i>
-        <span>Back to Website</span>
+    <a routerLink="/" class="back-to-home reveal fade-in">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back</span>
     </a>
 
-    <!-- Hero Section with Background Video -->
-    <div class="about-hero">
-        <!-- Unique Moving Mesh Background -->
-        <div class="mesh-container">
-            <div class="mesh-gradient"></div>
-            <div class="noise-overlay"></div>
-            <div class="luminous-grid"></div>
-
-            <!-- Abstract Floating Elements -->
-            <div class="abstract-shapes">
-                <div class="shape s1"></div>
-                <div class="shape s2"></div>
-                <div class="shape s3"></div>
+    <!-- Hero Section -->
+    <div class="fnp-hero">
+        <div class="hero-overlay"></div>
+        <div class="fnp-hero-content reveal reveal-up">
+            <div class="brand-logo-container">
+                <i class="fas fa-leaf brand-leaf-main"></i>
             </div>
-
-            <div class="aura aura-1"></div>
-            <div class="aura aura-2"></div>
-            <div class="aura aura-3"></div>
-            <div class="aura aura-4"></div>
+            <p class="hero-subtitle">Nurturing Nature at</p>
+            <h2 class="hero-name">Greenie Culture</h2>
+            <h1 class="hero-title">Connecting Humans with Environment</h1>
+            <div class="hero-divider"></div>
+            <p class="hero-tagline">Making India a Greener Country, One Leaf at a Time.</p>
         </div>
+    </div>
 
-        <!-- Floating Aura elements remain for depth, but emojis are removed -->
-
-        <div class="hero-overlay">
-            <div class="glass-card">
-                <div class="brand-badge">EST. 2024</div>
-                <div class="brand-content">
-                    <h1 class="brand-title">Greenie Culture</h1>
-                    <div class="brand-divider">
-                        <span class="d-line"></span>
-                        <i class="fas fa-leaf d-icon"></i>
-                        <span class="d-line"></span>
+    <!-- How it all started (Journey) - Now looping for ALL entries -->
+    <ng-container *ngFor="let j of journeySections; let i = index">
+        <div class="fnp-section fnp-journey-block reveal" [class.immediate]="j.isImmediate"
+            [class.reveal-left]="i % 2 === 0" [class.reveal-right]="i % 2 !== 0">
+            <div class="fnp-journey-grid" [class.reverse-grid]="i % 2 !== 0">
+                <div class="journey-content-side">
+                    <span class="section-badge">{{ i === 0 ? 'OUR ROOTS' : 'GROWING TOGETHER' }}</span>
+                    <h2 class="fnp-section-title">{{ j.title }}</h2>
+                    <p class="fnp-section-text">{{ j.content }}</p>
+                </div>
+                <div class="journey-image-side" *ngIf="j.image">
+                    <div class="journey-img-wrapper">
+                        <img [src]="j.image" [alt]="j.title">
                     </div>
-                    <p class="brand-tagline">Nurturing Spaces, Empowering Souls</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Fade -->
-        <div class="hero-bottom-fade"></div>
-    </div>
-
-    <!-- Video Modal -->
-    <div class="about-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
-        <div class="about-modal" (click)="$event.stopPropagation()">
-            <button class="modal-close" (click)="closeModal()">✕</button>
-            <div class="modal-player">
-                <video [src]="videoUrl" controls autoplay></video>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dynamic Content Sections -->
-    <ng-container *ngFor="let journey of journeySections">
-        <div class="section-wrapper">
-            <div class="vision-grid">
-                <div class="vision-text animate-on-scroll">
-                    <span class="section-tag">{{ journey.title }}</span>
-                    <h2>{{ journey.title }}</h2>
-                    <p>{{ journey.content }}</p>
-                </div>
-                <div class="vision-image animate-on-scroll" *ngIf="journey.image">
-                    <img [src]="journey.image" [alt]="journey.title">
                 </div>
             </div>
         </div>
     </ng-container>
 
-    <!-- Core Values -->
-    <div class="values-section" *ngIf="valueSections.length > 0">
-        <div class="section-header">
-            <h2>Our Core Values</h2>
-            <div class="divider"></div>
-        </div>
-        <div class="values-grid">
-            <div class="value-card" *ngFor="let val of valueSections">
-                <div class="icon-circle">
-                    <i class="fas" [ngClass]="val.icon || 'fa-leaf'"></i>
-                </div>
-                <h3>{{ val.title }}</h3>
-                <p>{{ val.content }}</p>
+    <!-- Stats Section (Dynamic from Admin) -->
+    <div class="fnp-stats-strip reveal reveal-up" *ngIf="statSections.length > 0">
+        <div class="stats-container">
+            <div class="stat-item" *ngFor="let s of statSections">
+                <h3 class="stat-number">{{ s.title }}</h3>
+                <p class="stat-label">{{ s.content }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Stats Section -->
-    <div class="stats-premium" *ngIf="statSections.length > 0">
-        <div class="stats-grid-v2">
-            <div class="stat-card-v2" *ngFor="let stat of statSections">
-                <i class="fas s-icon" [ngClass]="stat.icon || 'fa-chart-bar'"></i>
-                <div class="stat-info">
-                    <span class="stat-number">{{ stat.content }}</span>
-                    <span class="stat-label">{{ stat.title }}</span>
+    <!-- The Curation Process -->
+    <div class="fnp-section curation-process-section reveal reveal-up">
+        <div class="text-center">
+            <span class="section-badge">QUALITY FIRST</span>
+            <h2 class="fnp-section-title">Our Curation Process</h2>
+            <p class="section-intro">Every plant at Greenie Culture goes through a rigorous quality check to ensure it
+                thrives in your space.</p>
+        </div>
+        <div class="process-grid">
+            <div class="process-step">
+                <div class="step-num">01</div>
+                <div class="step-icon"><i class="fas fa-seedling"></i></div>
+                <h3>Sourcing with Love</h3>
+                <p>We hand-pick plants from sustainable nurseries that share our passion for quality.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">02</div>
+                <div class="step-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                <h3>Personalized Care</h3>
+                <p>Each plant is nurtured and checked for health before it ever reaches our shelves.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">03</div>
+                <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
+                <h3>Eco-Friendly Delivery</h3>
+                <p>We use sustainable packaging to ensure your green friends arrive safely and breathe easy.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vision & Mission -->
+    <div class="fnp-section vm-section" *ngIf="visionSections.length > 0 || missionSections.length > 0">
+        <div class="fnp-vm-grid">
+            <div class="fnp-vm-card reveal reveal-left" *ngFor="let v of visionSections">
+                <div class="vm-image-wrapper">
+                    <img [src]="v.image || 'https://images.unsplash.com/photo-1545241047-6083a36ee15f?w=800&auto=format&fit=crop'"
+                        alt="Vision">
+                    <div class="image-overlay"></div>
+                </div>
+                <span class="card-badge">THE GOAL</span>
+                <h2 class="fnp-vm-title">{{ v.title }}</h2>
+                <p class="fnp-vm-text">{{ v.content }}</p>
+            </div>
+
+            <div class="fnp-vm-card reveal reveal-right" *ngFor="let m of missionSections">
+                <div class="vm-image-wrapper">
+                    <img [src]="m.image || 'https://images.unsplash.com/photo-1466692476877-339fa9e48c3f?w=800&auto=format&fit=crop'"
+                        alt="Mission">
+                    <div class="image-overlay"></div>
+                </div>
+                <span class="card-badge">THE MISSION</span>
+                <h2 class="fnp-vm-title">{{ m.title }}</h2>
+                <p class="fnp-vm-text">{{ m.content }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Founder Message (Dynamic from Admin) -->
+    <div class="fnp-section founder-section reveal reveal-up" *ngIf="founderSection">
+        <div class="founder-grid">
+            <div class="founder-image-side">
+                <div class="founder-img-container">
+                    <img [src]="founderSection.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop'"
+                        alt="Founder">
+                </div>
+            </div>
+            <div class="founder-text-side">
+                <span class="section-badge">MESSAGE FROM FOUNDER</span>
+                <h2 class="fnp-section-title">{{ founderSection.title }}</h2>
+                <div class="quote-mark"><i class="fas fa-quote-left"></i></div>
+                <p class="founder-content">{{ founderSection.content }}</p>
+                <p class="founder-name">— {{ founderSection.author || 'The Founder' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Perfect Experience (Values) -->
+    <div class="fnp-section reveal reveal-up" *ngIf="valueSections.length > 0">
+        <div class="text-center">
+            <span class="section-badge">OUR PROMISE</span>
+            <h2 class="fnp-section-title">The Perfect Experience</h2>
+        </div>
+        <div class="fnp-values-grid">
+            <div class="fnp-value-card" *ngFor="let val of valueSections">
+                <div class="icon-wrapper">
+                    <div class="icon-pulse"></div>
+                    <i class="fas {{ val.icon || 'fa-gift' }} fnp-value-icon"></i>
+                </div>
+                <p class="fnp-value-title">{{ val.title }}</p>
+                <p class="fnp-value-desc">{{ val.content }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accolades & Milestones -->
+    <div class="fnp-section accolades-wrapper reveal reveal-up" *ngIf="accoladeSections.length > 0">
+        <div class="text-center">
+            <span class="section-badge">RECOGNITION</span>
+            <h2 class="fnp-section-title">Accolades & Milestones</h2>
+        </div>
+        <div class="fnp-accolades-grid">
+            <div class="fnp-accolade-card" *ngFor="let acc of accoladeSections; let even = even">
+                <div class="laurel laurel-left" [class.gold]="even">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" />
+                        <path d="M7 15C7 15 5 12 7 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M5 8C5 8 7 6 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="accolade-text">
+                    <p class="acc-content">{{ acc.content }}</p>
+                    <p class="acc-title">{{ acc.title }}</p>
+                </div>
+                <div class="laurel laurel-right" [class.gold]="even">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style="transform: scaleX(-1);">
+                        <path d="M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" />
+                        <path d="M7 15C7 15 5 12 7 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M5 8C5 8 7 6 10 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Founder Message -->
-    <div class="message-section-v2" *ngIf="founderSection">
-        <div class="message-glass">
-            <i class="fas fa-quote-left q-icon"></i>
-            <blockquote class="founder-quote">
-                "{{ founderSection.content }}"
-            </blockquote>
-            <p class="author">— {{ founderSection.title }}</p>
-        </div>
-    </div>
-
-    <!-- Inspirational Quotes Grid -->
-    <div class="inspiration-section" *ngIf="quoteSections.length > 0">
-        <div class="section-header">
-            <span class="section-tag">WISDOM</span>
-            <h2>Words to Grow By</h2>
-            <div class="divider"></div>
+    <!-- Inspirational Quotes (Dynamic from Admin) -->
+    <div class="fnp-section quotes-section reveal reveal-up" *ngIf="quoteSections.length > 0">
+        <div class="text-center">
+            <span class="section-badge">WORDS TO GROW BY</span>
         </div>
         <div class="quotes-grid">
-            <div class="quote-card-v3" *ngFor="let quote of quoteSections">
-                <p>"{{ quote.content }}"</p>
-                <span class="quote-author">— {{ quote.author || quote.title }}</span>
+            <div class="quote-card" *ngFor="let q of quoteSections">
+                <div class="quote-icon"><i class="fas fa-quote-left"></i></div>
+                <p class="quote-text">{{ q.content }}</p>
+                <p class="quote-author">— {{ q.author }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Contact CTA -->
-    <div class="cta-section-v2">
-        <div class="cta-aura-v2"></div>
-        <div class="cta-content-v2">
-            <h2>Ready to start your green journey?</h2>
-            <p>Join thousands of happy gardeners across the country.</p>
-            <button class="cta-btn-v2" routerLink="/">
-                <span>Browse Collection</span>
-                <i class="fas fa-arrow-right"></i>
-            </button>
+    <!-- Final CTA -->
+    <div class="fnp-section final-cta-section reveal reveal-up">
+        <div class="cta-card">
+            <div class="cta-card-content">
+                <h2>Join the Green Revolution</h2>
+                <p>Connect with nature today and help us make India green.</p>
+                <button class="btn-primary" routerLink="/">Explore Collection</button>
+            </div>
         </div>
     </div>
 </div>

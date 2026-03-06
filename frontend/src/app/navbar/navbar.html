@@ -28,6 +28,56 @@
   </div>
   <div class="nav-icons">
     <ng-container *ngIf="authService.isLoggedIn$ | async; else loginBtn">
+      <!-- Notifications Bell Icon -->
+      <div class="notifications-wrapper" (click)="toggleNotifications()" title="Notifications">
+        <i class="far fa-bell icon"></i>
+        <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+
+        <!-- Notifications Dropdown -->
+        <div class="notifications-dropdown" *ngIf="showNotifications" (click)="$event.stopPropagation()">
+          <div class="notifications-header">
+            <h3>Notifications</h3>
+            <button class="clear-all" (click)="clearAllNotifications()">Clear All</button>
+          </div>
+          <div class="notifications-list">
+            <div *ngIf="notifications.length === 0" class="no-notifications">
+              <i class="fas fa-bell-slash"></i>
+              <p>No new notifications</p>
+            </div>
+            <div class="notification-item" *ngFor="let n of notifications" [class.unread]="!n.isRead"
+              (click)="markAsRead(n)">
+              <div class="notification-icon">
+                <i class="fas" [ngClass]="n.type === 'Reply' ? 'fa-reply' : 'fa-info-circle'"></i>
+              </div>
+              <div class="notification-content">
+                <div class="notification-title">{{ n.title }}</div>
+                <div class="notification-message">
+                  <ng-container *ngIf="n.type === 'Reply' || n.message.includes('Reply:'); else plainMessage">
+                    <div class="msg-row">
+                      <span class="msg-label">Subject:</span>
+                      <span class="msg-value">{{ n.message.split('Reply:')[0].replace('Subject:', '').trim() }}</span>
+                    </div>
+                    <div class="msg-row reply-box">
+                      <span class="msg-label">Reply:</span>
+                      <span class="msg-value">{{ n.message.split('Reply:')[1]?.trim() || n.message }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #plainMessage>
+                    {{ n.message }}
+                  </ng-template>
+                </div>
+                <div class="notification-footer">
+                  <span class="notification-time">
+                    <i class="far fa-clock"></i> {{ n.createdAt | date:'shortTime' }}
+                  </span>
+                  <span class="unread-dot" *ngIf="!n.isRead"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="user-profile">
         <span class="welcome-text">Hello, <strong>{{ authService.currentUser$ | async }}</strong></span>
         <a *ngIf="authService.isAdmin$ | async" routerLink="/admin-dashboard" class="admin-link">

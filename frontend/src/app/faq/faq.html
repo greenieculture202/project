@@ -3,6 +3,11 @@
     <div class="faq-hero">
         <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1400&q=80"
             alt="FAQ Banner" class="hero-img">
+        <!-- Back to Website Button -->
+        <a routerLink="/" class="back-to-home">
+            <i class="fas fa-house-chimney-window"></i>
+            <span>Back to Website</span>
+        </a>
         <div class="hero-content">
             <span class="hero-badge">Help Center</span>
             <h1>Frequently Asked<br><span>Questions</span></h1>
@@ -10,37 +15,20 @@
         </div>
     </div>
 
-    <!-- Dynamic Category Explorer -->
-    <div class="category-explorer" *ngIf="!isLoading">
-        <div class="explorer-grid">
-            <!-- All Categories Card -->
-            <div class="category-card" [class.active]="selectedCategory() === 'All'" (click)="setCategory('All')">
-                <div class="card-blob"></div>
-                <div class="card-icon-box">
-                    <i class="fas fa-th-large"></i>
-                </div>
-                <h3>All Categories</h3>
-                <div class="count-badge-wrap">
-                    <span class="count-badge">{{ faqs.length }} PRODUCTS</span>
-                </div>
-            </div>
 
-            <!-- Specific Category Cards -->
-            <div class="category-card" *ngFor="let cat of categoryMetadata()"
-                [class.active]="selectedCategory() === cat.name" (click)="setCategory(cat.name)">
-                <div class="card-blob"></div>
-                <div class="card-icon-box">
-                    <i [class]="cat.icon"></i>
-                </div>
-                <h3>{{ cat.name }}</h3>
-                <div class="count-badge-wrap">
-                    <span class="count-badge">{{ cat.count }} PRODUCTS</span>
-                </div>
-            </div>
-        </div>
+    <!-- Category Filter Pills -->
+    <div class="category-pills-bar" *ngIf="!isLoading">
+        <button class="cat-pill" [class.active]="selectedCategory() === 'All'" (click)="setCategory('All')">
+            All Categories
+        </button>
+        <button class="cat-pill" *ngFor="let cat of categoryMetadata()" [class.active]="selectedCategory() === cat.name"
+            (click)="setCategory(cat.name)">
+            {{ cat.name }}
+        </button>
     </div>
 
     <!-- FAQ List -->
+
     <div class="faq-container">
         <div class="faq-list">
             <!-- Loading -->

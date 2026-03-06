@@ -10,6 +10,8 @@ const Offer = require('./models/Offer');
 const Placement = require('./models/Placement');
 const Faq = require('./models/Faq');
 const AboutSection = require('./models/AboutSection');
+const Inquiry = require('./models/Inquiry');
+const Notification = require('./models/Notification');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -239,7 +241,7 @@ app.post('/api/auth/login', async (req, res) => {
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
         });
     } catch (err) {
         console.error(err.message);
@@ -393,6 +395,10 @@ app.get('/api/cart', auth, async (req, res) => {
 app.post('/api/cart', auth, async (req, res) => {
     try {
         const { cart } = req.body;
+        // Skip DB update for special admin ID to avoid CastError
+        if (req.user.id === 'admin-special-id') {
+            return res.json({ message: 'Cart updated successfully (Admin mode)' });
+        }
         await User.findByIdAndUpdate(req.user.id, { cart });
         res.json({ message: 'Cart updated successfully' });
     } catch (err) {
@@ -1264,6 +1270,109 @@ const seedFaqs = async () => {
         console.error('[SEED] Error seeding FAQs:', err.message);
     }
 };
+
+// --- Inquiry & Notification System Routes ---
+
+// USER: Submit Inquiry
+app.post('/api/inquiries', async (req, res) => {
+    try {
+        const { name, email, subject, message, userId } = req.body;
+
+        const newInquiry = new Inquiry({
+            userId: userId || null,
+            name,
+            email,
+            subject,
+            message,
+            status: 'Pending'
+        });
+
+        await newInquiry.save();
+        console.log(`[INQUIRY] New message from ${name} (${email})`);
+        res.status(201).json({ message: 'Inquiry submitted successfully', inquiry: newInquiry });
+    } catch (err) {
+        console.error('[INQUIRY-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to submit inquiry' });
+    }
+});
+
+// ADMIN: Get all Inquiries
+app.get('/api/admin/inquiries', auth, async (req, res) => {
+    try {
+        const inquiries = await Inquiry.find().sort({ createdAt: -1 });
+        res.json(inquiries);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Reply to Inquiry
+app.put('/api/admin/inquiries/:id/reply', auth, async (req, res) => {
+    try {
+        const { content } = req.body;
+        const inquiryId = req.params.id;
+
+        const inquiry = await Inquiry.findById(inquiryId);
+        if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+
+        inquiry.reply = {
+            content,
+            repliedAt: new Date(),
+            adminId: req.user.id
+        };
+        inquiry.status = 'Replied';
+        await inquiry.save();
+
+        // Create Notification if user is registered
+        if (inquiry.userId) {
+            const newNotification = new Notification({
+                userId: inquiry.userId,
+                title: 'Admin Replied to your Inquiry',
+                message: `Subject: ${inquiry.subject}. Reply: ${content}`,
+                relatedInquiryId: inquiryId
+            });
+            await newNotification.save();
+            console.log(`[NOTIFICATION] Created for user ${inquiry.userId}`);
+        }
+
+        res.json({ message: 'Reply submitted and user notified', inquiry });
+    } catch (err) {
+        console.error('[REPLY-ERROR]', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Get Notifications
+app.get('/api/user/notifications', auth, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: req.user.id }).sort({ createdAt: -1 });
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Mark Notification as Read
+app.put('/api/user/notifications/:id/read', auth, async (req, res) => {
+    try {
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.json({ message: 'Notification marked as read' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Delete all notifications
+app.delete('/api/user/notifications', auth, async (req, res) => {
+    try {
+        await Notification.deleteMany({ userId: req.user.id });
+        res.json({ message: 'All notifications cleared' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// --- End of Inquiry & Notification System ---
 
 // Start Server
 Promise.all([seedPlacements(), seedFaqs()]).then(() => {

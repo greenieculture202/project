@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const AboutSection = require('./models/AboutSection');
 require('dotenv').config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/greenie_culture';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mejor';
 
 const seedAbout = async () => {
     try {

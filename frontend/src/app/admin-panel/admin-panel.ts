@@ -9,6 +9,7 @@ import { OfferService, Offer } from '../services/offer.service';
 import { PlacementService, Placement } from '../services/placement.service';
 import { FaqService, Faq } from '../services/faq.service';
 import { AboutService, AboutSection } from '../services/about.service';
+import { InquiryService, Inquiry } from '../services/inquiry.service';
 
 import { FormsModule } from '@angular/forms';
 
@@ -27,6 +28,7 @@ export class AdminPanelComponent implements OnInit {
     placementService = inject(PlacementService);
     faqService = inject(FaqService);
     aboutService = inject(AboutService);
+    inquiryService = inject(InquiryService);
     router = inject(Router);
     route = inject(ActivatedRoute);
     cdr = inject(ChangeDetectorRef);
@@ -63,6 +65,13 @@ export class AdminPanelComponent implements OnInit {
     searchTerm: string = ''; // For global/scoped product search
     activeMainCategory: string = 'Plants';
     activeCompanionGroup: string = 'All'; // For the 4 big tabs in Plant Companions
+
+    // Inquiries
+    inquiries: Inquiry[] = [];
+    isLoadingInquiries: boolean = false;
+    showReplyModal: boolean = false;
+    selectedInquiry: Inquiry | null = null;
+    replyContent: string = '';
 
     // Offers
     offers: Offer[] = [];
@@ -409,6 +418,15 @@ export class AdminPanelComponent implements OnInit {
     deleteSuccess: boolean = false;
     deleteTarget: { id: string; name: string; image?: string; type?: 'product' | 'placement' | 'offer' | 'faq' | 'about' } = { id: '', name: '', type: 'product' };
 
+    private toggleBodyScroll(lock: boolean) {
+        if (lock) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+
     get filteredUsers() {
         if (this.userFilter === 'All') return this.users;
         return this.users.filter(u => u.method === this.userFilter);
@@ -477,11 +495,13 @@ export class AdminPanelComponent implements OnInit {
     viewUserDetails(user: any) {
         this.selectedUser = user;
         this.showDetailModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeDetailModal() {
         this.showDetailModal = false;
         this.selectedUser = null;
+        this.toggleBodyScroll(false);
     }
 
     viewOrderDetails(order: any) {
@@ -492,6 +512,7 @@ export class AdminPanelComponent implements OnInit {
     closeOrderModal() {
         this.showOrderModal = false;
         this.selectedOrder = null;
+        this.toggleBodyScroll(false);
     }
 
     viewInvoice(order: any) {
@@ -502,6 +523,7 @@ export class AdminPanelComponent implements OnInit {
     closeInvoiceModal() {
         this.showInvoiceModal = false;
         this.selectedOrder = null;
+        this.toggleBodyScroll(false);
     }
 
     printInvoice() {
@@ -541,6 +563,8 @@ export class AdminPanelComponent implements OnInit {
             this.loadAboutSections();
         } else if (tab === 'orders') {
             this.loadOrders();
+        } else if (tab === 'inquiries') {
+            this.loadInquiries();
         }
     }
 
@@ -575,6 +599,7 @@ export class AdminPanelComponent implements OnInit {
             categoryRoute: '/products/plants'
         };
         this.showAddPlacementModal = true;
+        this.toggleBodyScroll(true);
     }
 
     openEditPlacementModal(plac: Placement) {
@@ -586,6 +611,7 @@ export class AdminPanelComponent implements OnInit {
 
     closeAddPlacementModal() {
         this.showAddPlacementModal = false;
+        this.toggleBodyScroll(false);
     }
 
     submitPlacement() {
@@ -603,6 +629,7 @@ export class AdminPanelComponent implements OnInit {
                     this.ngZone.run(() => {
                         this.isSubmitting = false;
                         this.showAddPlacementModal = false;
+                        this.toggleBodyScroll(false);
                         this.cdr.detectChanges();
                         this.loadPlacements();
                     });
@@ -622,6 +649,7 @@ export class AdminPanelComponent implements OnInit {
                     this.ngZone.run(() => {
                         this.isSubmitting = false;
                         this.showAddPlacementModal = false;
+                        this.toggleBodyScroll(false);
                         this.cdr.detectChanges();
                         this.loadPlacements();
                     });
@@ -687,6 +715,7 @@ export class AdminPanelComponent implements OnInit {
             timerBg: '#dcfce7'
         };
         this.showAddOfferModal = true;
+        this.toggleBodyScroll(true);
     }
 
     openEditOfferModal(offer: Offer) {
@@ -695,10 +724,12 @@ export class AdminPanelComponent implements OnInit {
         this.newOffer = { ...offer };
         if (!this.newOffer.features) this.newOffer.features = ['', '', ''];
         this.showAddOfferModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeAddOfferModal() {
         this.showAddOfferModal = false;
+        this.toggleBodyScroll(false);
     }
 
     submitOffer() {
@@ -720,6 +751,7 @@ export class AdminPanelComponent implements OnInit {
                     this.ngZone.run(() => {
                         this.isSubmitting = false;
                         this.showAddOfferModal = false;
+                        this.toggleBodyScroll(false);
                         this.cdr.detectChanges();
                         this.loadOffers();
                     });
@@ -737,6 +769,7 @@ export class AdminPanelComponent implements OnInit {
                     this.ngZone.run(() => {
                         this.isSubmitting = false;
                         this.showAddOfferModal = false;
+                        this.toggleBodyScroll(false);
                         this.cdr.detectChanges();
                         this.loadOffers();
                     });
@@ -1005,6 +1038,7 @@ export class AdminPanelComponent implements OnInit {
             tags: ''
         };
         this.showAddProductModal = true;
+        this.toggleBodyScroll(true);
     }
 
     openEditProductModal(product: any) {
@@ -1030,11 +1064,13 @@ export class AdminPanelComponent implements OnInit {
         }
 
         this.showAddProductModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeAddProductModal() {
         this.showAddProductModal = false;
         this.isSubmitting = false;
+        this.toggleBodyScroll(false);
     }
 
     submitProduct() {
@@ -1119,10 +1155,12 @@ export class AdminPanelComponent implements OnInit {
             type: type
         };
         this.showSuccessModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeSuccessModal() {
         this.showSuccessModal = false;
+        this.toggleBodyScroll(false);
     }
 
     getProductPath(category: string): string {
@@ -1146,12 +1184,14 @@ export class AdminPanelComponent implements OnInit {
         this.deleteTarget = { id, name, image, type: 'product' };
         this.deleteSuccess = false;
         this.showDeleteModal = true;
+        this.toggleBodyScroll(true);
     }
 
     cancelDelete() {
         this.showDeleteModal = false;
         this.deleteSuccess = false;
         this.deleteTarget = { id: '', name: '', type: 'product' };
+        this.toggleBodyScroll(false);
     }
 
     confirmDelete() {
@@ -1187,6 +1227,7 @@ export class AdminPanelComponent implements OnInit {
                         this.ngZone.run(() => {
                             this.showDeleteModal = false;
                             this.deleteSuccess = false;
+                            this.toggleBodyScroll(false);
                             this.cdr.detectChanges();
                         });
                     }, 1800);
@@ -1198,6 +1239,7 @@ export class AdminPanelComponent implements OnInit {
                 const msg = err?.error?.message || `${typeLabel} could not be deleted. Please try again.`;
                 this.ngZone.run(() => {
                     this.showDeleteModal = false;
+                    this.toggleBodyScroll(false);
                     this.cdr.detectChanges();
                     setTimeout(() => alert('❌ ' + msg), 50);
                 });
@@ -1235,12 +1277,14 @@ export class AdminPanelComponent implements OnInit {
         this.isEditingFaq = false;
         this.editingFaqId = null;
         this.showAddFaqModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeAddFaqModal() {
         this.showAddFaqModal = false;
         this.isEditingFaq = false;
         this.editingFaqId = null;
+        this.toggleBodyScroll(false);
     }
 
     openEditFaqModal(faq: Faq) {
@@ -1248,6 +1292,7 @@ export class AdminPanelComponent implements OnInit {
         this.isEditingFaq = true;
         this.editingFaqId = faq._id || null;
         this.showAddFaqModal = true;
+        this.toggleBodyScroll(true);
     }
 
     submitFaq() {
@@ -1264,6 +1309,7 @@ export class AdminPanelComponent implements OnInit {
                 this.ngZone.run(() => {
                     this.isSubmitting = false;
                     this.showAddFaqModal = false;
+                    this.toggleBodyScroll(false);
                     this.loadFaqs();
                     this.cdr.detectChanges();
                 });
@@ -1439,6 +1485,7 @@ export class AdminPanelComponent implements OnInit {
         this.deleteTarget = { id, name: question, type: 'faq' };
         this.deleteSuccess = false;
         this.showDeleteModal = true;
+        this.toggleBodyScroll(true);
     }
 
     // --- About Us Management Methods ---
@@ -1471,12 +1518,14 @@ export class AdminPanelComponent implements OnInit {
         this.isEditingAbout = false;
         this.editingAboutId = null;
         this.showAddAboutModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeAddAboutModal() {
         this.showAddAboutModal = false;
         this.isEditingAbout = false;
         this.editingAboutId = null;
+        this.toggleBodyScroll(false);
     }
 
     openEditAboutModal(section: AboutSection) {
@@ -1484,6 +1533,7 @@ export class AdminPanelComponent implements OnInit {
         this.isEditingAbout = true;
         this.editingAboutId = section._id || null;
         this.showAddAboutModal = true;
+        this.toggleBodyScroll(true);
     }
 
     submitAboutSection() {
@@ -1500,6 +1550,7 @@ export class AdminPanelComponent implements OnInit {
                 this.ngZone.run(() => {
                     this.isSubmitting = false;
                     this.showAddAboutModal = false;
+                    this.toggleBodyScroll(false);
                     this.loadAboutSections();
                     this.cdr.detectChanges();
                 });
@@ -1519,9 +1570,112 @@ export class AdminPanelComponent implements OnInit {
         this.deleteTarget = { id, name: title, type: 'about' };
         this.deleteSuccess = false;
         this.showDeleteModal = true;
+        this.toggleBodyScroll(true);
     }
 
     trackByIndex(index: number, obj: any): any {
         return index;
+    }
+
+    // --- Offer Associated Products Methods ---
+    getOfferCodeByLink(ctaLink: string | undefined): string | null {
+        if (!ctaLink) return null;
+        // Extract offer code from URL like /indoor-offer?code=INDOOR10
+        try {
+            const url = new URL(ctaLink, 'http://dummy.com');
+            const code = url.searchParams.get('code');
+            if (code) return code;
+        } catch (e) {
+            // fallback: try to extract manually
+        }
+        const match = ctaLink.match(/[?&]code=([^&]+)/);
+        return match ? match[1] : null;
+    }
+
+    viewOfferCards(code: string) {
+        this.activeOfferCode = code;
+        // Find the badge for this offer code
+        const offer = this.offers.find(o => this.getOfferCodeByLink(o.ctaLink) === code);
+        this.activeOfferBadge = offer?.badge || '';
+        this.showAssociatedProductsModal = true;
+
+        // Search all products for those tagged with this offer code
+        this.associatedProducts = [];
+        let allProducts: any[] = [];
+        Object.values(this.productMap).forEach((products: any) => {
+            if (Array.isArray(products)) {
+                allProducts = [...allProducts, ...products];
+            }
+        });
+
+        // Remove duplicates
+        const unique = Array.from(new Map(allProducts.map(p => [p._id, p])).values());
+
+        // Filter products whose tags or category contains the offer code (case-insensitive)
+        const searchCode = code.toLowerCase();
+        this.associatedProducts = unique.filter((p: any) => {
+            const tags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
+            const cat = (p.category || '').toLowerCase();
+            return tags.includes(searchCode) || cat.includes(searchCode);
+        });
+
+        this.cdr.detectChanges();
+    }
+
+    closeAssociatedProductsModal() {
+        this.showAssociatedProductsModal = false;
+        this.activeOfferCode = '';
+        this.activeOfferBadge = '';
+        this.associatedProducts = [];
+        this.cdr.detectChanges();
+    }
+
+    loadInquiries() {
+        this.isLoadingInquiries = true;
+        this.inquiryService.getAllInquiries().subscribe({
+            next: (data) => {
+                this.inquiries = data;
+                this.isLoadingInquiries = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Error loading inquiries:', err);
+                this.isLoadingInquiries = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    openReplyModal(inquiry: Inquiry) {
+        this.selectedInquiry = inquiry;
+        this.replyContent = inquiry.reply?.content || '';
+        this.showReplyModal = true;
+        this.toggleBodyScroll(true);
+    }
+
+    closeReplyModal() {
+        this.showReplyModal = false;
+        this.selectedInquiry = null;
+        this.replyContent = '';
+        this.toggleBodyScroll(false);
+    }
+
+    submitReply() {
+        if (!this.selectedInquiry || !this.replyContent.trim()) return;
+
+        this.isSubmitting = true;
+        this.inquiryService.replyToInquiry(this.selectedInquiry._id!, this.replyContent).subscribe({
+            next: (res) => {
+                console.log('Reply submitted:', res);
+                this.isSubmitting = false;
+                this.loadInquiries();
+                this.closeReplyModal();
+            },
+            error: (err) => {
+                console.error('Reply error:', err);
+                this.isSubmitting = false;
+                alert('Failed to submit reply.');
+            }
+        });
     }
 }

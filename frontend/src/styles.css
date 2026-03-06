@@ -19,6 +19,12 @@ body.no-padding {
     padding-top: 0 !important;
 }
 
+body.modal-open {
+    overflow: hidden !important;
+    padding-right: 8px;
+    /* Offset for hidden scrollbar to prevent layout shift */
+}
+
 /* Ensure images generally behave nicely */
 img {
     max-width: 100%;

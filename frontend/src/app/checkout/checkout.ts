@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '../services/user.service';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 @Component({
     selector: 'app-checkout',
@@ -410,10 +412,29 @@ export class CheckoutComponent implements OnInit {
         }
     }
 
+    private isValidName(name: string): boolean {
+        return /^[a-zA-Z\s]{1,50}$/.test(name || '');
+    }
+
+    private isValidPhone(phone: string): boolean {
+        return /^[0-9]{10}$/.test(phone || '');
+    }
+
+    private isValidEmail(email: string): boolean {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '');
+    }
+
     isStep1Valid(): boolean {
-        return !!(this.firstName && this.lastName && this.contactEmail &&
-            this.phone && this.phone.length >= 10 && this.address && this.address.trim().length >= 8 && this.city &&
-            this.stateName);
+        const isAltPhoneValid = !this.alternatePhone || this.isValidPhone(this.alternatePhone);
+        return !!(
+            this.isValidName(this.firstName) &&
+            this.isValidName(this.lastName) &&
+            this.isValidEmail(this.contactEmail) &&
+            this.isValidPhone(this.phone) &&
+            isAltPhoneValid &&
+            this.address && this.address.trim().length >= 8 &&
+            this.city && this.stateName
+        );
     }
 
     nextStep() {
@@ -522,16 +543,66 @@ export class CheckoutComponent implements OnInit {
         });
     }
 
-    printInvoice() {
-        // After the print/save dialog is closed, auto-proceed to review popup
-        const onAfterPrint = () => {
-            window.removeEventListener('afterprint', onAfterPrint);
-            setTimeout(() => {
-                this.closeInvoice();
-            }, 300);
-        };
-        window.addEventListener('afterprint', onAfterPrint);
-        window.print();
+    downloadInvoice() {
+        const invoiceElement = document.querySelector('.luxury-bill-card') as HTMLElement;
+        if (!invoiceElement) return;
+
+        // Temporarily hide the actions button row so it doesn't appear in the PDF
+        const actionsElement = document.querySelector('.luxury-actions') as HTMLElement;
+        if (actionsElement) actionsElement.style.display = 'none';
+
+        // Capture the full scrolled height of the element, not just what's visible on screen
+        const elementHeight = invoiceElement.scrollHeight;
+        const elementWidth = invoiceElement.scrollWidth;
+
+        html2canvas(invoiceElement, {
+            scale: 2, // High resolution
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            width: elementWidth,
+            height: elementHeight,
+            windowWidth: elementWidth,
+            windowHeight: elementHeight,
+            scrollY: 0,
+            x: 0,
+            y: 0
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Calculate ratios to ensure the image fits within the A4 page dimensions
+            const imgRatio = canvas.height / canvas.width;
+
+            // Add padding (margin)
+            const margin = 10;
+            const maxPdfImgWidth = pdfWidth - (margin * 2);
+
+            let finalImgWidth = maxPdfImgWidth;
+            let finalImgHeight = finalImgWidth * imgRatio;
+
+            // If the scaled height is taller than the page, scale by height instead
+            if (finalImgHeight > (pdfHeight - (margin * 2))) {
+                finalImgHeight = pdfHeight - (margin * 2);
+                finalImgWidth = finalImgHeight / imgRatio;
+            }
+
+            // Center horizontally
+            const xOffset = (pdfWidth - finalImgWidth) / 2;
+            const yOffset = margin;
+
+            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
+            pdf.save(`Greenie_Culture_Invoice_${this.placedOrder?.orderId || 'Download'}.pdf`);
+
+            // Restore the buttons and proceed to review
+            if (actionsElement) actionsElement.style.display = 'flex';
+            this.closeInvoice();
+        }).catch(err => {
+            console.error('Error generating PDF:', err);
+            if (actionsElement) actionsElement.style.display = 'flex';
+        });
     }
 
     closeInvoice() {

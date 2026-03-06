@@ -12,6 +12,7 @@ export interface AboutSection {
     author: string;
     order?: number;
     createdAt?: Date;
+    isImmediate?: boolean;
 }
 
 @Injectable({

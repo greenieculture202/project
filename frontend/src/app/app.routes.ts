@@ -15,6 +15,7 @@ export const routes: Routes = [
     { path: 'register', loadComponent: () => import('./register/register').then(m => m.RegisterComponent) },
     { path: 'checkout', loadComponent: () => import('./checkout/checkout').then(m => m.CheckoutComponent) },
     { path: 'about-us', loadComponent: () => import('./about-us/about-us').then(m => m.AboutUsComponent) },
+    { path: 'about us', redirectTo: 'about-us', pathMatch: 'full' },
     { path: 'contact-us', loadComponent: () => import('./contact-us/contact-us').then(m => m.ContactUsComponent) },
     { path: 'placements', loadComponent: () => import('./placements/placements').then(m => m.PlacementsComponent) },
     { path: 'user-panel', loadComponent: () => import('./user-panel/user-panel').then(m => m.UserPanelComponent) },
