@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '../services/user.service';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 @Component({
@@ -566,7 +566,7 @@ export class CheckoutComponent implements OnInit {
             scrollY: 0,
             x: 0,
             y: 0
-        }).then(canvas => {
+        }).then((canvas: HTMLCanvasElement) => {
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const pdf = new jsPDF('p', 'mm', 'a4');
 
@@ -599,7 +599,7 @@ export class CheckoutComponent implements OnInit {
             // Restore the buttons and proceed to review
             if (actionsElement) actionsElement.style.display = 'flex';
             this.closeInvoice();
-        }).catch(err => {
+        }).catch((err: any) => {
             console.error('Error generating PDF:', err);
             if (actionsElement) actionsElement.style.display = 'flex';
         });

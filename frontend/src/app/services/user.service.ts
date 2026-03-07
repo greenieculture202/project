@@ -48,4 +48,8 @@ export class UserService {
     deleteUser(id: string): Observable<any> {
         return this.http.delete(`/api/admin/users/${id}`, { headers: this.getHeaders() });
     }
+
+    updateOrderStatus(orderId: string, status: string): Observable<any> {
+        return this.http.put(`/api/admin/orders/${orderId}/status`, { status }, { headers: this.getHeaders() });
+    }
 }

@@ -21,6 +21,11 @@ import { FormsModule } from '@angular/forms';
     styleUrl: './admin-panel.css'
 })
 export class AdminPanelComponent implements OnInit {
+    searchTerm: string = '';
+    activeMainCategory: string = 'Plants';
+    activeCompanionGroup: string = 'All';
+    showUserModal: boolean = false;
+
     authService = inject(AuthService);
     userService = inject(UserService);
     productService = inject(ProductService);
@@ -62,9 +67,6 @@ export class AdminPanelComponent implements OnInit {
     productMap: { [key: string]: any[] } = {};
     isLoadingProducts: boolean = false;
     productCategoryFilter: string = 'All';
-    searchTerm: string = ''; // For global/scoped product search
-    activeMainCategory: string = 'Plants';
-    activeCompanionGroup: string = 'All'; // For the 4 big tabs in Plant Companions
 
     // Inquiries
     inquiries: Inquiry[] = [];
@@ -399,8 +401,18 @@ export class AdminPanelComponent implements OnInit {
         image: '',
         images: ['', '', '', ''], // 4 additional images
         description: '',
-        tags: ''
+        tags: '',
+        stock: 0
     };
+
+    // Tracking and Courier Fields
+    selectedCourier: string = '';
+    trackingNumber: string = '';
+    courierOptions: string[] = ['Blue Dart', 'Delhivery', 'DTDC'];
+
+    // Tracking Generation Limits
+    // Store: { [orderId]: { count: number, lockUntil: number } }
+    trackingGenLimits: { [key: string]: { count: number, lockUntil: number } } = {};
 
     // Success Modal State
     showSuccessModal: boolean = false;
@@ -1399,6 +1411,7 @@ export class AdminPanelComponent implements OnInit {
 
     getStatusIcon(status: string) {
         const icons: { [key: string]: string } = {
+            'Pending': 'fa-clock',
             'Processing': 'fa-sync-alt',
             'Shipped': 'fa-truck-fast',
             'Delivered': 'fa-circle-check',
@@ -1455,13 +1468,31 @@ export class AdminPanelComponent implements OnInit {
         const token = sessionStorage.getItem('auth_token');
         if (!token) return;
 
-        this.http.put(`/api/admin/orders/${orderId}/status`, { status: newStatus }, { headers: { 'x-auth-token': token } })
+        const body: any = { status: newStatus };
+        if (newStatus === 'Shipped') {
+            if (!this.selectedCourier) {
+                alert('Please select a courier partner.');
+                return;
+            }
+
+            // Auto-generate if not manually entered (this doesn't count towards the 3-click limit)
+            if (!this.trackingNumber) {
+                this.trackingNumber = this.createTrackingNumberString();
+            }
+
+            body.courierName = this.selectedCourier;
+            body.trackingNumber = this.trackingNumber;
+        }
+
+        this.http.put(`/api/admin/orders/${orderId}/status`, body, { headers: { 'x-auth-token': token } })
             .subscribe({
                 next: (updatedOrder: any) => {
                     this.ngZone.run(() => {
                         const idx = this.orders.findIndex(o => o._id === orderId);
                         if (idx !== -1) {
                             this.orders[idx] = updatedOrder;
+                            this.selectedCourier = '';
+                            this.trackingNumber = '';
                             this.cdr.detectChanges();
                         }
                     });
@@ -1470,8 +1501,61 @@ export class AdminPanelComponent implements OnInit {
             });
     }
 
+    dispatchOrder(orderId: string) {
+        this.updateOrderStatus(orderId, 'Shipped');
+    }
+
+    // Manual generation with limit
+    generateTrackingNumber(orderId: string) {
+        if (!orderId) return;
+
+        const now = Date.now();
+        if (!this.trackingGenLimits[orderId]) {
+            this.trackingGenLimits[orderId] = { count: 0, lockUntil: 0 };
+        }
+
+        const state = this.trackingGenLimits[orderId];
+
+        // Check if locked
+        if (state.lockUntil > now) {
+            const minutesLeft = Math.ceil((state.lockUntil - now) / 60000);
+            alert(`Limit reached. Please wait ${minutesLeft} minutes.`);
+            return;
+        }
+
+        // Reset if cooldown has passed
+        if (state.lockUntil !== 0 && now > state.lockUntil) {
+            state.count = 0;
+            state.lockUntil = 0;
+        }
+
+        if (state.count < 3) {
+            this.trackingNumber = this.createTrackingNumberString();
+            state.count++;
+
+            if (state.count === 3) {
+                state.lockUntil = now + (5 * 60 * 1000); // 5 minutes lock
+            }
+        }
+    }
+
+    // Check if the button should be disabled
+    isTrackingDisabled(orderId: string): boolean {
+        const state = this.trackingGenLimits[orderId];
+        if (!state) return false;
+        return state.count >= 3 && Date.now() < state.lockUntil;
+    }
+
+    private createTrackingNumberString(): string {
+        const prefix = 'GC';
+        const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+        return `${prefix}-${date}-${random}`;
+    }
+
     getStatusClass(status: string): string {
         switch (status) {
+            case 'Pending': return 'status-pending';
             case 'Processing': return 'status-processing';
             case 'Shipped': return 'status-shipped';
             case 'Delivered': return 'status-delivered';
@@ -1573,62 +1657,80 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(true);
     }
 
-    trackByIndex(index: number, obj: any): any {
-        return index;
-    }
+    getOfferCodeByLink(link: string | undefined | null): string | null {
+        if (!link) return null;
 
-    // --- Offer Associated Products Methods ---
-    getOfferCodeByLink(ctaLink: string | undefined): string | null {
-        if (!ctaLink) return null;
-        // Extract offer code from URL like /indoor-offer?code=INDOOR10
+        // Strategy 1: Check in the predefined offerSectionCodes list
+        const found = this.offerSectionCodes.find(code => code.page === link || link.includes(code.page));
+        if (found) return found.code;
+
+        // Strategy 2: Extract code from URL parameter if available (e.g., /offer?code=OFFER10)
         try {
-            const url = new URL(ctaLink, 'http://dummy.com');
+            const url = new URL(link, 'http://dummy.com');
             const code = url.searchParams.get('code');
             if (code) return code;
         } catch (e) {
-            // fallback: try to extract manually
+            // fallback: try to extract manually using regex
         }
-        const match = ctaLink.match(/[?&]code=([^&]+)/);
+        const match = link.match(/[?&]code=([^&]+)/);
         return match ? match[1] : null;
     }
 
-    viewOfferCards(code: string) {
+    viewOfferCards(code: string | null) {
+        if (!code) return;
         this.activeOfferCode = code;
-        // Find the badge for this offer code
-        const offer = this.offers.find(o => this.getOfferCodeByLink(o.ctaLink) === code);
-        this.activeOfferBadge = offer?.badge || '';
+
+        // Find the badge (from offerSectionCodes or existing offers list)
+        this.activeOfferBadge = this.offerSectionCodes.find(c => c.code === code)?.badge ||
+            this.offers.find(o => this.getOfferCodeByLink(o.ctaLink) === code)?.badge || '';
+
+        this.associatedProducts = [];
         this.showAssociatedProductsModal = true;
 
-        // Search all products for those tagged with this offer code
-        this.associatedProducts = [];
-        let allProducts: any[] = [];
-        Object.values(this.productMap).forEach((products: any) => {
-            if (Array.isArray(products)) {
-                allProducts = [...allProducts, ...products];
-            }
+        if (Object.keys(this.productMap).length === 0) {
+            this.productService.getAllProductsMap().subscribe({
+                next: (data: any) => {
+                    this.productMap = data;
+                    this.filterProductsForOffer(code);
+                },
+                error: (err: any) => console.error('Error fetching product map for offer code', err)
+            });
+        } else {
+            this.filterProductsForOffer(code);
+        }
+    }
+
+    private filterProductsForOffer(code: string) {
+        this.ngZone.run(() => {
+            // Flatten all products from the map
+            const allProducts = Object.values(this.productMap).flat();
+            // Remove duplicates by ID or name
+            const uniqueProducts = Array.from(new Map(allProducts.map(p => [p._id || p.name, p])).values());
+
+            // Filter products whose tags or category contains the offer code (case-insensitive)
+            const searchCode = code.toLowerCase();
+            this.associatedProducts = uniqueProducts.filter((p: any) => {
+                const tags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
+                const cat = (p.category || '').toLowerCase();
+                return tags.includes(searchCode) || cat.includes(searchCode);
+            });
+
+            this.cdr.detectChanges();
         });
-
-        // Remove duplicates
-        const unique = Array.from(new Map(allProducts.map(p => [p._id, p])).values());
-
-        // Filter products whose tags or category contains the offer code (case-insensitive)
-        const searchCode = code.toLowerCase();
-        this.associatedProducts = unique.filter((p: any) => {
-            const tags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
-            const cat = (p.category || '').toLowerCase();
-            return tags.includes(searchCode) || cat.includes(searchCode);
-        });
-
-        this.cdr.detectChanges();
     }
 
     closeAssociatedProductsModal() {
         this.showAssociatedProductsModal = false;
+        this.associatedProducts = [];
         this.activeOfferCode = '';
         this.activeOfferBadge = '';
-        this.associatedProducts = [];
         this.cdr.detectChanges();
     }
+
+    trackByIndex(index: number, obj: any): any {
+        return index;
+    }
+
 
     loadInquiries() {
         this.isLoadingInquiries = true;

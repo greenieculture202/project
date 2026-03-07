@@ -30,7 +30,7 @@ export class App {
 
   private updateTopLayoutVisibility(url: string): void {
     const cleanUrl = url.split('?')[0].split('#')[0];
-    const hiddenRoutes = ['/login', '/register', '/admin-dashboard'];
+    const hiddenRoutes = ['/login', '/register', '/admin-dashboard', '/delivery-panel'];
     const isHidden = hiddenRoutes.some((route) => cleanUrl.startsWith(route));
     this.hideTopLayout.set(isHidden);
 

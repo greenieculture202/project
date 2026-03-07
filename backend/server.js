@@ -1,7 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('--- BACKEND STARTUP ---');
+console.log('Working Directory:', process.cwd());
+console.log('__dirname:', __dirname);
+console.log('--- ---');
 
 const User = require('./models/User');
 const Product = require('./models/Product');
@@ -27,7 +32,7 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID.trim());
 const otpStore = new Map();
 
 const fs = require('fs');
-const path = require('path');
+// path already imported at top
 const debugLog = (msg) => {
     const logPath = path.join(__dirname, 'debug_otp.log');
     const timestamp = new Date().toISOString();
@@ -110,7 +115,7 @@ const sendOrderConfirmationEmail = async (user, order) => {
                             <p style="color: #6b7280; font-size: 14px;">We'll notify you as soon as your plants leave our greenhouse.</p>
                             
                             <div style="margin-top: 25px;">
-                                <a href="http://localhost:4200/my-account/orders" style="background-color: #2d8c6f; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Track My Order</a>
+                                <a href="http://localhost:3000/my-account/orders" style="background-color: #2d8c6f; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Track My Order</a>
                             </div>
                         </div>
                     </div>
@@ -159,14 +164,15 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-    console.error('FATAL ERROR: MONGODB_URI is not defined in .env');
-    process.exit(1);
-}
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
+console.log('Attempting to connect to MongoDB...');
+console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
 mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .then(() => {
+        console.log('✅ MongoDB connected successfully');
+        console.log('📊 Active Database:', mongoose.connection.name);
+    })
+    .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
@@ -245,7 +251,7 @@ app.post('/api/auth/login', async (req, res) => {
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic, role: user.role } });
         });
     } catch (err) {
         console.error(err.message);
@@ -637,8 +643,9 @@ app.post('/api/user/orders', auth, async (req, res) => {
             userName: req.user.fullName || 'User',
             items: items,
             totalAmount: totalAmount,
+            deliveryCharge: req.body.deliveryCharge || 0,
             paymentMethod: paymentMethod || 'UPI',
-            status: 'Processing',
+            status: 'Pending',
             transactionId: transactionId || '',
             paymentScreenshot: paymentScreenshot || '',
             paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending',
@@ -676,13 +683,23 @@ app.get('/api/admin/orders', auth, async (req, res) => {
 
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
-        const { status } = req.body;
-        if (!['Processing', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
+        const { status, courierName, trackingNumber } = req.body;
+        if (!['Pending', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status update' });
         }
+
+        const updateData = { status };
+        if (courierName) updateData.courierName = courierName;
+        if (trackingNumber) updateData.trackingNumber = trackingNumber;
+
+        // Automatically set to Shipped if courier and tracking are provided
+        if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled') {
+            updateData.status = 'Shipped';
+        }
+
         const order = await Order.findByIdAndUpdate(
             req.params.id,
-            { status },
+            { $set: updateData },
             { new: true }
         ).populate('userId', 'fullName email phone alternatePhone address city state');
         if (!order) {

@@ -18,7 +18,8 @@ const productSchema = new mongoose.Schema({
         name: { type: String }, // e.g. "250g", "500g", "1kg", "2kg", "5kg"
         price: { type: String },
         originalPrice: { type: String }
-    }]
+    }],
+    stock: { type: Number, default: 0 }
 });
 
 // Create text index for searching
