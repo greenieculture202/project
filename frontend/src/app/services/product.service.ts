@@ -537,4 +537,14 @@ export class ProductService {
             })
         );
     }
+
+    // Get products associated with an offer code (matches in tags or category)
+    getProductsByOfferCode(code: string): Observable<Product[]> {
+        return this.http.get<Product[]>(`${this.apiUrl}/products?category=${encodeURIComponent(code)}`).pipe(
+            catchError(error => {
+                console.error('Error fetching products by offer code:', error);
+                return of([]);
+            })
+        );
+    }
 }

@@ -356,7 +356,7 @@ export class CheckoutComponent implements OnInit {
                     // Save the pre-filled state
                     this.saveCheckoutState();
                 },
-                error: (err) => console.warn('[Checkout] Failed to fetch profile for auto-fill', err)
+                error: (err: any) => console.warn('[Checkout] Failed to fetch profile for auto-fill', err)
             });
         }
     }
@@ -497,7 +497,7 @@ export class CheckoutComponent implements OnInit {
 
             this.userService.updateUserProfile(profileData).subscribe({
                 next: () => this.executePlaceOrder(orderData),
-                error: (err) => {
+                error: (err: any) => {
                     console.warn('[Checkout] Profile update failed before ordering, proceeding anyway.', err);
                     this.executePlaceOrder(orderData);
                 }
@@ -514,7 +514,7 @@ export class CheckoutComponent implements OnInit {
 
     private executePlaceOrder(orderData: any) {
         this.userService.placeOrder(orderData).subscribe({
-            next: (res) => {
+            next: (res: any) => {
                 this.placedOrder = res;
                 this.showInvoiceModal = true;
                 this.isProcessing = false;
@@ -523,7 +523,7 @@ export class CheckoutComponent implements OnInit {
                 this.cartService.clear();
                 localStorage.removeItem('checkout_state');
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('[Checkout] Save failed, but showing invoice view for user:', err);
                 this.isProcessing = false;
                 // Create a temporary mock object for better fallback UI

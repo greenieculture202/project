@@ -75,6 +75,8 @@ export class AdminPanelComponent implements OnInit {
     selectedInquiry: Inquiry | null = null;
     replyContent: string = '';
 
+    today: Date = new Date();
+
     // Offers
     offers: Offer[] = [];
     isLoadingOffers: boolean = false;
@@ -172,7 +174,7 @@ export class AdminPanelComponent implements OnInit {
             page: '/flowering-offer',
             cardsCount: 6,
             code: 'G-FLOWER-6-SEC',
-            badge: '70% OFF',
+            badge: 'SALE',
             instruction: 'Add this code to a product\'s TAGS or CATEGORY to show it here.'
         }
     ];
@@ -445,10 +447,27 @@ export class AdminPanelComponent implements OnInit {
     }
 
     stats = [
-        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5' },
-        { label: 'Total Orders', value: '456', icon: 'shopping-bag', color: '#10b981' },
-        { label: 'Revenue', value: '₹84,290', icon: 'credit-card', color: '#f59e0b' },
-        { label: 'Pending Reviews', value: '12', icon: 'star', color: '#ef4444' }
+        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month' },
+        { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month' },
+        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month' },
+        { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average' }
+    ];
+
+    dashboardTrends = [
+        { day: 'Mon', count: 45 },
+        { day: 'Tue', count: 52 },
+        { day: 'Wed', count: 38 },
+        { day: 'Thu', count: 65 },
+        { day: 'Fri', count: 48 },
+        { day: 'Sat', count: 82 },
+        { day: 'Sun', count: 70 }
+    ];
+
+    categoryStats = [
+        { name: 'Indoor Plants', count: 125, percentage: 45, color: '#10b981' },
+        { name: 'Garden Tools', count: 84, percentage: 30, color: '#6366f1' },
+        { name: 'Decorative Pots', count: 42, percentage: 15, color: '#f59e0b' },
+        { name: 'Fertilizers', count: 28, percentage: 10, color: '#ef4444' }
     ];
 
     ngOnInit() {
@@ -470,6 +489,8 @@ export class AdminPanelComponent implements OnInit {
                 this.setTab('dashboard', undefined, false);
             }
         });
+        this.loadUsers();
+        this.loadOrders();
     }
 
     loadUsers() {
@@ -854,6 +875,20 @@ export class AdminPanelComponent implements OnInit {
     }
 
     getProductsForCategory(category: string): any[] {
+        // --- SPECIAL CASE: Dynamic Bestsellers from Backend aggregation ---
+        if (category === 'Bestsellers' && this.productMap['Bestsellers']) {
+            const list = this.productMap['Bestsellers'];
+            if (this.searchTerm && this.searchTerm.trim() !== '') {
+                const term = this.searchTerm.toLowerCase();
+                return list.filter((p: any) =>
+                    p.name.toLowerCase().includes(term) ||
+                    (p.category || '').toLowerCase().includes(term) ||
+                    (Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(term)))
+                );
+            }
+            return list;
+        }
+
         // Find defining items for this sub-category from our navbar mapping
         const navItems = this.navbarDefinitions[category] || [];
         const itemsToSearch = [category.toLowerCase(), ...navItems.map((i: string) => i.toLowerCase())];
@@ -1657,65 +1692,53 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(true);
     }
 
-    getOfferCodeByLink(link: string | undefined | null): string | null {
-        if (!link) return null;
+    getOfferCodeByLink(ctaLink: string | undefined): string | null {
+        if (!ctaLink) return null;
 
-        // Strategy 1: Check in the predefined offerSectionCodes list
-        const found = this.offerSectionCodes.find(code => code.page === link || link.includes(code.page));
-        if (found) return found.code;
+        // Normalize: remove trailing slashes and ensure leading slash
+        let link = ctaLink.trim();
+        if (!link.startsWith('/')) link = '/' + link;
+        if (link.endsWith('/') && link.length > 1) link = link.slice(0, -1);
 
-        // Strategy 2: Extract code from URL parameter if available (e.g., /offer?code=OFFER10)
-        try {
-            const url = new URL(link, 'http://dummy.com');
-            const code = url.searchParams.get('code');
-            if (code) return code;
-        } catch (e) {
-            // fallback: try to extract manually using regex
-        }
-        const match = link.match(/[?&]code=([^&]+)/);
-        return match ? match[1] : null;
+        // 1. Try to match by "page" property in offerSectionCodes
+        const matchByPage = this.offerSectionCodes.find(o => o.page === link);
+        if (matchByPage) return matchByPage.code;
+
+        // 2. Try to match by "code" property (if it's a direct collection link like /collection/CODE)
+        const parts = link.split('/');
+        const lastPart = parts[parts.length - 1];
+        const matchByCode = this.offerSectionCodes.find(o => o.code === lastPart);
+        if (matchByCode) return matchByCode.code;
+
+        return null;
     }
 
-    viewOfferCards(code: string | null) {
-        if (!code) return;
-        this.activeOfferCode = code;
+    viewOfferCards(offerCode: string) {
+        console.log('Triggering viewOfferCards for code:', offerCode);
+        this.activeOfferCode = offerCode;
+        // Find the badge for this code
+        const codeInfo = this.offerSectionCodes.find(o => o.code === offerCode);
+        this.activeOfferBadge = codeInfo ? codeInfo.badge : '';
 
-        // Find the badge (from offerSectionCodes or existing offers list)
-        this.activeOfferBadge = this.offerSectionCodes.find(c => c.code === code)?.badge ||
-            this.offers.find(o => this.getOfferCodeByLink(o.ctaLink) === code)?.badge || '';
-
-        this.associatedProducts = [];
+        this.isLoadingProducts = true;
         this.showAssociatedProductsModal = true;
+        this.associatedProducts = [];
 
-        if (Object.keys(this.productMap).length === 0) {
-            this.productService.getAllProductsMap().subscribe({
-                next: (data: any) => {
-                    this.productMap = data;
-                    this.filterProductsForOffer(code);
-                },
-                error: (err: any) => console.error('Error fetching product map for offer code', err)
-            });
-        } else {
-            this.filterProductsForOffer(code);
-        }
-    }
-
-    private filterProductsForOffer(code: string) {
-        this.ngZone.run(() => {
-            // Flatten all products from the map
-            const allProducts = Object.values(this.productMap).flat();
-            // Remove duplicates by ID or name
-            const uniqueProducts = Array.from(new Map(allProducts.map(p => [p._id || p.name, p])).values());
-
-            // Filter products whose tags or category contains the offer code (case-insensitive)
-            const searchCode = code.toLowerCase();
-            this.associatedProducts = uniqueProducts.filter((p: any) => {
-                const tags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
-                const cat = (p.category || '').toLowerCase();
-                return tags.includes(searchCode) || cat.includes(searchCode);
-            });
-
-            this.cdr.detectChanges();
+        this.productService.getProductsByOfferCode(offerCode).subscribe({
+            next: (products) => {
+                this.ngZone.run(() => {
+                    this.associatedProducts = products;
+                    this.isLoadingProducts = false;
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error fetching associated products:', err);
+                this.ngZone.run(() => {
+                    this.isLoadingProducts = false;
+                    this.cdr.detectChanges();
+                });
+            }
         });
     }
 
@@ -1725,6 +1748,12 @@ export class AdminPanelComponent implements OnInit {
         this.activeOfferCode = '';
         this.activeOfferBadge = '';
         this.cdr.detectChanges();
+    }
+
+    copyToClipboard(text: string) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Code copied: ' + text);
+        });
     }
 
     trackByIndex(index: number, obj: any): any {
