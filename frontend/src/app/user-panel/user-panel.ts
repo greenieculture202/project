@@ -207,9 +207,11 @@ export class UserPanelComponent implements OnInit {
                     this.profilePic = profile.profilePic || '';
                     this.profilePicPreview = profile.profilePic || '';
                 }
+                if (this.activeTab === 'settings') this.isLoading = false;
             },
             error: (err) => {
                 console.error('[UserPanel] Error loading profile:', err);
+                if (this.activeTab === 'settings') this.isLoading = false;
                 if (err.status === 401) {
                     console.log('[UserPanel] Unauthorized - might need to re-login');
                 }
@@ -276,6 +278,7 @@ export class UserPanelComponent implements OnInit {
     setActiveTab(tab: string) {
         this.activeTab = tab;
         sessionStorage.setItem('user_panel_tab', tab);
+        this.isLoading = true; // Show loader when switching
         if (tab === 'dashboard') this.loadDashboard();
         if (tab === 'orders') this.loadAllOrders();
         if (tab === 'settings') this.loadProfile();
@@ -298,12 +301,31 @@ export class UserPanelComponent implements OnInit {
     }
 
     loadAllOrders() {
+        this.isLoading = true;
         this.userService.getOrders().subscribe({
             next: (orders: any[]) => {
                 this.allOrders = orders;
+                this.isLoading = false;
             },
             error: (err: any) => {
                 console.error('[UserPanel] Error loading all orders:', err);
+                this.isLoading = false;
+            }
+        });
+    }
+
+    cancelOrder(orderId: string) {
+        if (!confirm('Are you sure you want to cancel this order?')) return;
+
+        this.userService.updateOrderStatus(orderId, 'Cancelled').subscribe({
+            next: () => {
+                alert('Order cancelled successfully.');
+                this.loadAllOrders();
+                this.loadDashboard();
+            },
+            error: (err) => {
+                console.error('[UserPanel] Cancel failed:', err);
+                alert('Failed to cancel order: ' + (err.error?.message || 'Error occurred'));
             }
         });
     }

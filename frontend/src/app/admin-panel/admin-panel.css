@@ -494,8 +494,14 @@
 }
 
 .logout-section {
-    padding: 0 1rem;
+    padding: 1rem;
+    padding-bottom: 2rem;
     margin-top: auto;
+    background: #1e293b;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .btn-logout {

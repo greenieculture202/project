@@ -1,0 +1,134 @@
+.analytics-container {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+    min-height: 100vh;
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.analytics-header {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.analytics-header h1 {
+    font-size: 2.5rem;
+    color: #1a5d1a;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, #166534, #0369a1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.analytics-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card h3 {
+    color: #334155;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0.5rem 0;
+}
+
+.stat-main {
+    grid-column: span 1;
+}
+
+.trend {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.usage-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.usage-row .name {
+    width: 100px;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar .fill {
+    height: 100%;
+    background: #16a34a;
+    border-radius: 4px;
+}
+
+.usage-row .percent {
+    width: 40px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.time-stats .subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.insights ul {
+    list-style: none;
+    padding: 0;
+}
+
+.insights li {
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    color: #334155;
+    border-left: 4px solid #16a34a;
+}
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.loading {
+    text-align: center;
+    padding: 5rem;
+    font-size: 1.25rem;
+    color: #64748b;
+}
