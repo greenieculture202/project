@@ -1,0 +1,902 @@
+[
+  {
+    "name": "Majestic Zen Garden",
+    "tags": [
+      "Easy Care",
+      "Modern Decor",
+      "Perfect Gift"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Jade Luck Charm",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Peace Lily Purification",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Snake Plant Sansevieria",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Money Plant Golden",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Areca Palm",
+    "tags": [
+      "Air Purifying",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Rubber Plant Burgundy",
+    "tags": [
+      "Air Purifying",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "ZZ Plant Zamia",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Pet Friendly"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Bamboo Palm",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Monstera Deliciosa",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Easy Care"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "String of Pearls",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Calathea Roseopicta",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Pet Friendly"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Aglaonema Red",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Philodendron Birkin",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Begonia Maculata",
+    "tags": [
+      "Modern Decor",
+      "Easy Care",
+      "Perfect Gift"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Syngonium Pink",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Neon Pothos",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Hoya Kerrii Heart",
+    "tags": [
+      "Perfect Gift",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Orchid Mini",
+    "tags": [
+      "Perfect Gift",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Monstera Deliciosa II",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Easy Care"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "String of Pearls II",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Calathea Roseopicta II",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Pet Friendly"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Philodendron Birkin II",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Begonia Maculata II",
+    "tags": [
+      "Modern Decor",
+      "Easy Care",
+      "Perfect Gift"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Syngonium Pink II",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Neon Pothos II",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Hoya Kerrii Heart II",
+    "tags": [
+      "Perfect Gift",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Orchid Mini II",
+    "tags": [
+      "Perfect Gift",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Spider Plant",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Pet Friendly"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Money Plant",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Boston Fern",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Snake Plant",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Aloe Vera",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Jade Plant",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Rubber Plant",
+    "tags": [
+      "Air Purifying",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "ZZ Plant",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Areca Palm",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Lucky Bamboo",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Peace Lily",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Pet Friendly"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Chinese Evergreen",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Dracaena",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Anthurium",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Calathea",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Philodendron",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Croton",
+    "tags": [
+      "Air Purifying",
+      "Modern Decor",
+      "Easy Care"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "English Ivy",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Orchid",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Ashoka Tree",
+    "tags": [
+      "Easy Care",
+      "Modern Decor",
+      "Perfect Gift"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Neem Tree",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Mango Tree",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Guava Plant",
+    "tags": [
+      "Perfect Gift",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Coconut Tree",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Banyan Tree",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Peepal Tree",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Palm Tree",
+    "tags": [
+      "Vastu Friendly",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Bamboo Plant",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Tulsi Plant",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Curry Leaf Plant",
+    "tags": [
+      "Easy Care",
+      "Modern Decor",
+      "Perfect Gift"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Lemon Plant",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Papaya Plant",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Banana Plant",
+    "tags": [
+      "Perfect Gift",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Aloe Vera",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Perfect Gift"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Snake Plant",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Hibiscus",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Bougainvillea",
+    "tags": [
+      "Vastu Friendly",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Areca Palm",
+    "tags": [
+      "Easy Care",
+      "Vastu Friendly",
+      "Air Purifying"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Croton",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Vastu Friendly"
+    ],
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Peace Lily",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Perfect Gift"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Anthurium",
+    "tags": [
+      "Easy Care",
+      "Modern Decor",
+      "Perfect Gift"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Orchid",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Kalanchoe",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Begonia",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Geranium",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "African Violet",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Air Purifying"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Jasmine (Indoor Variety)",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Bromeliad",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Amaryllis",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Christmas Cactus",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Air Purifying"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Crown of Thorns",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Clivia",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Gloxinia",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Flamingo Flower",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Cyclamen",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Impatiens",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Air Purifying"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Lipstick Plant",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Hoya",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Modern Decor"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Anthurium Lily",
+    "tags": [
+      "Easy Care",
+      "Perfect Gift",
+      "Air Purifying"
+    ],
+    "category": "Flowering Plants"
+  },
+  {
+    "name": "Snake Plant",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Areca Palm",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Spider Plant",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Peace Lily",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Rubber Plant",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Aloe Vera",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Perfect Gift"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "English Ivy",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Boston Fern",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "ZZ Plant",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Philodendron",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Modern Decor"
+    ],
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Snake Plant II",
+    "tags": [
+      "Air Purifying",
+      "Easy Care",
+      "Pet Friendly"
+    ],
+    "category": "Air Purifying"
+  }
+]

@@ -1,46 +1,63 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const Product = require('./models/Product');
 
-async function seedOfferTags() {
+const SEED_DATA = [
+    {
+        code: 'G-BOGO-6-SECTION',
+        category: 'Bestsellers',
+        limit: 4
+    },
+    {
+        code: 'G-INDOOR-6-SEC',
+        category: 'Indoor Plants',
+        limit: 6
+    },
+    {
+        code: 'G-GARDEN-6-SEC',
+        category: 'Gardening Tools',
+        limit: 6
+    },
+    {
+        code: 'G-FLOWER-6-SEC',
+        category: 'Flowering Plants',
+        limit: 6
+    }
+];
+
+async function seedTags() {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log('✅ Connected to MongoDB');
+        const productsCollection = mongoose.connection.collection('products');
 
-        const mappings = [
-            { category: 'Vegetable Seeds', tag: 'G-BOGO-6-SECTION' },
-            { category: 'Fruit Seeds', tag: 'G-BOGO-6-SECTION' },
-            { category: 'Indoor Plants', tag: 'G-INDOOR-6-SEC' },
-            { category: 'Outdoor Blooms', tag: 'G-INDOOR-6-SEC' }, // Add some blooms to indoor too for demo
-            { category: 'Gardening Tools', tag: 'G-GARDEN-6-SEC' },
-            { category: 'Soil & Growing Media', tag: 'G-GARDEN-6-SEC' },
-            { category: 'Flower Seeds', tag: 'G-FLOWER-6-BANNER' },
-            { category: 'Accessories Plants', tag: 'G-ACCESS-6-SALE' }
-        ];
+        console.log('--- Starting Seeding ---');
 
-        console.log('📦 Updating products with offer codes...');
+        for (const item of SEED_DATA) {
+            // Find products in the specified category that don't already have the tag
+            const products = await productsCollection
+                .find({ category: item.category, tags: { $ne: item.code } })
+                .limit(item.limit)
+                .toArray();
 
-        for (const map of mappings) {
-            const result = await Product.updateMany(
-                { category: map.category },
-                { $addToSet: { tags: map.tag } }
+            if (products.length === 0) {
+                console.log(`No products found for category: ${item.category}`);
+                continue;
+            }
+
+            const ids = products.map(p => p._id);
+            await productsCollection.updateMany(
+                { _id: { $in: ids } },
+                { $addToSet: { tags: item.code } }
             );
-            console.log(`- Added ${map.tag} to ${result.modifiedCount} products in ${map.category}`);
+
+            console.log(`Tagged ${products.length} products with ${item.code} in category ${item.category}`);
         }
 
-        // Add to some "Gardening" category fallback too
-        const resultFallback = await Product.updateMany(
-            { category: 'Gardening' },
-            { $addToSet: { tags: 'G-INDOOR-6-SEC' } }
-        );
-        console.log(`- Added G-INDOOR-6-SEC to ${resultFallback.modifiedCount} "Gardening" products`);
-
-        console.log('✅ Success! Now products should show up in "Associated Cards" in the Admin Panel.');
+        console.log('--- Seeding Complete ---');
         process.exit(0);
     } catch (err) {
-        console.error('❌ Error during tag seeding:', err);
+        console.error('Error during seeding:', err);
         process.exit(1);
     }
 }
 
-seedOfferTags();
+seedTags();
