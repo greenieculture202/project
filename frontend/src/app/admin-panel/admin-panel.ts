@@ -842,6 +842,20 @@ export class AdminPanelComponent implements OnInit {
     }
 
     getProductsForCategory(category: string): any[] {
+        // --- SPECIAL CASE: Dynamic Bestsellers from Backend aggregation ---
+        if (category === 'Bestsellers' && this.productMap['Bestsellers']) {
+            const list = this.productMap['Bestsellers'];
+            if (this.searchTerm && this.searchTerm.trim() !== '') {
+                const term = this.searchTerm.toLowerCase();
+                return list.filter((p: any) =>
+                    p.name.toLowerCase().includes(term) ||
+                    (p.category || '').toLowerCase().includes(term) ||
+                    (Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(term)))
+                );
+            }
+            return list;
+        }
+
         // Find defining items for this sub-category from our navbar mapping
         const navItems = this.navbarDefinitions[category] || [];
         const itemsToSearch = [category.toLowerCase(), ...navItems.map((i: string) => i.toLowerCase())];

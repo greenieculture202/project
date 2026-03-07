@@ -426,6 +426,44 @@ app.get('/api/products', async (req, res) => {
         if (category) {
             let decodedCategory = decodeURIComponent(category).trim();
 
+            // --- SPECIAL CASE: Dynamic Bestsellers based on Orders ---
+            if (decodedCategory === 'Bestsellers') {
+                const limitNum = parseInt(limit) || 20;
+                const topSelling = await Order.aggregate([
+                    { $unwind: "$items" },
+                    {
+                        $group: {
+                            _id: "$items.name",
+                            totalSold: { $sum: "$items.quantity" }
+                        }
+                    },
+                    { $sort: { totalSold: -1 } },
+                    { $limit: limitNum }
+                ]);
+
+                let sortedProducts = [];
+                if (topSelling.length > 0) {
+                    const productNames = topSelling.map(s => s._id);
+                    const products = await Product.find({ name: { $in: productNames } }).lean();
+                    sortedProducts = topSelling
+                        .map(s => products.find(p => p.name === s._id))
+                        .filter(p => !!p);
+                }
+
+                // Pad with static Bestsellers if not enough order data
+                if (sortedProducts.length < limitNum) {
+                    const existingIds = sortedProducts.map(p => p._id);
+                    const padding = await Product.find({
+                        category: 'Bestsellers',
+                        _id: { $nin: existingIds }
+                    }).limit(limitNum - sortedProducts.length).lean();
+                    sortedProducts = [...sortedProducts, ...padding];
+                }
+
+                console.log(`[ProductsAPI] Returning ${sortedProducts.length} Bestsellers`);
+                return res.json(sortedProducts);
+            }
+
             // Broaden search for main categories
             let usePartial = false;
             if (['seeds', 'plants', 'accessories', 'soil'].some(c => decodedCategory.toLowerCase().includes(c))) {
@@ -532,6 +570,35 @@ app.get('/api/products/map', async (req, res) => {
             acc[product.category].push(product);
             return acc;
         }, {});
+
+        // Inject Dynamic Bestsellers into the map
+        const topSelling = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.name",
+                    totalSold: { $sum: "$items.quantity" }
+                }
+            },
+            { $sort: { totalSold: -1 } },
+            { $limit: 20 }
+        ]);
+
+        let bestSellers = [];
+        if (topSelling.length > 0) {
+            bestSellers = topSelling
+                .map(s => products.find(p => p.name === s._id))
+                .filter(p => !!p);
+        }
+
+        // Pad with static Bestsellers up to 20
+        if (bestSellers.length < 20) {
+            const existingIds = new Set(bestSellers.map(p => p._id.toString()));
+            const staticBS = products.filter(p => p.category === 'Bestsellers' && !existingIds.has(p._id.toString()));
+            bestSellers = [...bestSellers, ...staticBS.slice(0, 20 - bestSellers.length)];
+        }
+        productMap['Bestsellers'] = bestSellers;
+
         res.json(productMap);
     } catch (err) {
         res.status(500).json({ message: err.message });
