@@ -594,6 +594,27 @@
                 </div>
             </div>
 
+            <!-- Offer Reference / Instructions -->
+            <div class="offer-reference-section" *ngIf="offers.length > 0">
+                <div class="reference-card">
+                    <div class="header">
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Product Association Guide</h3>
+                        <p>To show products on specific offer pages, use the codes below in the product's
+                            <strong>TAGS</strong>.</p>
+                    </div>
+                    <div class="codes-grid">
+                        <div class="code-item" *ngFor="let o of offerSectionCodes">
+                            <span class="code-label">{{ o.name }}</span>
+                            <div class="code-pill-wrapper" (click)="copyToClipboard(o.code)">
+                                <code class="code-pill">{{ o.code }}</code>
+                                <i class="far fa-copy"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="offers-admin-container">
                 <!-- Loading -->
                 <div *ngIf="isLoadingOffers" class="offers-loading-state">

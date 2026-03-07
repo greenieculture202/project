@@ -452,13 +452,17 @@ app.get('/api/products', async (req, res) => {
                 // For specific sub-categories, be more precise but still allow tag matches
                 query = {
                     $or: [
+                        { category: decodedCategory },
+                        { tags: decodedCategory },
                         { category: { $regex: regex } },
                         { tags: { $regex: regex } },
-                        { category: { $regex: new RegExp(`.*${decodedCategory.replace(/[-\s]+/g, '.*')}.*`, 'i') } }
+                        { category: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } },
+                        { tags: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } }
                     ]
                 };
             }
             console.log(`[ProductsAPI] Querying for: "${decodedCategory}" (Partial: ${usePartial})`);
+            console.log(`[ProductsAPI] DB Query Object: ${JSON.stringify(query)}`);
         }
 
         let productsQuery = Product.find(query).lean();
@@ -471,7 +475,7 @@ app.get('/api/products', async (req, res) => {
         }
 
         const products = await productsQuery;
-        console.log(`[ProductsAPI] Found ${products.length} products for "${category}"`);
+        console.log(`[ProductsAPI] Found ${products.length} products for "${category || 'all'}"`);
         res.json(products);
     } catch (err) {
         console.error('[ProductsAPI] Error:', err.message);

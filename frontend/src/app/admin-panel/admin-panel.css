@@ -4024,6 +4024,125 @@ td {
     border-color: #10b981 !important;
 }
 
+/* Offer Reference Section */
+.offer-reference-section {
+    margin-bottom: 25px;
+    animation: fadeInSlide 0.5s ease;
+}
+
+.reference-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.reference-card .header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 20px;
+    position: relative;
+    padding-left: 50px;
+}
+
+.reference-card .header i {
+    position: absolute;
+    left: 0;
+    top: 5px;
+    font-size: 1.8rem;
+    color: #f59e0b;
+    background: #fffbeb;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.reference-card .header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+    font-weight: 800;
+}
+
+.reference-card .header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.codes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.code-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s;
+}
+
+.code-item:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+.code-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.code-pill-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.code-pill-wrapper:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+}
+
+.code-pill {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+.code-pill-wrapper i {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Associated Products Card Grid (Matches Offer Pages) */
 .product-grid {
     display: grid;

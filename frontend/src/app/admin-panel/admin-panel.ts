@@ -170,7 +170,7 @@ export class AdminPanelComponent implements OnInit {
             page: '/flowering-offer',
             cardsCount: 6,
             code: 'G-FLOWER-6-SEC',
-            badge: '70% OFF',
+            badge: 'SALE',
             instruction: 'Add this code to a product\'s TAGS or CATEGORY to show it here.'
         }
     ];
@@ -1573,61 +1573,70 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(true);
     }
 
-    trackByIndex(index: number, obj: any): any {
-        return index;
-    }
-
-    // --- Offer Associated Products Methods ---
     getOfferCodeByLink(ctaLink: string | undefined): string | null {
         if (!ctaLink) return null;
-        // Extract offer code from URL like /indoor-offer?code=INDOOR10
-        try {
-            const url = new URL(ctaLink, 'http://dummy.com');
-            const code = url.searchParams.get('code');
-            if (code) return code;
-        } catch (e) {
-            // fallback: try to extract manually
-        }
-        const match = ctaLink.match(/[?&]code=([^&]+)/);
-        return match ? match[1] : null;
+
+        // Normalize: remove trailing slashes and ensure leading slash
+        let link = ctaLink.trim();
+        if (!link.startsWith('/')) link = '/' + link;
+        if (link.endsWith('/') && link.length > 1) link = link.slice(0, -1);
+
+        // 1. Try to match by "page" property in offerSectionCodes
+        const matchByPage = this.offerSectionCodes.find(o => o.page === link);
+        if (matchByPage) return matchByPage.code;
+
+        // 2. Try to match by "code" property (if it's a direct collection link like /collection/CODE)
+        const parts = link.split('/');
+        const lastPart = parts[parts.length - 1];
+        const matchByCode = this.offerSectionCodes.find(o => o.code === lastPart);
+        if (matchByCode) return matchByCode.code;
+
+        return null;
     }
 
-    viewOfferCards(code: string) {
-        this.activeOfferCode = code;
-        // Find the badge for this offer code
-        const offer = this.offers.find(o => this.getOfferCodeByLink(o.ctaLink) === code);
-        this.activeOfferBadge = offer?.badge || '';
-        this.showAssociatedProductsModal = true;
+    viewOfferCards(offerCode: string) {
+        console.log('Triggering viewOfferCards for code:', offerCode);
+        this.activeOfferCode = offerCode;
+        // Find the badge for this code
+        const codeInfo = this.offerSectionCodes.find(o => o.code === offerCode);
+        this.activeOfferBadge = codeInfo ? codeInfo.badge : '';
 
-        // Search all products for those tagged with this offer code
+        this.isLoadingProducts = true;
+        this.showAssociatedProductsModal = true;
         this.associatedProducts = [];
-        let allProducts: any[] = [];
-        Object.values(this.productMap).forEach((products: any) => {
-            if (Array.isArray(products)) {
-                allProducts = [...allProducts, ...products];
+
+        this.productService.getProductsByOfferCode(offerCode).subscribe({
+            next: (products) => {
+                this.ngZone.run(() => {
+                    this.associatedProducts = products;
+                    this.isLoadingProducts = false;
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error fetching associated products:', err);
+                this.ngZone.run(() => {
+                    this.isLoadingProducts = false;
+                    this.cdr.detectChanges();
+                });
             }
         });
-
-        // Remove duplicates
-        const unique = Array.from(new Map(allProducts.map(p => [p._id, p])).values());
-
-        // Filter products whose tags or category contains the offer code (case-insensitive)
-        const searchCode = code.toLowerCase();
-        this.associatedProducts = unique.filter((p: any) => {
-            const tags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
-            const cat = (p.category || '').toLowerCase();
-            return tags.includes(searchCode) || cat.includes(searchCode);
-        });
-
-        this.cdr.detectChanges();
     }
 
     closeAssociatedProductsModal() {
         this.showAssociatedProductsModal = false;
         this.activeOfferCode = '';
-        this.activeOfferBadge = '';
         this.associatedProducts = [];
-        this.cdr.detectChanges();
+    }
+
+    copyToClipboard(text: string) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Code copied: ' + text);
+        });
+    }
+
+    trackByIndex(index: number, obj: any): any {
+        return index;
     }
 
     loadInquiries() {

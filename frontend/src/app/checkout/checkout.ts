@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '../services/user.service';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 @Component({
@@ -356,7 +356,7 @@ export class CheckoutComponent implements OnInit {
                     // Save the pre-filled state
                     this.saveCheckoutState();
                 },
-                error: (err) => console.warn('[Checkout] Failed to fetch profile for auto-fill', err)
+                error: (err: any) => console.warn('[Checkout] Failed to fetch profile for auto-fill', err)
             });
         }
     }
@@ -497,7 +497,7 @@ export class CheckoutComponent implements OnInit {
 
             this.userService.updateUserProfile(profileData).subscribe({
                 next: () => this.executePlaceOrder(orderData),
-                error: (err) => {
+                error: (err: any) => {
                     console.warn('[Checkout] Profile update failed before ordering, proceeding anyway.', err);
                     this.executePlaceOrder(orderData);
                 }
@@ -514,7 +514,7 @@ export class CheckoutComponent implements OnInit {
 
     private executePlaceOrder(orderData: any) {
         this.userService.placeOrder(orderData).subscribe({
-            next: (res) => {
+            next: (res: any) => {
                 this.placedOrder = res;
                 this.showInvoiceModal = true;
                 this.isProcessing = false;
@@ -523,7 +523,7 @@ export class CheckoutComponent implements OnInit {
                 this.cartService.clear();
                 localStorage.removeItem('checkout_state');
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('[Checkout] Save failed, but showing invoice view for user:', err);
                 this.isProcessing = false;
                 // Create a temporary mock object for better fallback UI
@@ -566,7 +566,7 @@ export class CheckoutComponent implements OnInit {
             scrollY: 0,
             x: 0,
             y: 0
-        }).then(canvas => {
+        }).then((canvas: HTMLCanvasElement) => {
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const pdf = new jsPDF('p', 'mm', 'a4');
 
@@ -599,7 +599,7 @@ export class CheckoutComponent implements OnInit {
             // Restore the buttons and proceed to review
             if (actionsElement) actionsElement.style.display = 'flex';
             this.closeInvoice();
-        }).catch(err => {
+        }).catch((err: any) => {
             console.error('Error generating PDF:', err);
             if (actionsElement) actionsElement.style.display = 'flex';
         });
