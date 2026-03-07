@@ -158,4 +158,7 @@ export class AuthService {
         return this.isAdminSubject.value;
     }
 
+    getToken(): string | null {
+        return sessionStorage.getItem('auth_token');
+    }
 }

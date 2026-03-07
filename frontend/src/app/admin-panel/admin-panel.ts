@@ -73,6 +73,8 @@ export class AdminPanelComponent implements OnInit {
     selectedInquiry: Inquiry | null = null;
     replyContent: string = '';
 
+    today: Date = new Date();
+
     // Offers
     offers: Offer[] = [];
     isLoadingOffers: boolean = false;
@@ -433,10 +435,27 @@ export class AdminPanelComponent implements OnInit {
     }
 
     stats = [
-        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5' },
-        { label: 'Total Orders', value: '456', icon: 'shopping-bag', color: '#10b981' },
-        { label: 'Revenue', value: '₹84,290', icon: 'credit-card', color: '#f59e0b' },
-        { label: 'Pending Reviews', value: '12', icon: 'star', color: '#ef4444' }
+        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month' },
+        { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month' },
+        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month' },
+        { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average' }
+    ];
+
+    dashboardTrends = [
+        { day: 'Mon', count: 45 },
+        { day: 'Tue', count: 52 },
+        { day: 'Wed', count: 38 },
+        { day: 'Thu', count: 65 },
+        { day: 'Fri', count: 48 },
+        { day: 'Sat', count: 82 },
+        { day: 'Sun', count: 70 }
+    ];
+
+    categoryStats = [
+        { name: 'Indoor Plants', count: 125, percentage: 45, color: '#10b981' },
+        { name: 'Garden Tools', count: 84, percentage: 30, color: '#6366f1' },
+        { name: 'Decorative Pots', count: 42, percentage: 15, color: '#f59e0b' },
+        { name: 'Fertilizers', count: 28, percentage: 10, color: '#ef4444' }
     ];
 
     ngOnInit() {
@@ -458,6 +477,8 @@ export class AdminPanelComponent implements OnInit {
                 this.setTab('dashboard', undefined, false);
             }
         });
+        this.loadUsers();
+        this.loadOrders();
     }
 
     loadUsers() {

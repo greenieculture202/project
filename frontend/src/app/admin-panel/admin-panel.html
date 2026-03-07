@@ -66,79 +66,190 @@
     <main class="main-content">
         <!-- Dashboard Content -->
         <ng-container *ngIf="activeTab === 'dashboard'">
-            <header class="top-header">
-                <div class="welcome">
-                    <h1>Dashboard Overview</h1>
-                    <p>Welcome back, Admin! Here's what's happening today.</p>
+            <header class="top-header-premium">
+                <div class="welcome-group">
+                    <div class="greeting-badge">
+                        <i class="fas fa-sparkles"></i>
+                        <span>System Status: Online & Optimized</span>
+                    </div>
+                    <h1>Dashboard Analytics</h1>
+                    <p>Welcome back, Admin! Here's a brief look at your store's performance.</p>
                 </div>
-                <div class="user-profile">
-                    <div class="avatar">A</div>
-                    <span class="admin-name">Administrator</span>
+                <div class="header-actions-group">
+                    <div class="date-picker-mini">
+                        <i class="far fa-calendar-alt"></i>
+                        <span>{{ today | date:'longDate' }}</span>
+                    </div>
+                    <div class="user-profile-premium">
+                        <div class="avatar-glow">A</div>
+                        <div class="profile-info">
+                            <span class="name">Administrator</span>
+                            <span class="role">System Manager</span>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card" *ngFor="let stat of stats" [style.border-left-color]="stat.color">
-                    <div class="stat-info">
-                        <span class="stat-label">{{stat.label}}</span>
-                        <h2 class="stat-value">{{stat.value}}</h2>
+            <!-- Premium Stats Row -->
+            <div class="stats-row-premium">
+                <div class="premium-stat-card" *ngFor="let stat of stats" [style.--accent-color]="stat.color">
+                    <div class="stat-main">
+                        <div class="stat-icon-wrapper">
+                            <i class="fas fa-{{stat.icon}}"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">{{stat.label}}</span>
+                            <h2 class="stat-value">{{stat.value}}</h2>
+                        </div>
                     </div>
-                    <div class="stat-icon" [style.background-color]="stat.color + '20'" [style.color]="stat.color">
-                        <i class="fas fa-{{stat.icon}}"></i>
+                    <div class="stat-footer">
+                        <span class="stat-trend">
+                            <i class="fas fa-arrow-up"></i> {{stat.trend}}
+                        </span>
+                    </div>
+                    <div class="card-wave"></div>
+                </div>
+            </div>
+
+            <!-- Analytics Distribution Section -->
+            <div class="analytics-layout-grid">
+                <!-- Main Trend Chart Card -->
+                <div class="data-card-premium chart-card">
+                    <div class="card-header-premium">
+                        <div class="header-title">
+                            <h3>Sales Performance</h3>
+                            <span>Weekly trend of completed orders</span>
+                        </div>
+                        <div class="header-options">
+                            <button class="btn-ghost">Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="chart-container-mock">
+                        <div class="chart-bars">
+                            <div class="bar-item" *ngFor="let trend of dashboardTrends">
+                                <div class="bar-pillar" [style.height.%]="trend.count">
+                                    <span class="bar-tooltip">{{trend.count}} Orders</span>
+                                </div>
+                                <span class="bar-label">{{trend.day}}</span>
+                            </div>
+                        </div>
+                        <div class="chart-y-axis">
+                            <span>100</span>
+                            <span>75</span>
+                            <span>50</span>
+                            <span>25</span>
+                            <span>0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions / Right Column -->
+                <div class="side-analytics-group">
+                    <!-- Quick Actions Card -->
+                    <div class="data-card-premium actions-card">
+                        <h3>Quick Navigation</h3>
+                        <div class="action-grid-premium">
+                            <button class="premium-action-btn" (click)="setTab('products', 'Plants')">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Product</span>
+                            </button>
+                            <button class="premium-action-btn" (click)="setTab('offers')">
+                                <i class="fas fa-tag"></i>
+                                <span>Manage Deals</span>
+                            </button>
+                            <button class="premium-action-btn" (click)="setTab('orders')">
+                                <i class="fas fa-truck"></i>
+                                <span>Process Orders</span>
+                            </button>
+                            <button class="premium-action-btn" (click)="setTab('analytics')">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Full Report</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Category Distrubution Card -->
+                    <div class="data-card-premium category-dist-card">
+                        <h3>Category Focus</h3>
+                        <div class="dist-list">
+                            <div class="dist-item" *ngFor="let cat of categoryStats">
+                                <div class="dist-info">
+                                    <span class="dist-name">{{cat.name}}</span>
+                                    <span class="dist-count">{{cat.count}} items</span>
+                                </div>
+                                <div class="dist-progress-bg">
+                                    <div class="dist-progress-fill" [style.width.%]="cat.percentage"
+                                        [style.background-color]="cat.color"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Activity Section -->
-            <div class="activity-section">
-                <div class="data-card orders-card">
-                    <div class="card-header">
-                        <h3>Recent Orders</h3>
-                        <button class="btn-view-all">View All</button>
+            <!-- Recent Activity List -->
+            <div class="data-card-premium recent-orders-card">
+                <div class="card-header-premium">
+                    <div class="header-title">
+                        <h3>Recent Transactions</h3>
+                        <span>Latest successful order placements</span>
                     </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Amount</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let order of orders.slice(0, 5)">
-                                    <td>{{order.orderId}}</td>
-                                    <td>{{order.userId?.fullName || 'Guest'}}</td>
-                                    <td>{{order.orderDate | date:'mediumDate'}}</td>
-                                    <td>
-                                        <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-                                            {{order.status}}
-                                        </span>
-                                    </td>
-                                    <td>₹{{order.totalAmount}}</td>
-                                    <td><button class="btn-action" (click)="setTab('orders')">Details</button></td>
-                                </tr>
-                                <tr *ngIf="orders.length === 0">
-                                    <td colspan="6" style="text-align:center; color: #94a3b8; padding: 16px;">No recent
-                                        orders</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <button class="btn-link" (click)="setTab('orders')">View Database</button>
                 </div>
-
-                <div class="data-card quick-actions">
-                    <h3>Quick Actions</h3>
-                    <div class="action-buttons">
-                        <button class="action-btn"><i class="fas fa-plus"></i> Add New Product</button>
-                        <button class="action-btn"><i class="fas fa-percentage"></i> Create Discount</button>
-                        <button class="action-btn"><i class="fas fa-envelope"></i> Send Newsletter</button>
-                        <button class="action-btn"><i class="fas fa-file-export"></i> Export Report</button>
-                    </div>
+                <div class="premium-table-wrapper">
+                    <table class="premium-minimal-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer Details</th>
+                                <th>Date & Time</th>
+                                <th>Billing</th>
+                                <th>Status</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let order of orders.slice(0, 4)">
+                                <td class="id-col">
+                                    <span class="id-pill">{{order.orderId}}</span>
+                                </td>
+                                <td>
+                                    <div class="customer-preview">
+                                        <div class="mini-avatar">{{ (order.userId?.fullName || 'G').charAt(0) }}</div>
+                                        <div class="c-info">
+                                            <span class="c-name">{{order.userId?.fullName || 'Guest Customer'}}</span>
+                                            <span class="c-email">{{order.userId?.email || 'via Direct
+                                                Purchase'}}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="date-col">
+                                    <span class="d-val">{{order.orderDate | date:'mediumDate'}}</span>
+                                    <span class="d-time">{{order.orderDate | date:'shortTime'}}</span>
+                                </td>
+                                <td class="amount-col">
+                                    <span class="amount-val">₹{{order.totalAmount}}</span>
+                                    <span class="payment-type">{{order.paymentMethod}}</span>
+                                </td>
+                                <td>
+                                    <span class="premium-status-badge" [ngClass]="getStatusClass(order.status)">
+                                        {{order.status}}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <button class="btn-icon-premium" (click)="viewOrderDetails(order)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="orders.length === 0">
+                                <td colspan="6" class="table-empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No transactions found in queue</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </ng-container>
@@ -601,7 +712,8 @@
                         <i class="fas fa-lightbulb"></i>
                         <h3>Product Association Guide</h3>
                         <p>To show products on specific offer pages, use the codes below in the product's
-                            <strong>TAGS</strong>.</p>
+                            <strong>TAGS</strong>.
+                        </p>
                     </div>
                     <div class="codes-grid">
                         <div class="code-item" *ngFor="let o of offerSectionCodes">
