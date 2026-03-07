@@ -71,12 +71,7 @@ export class LoginComponent implements OnInit {
                     this.isLoading = false;
                     this.otpEmail = res.email;
                     this.showOtpModal = true;
-
-                    if (res.devMode) {
-                        this.notificationService.show(res.message, 'Dev Mode Active', 'info');
-                    } else {
-                        this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
-                    }
+                    this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
                 },
                 error: (err: any) => {
                     this.isLoading = false;

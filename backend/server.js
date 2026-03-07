@@ -253,6 +253,49 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.post('/api/auth/google-login', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: GOOGLE_CLIENT_ID
+        });
+
+        const { email, name, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email: email.toLowerCase() }).lean();
+
+        if (!user) {
+            const newUser = new User({
+                fullName: name,
+                email: email.toLowerCase(),
+                password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10),
+                phone: 'Not provided',
+                address: 'Not provided',
+                profilePic: picture,
+                method: 'Google'
+            });
+            user = await newUser.save();
+        }
+
+        const payload = {
+            user: {
+                id: user._id,
+                email: user.email,
+                fullName: user.fullName
+            }
+        };
+
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
+            if (err) throw err;
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+        });
+    } catch (err) {
+        console.error('[GOOGLE-LOGIN] Error:', err.message);
+        res.status(401).json({ message: 'Google verification failed', details: err.message });
+    }
+});
+
 app.post('/api/auth/google-login/request-otp', async (req, res) => {
     try {
         const { idToken } = req.body;
