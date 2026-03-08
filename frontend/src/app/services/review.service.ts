@@ -27,7 +27,25 @@ export class ReviewService {
     private loadReviews(): Review[] {
         const saved = localStorage.getItem('greenie_reviews');
         if (saved) {
-            return JSON.parse(saved);
+            let parsedReviews = JSON.parse(saved);
+            const userName = sessionStorage.getItem('user_name');
+
+            // If the user is logged in now, update their previous anonymous reviews
+            if (userName) {
+                let updated = false;
+                parsedReviews = parsedReviews.map((r: any) => {
+                    if (r.userName === 'Guest User' || !r.userName || r.userName === 'null' || r.userName === 'undefined') {
+                        updated = true;
+                        return { ...r, userName: userName };
+                    }
+                    return r;
+                });
+
+                if (updated) {
+                    localStorage.setItem('greenie_reviews', JSON.stringify(parsedReviews));
+                }
+            }
+            return parsedReviews;
         }
         // Default reviews
         return [

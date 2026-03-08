@@ -613,9 +613,10 @@ export class CheckoutComponent implements OnInit {
 
 
     handleReviewSubmit(data: { rating: number, description: string }) {
-        const user = this.authService.getCurrentUser() as any;
+        const user = this.authService.getCurrentUser();
+        const checkoutName = `${this.firstName} ${this.lastName}`.trim();
         this.reviewService.addReview({
-            userName: user?.fullName || 'Guest User',
+            userName: user || checkoutName || 'Guest User',
             rating: data.rating,
             description: data.description,
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })

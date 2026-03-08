@@ -22,5 +22,6 @@ export const routes: Routes = [
     { path: 'admin-dashboard', loadComponent: () => import('./admin-panel/admin-panel').then(m => m.AdminPanelComponent) },
     { path: 'delivery-panel', loadComponent: () => import('./delivery-panel/delivery-panel').then(m => m.DeliveryPanelComponent) },
     { path: 'ai-analytics', loadComponent: () => import('./ai-analytics-panel/ai-analytics-panel').then(m => m.AiAnalyticsPanelComponent) },
-    { path: 'faq', loadComponent: () => import('./faq/faq').then(m => m.FaqComponent) }
+    { path: 'faq', loadComponent: () => import('./faq/faq').then(m => m.FaqComponent) },
+    { path: 'all-reviews', loadComponent: () => import('./all-reviews/all-reviews').then(m => m.AllReviews) }
 ];
