@@ -46,13 +46,11 @@ export class ReviewService {
         fetch('http://localhost:5000/api/reviews')
             .then(res => res.json())
             .then(data => {
-                let parsedReviews = data;
+                let dbReviews = Array.isArray(data) ? data : [];
                 const userName = sessionStorage.getItem('user_name');
 
-                // If user is logged in, retroactively claim "Guest User" reviews where logic allows,
-                // however for a real DB we usually update the DB instead. For now we will just show it correctly on frontend.
-                if (userName && Array.isArray(parsedReviews)) {
-                    parsedReviews = parsedReviews.map((r: any) => {
+                if (userName && dbReviews.length > 0) {
+                    dbReviews = dbReviews.map((r: any) => {
                         if (r.userName === 'Guest User' || !r.userName || r.userName === 'null' || r.userName === 'undefined') {
                             return { ...r, userName: userName };
                         }
@@ -60,9 +58,36 @@ export class ReviewService {
                     });
                 }
 
-                // If DB is totally empty, supply the defaults 
-                if (!Array.isArray(parsedReviews) || parsedReviews.length === 0) {
-                    parsedReviews = [
+                // --- RESTORE LOCAL STORAGE REVIEWS ---
+                const localStr = localStorage.getItem('greenie_reviews');
+                if (localStr) {
+                    try {
+                        const localReviews: Review[] = JSON.parse(localStr);
+                        // Filter out default stubs to prevent spamming DB 
+                        const actualLocalReviews = localReviews.filter(r => r.userName !== 'Rahul Sharma' && r.userName !== 'Anjali Gupta');
+
+                        // Find local reviews NOT yet in the DB (basic deduplication by description or exact match)
+                        const newLocalReviews = actualLocalReviews.filter(localRev =>
+                            !dbReviews.some((dbRev: any) => dbRev.description === localRev.description && dbRev.rating === localRev.rating)
+                        );
+
+                        if (newLocalReviews.length > 0) {
+                            newLocalReviews.forEach(rev => {
+                                if (userName && (rev.userName === 'Guest User' || !rev.userName || rev.userName === 'null')) {
+                                    rev.userName = userName;
+                                }
+                                this.addReview(rev); // Save to DB
+                            });
+                            dbReviews = [...newLocalReviews, ...dbReviews];
+                        }
+                    } catch (e) {
+                        console.error("Local storage parsing error", e);
+                    }
+                }
+
+                // If STILL totally empty (no local, no DB), supply the defaults 
+                if (dbReviews.length === 0) {
+                    dbReviews = [
                         {
                             userName: 'Rahul Sharma',
                             rating: 5,
@@ -78,10 +103,15 @@ export class ReviewService {
                     ];
                 }
 
-                this.reviewsSignal.set(parsedReviews);
+                this.reviewsSignal.set(dbReviews);
             })
             .catch(err => console.error("Could not fetch reviews from backend", err));
 
-        return []; // Initial empty state before load completes
+        // Return localStorage immediately so UI doesn't flash empty while fetching
+        const fallbackStr = localStorage.getItem('greenie_reviews');
+        if (fallbackStr) {
+            try { return JSON.parse(fallbackStr); } catch (e) { }
+        }
+        return [];
     }
 }
