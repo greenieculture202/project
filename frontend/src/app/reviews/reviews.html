@@ -4,6 +4,26 @@
             <h2>What Our Customers Say</h2>
             <p>Real experiences from our plant community</p>
         </div>
+
+        <div class="rating-summary-wrapper">
+            <div class="rating-summary-card">
+                <div class="rating-breakdown">
+                    <div class="rating-row" *ngFor="let row of ratingStats().breakdown">
+                        <div class="rating-label">
+                            <span class="star-group">
+                                <i *ngFor="let s of [1,2,3,4,5]"
+                                    [ngClass]="row.stars >= s ? 'fas fa-star filled' : 'far fa-star outline'"></i>
+                            </span>
+                        </div>
+                        <div class="rating-bar-container">
+                            <div class="rating-bar-fill" [style.width.%]="row.pct"></div>
+                        </div>
+                        <div class="rating-count">{{ row.count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="reviews-grid">
             <div class="review-card" *ngFor="let review of reviews().slice(0, 3)">
                 <div class="review-stars">
@@ -17,6 +37,13 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="view-all-container" *ngIf="reviews().length > 3">
+            <a routerLink="/all-reviews" class="view-all-btn">
+                <span>View All Reviews</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
     </div>
 </div>
