@@ -12,6 +12,7 @@ const User = require('./models/User');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Offer = require('./models/Offer');
+const offerProductsRouter = require('./routes/offerProducts');
 const Placement = require('./models/Placement');
 const Faq = require('./models/Faq');
 const AboutSection = require('./models/AboutSection');
@@ -156,6 +157,7 @@ const auth = (req, res, next) => {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use('/api/admin/offers', offerProductsRouter);
 
 // Request logging middleware
 app.use((req, res, next) => {

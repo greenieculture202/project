@@ -19,7 +19,9 @@ const offerSchema = new mongoose.Schema({
     tagText: { type: String, default: '#78350f' },
     timer: { type: String, default: 'Ends Soon!' },
     timerBg: { type: String, default: '#dcfce7' },
-    createdAt: { type: Date, default: Date.now }
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    createdAt: { type: Date, default: Date.now },
+
 });
 
 module.exports = mongoose.model('Offer', offerSchema);

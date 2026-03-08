@@ -27,6 +27,19 @@ export class DeliveryPanelComponent implements OnInit {
   isLoading: boolean = true;
   today: Date = new Date();
 
+  // Password Protection State
+  private courierPasswords: { [key: string]: string } = {
+    'Blue Dart': 'bluedart@greenie',
+    'Delhivery': 'delhivery@greenie',
+    'DTDC': 'dtdc@greenie'
+  };
+  activeUnlockedCourier: string | null = null;
+  showPasswordModal: boolean = false;
+  showPasswordText: boolean = false;
+  pendingCourier: string = '';
+  enteredPassword: string = '';
+  passwordError: string = '';
+
   // Similar to Admin Panel: Consistent tab navigation
   setTab(tab: string, courier?: string, navigate: boolean = true) {
     this.activeMainTab = tab;
@@ -46,8 +59,39 @@ export class DeliveryPanelComponent implements OnInit {
   }
 
   selectCourier(name: string) {
-    this.setTab('orders', name);
-    this.filterStatus = 'All';
+    if (this.activeUnlockedCourier === name) {
+      this.setTab('orders', name);
+      this.filterStatus = 'All';
+    } else {
+      this.pendingCourier = name;
+      this.showPasswordModal = true;
+      this.enteredPassword = '';
+      this.passwordError = '';
+    }
+  }
+
+  verifyCourierPassword() {
+    const correctPassword = this.courierPasswords[this.pendingCourier];
+    if (this.enteredPassword === correctPassword) {
+      this.activeUnlockedCourier = this.pendingCourier;
+      this.showPasswordModal = false;
+      this.showPasswordText = false;
+      this.selectCourier(this.pendingCourier);
+    } else {
+      this.passwordError = 'Invalid password. Please try again.';
+    }
+  }
+
+  togglePasswordVisibility() {
+    this.showPasswordText = !this.showPasswordText;
+  }
+
+  closePasswordModal() {
+    this.showPasswordModal = false;
+    this.showPasswordText = false;
+    this.pendingCourier = '';
+    this.enteredPassword = '';
+    this.passwordError = '';
   }
 
   get filteredOrdersV2() {

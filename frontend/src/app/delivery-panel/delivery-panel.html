@@ -1,6 +1,103 @@
 <div class="delivery-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <!-- Fullscreen Courier View (Overlay) -->
+    <div class="fullscreen-courier-overlay"
+        *ngIf="activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier">
+        <div class="overlay-header">
+            <button class="back-btn" (click)="setTab('dashboard')">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="aesthetic-title-wrapper">
+                <span class="aesthetic-ghost-text">{{ selectedCourier }}</span>
+                <h1 class="aesthetic-partner-name">{{ selectedCourier }}</h1>
+            </div>
+        </div>
+
+        <div class="overlay-content">
+            <!-- Control Bar (Restored from Screenshot) -->
+            <div class="control-bar-minimal">
+                <div class="filter-group">
+                    <span class="filter-label">Filter:</span>
+                    <button class="filter-btn" [class.active]="filterStatus === 'All'"
+                        (click)="setFilter('All')">All</button>
+                    <button class="filter-btn" [class.active]="filterStatus === 'Pending'"
+                        (click)="setFilter('Pending')">Pending</button>
+                    <button class="filter-btn" [class.active]="filterStatus === 'Shipped'"
+                        (click)="setFilter('Shipped')">Out for Delivery</button>
+                    <button class="filter-btn" [class.active]="filterStatus === 'Delivered'"
+                        (click)="setFilter('Delivered')">Delivered</button>
+                </div>
+
+                <div class="search-and-date">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search orders..." [(ngModel)]="searchQuery">
+                    </div>
+                    <span class="date-label">Date : {{ today | date:'longDate' }}</span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="aesthetic-table-card">
+                <div class="table-header-minimal">
+                    <h3>Delivery Orders</h3>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="minimal-table">
+                        <thead>
+                            <tr>
+                                <th>ORDER ID</th>
+                                <th>CUSTOMER NAME</th>
+                                <th>ADDRESS</th>
+                                <th>STATUS</th>
+                                <th style="text-align: center;">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let order of filteredOrdersV2">
+                                <td class="order-id-cell">##{{ order.orderId }}</td>
+                                <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest' }}</td>
+                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
+                                    {{ order.userId?.city || '' }}</td>
+                                <td>
+                                    <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : order.status }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button class="btn-view-minimal" *ngIf="order.status !== 'Delivered'">View</button>
+                                    <div class="delivered-check-minimal" *ngIf="order.status === 'Delivered'">
+                                        <i class="fas fa-check-double"></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="empty-state-minimal" *ngIf="filteredOrdersV2.length === 0">
+                        <i class="fas fa-box-open"></i>
+                        <p>No orders found for this criteria.</p>
+                    </div>
+                </div>
+
+                <!-- Footer / Pagination mimicking screenshot -->
+                <div class="table-footer-minimal">
+                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length }} of {{ filteredOrdersV2.length }}
+                        entries</span>
+                    <div class="pagination-minimal">
+                        <button class="page-num active">1</button>
+                        <button class="page-num">2</button>
+                        <button class="page-num">3</button>
+                        <button class="page-num">...</button>
+                        <button class="page-num next">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout (Hidden when fullscreen courier is active) -->
+    <aside class="sidebar" *ngIf="!(activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier)">
         <div class="logo-section">
             <div class="logo-circle">
                 <i class="fas fa-leaf"></i>
@@ -38,17 +135,29 @@
                     style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
                     <i class="fas fa-bolt" style="color: #60a5fa;"></i>
                     <span style="font-size: 0.85rem; font-weight: 700;">Blue Dart</span>
+                    <i class="fas fa-lock" *ngIf="activeUnlockedCourier !== 'Blue Dart'"
+                        style="margin-left: auto; font-size: 0.7rem; opacity: 0.5;"></i>
+                    <i class="fas fa-lock-open" *ngIf="activeUnlockedCourier === 'Blue Dart'"
+                        style="margin-left: auto; font-size: 0.7rem; color: #34d399;"></i>
                 </div>
                 <div class="courier-item" [class.selected]="selectedCourier === 'Delhivery'"
                     (click)="selectCourier('Delhivery')"
                     style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
                     <i class="fas fa-paper-plane" style="color: #34d399;"></i>
                     <span style="font-size: 0.85rem; font-weight: 700;">Delhivery</span>
+                    <i class="fas fa-lock" *ngIf="activeUnlockedCourier !== 'Delhivery'"
+                        style="margin-left: auto; font-size: 0.7rem; opacity: 0.5;"></i>
+                    <i class="fas fa-lock-open" *ngIf="activeUnlockedCourier === 'Delhivery'"
+                        style="margin-left: auto; font-size: 0.7rem; color: #34d399;"></i>
                 </div>
                 <div class="courier-item" [class.selected]="selectedCourier === 'DTDC'" (click)="selectCourier('DTDC')"
                     style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
                     <i class="fas fa-truck" style="color: #f87171;"></i>
                     <span style="font-size: 0.85rem; font-weight: 700;">DTDC</span>
+                    <i class="fas fa-lock" *ngIf="activeUnlockedCourier !== 'DTDC'"
+                        style="margin-left: auto; font-size: 0.7rem; opacity: 0.5;"></i>
+                    <i class="fas fa-lock-open" *ngIf="activeUnlockedCourier === 'DTDC'"
+                        style="margin-left: auto; font-size: 0.7rem; color: #34d399;"></i>
                 </div>
             </div>
         </div>
@@ -61,7 +170,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" *ngIf="!(activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier)">
         <header class="header-section">
             <div class="header-title">
                 <h1>Delivery Management</h1>
@@ -236,4 +345,34 @@
 
 
     </main>
+
+    <!-- Password Protection Modal -->
+    <div class="modal-overlay" *ngIf="showPasswordModal">
+        <div class="password-modal">
+            <div class="modal-header">
+                <div class="lock-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3>Access Protected</h3>
+                <p>Please enter the password for <strong>{{ pendingCourier }}</strong></p>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input [type]="showPasswordText ? 'text' : 'password'" [(ngModel)]="enteredPassword"
+                        placeholder="Enter password" (keyup.enter)="verifyCourierPassword()">
+                    <button type="button" class="btn-toggle" (click)="togglePasswordVisibility()">
+                        <i class="fas" [class.fa-eye]="!showPasswordText" [class.fa-eye-slash]="showPasswordText"></i>
+                    </button>
+                </div>
+                <p class="error-msg" *ngIf="passwordError">{{ passwordError }}</p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closePasswordModal()">Cancel</button>
+                <button class="btn-verify" (click)="verifyCourierPassword()">Verify & Open</button>
+            </div>
+        </div>
+    </div>
 </div>

@@ -333,9 +333,10 @@
                                 (click)="productCategoryFilter = 'All'">
                                 All {{activeMainCategory === 'Accessories' ? activeCompanionGroup : activeMainCategory}}
                             </button>
-                            <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
-                                (click)="productCategoryFilter = cat">
-                                {{getCategoryLabel(cat)}}
+                            <button *ngFor="let cat of getCategoryList()"
+                                [class.active]="productCategoryFilter === cat.key"
+                                (click)="productCategoryFilter = cat.key">
+                                {{cat.label}}
                             </button>
                         </div>
                     </div>
@@ -2118,19 +2119,32 @@
     <div class="modal-overlay" *ngIf="showAssociatedProductsModal" (click)="closeAssociatedProductsModal()">
         <div class="user-detail-modal product-modal" (click)="$event.stopPropagation()" style="max-width: 900px;">
             <div class="modal-header" [style.background]="'#4f46e5'" style="color: white; padding: 25px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div
-                        style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                        <i class="fas fa-th"></i>
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div
+                            style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            <i class="fas fa-th"></i>
+                        </div>
+                        <div>
+                            <h2 style="color: white; margin: 0;">Associated Products</h2>
+                            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Code: <strong
+                                    style="color: white; font-family: monospace;">{{ activeOfferCode }}</strong></p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 style="color: white; margin: 0;">Associated Products</h2>
-                        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Code: <strong
-                                style="color: white; font-family: monospace;">{{ activeOfferCode }}</strong></p>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="add-floating-btn"
+                            (click)="openAddProductModal(activeOfferCode); closeAssociatedProductsModal()"
+                            style="padding: 10px 18px; font-size: 0.9rem; background: #10b981; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);">
+                            <i class="fas fa-plus"></i> Create New
+                        </button>
+                        <button class="add-floating-btn" (click)="openAddProductToOfferModal()"
+                            style="padding: 10px 18px; font-size: 0.9rem; background: #6366f1; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);">
+                            <i class="fas fa-th"></i> Add Existing
+                        </button>
+                        <button class="close-modal" (click)="closeAssociatedProductsModal()"
+                            style="color: white; opacity: 0.8; font-size: 2rem; background: none; border: none; cursor: pointer;">&times;</button>
                     </div>
                 </div>
-                <button class="close-modal" (click)="closeAssociatedProductsModal()"
-                    style="color: white; opacity: 0.8;">&times;</button>
             </div>
 
             <div class="modal-body" style="padding: 25px; max-height: 70vh; overflow-y: auto;">
@@ -2155,6 +2169,13 @@
                 <div class="product-grid" *ngIf="!isLoadingProducts && associatedProducts.length > 0"
                     style="padding: 10px;">
                     <div class="product-card" *ngFor="let prod of associatedProducts" style="position: relative;">
+                        <!-- Remove button -->
+                        <button class="btn-icon delete"
+                            style="position: absolute; top: 10px; right: 10px; z-index: 20; background: rgba(255,255,255,0.9); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; cursor: pointer;"
+                            title="Remove from Offer" (click)="removeProductFromOffer(prod)">
+                            <i class="fas fa-times" style="color: #ef4444;"></i>
+                        </button>
+
                         <!-- Badge -->
                         <div class="badge" style="z-index: 10;" *ngIf="prod.discount || activeOfferBadge">
                             {{ prod.discount || activeOfferBadge }}
@@ -2193,7 +2214,72 @@
         </div>
     </div>
 
-    <!-- Inquiry Reply Modal -->
+    <!-- Add Product to Offer Modal -->
+    <div class="modal-overlay" *ngIf="showAddProductToOfferModal" (click)="showAddProductToOfferModal = false"
+        style="z-index: 1100;">
+        <div class="user-detail-modal" (click)="$event.stopPropagation()"
+            style="max-width: 700px; border-radius: 20px;">
+            <!-- ... existing content ... -->
+            <div class="modal-header" style="background: #6366f1; color: white; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-plus-circle" style="font-size: 1.5rem;"></i>
+                    <h2 style="color: white; margin: 0;">Add Product to Offer</h2>
+                </div>
+                <button class="close-modal" (click)="showAddProductToOfferModal = false"
+                    style="color: white;">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Search Box -->
+                <div class="search-box-premium" style="margin-bottom: 20px; width: 100%;">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" [(ngModel)]="addProductSearchTerm"
+                        placeholder="Search by name, category or brand..." class="search-field"
+                        style="width: 100%; padding-left: 45px;">
+                </div>
+
+                <div class="selection-list" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Loading State -->
+                    <div *ngIf="isLoadingProducts" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"
+                            style="font-size: 2.5rem; color: #6366f1; margin-bottom: 10px;"></i>
+                        <p style="color: #64748b;">Loading products...</p>
+                    </div>
+
+                    <!-- No Products / Empty Search -->
+                    <div *ngIf="!isLoadingProducts && filteredProductsForOfferList.length === 0"
+                        style="text-align: center; padding: 30px; color: #64748b;">
+                        <i class="fas fa-search" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        <p>No products found matching your search.</p>
+                    </div>
+
+                    <div class="selection-item" *ngFor="let prod of filteredProductsForOfferList"
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img [src]="prod.image"
+                                style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                            <div>
+                                <h4 style="margin: 0; font-size: 1rem; color: #1e293b;">{{prod.name}}</h4>
+                                <span style="font-size: 0.8rem; color: #64748b;">{{prod.category}}</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary" (click)="addProductToOffer(prod)"
+                            style="padding: 6px 15px; font-size: 0.8rem; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer"
+                    style="padding: 15px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                    <button class="btn-secondary" (click)="showAddProductToOfferModal = false"
+                        style="padding: 8px 20px; border-radius: 8px;">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
     <div class="modal-overlay" *ngIf="showReplyModal" (click)="closeReplyModal()">
         <div class="user-detail-modal" (click)="$event.stopPropagation()" style="max-width: 600px;">
             <div class="modal-header"
@@ -2217,7 +2303,8 @@
                     style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #6366f1;">
                     <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #1e293b;">Original
                         Message:</div>
-                    <div style="color: #475569; font-style: italic; line-height: 1.5;">"{{selectedInquiry?.message}}"
+                    <div style="color: #475569; font-style: italic; line-height: 1.5;">
+                        "{{selectedInquiry?.message}}"
                     </div>
                     <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
                         From: <span style="font-weight: 500;">{{selectedInquiry?.name}}</span>
@@ -2249,4 +2336,3 @@
 
     <!-- Add FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</div>

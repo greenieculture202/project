@@ -142,6 +142,9 @@ export class AdminPanelComponent implements OnInit {
     associatedProducts: any[] = [];
     activeOfferCode: string = '';
     activeOfferBadge: string = '';
+    showAddProductToOfferModal: boolean = false;
+    addProductSearchTerm: string = '';
+    allProductsList: any[] = [];
 
     // Offer Codes (Admin Only)
     offerSectionCodes: any[] = [
@@ -587,6 +590,7 @@ export class AdminPanelComponent implements OnInit {
             this.loadProducts();
         } else if (tab === 'offers') {
             this.loadOffers();
+            this.loadProducts(); // Load products to support the "Add Existing" search modal
         } else if (tab === 'placements') {
             this.loadPlacements();
         } else if (tab === 'faqs') {
@@ -854,13 +858,31 @@ export class AdminPanelComponent implements OnInit {
     getCategoryList() {
         if (!this.mainCategoryGroups[this.activeMainCategory]) return [];
         const cats = this.mainCategoryGroups[this.activeMainCategory];
-        const keys = cats.map(c => c.key);
 
         if (this.activeMainCategory === 'Accessories') {
-            const accHeaders = ['Pots & Planters', 'Watering Equipment', 'Support & Protection', 'Lighting Equipment', 'Decorative & Display'];
-            const soilHeaders = ['Soil Types', 'Organic Amendments', 'Growth Media'];
-            const fertHeaders = ['Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters'];
-            const toolHeaders = ['Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools'];
+            const accHeaders = [
+                { key: 'Pots & Planters', label: 'Pots & Planters' },
+                { key: 'Watering Equipment', label: 'Watering Equipment' },
+                { key: 'Support & Protection', label: 'Support & Protection' },
+                { key: 'Lighting Equipment', label: 'Lighting Equipment' },
+                { key: 'Decorative & Display', label: 'Decorative & Display' }
+            ];
+            const soilHeaders = [
+                { key: 'Soil Types', label: 'Soil Types' },
+                { key: 'Organic Amendments', label: 'Organic Amendments' },
+                { key: 'Growth Media', label: 'Growth Media' }
+            ];
+            const fertHeaders = [
+                { key: 'Organic Fertilizers', label: 'Organic Fertilizers' },
+                { key: 'Chemical Fertilizers', label: 'Chemical Fertilizers' },
+                { key: 'Plant Boosters', label: 'Plant Boosters' }
+            ];
+            const toolHeaders = [
+                { key: 'Hand Tools', label: 'Hand Tools' },
+                { key: 'Cutting Tools', label: 'Cutting Tools' },
+                { key: 'Digging Tools', label: 'Digging Tools' },
+                { key: 'Power Tools', label: 'Power Tools' }
+            ];
             const allHeaders = [...accHeaders, ...soilHeaders, ...fertHeaders, ...toolHeaders];
 
             if (this.activeCompanionGroup === 'All') return allHeaders;
@@ -871,7 +893,7 @@ export class AdminPanelComponent implements OnInit {
             if (this.activeCompanionGroup === 'Gardening Tools') return toolHeaders;
         }
 
-        return keys;
+        return cats;
     }
 
     getProductsForCategory(category: string): any[] {
@@ -932,14 +954,33 @@ export class AdminPanelComponent implements OnInit {
     }
 
     getFilteredCategoriesForModal() {
+        const categories = this.getCategoryList();
+
+        // If we are adding a product for a specific offer, filter categories
+        if (!this.isEditingProduct && this.newProduct.tags) {
+            const offerCode = this.newProduct.tags;
+
+            if (offerCode === 'G-INDOOR-6-SEC') {
+                return (categories as any[]).filter(c => c.key === 'Indoor Plants' || c.key.includes('Indoor'));
+            }
+            if (offerCode === 'G-GARDEN-6-SEC') {
+                return (categories as any[]).filter(c => c.key === 'Gardening Tools' || c.key.includes('Tool'));
+            }
+            if (offerCode === 'G-FLOWER-6-SEC') {
+                return (categories as any[]).filter(c => c.key === 'Flowering Plants' || c.key.includes('Flower'));
+            }
+            if (offerCode === 'G-BOGO-6-SECTION') {
+                return (categories as any[]).filter(c => c.key === 'XL Plants' || c.key.includes('XL'));
+            }
+        }
+
+        // Original logic for grouping by activeMainCategory and activeCompanionGroup
         if (!this.activeMainCategory || !this.mainCategoryGroups[this.activeMainCategory]) return [];
 
         if (this.activeMainCategory !== 'Accessories') {
             return this.mainCategoryGroups[this.activeMainCategory];
         }
 
-        // For Accessories, we filter by the specific pill (Pots & Planters, etc.) 
-        // OR the current sub-tab (Companion Group)
         let targetSubGroups: string[] = [];
 
         if (this.productCategoryFilter !== 'All') {
@@ -1036,7 +1077,7 @@ export class AdminPanelComponent implements OnInit {
                 if (this.activeCompanionGroup === 'All') {
                     return ['Accessories', 'Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
                 }
-                return this.getCategoryList();
+                return this.getCategoryList().map((c: any) => c.key);
             }
 
             // Simple view: return only the active filter. 
@@ -1044,7 +1085,7 @@ export class AdminPanelComponent implements OnInit {
             return [this.productCategoryFilter];
         }
 
-        const categories = this.getCategoryList();
+        const categories = this.getCategoryList().map((c: any) => c.key);
         if (this.productCategoryFilter === 'All') return categories;
         return [this.productCategoryFilter];
     }
@@ -1069,7 +1110,7 @@ export class AdminPanelComponent implements OnInit {
         }
     }
 
-    openAddProductModal() {
+    openAddProductModal(initialTag?: string) {
         this.isEditingProduct = false;
         this.editingProductId = null;
         this.isSubmitting = false; // Always reset on open
@@ -1082,7 +1123,7 @@ export class AdminPanelComponent implements OnInit {
             image: '',
             images: ['', '', '', ''],
             description: '',
-            tags: ''
+            tags: initialTag || ''
         };
         this.showAddProductModal = true;
         this.toggleBodyScroll(true);
@@ -1748,6 +1789,91 @@ export class AdminPanelComponent implements OnInit {
         this.activeOfferCode = '';
         this.activeOfferBadge = '';
         this.cdr.detectChanges();
+    }
+
+    removeProductFromOffer(product: any) {
+        if (!confirm(`Are you sure you want to remove ${product.name} from this offer?`)) return;
+
+        // Clone the product and remove the activeOfferCode from tags
+        const updatedProduct = { ...product };
+        if (Array.isArray(updatedProduct.tags)) {
+            updatedProduct.tags = updatedProduct.tags.filter((t: string) => t !== this.activeOfferCode);
+        }
+
+        // Also check category just in case it's set as category
+        if (updatedProduct.category === this.activeOfferCode) {
+            updatedProduct.category = 'Plants'; // Default back to Plants or something safe
+        }
+
+        this.productService.updateProduct(product._id, updatedProduct).subscribe({
+            next: () => {
+                this.ngZone.run(() => {
+                    this.associatedProducts = this.associatedProducts.filter(p => p._id !== product._id);
+                    this.cdr.detectChanges();
+                    // Optional: show a small toast or message
+                });
+            },
+            error: (err) => {
+                console.error('Error removing product from offer:', err);
+                alert('Failed to remove product.');
+            }
+        });
+    }
+
+    openAddProductToOfferModal() {
+        this.addProductSearchTerm = '';
+        this.showAddProductToOfferModal = true;
+
+        // Safety: If products aren't loaded (e.g. user went straight to Offers), load them now
+        if (Object.keys(this.productMap).length === 0) {
+            this.loadProducts();
+        }
+
+        // Flatten productMap to get all unique products
+        let all: any[] = [];
+        Object.values(this.productMap).forEach(list => {
+            if (Array.isArray(list)) all = [...all, ...list];
+        });
+
+        // Unique by _id and exclude already associated
+        const existingIds = new Set(this.associatedProducts.map(p => p._id));
+        this.allProductsList = Array.from(new Map(all.map(p => [p._id, p])).values())
+            .filter(p => !existingIds.has(p._id));
+
+        this.cdr.detectChanges();
+    }
+
+    get filteredProductsForOfferList(): any[] {
+        if (!this.addProductSearchTerm.trim()) return this.allProductsList.slice(0, 50); // Limit initial view
+
+        const term = this.addProductSearchTerm.toLowerCase();
+        return this.allProductsList.filter(p =>
+            p.name.toLowerCase().includes(term) ||
+            (p.category || '').toLowerCase().includes(term)
+        ).slice(0, 50);
+    }
+
+    addProductToOffer(product: any) {
+        const updatedProduct = { ...product };
+        if (!Array.isArray(updatedProduct.tags)) updatedProduct.tags = [];
+
+        if (!updatedProduct.tags.includes(this.activeOfferCode)) {
+            updatedProduct.tags.push(this.activeOfferCode);
+        }
+
+        this.productService.updateProduct(product._id, updatedProduct).subscribe({
+            next: (res) => {
+                this.ngZone.run(() => {
+                    this.associatedProducts.push(res);
+                    this.allProductsList = this.allProductsList.filter(p => p._id !== product._id);
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error adding product to offer:', err);
+                alert('Failed to add product.');
+            }
+        });
     }
 
     copyToClipboard(text: string) {
