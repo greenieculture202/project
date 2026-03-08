@@ -450,21 +450,31 @@ export class AdminPanelComponent implements OnInit {
     }
 
     stats = [
-        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month' },
-        { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month' },
-        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month' },
-        { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average' }
+        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month', targetTab: 'users' },
+        { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month', targetTab: 'orders' },
+        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month', targetTab: 'orders' },
+        { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average', targetTab: 'analytics' }
     ];
 
-    dashboardTrends = [
-        { day: 'Mon', count: 45 },
-        { day: 'Tue', count: 52 },
-        { day: 'Wed', count: 38 },
-        { day: 'Thu', count: 65 },
-        { day: 'Fri', count: 48 },
-        { day: 'Sat', count: 82 },
-        { day: 'Sun', count: 70 }
+    dashboardTrends: any[] = [
+        { day: 'Mon', count: 0, visualHeight: 0 },
+        { day: 'Tue', count: 0, visualHeight: 0 },
+        { day: 'Wed', count: 0, visualHeight: 0 },
+        { day: 'Thu', count: 0, visualHeight: 0 },
+        { day: 'Fri', count: 0, visualHeight: 0 },
+        { day: 'Sat', count: 0, visualHeight: 0 },
+        { day: 'Sun', count: 0, visualHeight: 0 }
     ];
+
+    fulfillmentRate: number = 0;
+    donutDashArray: string = '0 100';
+    pieChartStyle: string = '';
+    salesPieChartStyle: string = '';
+
+    // Detailed Interactive Sales Chart
+    salesSlices: any[] = [];
+    hoveredSalesSegment: any = null;
+    totalSalesItems: number = 0;
 
     categoryStats = [
         { name: 'Indoor Plants', count: 125, percentage: 45, color: '#10b981' },
@@ -516,6 +526,7 @@ export class AdminPanelComponent implements OnInit {
                         profilePic: user.profilePic
                     }));
                     this.stats[0].value = this.users.length.toString();
+                    this.updateDashboardStats();
                     this.isLoading = false;
                     this.cdr.detectChanges();
                 });
@@ -1523,12 +1534,8 @@ export class AdminPanelComponent implements OnInit {
             next: (data: any) => {
                 this.ngZone.run(() => {
                     this.orders = data;
+                    this.updateDashboardStats();
                     this.isLoadingOrders = false;
-
-                    // Update main dashboard stats dynamically
-                    this.stats[1].value = this.orders.length.toString();
-                    this.stats[2].value = '₹' + this.getTotalRevenue();
-
                     this.cdr.detectChanges();
                 });
             },
@@ -1934,5 +1941,186 @@ export class AdminPanelComponent implements OnInit {
                 alert('Failed to submit reply.');
             }
         });
+    }
+
+    updateDashboardStats() {
+        if (!this.stats || this.stats.length < 4) return;
+
+        // Update Total Users
+        this.stats[0].value = (this.users || []).length.toString();
+
+        // Update Total Orders & Revenue
+        if (this.orders && this.orders.length > 0) {
+            this.stats[1].value = this.orders.length.toString();
+
+            const totalRevenue = this.orders.reduce((acc, order) => {
+                const amount = Number(order.totalAmount) || 0;
+                if (this.getStatusClass(order.status) !== 'status-cancelled') {
+                    return acc + amount;
+                }
+                return acc;
+            }, 0);
+            this.stats[2].value = '₹' + totalRevenue.toLocaleString();
+
+            // Update Conversion Rate
+            if (this.users && this.users.length > 0) {
+                const rate = (this.orders.length / this.users.length * 100);
+                this.stats[3].value = rate.toFixed(1) + '%';
+            } else {
+                this.stats[3].value = '0%';
+            }
+
+            // Update Chart Trends
+            const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const counts: { [key: string]: number } = { 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0 };
+
+            // Determine the "Reference Date"
+            let refDate = new Date();
+            let latestOrderDate: Date | null = null;
+
+            this.orders.forEach(o => {
+                if (o.orderDate) {
+                    const d = new Date(o.orderDate);
+                    if (!latestOrderDate || d > latestOrderDate) latestOrderDate = d;
+                }
+            });
+
+            // If the latest order is older than 7 days, anchor to it to show mock data
+            if (latestOrderDate) {
+                const latestOrder = latestOrderDate as Date;
+                if ((refDate.getTime() - latestOrder.getTime()) > (7 * 24 * 60 * 60 * 1000)) {
+                    refDate = new Date(latestOrder);
+                }
+            }
+
+            const windowStart = new Date(refDate);
+            windowStart.setDate(windowStart.getDate() - 7);
+
+            this.orders.forEach(order => {
+                if (order.orderDate) {
+                    const date = new Date(order.orderDate);
+                    if (date >= windowStart) {
+                        const dayName = daysShort[date.getDay()];
+                        if (counts[dayName] !== undefined) {
+                            counts[dayName]++;
+                        }
+                    }
+                }
+            });
+
+            const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const maxCount = Math.max(...Object.values(counts), 1);
+
+            this.dashboardTrends = orderedDays.map(day => {
+                const count = counts[day];
+                const visualHeight = count > 0 ? Math.max((count / maxCount) * 100, 15) : 0;
+                return {
+                    day,
+                    count,
+                    visualHeight
+                };
+            });
+
+            // Update Pie Chart (Full distribution)
+            const total = this.orders.length;
+            const pending = this.getOrdersByStatus('Pending').length;
+            const shipped = this.getOrdersByStatus('Shipped').length;
+            const delivered = this.getOrdersByStatus('Delivered').length;
+            const cancelled = this.getOrdersByStatus('Cancelled').length;
+
+            const p1 = (pending / total) * 100;
+            const p2 = p1 + (shipped / total) * 100;
+            const p3 = p2 + (delivered / total) * 100;
+
+            this.pieChartStyle = `conic-gradient(
+                #f59e0b 0% ${p1}%, 
+                #3b82f6 ${p1}% ${p2}%, 
+                #10b981 ${p2}% ${p3}%, 
+                #ef4444 ${p3}% 100%
+            )`;
+
+            // --- Advanced Interactive Sales Distribution ---
+            const groupedStats = {
+                Plants: { count: 0, color: '#10b981', label: 'Plants' },
+                Accessories: { count: 0, color: '#3b82f6', label: 'Accessories' },
+                Offers: { count: 0, color: '#f59e0b', label: 'Promotion' },
+                Other: { count: 0, color: '#6366f1', label: 'Others' }
+            };
+
+            let totalItemsBase = 0;
+            this.orders.forEach(order => {
+                if (order.status !== 'Cancelled' && order.items) {
+                    order.items.forEach((item: any) => {
+                        const qty = item.quantity || 1;
+                        totalItemsBase += qty;
+                        const cat = (item.category || '').toLowerCase();
+                        const hasDiscount = (item.discountPrice && item.discountPrice < item.price) || order.appliedOffer;
+
+                        if (hasDiscount) {
+                            groupedStats.Offers.count += qty;
+                        } else if (cat.includes('plant') || cat.includes('cactus') || cat.includes('succul')) {
+                            groupedStats.Plants.count += qty;
+                        } else if (cat.includes('tool') || cat.includes('pot') || cat.includes('fert') || cat.includes('access')) {
+                            groupedStats.Accessories.count += qty;
+                        } else {
+                            groupedStats.Other.count += qty;
+                        }
+                    });
+                }
+            });
+
+            this.totalSalesItems = totalItemsBase;
+
+            if (totalItemsBase > 0) {
+                let currentOffset = 0;
+                this.salesSlices = Object.entries(groupedStats)
+                    .filter(([_, data]) => data.count > 0)
+                    .map(([key, data]) => {
+                        const percentage = (data.count / totalItemsBase) * 100;
+                        const dashArray = `${percentage} ${100 - percentage}`;
+                        const dashOffset = 100 - currentOffset + 25;
+                        currentOffset += percentage;
+
+                        return {
+                            type: key,
+                            label: data.label,
+                            count: data.count,
+                            percentage: Math.round(percentage),
+                            color: data.color,
+                            dashArray,
+                            dashOffset: dashOffset % 100
+                        };
+                    });
+
+                this.categoryStats = this.salesSlices.map(s => ({
+                    name: s.label,
+                    count: s.count,
+                    percentage: s.percentage,
+                    color: s.color
+                }));
+            }
+
+        } else {
+            this.stats[1].value = '0';
+            this.stats[2].value = '₹0';
+            this.stats[3].value = '0%';
+            if (this.dashboardTrends) {
+                this.dashboardTrends.forEach(t => {
+                    t.count = 0;
+                    t.visualHeight = 0;
+                });
+            }
+            this.fulfillmentRate = 0;
+            this.donutDashArray = '0 100';
+            this.pieChartStyle = 'lightgray';
+        }
+
+        if (this.cdr) {
+            this.cdr.detectChanges();
+        }
+    }
+
+    exportDashboardPDF() {
+        window.print();
     }
 }
