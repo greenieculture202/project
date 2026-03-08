@@ -14,6 +14,7 @@ const Order = require('./models/Order');
 const Offer = require('./models/Offer');
 const offerProductsRouter = require('./routes/offerProducts');
 const Placement = require('./models/Placement');
+const Review = require('./models/Review');
 const Faq = require('./models/Faq');
 const AboutSection = require('./models/AboutSection');
 const Inquiry = require('./models/Inquiry');
@@ -465,6 +466,40 @@ app.post('/api/cart', auth, async (req, res) => {
 // Routes
 app.get('/', (req, res) => {
     res.send('Greenie Culture Backend is running');
+});
+
+// API Routes for Reviews
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+        res.json(reviews);
+    } catch (err) {
+        console.error('[ReviewsAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error fetching reviews' });
+    }
+});
+
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { userName, rating, description, date } = req.body;
+
+        if (!rating || !description) {
+            return res.status(400).json({ message: 'Rating and description are required' });
+        }
+
+        const newReview = new Review({
+            userName: userName || 'Guest User',
+            rating: Number(rating),
+            description,
+            date: date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        });
+
+        const savedReview = await newReview.save();
+        res.status(201).json(savedReview);
+    } catch (err) {
+        console.error('[ReviewsAPI] Save error:', err.message);
+        res.status(500).json({ message: 'Server error saving review' });
+    }
 });
 
 // API Routes for Products
