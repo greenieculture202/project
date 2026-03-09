@@ -88,21 +88,68 @@
                         <i class="far fa-calendar-alt"></i>
                         <span>{{ today | date:'longDate' }}</span>
                     </div>
-                    <div class="notification-trigger" (mouseenter)="showNotiMenu = true"
-                        (mouseleave)="showNotiMenu = false">
-                        <i class="far fa-bell" (click)="clearNotifications()"></i>
+                    <div class="notification-trigger" (click)="toggleNotiMenu($event)">
+                        <i class="far fa-bell" (click)="clearNotifications($event)"></i>
                         <span class="noti-badge" *ngIf="hasNotifications"></span>
 
-                        <!-- Mini Noti Menu -->
-                        <div class="noti-mini-menu" *ngIf="showNotiMenu">
-                            <div class="noti-menu-header">Notifications</div>
-                            <div class="noti-menu-body">
-                                <span *ngIf="!hasNotifications" class="no-noti-txt">No new alerts</span>
-                                <span *ngIf="hasNotifications" class="has-noti-txt">You have new orders!</span>
+                        <!-- Premium Notification Popup -->
+                        <div class="noti-mini-menu" *ngIf="showNotiMenu" (click)="$event.stopPropagation()">
+                            <div class="noti-menu-header">
+                                <h4>Notifications</h4>
+                                <div class="noti-header-actions">
+                                    <span class="noti-count-badge"
+                                        *ngIf="unreadNotificationsCount > 0">{{unreadNotificationsCount}}</span>
+                                    <button class="btn-mark-all" (click)="clearNotifications($event)"
+                                        *ngIf="hasNotifications">Mark all as read</button>
+                                </div>
                             </div>
-                            <button class="btn-test-sound" (click)="playNotificationSound()">
-                                <i class="fas fa-volume-up"></i> Test Sound
-                            </button>
+
+                            <div class="noti-menu-body">
+                                <div *ngIf="adminNotifications.length === 0" class="noti-empty-state">
+                                    <div class="noti-empty-icon">
+                                        <i class="fas fa-bell-slash"></i>
+                                    </div>
+                                    <span>All caught up! No new alerts.</span>
+                                </div>
+
+                                <div class="noti-list" *ngIf="adminNotifications.length > 0">
+                                    <div class="noti-item" *ngFor="let noti of adminNotifications"
+                                        [class.unread]="!noti.isRead" (click)="markOneAsRead(noti)">
+                                        <div class="noti-image-wrapper" *ngIf="noti.type === 'LowStock'">
+                                            <img [src]="noti.product?.image || 'assets/placeholder-plant.png'"
+                                                alt="product" class="noti-prod-img">
+                                        </div>
+                                        <div class="noti-item-content">
+                                            <div class="noti-item-title">
+                                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"
+                                                    *ngIf="noti.type === 'LowStock'"></i>
+                                                {{noti.title}}
+                                            </div>
+                                            <div class="noti-item-msg">{{noti.message}}</div>
+
+                                            <div class="noti-item-footer" *ngIf="noti.product">
+                                                <div class="noti-price-tag" *ngIf="noti.product.price">
+                                                    ₹{{noti.product.price}}
+                                                </div>
+                                                <div class="noti-stock-info">
+                                                    <i class="fas fa-cubes"></i>
+                                                    Stock: {{noti.product.stock}}
+                                                </div>
+                                            </div>
+                                            <div class="noti-time-stamp">{{noti.createdAt | date:'shortTime'}}</div>
+                                        </div>
+                                        <i class="fas fa-trash-alt noti-delete-btn"
+                                            (click)="deleteNotification(noti._id, $event)"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="noti-footer-controls">
+                                <button class="btn-premium-toggle" (click)="playNotificationSound()">
+                                    <i class="fas fa-volume-up"></i>
+                                    Test Notification Sound
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="user-profile-premium">
@@ -639,14 +686,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="modal-footer-premium">
-                        <button class="btn-premium-secondary" (click)="closeDetailModal()">Dismiss</button>
-                        <button class="btn-premium-primary" (click)="toggleBlockUser(selectedUser); closeDetailModal()">
-                            <i class="fas" [ngClass]="selectedUser.isBlocked ? 'fa-user-check' : 'fa-user-slash'"></i>
-                            {{ selectedUser.isBlocked ? 'Unblock User' : 'Block User' }}
-                        </button>
                     </div>
                 </div>
             </div>

@@ -139,7 +139,7 @@ const sendOrderConfirmationEmail = async (user, order) => {
 };
 
 // Auth Middleware
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
     const token = req.header('x-auth-token');
     if (!token) {
         return res.status(401).json({ message: 'No token, authorization denied' });
@@ -148,6 +148,15 @@ const auth = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded.user;
+
+        // Ensure user is not blocked (Skip for special admin bypass)
+        if (req.user.id && req.user.id !== 'admin-special-id') {
+            const activeUser = await User.findById(req.user.id).select('isBlocked').lean();
+            if (activeUser && activeUser.isBlocked) {
+                return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+            }
+        }
+
         next();
     } catch (err) {
         res.status(401).json({ message: 'Token is not valid' });
@@ -238,7 +247,7 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         if (user.isBlocked) {
-            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
         }
 
         // Check password
@@ -279,7 +288,7 @@ app.post('/api/auth/google-login', async (req, res) => {
         let user = await User.findOne({ email: email.toLowerCase() }).lean();
 
         if (user && user.isBlocked) {
-            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
         }
 
         if (!user) {
@@ -415,7 +424,7 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
         let user = await User.findOne({ email: email.toLowerCase() }).lean();
 
         if (user && user.isBlocked) {
-            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
         }
 
         if (!user) {
@@ -850,6 +859,48 @@ app.post('/api/user/orders', auth, async (req, res) => {
         const savedOrder = await newOrder.save();
         console.log(`[OrdersAPI] New order placed: ${savedOrder.orderId} for user ${req.user.id}`);
 
+        // Deduct stock for each item in the order
+        for (const item of items) {
+            if (item.productId) {
+                try {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        const reduceBy = Number(item.quantity) || 1;
+                        let currentStock = product.stock !== undefined ? product.stock : 25;
+                        currentStock = Math.max(0, currentStock - reduceBy); // Prevent negative stock
+                        product.stock = currentStock;
+                        await product.save();
+                        console.log(`[OrdersAPI] Reduced stock for product ${product.name} to ${product.stock}`);
+
+                        // --- LOW STOCK NOTIFICATION STRATEGY ---
+                        if (currentStock <= 5) {
+                            try {
+                                const newNoti = new Notification({
+                                    type: 'LowStock',
+                                    title: 'Low Stock Alert 📉',
+                                    message: `Stock for ${product.name} has fallen to ${currentStock}. Time to restock!`,
+                                    product: {
+                                        id: product._id,
+                                        name: product.name,
+                                        image: product.image,
+                                        price: product.price,
+                                        stock: currentStock
+                                    }
+                                });
+                                await newNoti.save();
+                                console.log(`[OrdersAPI] Generated Low Stock Notification for: ${product.name}`);
+                            } catch (notiErr) {
+                                console.error('[OrdersAPI] Failed to generate low stock notification:', notiErr.message);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    // Log error but don't fail the order if stock update fails
+                    console.error(`[OrdersAPI] Error updating stock for product ${item.productId}:`, err.message);
+                }
+            }
+        }
+
         // Asynchronously send the invoice email
         sendOrderConfirmationEmail(req.user, savedOrder);
 
@@ -993,6 +1044,50 @@ app.put('/api/user/profile', auth, async (req, res) => {
     } catch (err) {
         console.error('[ProfileAPI] Update error details:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
+// ADMIN API - Notifications
+app.get('/api/admin/notifications', auth, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: { $exists: false } })
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .lean();
+        res.json(notifications);
+    } catch (err) {
+        console.error('[AdminNotificationsAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error fetching notifications' });
+    }
+});
+
+app.put('/api/admin/notifications/:id/read', auth, async (req, res) => {
+    try {
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.json({ message: 'Notification marked as read' });
+    } catch (err) {
+        console.error('[AdminNotificationsAPI] Read error:', err.message);
+        res.status(500).json({ message: 'Server error marking notification read' });
+    }
+});
+
+app.delete('/api/admin/notifications/:id', auth, async (req, res) => {
+    try {
+        await Notification.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Notification deleted successfully' });
+    } catch (err) {
+        console.error('[AdminNotificationsAPI] Delete error:', err.message);
+        res.status(500).json({ message: 'Server error deleting notification' });
+    }
+});
+
+app.put('/api/admin/notifications/read', auth, async (req, res) => {
+    try {
+        await Notification.updateMany({ userId: { $exists: false }, isRead: false }, { isRead: true });
+        res.json({ message: 'All admin notifications marked as read' });
+    } catch (err) {
+        console.error('[AdminNotificationsAPI] Read error:', err.message);
+        res.status(500).json({ message: 'Server error marking notifications read' });
     }
 });
 
@@ -1307,7 +1402,7 @@ app.put('/api/admin/users/:id/block', auth, async (req, res) => {
 // ADMIN API - Update product
 app.put('/api/admin/products/:id', auth, async (req, res) => {
     try {
-        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
+        const { name, price, originalPrice, discount, category, image, images, description, tags, stock } = req.body;
 
         const updateData = {
             name,
@@ -1315,6 +1410,7 @@ app.put('/api/admin/products/:id', auth, async (req, res) => {
             originalPrice,
             discount,
             category,
+            stock: stock !== undefined ? Number(stock) : 25,
             image,
             images,
             description,
@@ -1357,7 +1453,7 @@ app.delete('/api/admin/products/:id', auth, async (req, res) => {
 // ADMIN API - Add new product
 app.post('/api/admin/products', auth, async (req, res) => {
     try {
-        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
+        const { name, price, originalPrice, discount, category, image, images, description, tags, stock } = req.body;
 
         if (!name || !price || !category || !image) {
             return res.status(400).json({ message: 'Name, price, category, and image are required.' });
@@ -1380,7 +1476,8 @@ app.post('/api/admin/products', auth, async (req, res) => {
             image,
             images: Array.isArray(images) ? images : [],
             description: description || '',
-            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : [])
+            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : []),
+            stock: stock !== undefined ? Number(stock) : 25
         });
 
         const savedProduct = await newProduct.save();

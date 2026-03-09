@@ -61,6 +61,7 @@
                 <span class="current-price">{{ selectedPrice }}</span>
                 <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
                 <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
+                <span class="sold-out-badge" *ngIf="product.stock !== undefined && product.stock <= 0">SOLD OUT</span>
             </div>
             <span class="taxes-text">(Incl. of all taxes)</span>
 
@@ -108,17 +109,23 @@
             </div>
 
             <label class="gift-option">
-                <input type="checkbox" [(ngModel)]="isGift"> Make This a Gift
+                <input type="checkbox" [(ngModel)]="isGift"
+                    [disabled]="product.stock !== undefined && product.stock <= 0"> Make This a Gift
             </label>
 
             <div class="actions">
-                <div class="quantity-selector">
-                    <button (click)="decreaseQuantity()">-</button>
+                <div class="quantity-selector" [class.disabled]="product.stock !== undefined && product.stock <= 0">
+                    <button (click)="decreaseQuantity()"
+                        [disabled]="product.stock !== undefined && product.stock <= 0">-</button>
                     <span>{{ quantity }}</span>
-                    <button (click)="increaseQuantity()">+</button>
+                    <button (click)="increaseQuantity()"
+                        [disabled]="product.stock !== undefined && product.stock <= 0">+</button>
                 </div>
-                <button class="add-to-cart-btn btn" (click)="addToCart()">ADD TO CART</button>
-                <button class="buy-now-btn btn" (click)="buyNow()">BUY IT NOW</button>
+                <button class="add-to-cart-btn btn"
+                    [class.out-of-stock]="product.stock !== undefined && product.stock <= 0" (click)="addToCart()">ADD
+                    TO CART</button>
+                <button class="buy-now-btn btn" [class.out-of-stock]="product.stock !== undefined && product.stock <= 0"
+                    (click)="buyNow()">BUY IT NOW</button>
             </div>
 
             <div style="color: #008f53; font-weight: 600; margin-top: 25px; margin-bottom: 15px; cursor: pointer;">

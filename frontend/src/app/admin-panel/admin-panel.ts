@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -538,6 +538,14 @@ export class AdminPanelComponent implements OnInit {
     backendResults: any[] = [];
     isSearching: boolean = false;
     private notificationAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    adminNotifications: any[] = [];
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
+        if (this.showNotiMenu) {
+            this.showNotiMenu = false;
+        }
+    }
 
     categoryStats = [
         { name: 'Indoor Plants', count: 125, percentage: 45, color: '#10b981' },
@@ -598,10 +606,12 @@ export class AdminPanelComponent implements OnInit {
 
         this.loadUsers();
         this.loadOrders();
+        this.loadAdminNotifications();
 
-        // Start background polling for new orders (every 30 seconds)
+        // Setup polling for orders and notifications
         this.pollingInterval = setInterval(() => {
             this.loadOrders();
+            this.loadAdminNotifications();
         }, 30000);
     }
 
@@ -768,10 +778,81 @@ export class AdminPanelComponent implements OnInit {
         this.cdr.detectChanges();
     }
 
-    clearNotifications() {
-        this.hasNotifications = false;
-        this.unreadNotificationsCount = 0;
-        this.cdr.detectChanges();
+    loadAdminNotifications() {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+        this.http.get<any[]>('/api/admin/notifications', { headers }).subscribe({
+            next: (data: any[]) => {
+                this.adminNotifications = data;
+                this.unreadNotificationsCount = data.filter((n: any) => !n.isRead).length;
+                this.hasNotifications = this.unreadNotificationsCount > 0;
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => console.error('Error loading notifications:', err)
+        });
+    }
+
+    toggleNotiMenu(event: Event) {
+        event.stopPropagation();
+        this.showNotiMenu = !this.showNotiMenu;
+        if (this.showNotiMenu && this.hasNotifications) {
+            this.clearNotifications();
+        }
+    }
+
+    clearNotifications(event?: Event) {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+        this.http.put('/api/admin/notifications/read', {}, { headers }).subscribe({
+            next: () => {
+                this.hasNotifications = false;
+                this.unreadNotificationsCount = 0;
+                // Mark local ones as read
+                this.adminNotifications.forEach((n: any) => n.isRead = true);
+                this.cdr.detectChanges();
+            },
+        });
+    }
+
+    markOneAsRead(noti: any) {
+        if (noti.isRead) return;
+
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+
+        this.http.put(`/api/admin/notifications/${noti._id}/read`, {}, { headers }).subscribe({
+            next: () => {
+                noti.isRead = true;
+                this.unreadNotificationsCount = Math.max(0, this.unreadNotificationsCount - 1);
+                this.hasNotifications = this.unreadNotificationsCount > 0;
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => {
+                console.error('Error marking notification as read:', err);
+                noti.isRead = true;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    deleteNotification(id: string, event: Event) {
+        event.stopPropagation();
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+
+        this.http.delete(`/api/admin/notifications/${id}`, { headers }).subscribe({
+            next: () => {
+                this.adminNotifications = this.adminNotifications.filter(n => n._id !== id);
+                this.unreadNotificationsCount = this.adminNotifications.filter(n => !n.isRead).length;
+                this.hasNotifications = this.unreadNotificationsCount > 0;
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => console.error('Error deleting notification:', err)
+        });
     }
 
     loadPlacements() {
