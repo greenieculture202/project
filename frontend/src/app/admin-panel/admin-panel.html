@@ -1507,10 +1507,33 @@
                         </div>
                     </div>
 
-                    <!-- Dispatch Controls for Pending Orders -->
-                    <div class="dispatch-controls"
-                        style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7;"
+                    <div class="dispatch-controls" [class.shake-error]="isShaking"
+                        style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7; transition: all 0.3s;"
                         *ngIf="selectedOrder.status === 'Pending'">
+
+                        <!-- Territory Mismatch Warning -->
+                        <div *ngIf="showCourierMismatchError"
+                            style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 12px; padding: 12px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease;">
+                            <i class="fas fa-triangle-exclamation"
+                                style="color: #ef4444; font-size: 1.2rem; margin-top: 2px;"></i>
+                            <div>
+                                <p style="margin: 0; color: #991b1b; font-size: 0.85rem; font-weight: 800;">Courier
+                                    Territory Mismatch!</p>
+                                <p style="margin: 4px 0 0 0; color: #b91c1c; font-size: 0.75rem; line-height: 1.4;">
+                                    <strong>{{selectedCourier}}</strong> does not service this location. Sending here
+                                    might cause delays or cancellations.
+                                </p>
+                                <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.7rem; color: #7f1d1d; font-weight: 700;">Suggested:</span>
+                                    <button
+                                        (click)="selectedCourier = suggestedCourier; showCourierMismatchError = false"
+                                        style="background: #ef4444; color: white; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: all 0.2s;">
+                                        Switch to {{suggestedCourier}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <h4 style="margin: 0 0 15px 0; color: #92400e;"><i class="fas fa-shipping-fast"></i> Dispatch
                             this Order</h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">

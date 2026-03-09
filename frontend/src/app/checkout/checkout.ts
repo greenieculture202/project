@@ -566,7 +566,7 @@ export class CheckoutComponent implements OnInit {
             scrollY: 0,
             x: 0,
             y: 0
-        }).then((canvas: HTMLCanvasElement) => {
+        } as any).then((canvas: HTMLCanvasElement) => {
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const pdf = new jsPDF('p', 'mm', 'a4');
 

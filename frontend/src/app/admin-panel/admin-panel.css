@@ -351,6 +351,32 @@
     border-color: #ef4444;
 }
 
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-8px);
+    }
+
+    50% {
+        transform: translateX(8px);
+    }
+
+    75% {
+        transform: translateX(-8px);
+    }
+}
+
+.shake-error {
+    animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
