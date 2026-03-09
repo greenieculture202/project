@@ -108,11 +108,77 @@
   color: #1a1a1a;
   font-weight: 500;
   letter-spacing: 0.2px;
+  background: transparent;
 }
 
 .search-box input::placeholder {
   color: #9cb29c;
   font-weight: 400;
+}
+
+.search-box.is-searching {
+  border-color: #74c69d;
+}
+
+.clear-search-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  margin-left: 8px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.clear-search-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.clear-search-btn i {
+  font-size: 0.9rem;
+}
+
+.searching-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.searching-state p {
+  color: #6a8c6a;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(26, 93, 26, 0.1);
+  border-top: 3px solid #1a5d1a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* --- Premium Search Results Dropdown --- */

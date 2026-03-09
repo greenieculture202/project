@@ -613,18 +613,40 @@ app.get('/api/products/search', async (req, res) => {
         if (!q || q.length < 2) return res.json([]);
 
         console.log(`[Backend Search] Processing query: "${q}"`);
-        const searchTerms = q.split(' ').filter(term => term.length > 0);
-        const regexes = searchTerms.map(term => new RegExp(term, 'i'));
 
-        // Search in name, category, or tags
-        const products = await Product.find({
-            $or: [
-                { name: { $regex: new RegExp(q, 'i') } },
-                { category: { $regex: new RegExp(q, 'i') } },
-                { tags: { $regex: new RegExp(q, 'i') } },
-                ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
-            ]
-        }).limit(10).select('name category price image slug').lean();
+        // Use text search for performance if possible, with regex fallback
+        // Text search is generally faster and handles weights
+        const products = await Product.find(
+            { $text: { $search: q } },
+            { score: { $meta: "textScore" } }
+        )
+            .sort({ score: { $meta: "textScore" } })
+            .limit(10)
+            .select('name category price image slug')
+            .lean();
+
+        // If text search yields few results, fallback to regex for partial matches
+        if (products.length < 3) {
+            const searchTerms = q.split(' ').filter(term => term.length > 0);
+            const regexes = searchTerms.map(term => new RegExp(term, 'i'));
+
+            const regexProducts = await Product.find({
+                $or: [
+                    { name: { $regex: new RegExp(q, 'i') } },
+                    { category: { $regex: new RegExp(q, 'i') } },
+                    { tags: { $regex: new RegExp(q, 'i') } },
+                    ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
+                ]
+            })
+                .limit(10)
+                .select('name category price image slug')
+                .lean();
+
+            // Merge and de-duplicate
+            const combined = [...products, ...regexProducts];
+            const unique = Array.from(new Map(combined.map(p => [p._id.toString(), p])).values());
+            return res.json(unique.slice(0, 10));
+        }
 
         res.json(products);
     } catch (err) {

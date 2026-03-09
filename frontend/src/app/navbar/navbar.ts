@@ -5,7 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { CartService } from '../services/cart.service';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of } from 'rxjs';
 
 import { NotificationService, Notification } from '../services/notification.service';
 
@@ -20,6 +20,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     searchTerm: string = '';
     searchResults: Product[] = [];
     showResults: boolean = false;
+    isLoading: boolean = false;
     showNotifications: boolean = false;
     unreadCount: number = 0;
     notifications: Notification[] = [];
@@ -40,20 +41,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
             debounceTime(400),
             distinctUntilChanged(),
             switchMap(term => {
-                if (term.trim().length > 1) {
-                    return this.productService.searchProducts(term);
+                const trimmed = term.trim();
+                if (trimmed.length > 1) {
+                    this.isLoading = true;
+                    this.showResults = true;
+                    return this.productService.searchProducts(trimmed);
                 } else {
-                    return [];
+                    this.isLoading = false;
+                    this.showResults = false;
+                    return of([]);
                 }
             }),
             takeUntil(this.destroy$)
         ).subscribe({
             next: (results) => {
-                console.warn(`[Search-Backend] Received ${results.length} products from server`);
+                this.isLoading = false;
                 this.searchResults = results;
-                this.showResults = this.searchResults.length > 0 || this.searchTerm.trim().length > 1;
+                // Keep showResults true if we have results OR if we are still searching
+                this.showResults = this.searchTerm.trim().length > 1;
             },
             error: (err) => {
+                this.isLoading = false;
                 console.error('Search error:', err);
                 this.showResults = false;
             }
@@ -102,8 +110,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     onSearch() {
+        if (this.searchTerm.trim().length === 0) {
+            this.clearSearch();
+            return;
+        }
         console.log(`[Search-Input] User typed: "${this.searchTerm}"`);
         this.searchSubject.next(this.searchTerm);
+    }
+
+    clearSearch() {
+        this.searchTerm = '';
+        this.searchResults = [];
+        this.showResults = false;
+        this.isLoading = false;
+        this.searchSubject.next('');
     }
 
     selectProduct(product: Product) {
