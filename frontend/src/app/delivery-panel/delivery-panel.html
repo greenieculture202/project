@@ -1,103 +1,8 @@
 <div class="delivery-layout">
-    <!-- Fullscreen Courier View (Overlay) -->
-    <div class="fullscreen-courier-overlay"
-        *ngIf="activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier">
-        <div class="overlay-header">
-            <button class="back-btn" (click)="setTab('dashboard')">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <div class="aesthetic-title-wrapper">
-                <span class="aesthetic-ghost-text">{{ selectedCourier }}</span>
-                <h1 class="aesthetic-partner-name">{{ selectedCourier }}</h1>
-            </div>
-        </div>
 
-        <div class="overlay-content">
-            <!-- Control Bar (Restored from Screenshot) -->
-            <div class="control-bar-minimal">
-                <div class="filter-group">
-                    <span class="filter-label">Filter:</span>
-                    <button class="filter-btn" [class.active]="filterStatus === 'All'"
-                        (click)="setFilter('All')">All</button>
-                    <button class="filter-btn" [class.active]="filterStatus === 'Pending'"
-                        (click)="setFilter('Pending')">Pending</button>
-                    <button class="filter-btn" [class.active]="filterStatus === 'Shipped'"
-                        (click)="setFilter('Shipped')">Out for Delivery</button>
-                    <button class="filter-btn" [class.active]="filterStatus === 'Delivered'"
-                        (click)="setFilter('Delivered')">Delivered</button>
-                </div>
 
-                <div class="search-and-date">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search orders..." [(ngModel)]="searchQuery">
-                    </div>
-                    <span class="date-label">Date : {{ today | date:'longDate' }}</span>
-                </div>
-            </div>
-
-            <!-- Table Container -->
-            <div class="aesthetic-table-card">
-                <div class="table-header-minimal">
-                    <h3>Delivery Orders</h3>
-                </div>
-
-                <div class="table-wrapper">
-                    <table class="minimal-table">
-                        <thead>
-                            <tr>
-                                <th>ORDER ID</th>
-                                <th>CUSTOMER NAME</th>
-                                <th>ADDRESS</th>
-                                <th>STATUS</th>
-                                <th style="text-align: center;">ACTION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let order of filteredOrdersV2">
-                                <td class="order-id-cell">##{{ order.orderId }}</td>
-                                <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest' }}</td>
-                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
-                                    {{ order.userId?.city || '' }}</td>
-                                <td>
-                                    <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : order.status }}
-                                    </span>
-                                </td>
-                                <td style="text-align: center;">
-                                    <button class="btn-view-minimal" *ngIf="order.status !== 'Delivered'">View</button>
-                                    <div class="delivered-check-minimal" *ngIf="order.status === 'Delivered'">
-                                        <i class="fas fa-check-double"></i>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="empty-state-minimal" *ngIf="filteredOrdersV2.length === 0">
-                        <i class="fas fa-box-open"></i>
-                        <p>No orders found for this criteria.</p>
-                    </div>
-                </div>
-
-                <!-- Footer / Pagination mimicking screenshot -->
-                <div class="table-footer-minimal">
-                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length }} of {{ filteredOrdersV2.length }}
-                        entries</span>
-                    <div class="pagination-minimal">
-                        <button class="page-num active">1</button>
-                        <button class="page-num">2</button>
-                        <button class="page-num">3</button>
-                        <button class="page-num">...</button>
-                        <button class="page-num next">Next</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Layout (Hidden when fullscreen courier is active) -->
-    <aside class="sidebar" *ngIf="!(activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier)">
+    <!-- Main Layout -->
+    <aside class="sidebar">
         <div class="logo-section">
             <div class="logo-circle">
                 <i class="fas fa-leaf"></i>
@@ -106,11 +11,8 @@
         </div>
 
         <nav class="nav-menu">
-            <a class="nav-item" [class.active]="activeMainTab === 'dashboard'" (click)="setTab('dashboard')">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders')">
-                <i class="fas fa-shopping-basket"></i> Orders
+            <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders', '')">
+                <i class="fas fa-chart-bar"></i> Reports & Dashboard
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'payment'" (click)="setTab('payment')">
                 <i class="fas fa-credit-card"></i> Payment
@@ -130,6 +32,7 @@
                 style="font-size: 0.7rem; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem; font-weight: 800;">
                 Courier Partners</p>
             <div class="courier-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+
                 <div class="courier-item" [class.selected]="selectedCourier === 'Blue Dart'"
                     (click)="selectCourier('Blue Dart')"
                     style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
@@ -170,7 +73,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content" *ngIf="!(activeMainTab === 'orders' && activeUnlockedCourier === selectedCourier)">
+    <main class="main-content">
         <header class="header-section">
             <div class="header-title">
                 <h1>Delivery Management</h1>
@@ -191,9 +94,9 @@
         </header>
 
         <!-- Dashboard / Orders View -->
-        <ng-container *ngIf="activeMainTab === 'dashboard' || activeMainTab === 'orders'">
+        <ng-container *ngIf="activeMainTab === 'orders'">
             <!-- Stats Row -->
-            <div class="stats-row" *ngIf="activeMainTab === 'dashboard'">
+            <div class="stats-row" *ngIf="activeMainTab === 'orders' && selectedCourier">
                 <div class="stat-card">
                     <div class="stat-icon pending">
                         <i class="fas fa-clock"></i>
@@ -223,8 +126,95 @@
                 </div>
             </div>
 
+            <!-- Comprehensive Reports Dashboard (Default when no courier selected) -->
+            <div *ngIf="activeMainTab === 'orders' && !selectedCourier" class="reports-dashboard">
+
+                <!-- Performance Highlight -->
+                <div class="top-performance-card" *ngIf="getTopCourier()">
+                    <div class="performance-info">
+                        <span class="performance-label">Top Courier This Month</span>
+                        <h2 class="performance-value">{{ getTopCourier()?.name }}</h2>
+                        <p class="performance-subtext">Handling {{ getTopCourier()?.total }} total shipments</p>
+                    </div>
+                    <div class="performance-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+
+                <!-- Courier Reports Grid -->
+                <div class="reports-grid">
+                    <div class="report-card" *ngFor="let courier of getComparisonData()">
+                        <div class="report-card-header">
+                            <div class="courier-badge-large"
+                                [style.background]="courier.name === 'Blue Dart' ? '#eff6ff' : courier.name === 'Delhivery' ? '#f0fdf4' : '#fff1f1'"
+                                [style.color]="courier.name === 'Blue Dart' ? '#3b82f6' : courier.name === 'Delhivery' ? '#22c55e' : '#ef4444'">
+                                <i class="fas"
+                                    [ngClass]="{'fa-bolt': courier.name === 'Blue Dart', 'fa-paper-plane': courier.name === 'Delhivery', 'fa-truck': courier.name === 'DTDC'}"></i>
+                            </div>
+                            <h3 class="courier-title">{{ courier.name }}</h3>
+                        </div>
+
+                        <div class="report-stats-list">
+                            <div class="report-stat-item">
+                                <span class="stat-name">Pending</span>
+                                <span class="stat-value text-orange">{{ courier.pending }}</span>
+                                <div class="stat-progress-bg">
+                                    <div class="stat-progress-bar bg-orange"
+                                        [style.width.%]="(courier.pending / (courier.total || 1)) * 100"></div>
+                                </div>
+                            </div>
+                            <div class="report-stat-item">
+                                <span class="stat-name">Out for Delivery</span>
+                                <span class="stat-value text-blue">{{ courier.shipped }}</span>
+                                <div class="stat-progress-bg">
+                                    <div class="stat-progress-bar bg-blue"
+                                        [style.width.%]="(courier.shipped / (courier.total || 1)) * 100"></div>
+                                </div>
+                            </div>
+                            <div class="report-stat-item">
+                                <span class="stat-name">Delivered</span>
+                                <span class="stat-value text-green">{{ courier.delivered }}</span>
+                                <div class="stat-progress-bg">
+                                    <div class="stat-progress-bar bg-green"
+                                        [style.width.%]="(courier.delivered / (courier.total || 1)) * 100"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- State Coverage Section -->
+                        <div class="state-coverage"
+                            style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed #f1f5f9;">
+                            <span class="stat-name" style="display: block; margin-bottom: 0.75rem;">Territory
+                                Coverage:</span>
+                            <div class="state-tags" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <span *ngFor="let state of courierStateMapping[courier.name]"
+                                    style="background: #f8fafc; color: #475569; font-size: 0.6rem; padding: 3px 8px; border-radius: 6px; font-weight: 700; border: 1px solid #e2e8f0; white-space: nowrap;">
+                                    {{ state }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="report-footer">
+                            <span class="total-orders-label">Total Assigned</span>
+                            <button class="btn-assign-quick" (click)="selectCourier(courier.name)"
+                                style="background: #166534; margin-left: auto;">View List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unassigned Orders Alert -->
+                <div class="unassigned-alert"
+                    *ngIf="getCount('Pending') - (getComparisonData()[0].pending + getComparisonData()[1].pending + getComparisonData()[2].pending) > 0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>There are <strong>{{ getCount('Pending') - (getComparisonData()[0].pending +
+                            getComparisonData()[1].pending + getComparisonData()[2].pending) }}</strong> unassigned
+                        pending orders.</span>
+                    <button class="btn-assign-quick" (click)="setTab('orders', 'Blue Dart')">Assign Now</button>
+                </div>
+            </div>
+
             <!-- Control Bar -->
-            <div class="control-bar">
+            <div class="control-bar" *ngIf="selectedCourier">
                 <div class="filter-group">
                     <span class="filter-label">Filter:</span>
                     <button class="filter-btn" [class.active]="filterStatus === 'All'"
@@ -244,7 +234,7 @@
             </div>
 
             <!-- Table Container -->
-            <div class="table-card">
+            <div class="table-card" *ngIf="selectedCourier">
                 <div class="table-header">
                     <h3>Delivery Orders</h3>
                 </div>
@@ -256,6 +246,8 @@
                                 <th>Order ID</th>
                                 <th>Customer Name</th>
                                 <th>Address</th>
+                                <th>Order Date</th>
+                                <th>Expected Delivery</th>
                                 <th>Status</th>
                                 <th style="text-align: center;">Action</th>
                             </tr>
@@ -267,6 +259,13 @@
                                 <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
                                     {{
                                     order.userId?.city || '' }}</td>
+                                <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
+                                <td>
+                                    <input type="date" [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
+                                        (change)="updateExpectedDate(order.orderId, $event)"
+                                        style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.85rem;"
+                                        [disabled]="order.status === 'Delivered'">
+                                </td>
                                 <td>
                                     <span class="status-badge" [ngClass]="getStatusClass(order.status)">
                                         {{ order.status === 'Shipped' ? 'Out for Delivery' : order.status }}

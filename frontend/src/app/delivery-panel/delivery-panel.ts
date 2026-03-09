@@ -20,9 +20,9 @@ export class DeliveryPanelComponent implements OnInit {
   private ngZone = inject(NgZone);
 
   allOrders: any[] = [];
-  activeMainTab: string = 'dashboard';
+  activeMainTab: string = 'orders';
   filterStatus: string = 'All';
-  selectedCourier: string = 'Blue Dart';
+  selectedCourier: string = '';
   searchQuery: string = '';
   isLoading: boolean = true;
   today: Date = new Date();
@@ -40,10 +40,28 @@ export class DeliveryPanelComponent implements OnInit {
   enteredPassword: string = '';
   passwordError: string = '';
 
+  // India State to Courier Mapping (28 States + 8 UTs)
+  public courierStateMapping: { [key: string]: string[] } = {
+    'Blue Dart': [
+      'Maharashtra', 'Gujarat', 'Goa', 'Rajasthan', 'Madhya Pradesh',
+      'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu'
+    ],
+    'Delhivery': [
+      'Delhi', 'Uttar Pradesh', 'Haryana', 'Punjab', 'Himachal Pradesh',
+      'Uttarakhand', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Bihar', 'Jharkhand'
+    ],
+    'DTDC': [
+      'Karnataka', 'Kerala', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana',
+      'West Bengal', 'Odisha', 'Assam', 'Arunachal Pradesh', 'Manipur',
+      'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Puducherry',
+      'Andaman and Nicobar Islands', 'Lakshadweep'
+    ]
+  };
+
   // Similar to Admin Panel: Consistent tab navigation
   setTab(tab: string, courier?: string, navigate: boolean = true) {
     this.activeMainTab = tab;
-    if (courier) this.selectedCourier = courier;
+    if (courier !== undefined) this.selectedCourier = courier;
 
     if (navigate) {
       this.router.navigate([], {
@@ -59,6 +77,7 @@ export class DeliveryPanelComponent implements OnInit {
   }
 
   selectCourier(name: string) {
+
     if (this.activeUnlockedCourier === name) {
       this.setTab('orders', name);
       this.filterStatus = 'All';
@@ -97,8 +116,18 @@ export class DeliveryPanelComponent implements OnInit {
   get filteredOrdersV2() {
     let filtered = this.allOrders;
 
-    // Filter by Courier if on Orders tab (or always for this panel)
-    filtered = filtered.filter(o => o.courierName === this.selectedCourier);
+    // Filter by Courier if on Orders tab
+    if (this.selectedCourier) {
+      filtered = filtered.filter(o => {
+        // Automatically check if the order matches the courier's assigned state 
+        // OR if it was manually assigned in the database
+        const orderState = this.extractState(o);
+        const states = this.courierStateMapping[this.selectedCourier] || [];
+        return states.includes(orderState) || o.courierName === this.selectedCourier;
+      });
+    } else {
+      filtered = [];
+    }
 
     // Filter by Status
     if (this.filterStatus !== 'All') {
@@ -119,10 +148,9 @@ export class DeliveryPanelComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Sync with URL Query Params just like Admin Panel
     this.route.queryParams.subscribe(params => {
-      const tab = params['tab'] || 'dashboard';
-      const courier = params['courier'] || 'Blue Dart';
+      const tab = params['tab'] || 'orders';
+      const courier = params['courier'] || '';
       this.setTab(tab, courier, false);
     });
   }
@@ -147,8 +175,53 @@ export class DeliveryPanelComponent implements OnInit {
     this.filterStatus = status;
   }
 
+  extractState(order: any): string {
+    // Attempt to find state from user profile or shipping address string
+    const address = (order.userId?.address || order.shippingAddress || '').toLowerCase();
+    const city = (order.userId?.city || '').toLowerCase();
+
+    for (const courier in this.courierStateMapping) {
+      for (const state of this.courierStateMapping[courier]) {
+        if (address.includes(state.toLowerCase()) || city.includes(state.toLowerCase())) {
+          return state;
+        }
+      }
+    }
+    return 'Unknown';
+  }
+
   getCount(status: string) {
-    return this.allOrders.filter(o => o.status === status && o.courierName === this.selectedCourier).length;
+    if (!this.selectedCourier) return 0;
+    const states = this.courierStateMapping[this.selectedCourier] || [];
+    return this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      return o.status === status && (states.includes(orderState) || o.courierName === this.selectedCourier);
+    }).length;
+  }
+
+  getCourierCount(courier: string, status: string | 'Total') {
+    const states = this.courierStateMapping[courier] || [];
+    return this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      const isAssigned = states.includes(orderState) || o.courierName === courier;
+      if (status === 'Total') return isAssigned;
+      return isAssigned && o.status === status;
+    }).length;
+  }
+
+  getComparisonData() {
+    return ['Blue Dart', 'Delhivery', 'DTDC'].map(c => ({
+      name: c,
+      pending: this.getCourierCount(c, 'Pending'),
+      shipped: this.getCourierCount(c, 'Shipped'),
+      delivered: this.getCourierCount(c, 'Delivered'),
+      total: this.getCourierCount(c, 'Total')
+    })).sort((a, b) => b.total - a.total);
+  }
+
+  getTopCourier() {
+    const data = this.getComparisonData();
+    return (data.length > 0 && data[0].total > 0) ? data[0] : null;
   }
 
   getStatusClass(status: string) {
@@ -169,6 +242,33 @@ export class DeliveryPanelComponent implements OnInit {
       error: (err) => console.error('Error updating status:', err)
     });
   }
+
+  updateExpectedDate(orderId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.value) return;
+
+    const token = sessionStorage.getItem('auth_token');
+    const expectedDate = new Date(input.value);
+
+    // the backend route accepts expectedDeliveryDate now, we also need to keep the existing status
+    // To get the existing status:
+    const order = this.allOrders.find(o => o.orderId === orderId);
+    if (!order) return;
+
+    const payload = {
+      status: order.status,
+      expectedDeliveryDate: expectedDate.toISOString()
+    };
+
+    this.http.put(`/api/admin/orders/${order._id || orderId}/status`, payload, { headers: { 'x-auth-token': token || '' } }).subscribe({
+      next: () => {
+        // Optionally show success or reload
+        // this.loadShipments(); 
+      },
+      error: (err) => console.error('Error updating expected date:', err)
+    });
+  }
+
   backToAdmin() {
     this.router.navigate(['/admin-dashboard']);
   }

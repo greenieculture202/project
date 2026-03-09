@@ -795,9 +795,23 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
 // User Orders API - GET all orders for current user
 app.get('/api/user/orders', auth, async (req, res) => {
     try {
+        // Auto-update orders that have passed their expected delivery date for this user
+        const currentTime = new Date();
+        const overdueOrders = await Order.find({
+            userId: req.user.id,
+            status: 'Shipped',
+            expectedDeliveryDate: { $lte: currentTime, $ne: null }
+        });
+
+        for (const order of overdueOrders) {
+            order.status = 'Delivered';
+            await order.save();
+        }
+
         const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
         res.json(orders);
     } catch (err) {
+        console.error('[UserOrdersAPI] Fetch error:', err.message);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -842,6 +856,18 @@ app.post('/api/user/orders', auth, async (req, res) => {
 // Admin Orders API
 app.get('/api/admin/orders', auth, async (req, res) => {
     try {
+        // Auto-update orders that have passed their expected delivery date
+        const currentTime = new Date();
+        const overdueOrders = await Order.find({
+            status: 'Shipped',
+            expectedDeliveryDate: { $lte: currentTime, $ne: null }
+        });
+
+        for (const order of overdueOrders) {
+            order.status = 'Delivered';
+            await order.save();
+        }
+
         // Fetch all orders, populate user details
         const orders = await Order.find({})
             .populate('userId', 'fullName email phone alternatePhone address city state')
@@ -856,7 +882,7 @@ app.get('/api/admin/orders', auth, async (req, res) => {
 
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
-        const { status, courierName, trackingNumber } = req.body;
+        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
         if (!['Pending', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status update' });
         }
@@ -864,6 +890,7 @@ app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
         const updateData = { status };
         if (courierName) updateData.courierName = courierName;
         if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
 
         // Automatically set to Shipped if courier and tracking are provided
         if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled') {

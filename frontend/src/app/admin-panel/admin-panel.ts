@@ -430,6 +430,51 @@ export class AdminPanelComponent implements OnInit {
 
     isSubmitting: boolean = false;
 
+    // State to Courier Mapping
+    public courierStateMapping: { [key: string]: string[] } = {
+        'Blue Dart': [
+            'Maharashtra', 'Gujarat', 'Goa', 'Rajasthan', 'Madhya Pradesh',
+            'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu'
+        ],
+        'Delhivery': [
+            'Delhi', 'Uttar Pradesh', 'Haryana', 'Punjab', 'Himachal Pradesh',
+            'Uttarakhand', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Bihar', 'Jharkhand'
+        ],
+        'DTDC': [
+            'Karnataka', 'Kerala', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana',
+            'West Bengal', 'Odisha', 'Assam', 'Arunachal Pradesh', 'Manipur',
+            'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Puducherry',
+            'Andaman and Nicobar Islands', 'Lakshadweep'
+        ]
+    };
+
+    isShaking: boolean = false;
+    showCourierMismatchError: boolean = false;
+    suggestedCourier: string = '';
+
+    extractState(order: any): string {
+        const address = (order.userId?.address || order.shippingAddress || '').toLowerCase();
+        const city = (order.userId?.city || '').toLowerCase();
+
+        for (const courier in this.courierStateMapping) {
+            for (const state of this.courierStateMapping[courier]) {
+                if (address.includes(state.toLowerCase()) || city.includes(state.toLowerCase())) {
+                    return state;
+                }
+            }
+        }
+        return 'Unknown';
+    }
+
+    findRecommendedCourier(state: string): string {
+        for (const courier in this.courierStateMapping) {
+            if (this.courierStateMapping[courier].includes(state)) {
+                return courier;
+            }
+        }
+        return '';
+    }
+
     // Delete Confirmation Modal State
     showDeleteModal: boolean = false;
     deleteSuccess: boolean = false;
@@ -554,11 +599,15 @@ export class AdminPanelComponent implements OnInit {
     viewOrderDetails(order: any) {
         this.selectedOrder = order;
         this.showOrderModal = true;
+        this.showCourierMismatchError = false;
+        this.suggestedCourier = '';
     }
 
     closeOrderModal() {
         this.showOrderModal = false;
         this.selectedOrder = null;
+        this.showCourierMismatchError = false;
+        this.suggestedCourier = '';
         this.toggleBodyScroll(false);
     }
 
@@ -1557,6 +1606,28 @@ export class AdminPanelComponent implements OnInit {
                 alert('Please select a courier partner.');
                 return;
             }
+
+            // VALIDATION: Check if courier matches state
+            const orderState = this.extractState(this.selectedOrder);
+            const allowedStates = this.courierStateMapping[this.selectedCourier] || [];
+
+            if (!allowedStates.includes(orderState)) {
+                this.suggestedCourier = this.findRecommendedCourier(orderState);
+                this.showCourierMismatchError = true;
+                this.isShaking = true;
+
+                // Visual feedback: Stop shaking after 500ms
+                setTimeout(() => {
+                    this.isShaking = false;
+                    this.cdr.detectChanges();
+                }, 500);
+
+                this.cdr.detectChanges();
+                return;
+            }
+
+            // Clear error if validation passes
+            this.showCourierMismatchError = false;
 
             // Auto-generate if not manually entered (this doesn't count towards the 3-click limit)
             if (!this.trackingNumber) {

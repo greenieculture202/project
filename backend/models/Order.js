@@ -56,6 +56,10 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: 'UPI'
     },
+    expectedDeliveryDate: {
+        type: Date,
+        default: null
+    },
     orderId: {
         type: String,
         unique: true
