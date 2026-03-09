@@ -450,7 +450,13 @@
                                             <td class="price-cell text-muted">₹{{prod.originalPrice || '-'}}</td>
                                             <td><span class="discount-pill"
                                                     *ngIf="prod.discount">{{prod.discount}}</span></td>
-                                            <td><span class="status-badge delivered">In Stock</span></td>
+                                            <td>
+                                                <span class="status-badge"
+                                                    [ngClass]="prod.stock > 0 ? 'delivered' : 'cancelled'">
+                                                    {{ prod.stock }} {{ prod.category?.includes('Seeds') ? 'Packets' :
+                                                    (prod.stock > 0 ? 'In Stock' : 'Out of Stock') }}
+                                                </span>
+                                            </td>
                                             <td class="action-cell">
                                                 <button class="btn-icon edit" title="Edit"
                                                     (click)="openEditProductModal(prod)">
@@ -533,17 +539,104 @@
                                             {{user.method}}
                                         </span>
                                     </td>
-                                    <td><span class="status-dot online"></span> Active</td>
+                                    <td>
+                                        <span class="status-dot"
+                                            [ngClass]="user.isBlocked ? 'offline' : 'online'"></span>
+                                        {{ user.isBlocked ? 'Blocked' : 'Active' }}
+                                    </td>
                                     <td class="action-cell">
                                         <button (click)="viewUserDetails(user)" class="btn-icon view" title="View"><i
                                                 class="far fa-eye"></i></button>
-                                        <button class="btn-icon edit" title="Edit"><i class="far fa-edit"></i></button>
+                                        <button (click)="toggleBlockUser(user)" class="btn-icon block"
+                                            [title]="user.isBlocked ? 'Unblock User' : 'Block User'">
+                                            <i class="fas"
+                                                [ngClass]="user.isBlocked ? 'fa-user-check' : 'fa-user-slash'"></i>
+                                        </button>
                                         <button (click)="deleteUser(user.id, user.name)" class="btn-icon delete"
                                             title="Delete"><i class="far fa-trash-alt"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Details Modal (Inside Users Content) -->
+            <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+                <div class="user-detail-modal" (click)="$event.stopPropagation()">
+                    <button class="close-modal" (click)="closeDetailModal()">&times;</button>
+
+                    <div class="modal-header-premium">
+                        <h2>User Profile</h2>
+                        <p>Complete account overview and registration data</p>
+                    </div>
+
+                    <div class="modal-body-premium" *ngIf="selectedUser">
+                        <div class="profile-card-floating">
+                            <div class="large-avatar-premium" [ngClass]="selectedUser.method?.toLowerCase()">
+                                {{ selectedUser.name?.charAt(0) || 'U' }}
+                                <div class="method-badge-floating" *ngIf="selectedUser.method === 'Google'">
+                                    <i class="fab fa-google"></i>
+                                </div>
+                                <div class="method-badge-floating" *ngIf="selectedUser.method === 'Website'">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                            </div>
+                            <div class="user-info-main">
+                                <h3>{{ selectedUser.name }}</h3>
+                                <span class="user-id-text">REF ID: {{ selectedUser.id }}</span>
+                                <div class="badge-stack">
+                                    <span class="premium-badge role">{{ selectedUser.role || 'user' }}</span>
+                                    <span class="premium-badge status">Active Member</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-sections-grid">
+                            <div class="info-card-premium">
+                                <span class="label">Primary Email</span>
+                                <span class="value"><i class="far fa-envelope"></i> {{ selectedUser.email }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Contact Phone</span>
+                                <span class="value"><i class="fas fa-phone-alt"></i> {{ selectedUser.phone || 'N/A'
+                                    }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Alternate Contact</span>
+                                <span class="value"><i class="fas fa-mobile-alt"></i> {{ selectedUser.alternatePhone ||
+                                    'N/A' }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Registration Date</span>
+                                <span class="value"><i class="far fa-calendar-alt"></i> {{ selectedUser.date ?
+                                    (selectedUser.date | date: 'mediumDate') : 'Unknown' }}</span>
+                            </div>
+
+                            <div class="address-hero-card">
+                                <div class="address-icon-wrapper">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div class="address-content">
+                                    <h4>Account Address</h4>
+                                    <p>{{ selectedUser.address || 'User has not provided a primary address yet.' }}</p>
+                                    <p *ngIf="selectedUser.city || selectedUser.state"
+                                        style="color: #6366f1; font-size: 0.9rem; margin-top: 4px;">
+                                        {{ selectedUser.city }}{{ selectedUser.city && selectedUser.state ? ',' : '' }}
+                                        {{ selectedUser.state }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer-premium">
+                        <button class="btn-premium-secondary" (click)="closeDetailModal()">Dismiss</button>
+                        <button class="btn-premium-primary" (click)="toggleBlockUser(selectedUser); closeDetailModal()">
+                            <i class="fas" [ngClass]="selectedUser.isBlocked ? 'fa-user-check' : 'fa-user-slash'"></i>
+                            {{ selectedUser.isBlocked ? 'Unblock User' : 'Block User' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1319,7 +1412,8 @@
         </ng-container>
     </main>
 
-    <!-- User Details Modal ... existing ... -->
+
+
 
     <!-- Order Details Modal -->
     <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
@@ -1684,6 +1778,10 @@
                                 <label><i class="fas fa-history"></i> Original Value (₹)</label>
                                 <input type="text" [(ngModel)]="newProduct.originalPrice" name="originalPrice"
                                     placeholder="e.g. 1999">
+                            </div>
+                            <div class="info-item">
+                                <label><i class="fas fa-cubes"></i> Inventory Stock</label>
+                                <input type="number" [(ngModel)]="newProduct.stock" name="stock" placeholder="e.g. 25">
                             </div>
                         </div>
                     </div>
@@ -2449,3 +2547,4 @@
 
     <!-- Add FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</div>

@@ -24,7 +24,7 @@ export class AdminPanelComponent implements OnInit {
     searchTerm: string = '';
     activeMainCategory: string = 'Plants';
     activeCompanionGroup: string = 'All';
-    showUserModal: boolean = false;
+    // showDetailModal handles user details viewing
 
     authService = inject(AuthService);
     userService = inject(UserService);
@@ -517,13 +517,19 @@ export class AdminPanelComponent implements OnInit {
                 this.ngZone.run(() => {
                     this.users = data.map((user: any) => ({
                         id: user._id,
-                        name: user.fullName,
+                        name: user.fullName || user.name || 'User',
                         email: user.email,
                         phone: user.phone || 'N/A',
+                        alternatePhone: user.alternatePhone || 'N/A',
                         address: user.address || 'N/A',
+                        city: user.city || '',
+                        state: user.state || '',
                         method: user.method || 'Website',
                         greenPoints: user.greenPoints || 0,
-                        profilePic: user.profilePic
+                        profilePic: user.profilePic,
+                        role: user.role || 'user',
+                        date: user.createdAt || user.date,
+                        isBlocked: user.isBlocked || false
                     }));
                     this.stats[0].value = this.users.length.toString();
                     this.updateDashboardStats();
@@ -543,12 +549,30 @@ export class AdminPanelComponent implements OnInit {
         this.selectedUser = user;
         this.showDetailModal = true;
         this.toggleBodyScroll(true);
+        this.cdr.detectChanges();
     }
 
     closeDetailModal() {
         this.showDetailModal = false;
         this.selectedUser = null;
         this.toggleBodyScroll(false);
+        this.cdr.detectChanges();
+    }
+
+    toggleBlockUser(user: any) {
+        const newStatus = !user.isBlocked;
+        this.userService.blockUser(user.id, newStatus).subscribe({
+            next: (updatedUser: any) => {
+                this.ngZone.run(() => {
+                    user.isBlocked = updatedUser.isBlocked;
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err: any) => {
+                console.error('Error toggling user block status:', err);
+                alert('Failed to update user status');
+            }
+        });
     }
 
     viewOrderDetails(order: any) {
@@ -1134,7 +1158,8 @@ export class AdminPanelComponent implements OnInit {
             image: '',
             images: ['', '', '', ''],
             description: '',
-            tags: initialTag || ''
+            tags: initialTag || '',
+            stock: 25
         };
         this.showAddProductModal = true;
         this.toggleBodyScroll(true);
@@ -1154,7 +1179,8 @@ export class AdminPanelComponent implements OnInit {
             image: product.image,
             images: product.images && product.images.length > 0 ? [...product.images] : ['', '', '', ''],
             description: product.description || '',
-            tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || '')
+            tags: Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || ''),
+            stock: product.stock !== undefined ? product.stock : 25
         };
 
         // Ensure images array has at least 4 elements for the UI inputs
