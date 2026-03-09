@@ -130,11 +130,11 @@
             <div *ngIf="activeMainTab === 'orders' && !selectedCourier" class="reports-dashboard">
 
                 <!-- Performance Highlight -->
-                <div class="top-performance-card" *ngIf="getTopCourier()">
+                <div class="top-performance-card" *ngIf="topCourier">
                     <div class="performance-info">
                         <span class="performance-label">Top Courier This Month</span>
-                        <h2 class="performance-value">{{ getTopCourier()?.name }}</h2>
-                        <p class="performance-subtext">Handling {{ getTopCourier()?.total }} total shipments</p>
+                        <h2 class="performance-value">{{ topCourier?.name }}</h2>
+                        <p class="performance-subtext">Handling {{ topCourier?.total }} total shipments</p>
                     </div>
                     <div class="performance-icon">
                         <i class="fas fa-crown"></i>
@@ -143,7 +143,7 @@
 
                 <!-- Courier Reports Grid -->
                 <div class="reports-grid">
-                    <div class="report-card" *ngFor="let courier of getComparisonData()">
+                    <div class="report-card" *ngFor="let courier of comparisonData">
                         <div class="report-card-header">
                             <div class="courier-badge-large"
                                 [style.background]="courier.name === 'Blue Dart' ? '#eff6ff' : courier.name === 'Delhivery' ? '#f0fdf4' : '#fff1f1'"
@@ -196,7 +196,7 @@
 
                         <div class="report-footer">
                             <span class="total-orders-label">Total Assigned</span>
-                            <button class="btn-assign-quick" (click)="selectCourier(courier.name)"
+                            <button class="btn-assign-quick" (click)="toggleCourierChart(courier.name)"
                                 style="background: #166534; margin-left: auto;">View List</button>
                         </div>
                     </div>
@@ -204,12 +204,62 @@
 
                 <!-- Unassigned Orders Alert -->
                 <div class="unassigned-alert"
-                    *ngIf="getCount('Pending') - (getComparisonData()[0].pending + getComparisonData()[1].pending + getComparisonData()[2].pending) > 0">
+                    *ngIf="comparisonData.length > 0 && getCount('Pending') - (comparisonData[0]?.pending + comparisonData[1]?.pending + comparisonData[2]?.pending) > 0">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>There are <strong>{{ getCount('Pending') - (getComparisonData()[0].pending +
-                            getComparisonData()[1].pending + getComparisonData()[2].pending) }}</strong> unassigned
-                        pending orders.</span>
+                    <span>There are <strong>{{ getCount('Pending') - (comparisonData[0]?.pending +
+                            comparisonData[1]?.pending + comparisonData[2]?.pending) }}</strong> unassigned pending
+                        orders.</span>
                     <button class="btn-assign-quick" (click)="setTab('orders', 'Blue Dart')">Assign Now</button>
+                </div>
+            </div>
+
+            <!-- Order Pie Chart (Matches Admin Style for Dashboard) -->
+            <div class="pie-distribution-flex premium-chart-container" *ngIf="dashboardChartCourier && !selectedCourier"
+                style="margin: 0 2rem 2rem 2rem; background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; position: relative; animation: slideUp 0.3s ease;">
+
+                <button (click)="dashboardChartCourier = null"
+                    style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; transition: color 0.2s;">
+                    &times;
+                </button>
+                <div style="position: absolute; top: 1.5rem; left: 2rem;">
+                    <h3 style="margin:0; font-size: 1.25rem; font-weight: 800; color: #1e293b;">{{ dashboardChartCourier
+                        }} Weekly Trends</h3>
+                </div>
+
+                <div class="hologram-pie-container" style="margin-top: 2rem;">
+                    <div class="pie-glow-layer"
+                        [style.background]="'radial-gradient(circle, #166534 0%, transparent 70%)'">
+                    </div>
+                    <svg viewBox="0 0 100 100" class="donut-svg-interactive">
+                        <circle *ngFor="let slice of daySlices" class="donut-segment-interactive" cx="50" cy="50" r="25"
+                            fill="transparent" pathLength="100" [attr.stroke]="slice.color" stroke-width="50"
+                            [attr.stroke-dasharray]="slice.dashArray" [attr.stroke-dashoffset]="slice.dashOffset"
+                            (mouseenter)="hoveredSalesSegment = slice" (mouseleave)="hoveredSalesSegment = null">
+                        </circle>
+                    </svg>
+
+                    <div class="pie-inner-glass" style="width: 38%; height: 38%;">
+                        <ng-container *ngIf="!hoveredSalesSegment">
+                            <span class="revenue-val" style="font-size: 1.4rem;">{{totalWeeklyOrders}}</span>
+                            <span class="revenue-lbl" style="font-size: 0.6rem;">Total Items</span>
+                        </ng-container>
+                        <ng-container *ngIf="hoveredSalesSegment">
+                            <span class="revenue-val"
+                                [style.color]="hoveredSalesSegment.color">{{hoveredSalesSegment.percentage}}%</span>
+                            <span class="revenue-lbl" style="font-size: 0.6rem;">{{hoveredSalesSegment.label}}</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <!-- Multi-Column Legend -->
+                <div class="modern-grid-legend">
+                    <div class="legend-card-item" *ngFor="let slice of daySlices">
+                        <div class="cat-chip" [style.background]="slice.color"></div>
+                        <div class="legend-info">
+                            <div class="cat-head">{{slice.label}}</div>
+                            <div class="cat-meta">{{slice.count}} orders ({{slice.percentage}}%)</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

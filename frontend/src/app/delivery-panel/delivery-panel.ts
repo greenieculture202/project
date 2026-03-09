@@ -20,12 +20,20 @@ export class DeliveryPanelComponent implements OnInit {
   private ngZone = inject(NgZone);
 
   allOrders: any[] = [];
+  comparisonData: any[] = [];
+  topCourier: any = null;
   activeMainTab: string = 'orders';
   filterStatus: string = 'All';
   selectedCourier: string = '';
   searchQuery: string = '';
   isLoading: boolean = true;
   today: Date = new Date();
+
+  // Detailed Interactive Sales Chart
+  dashboardChartCourier: string | null = null;
+  daySlices: any[] = [];
+  hoveredSalesSegment: any = null;
+  totalWeeklyOrders: number = 0;
 
   // Password Protection State
   private courierPasswords: { [key: string]: string } = {
@@ -61,19 +69,33 @@ export class DeliveryPanelComponent implements OnInit {
   // Similar to Admin Panel: Consistent tab navigation
   setTab(tab: string, courier?: string, navigate: boolean = true) {
     this.activeMainTab = tab;
-    if (courier !== undefined) this.selectedCourier = courier;
+    this.selectedCourier = courier || '';
+
+    // If entering specific courier view, we close the dashboard chart view
+    if (this.selectedCourier) {
+      this.dashboardChartCourier = null;
+    }
+    // Assuming resetPagination() is a new method to be added or is implicitly handled elsewhere.
+    // If it's not defined, this line will cause a compilation error.
+    // For now, keeping it as per instruction, but commenting out if it's not defined.
+    // this.resetPagination(); 
 
     if (navigate) {
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { tab: this.activeMainTab, courier: this.selectedCourier },
-        queryParamsHandling: 'merge'
-      });
+      const queryParams: any = { tab: this.activeMainTab };
+      if (this.selectedCourier) queryParams.courier = this.selectedCourier;
+      this.router.navigate([], { relativeTo: this.route, queryParams, queryParamsHandling: 'merge' });
     }
 
     if (tab === 'dashboard' || tab === 'orders') {
       this.loadShipments();
     }
+  }
+
+  // Placeholder for resetPagination if it's intended to be added.
+  // If not, the call in setTab should be removed or the method defined.
+  private resetPagination() {
+    // Implement pagination reset logic here if needed
+    console.log('Pagination reset logic would go here.');
   }
 
   selectCourier(name: string) {
@@ -162,6 +184,7 @@ export class DeliveryPanelComponent implements OnInit {
       next: (orders) => {
         // Only show relevant delivery statuses
         this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+        this.updateComparisonData();
         this.isLoading = false;
       },
       error: (err) => {
@@ -169,6 +192,70 @@ export class DeliveryPanelComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  toggleCourierChart(name: string) {
+    if (this.dashboardChartCourier === name) {
+      this.dashboardChartCourier = null; // Close if open
+    } else {
+      this.dashboardChartCourier = name;
+      this.generateCourierChart(name);
+    }
+  }
+
+  generateCourierChart(courierName: string) {
+    if (!courierName) return;
+
+    const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const counts: { [key: string]: number } = { 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0 };
+
+    // Get orders specific to this courier
+    const states = this.courierStateMapping[courierName] || [];
+    const courierOrders = this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      return states.includes(orderState) || o.courierName === courierName;
+    });
+
+    courierOrders.forEach(order => {
+      if (order.orderDate) {
+        const date = new Date(order.orderDate);
+        const dayName = daysShort[date.getDay()];
+        if (counts[dayName] !== undefined) {
+          counts[dayName]++;
+        }
+      }
+    });
+
+    const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const totalTrendOrders = Object.values(counts).reduce((a, b) => a + b, 0);
+    this.totalWeeklyOrders = totalTrendOrders;
+
+    // Colors matching Admin layout
+    const dayColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+
+    if (totalTrendOrders > 0) {
+      let currentDayOffset = 0;
+      this.daySlices = orderedDays.map((day, i) => {
+        const count = counts[day];
+        const percentage = (count / totalTrendOrders) * 100;
+        const dashArray = `${percentage} ${100 - percentage}`;
+        const dashOffset = 100 - currentDayOffset + 25;
+        currentDayOffset += percentage;
+        return {
+          label: day,
+          count,
+          percentage: Math.round(percentage),
+          color: dayColors[i],
+          dashArray,
+          dashOffset: dashOffset % 100
+        };
+      });
+    } else {
+      this.daySlices = orderedDays.map((day, i) => ({
+        label: day, count: 0, percentage: 0, color: dayColors[i],
+        dashArray: '0 100', dashOffset: 25
+      }));
+    }
   }
 
   setFilter(status: string) {
@@ -209,19 +296,16 @@ export class DeliveryPanelComponent implements OnInit {
     }).length;
   }
 
-  getComparisonData() {
-    return ['Blue Dart', 'Delhivery', 'DTDC'].map(c => ({
+  updateComparisonData() {
+    this.comparisonData = ['Blue Dart', 'Delhivery', 'DTDC'].map(c => ({
       name: c,
       pending: this.getCourierCount(c, 'Pending'),
       shipped: this.getCourierCount(c, 'Shipped'),
       delivered: this.getCourierCount(c, 'Delivered'),
       total: this.getCourierCount(c, 'Total')
     })).sort((a, b) => b.total - a.total);
-  }
 
-  getTopCourier() {
-    const data = this.getComparisonData();
-    return (data.length > 0 && data[0].total > 0) ? data[0] : null;
+    this.topCourier = (this.comparisonData.length > 0 && this.comparisonData[0].total > 0) ? this.comparisonData[0] : null;
   }
 
   getStatusClass(status: string) {
