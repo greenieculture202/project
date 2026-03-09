@@ -1,0 +1,2 @@
+ee86be1 feat(ui): complete all-reviews page and animated review component
+ef60a94 feat(ui): Redesign all-reviews page, reposition back button, and add animated star rating progress breakdown to reviews component
