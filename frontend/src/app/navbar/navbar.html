@@ -5,8 +5,8 @@
   </div>
   <div class="search-container">
     <div class="search-box" [class.is-searching]="isLoading">
-      <i class="fas" [class.fa-search]="!isLoading" [class.fa-circle-notch]="isLoading" [class.fa-spin]="isLoading"
-        class="search-icon"></i>
+      <i class="fas search-icon" [class.fa-magnifying-glass]="!isLoading" [class.fa-circle-notch]="isLoading"
+        [class.fa-spin]="isLoading"></i>
       <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search For Plants..."
         (keyup.escape)="clearSearch()">
       <button class="clear-search-btn" *ngIf="searchTerm" (click)="clearSearch()" title="Clear search">

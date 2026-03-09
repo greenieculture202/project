@@ -237,6 +237,10 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        if (user.isBlocked) {
+            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+        }
+
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -273,6 +277,10 @@ app.post('/api/auth/google-login', async (req, res) => {
         const { email, name, picture } = ticket.getPayload();
 
         let user = await User.findOne({ email: email.toLowerCase() }).lean();
+
+        if (user && user.isBlocked) {
+            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+        }
 
         if (!user) {
             const newUser = new User({
@@ -405,6 +413,10 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
         otpStore.delete(email.toLowerCase());
 
         let user = await User.findOne({ email: email.toLowerCase() }).lean();
+
+        if (user && user.isBlocked) {
+            return res.status(403).json({ message: 'Your account has been blocked. Please contact support.' });
+        }
 
         if (!user) {
             const newUser = new User({
@@ -1269,6 +1281,26 @@ app.delete('/api/admin/users/:id', async (req, res) => {
         res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error('[AdminAPI] User deletion error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN API - Block/Unblock user
+app.put('/api/admin/users/:id/block', auth, async (req, res) => {
+    try {
+        const { isBlocked } = req.body;
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isBlocked },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        console.log(`[AdminAPI] User ${user.fullName} ${isBlocked ? 'blocked' : 'unblocked'}`);
+        res.json(user);
+    } catch (err) {
+        console.error('[AdminAPI] User block error:', err.message);
         res.status(500).json({ message: 'Server error: ' + err.message });
     }
 });
