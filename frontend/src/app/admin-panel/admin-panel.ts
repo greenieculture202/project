@@ -10,7 +10,7 @@ import { PlacementService, Placement } from '../services/placement.service';
 import { FaqService, Faq } from '../services/faq.service';
 import { AboutService, AboutSection } from '../services/about.service';
 import { InquiryService, Inquiry } from '../services/inquiry.service';
-
+import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -457,24 +457,42 @@ export class AdminPanelComponent implements OnInit {
     ];
 
     dashboardTrends: any[] = [
-        { day: 'Mon', count: 0, visualHeight: 0 },
-        { day: 'Tue', count: 0, visualHeight: 0 },
-        { day: 'Wed', count: 0, visualHeight: 0 },
-        { day: 'Thu', count: 0, visualHeight: 0 },
-        { day: 'Fri', count: 0, visualHeight: 0 },
-        { day: 'Sat', count: 0, visualHeight: 0 },
-        { day: 'Sun', count: 0, visualHeight: 0 }
+        { day: 'Mon', count: 0, visualHeight: 10 },
+        { day: 'Tue', count: 0, visualHeight: 10 },
+        { day: 'Wed', count: 0, visualHeight: 10 },
+        { day: 'Thu', count: 0, visualHeight: 10 },
+        { day: 'Fri', count: 0, visualHeight: 10 },
+        { day: 'Sat', count: 0, visualHeight: 10 },
+        { day: 'Sun', count: 0, visualHeight: 10 }
     ];
 
     fulfillmentRate: number = 0;
     donutDashArray: string = '0 100';
     pieChartStyle: string = '';
     salesPieChartStyle: string = '';
+    lineChartPath: string = '';
+    areaChartPath: string = '';
 
     // Detailed Interactive Sales Chart
     salesSlices: any[] = [];
+    daySlices: any[] = [];
     hoveredSalesSegment: any = null;
     totalSalesItems: number = 0;
+    totalWeeklyOrders: number = 0;
+    newUsersThisWeek: number = 0;
+    newUsersPercentage: number = 0;
+
+    // Notification State
+    hasNotifications: boolean = false;
+    unreadNotificationsCount: number = 0;
+    showNotiMenu: boolean = false;
+    private lastOrderCount: number = -1;
+    private pollingInterval: any;
+    private searchSubject = new Subject<string>();
+    private destroy$ = new Subject<void>();
+    backendResults: any[] = [];
+    isSearching: boolean = false;
+    private notificationAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
     categoryStats = [
         { name: 'Indoor Plants', count: 125, percentage: 45, color: '#10b981' },
@@ -502,8 +520,65 @@ export class AdminPanelComponent implements OnInit {
                 this.setTab('dashboard', undefined, false);
             }
         });
+
+        // Setup debounced backend search
+        this.searchSubject.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            switchMap(term => {
+                const trimmed = term?.trim() || '';
+                if (trimmed.length < 2) {
+                    this.isSearching = false;
+                    this.backendResults = [];
+                    this.cdr.detectChanges();
+                    return of([]);
+                }
+                this.isSearching = true;
+                this.cdr.detectChanges();
+                return this.productService.searchProducts(trimmed);
+            }),
+            takeUntil(this.destroy$)
+        ).subscribe({
+            next: (results) => {
+                this.backendResults = results;
+                this.isSearching = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Search error:', err);
+                this.isSearching = false;
+                this.cdr.detectChanges();
+            }
+        });
+
         this.loadUsers();
         this.loadOrders();
+
+        // Start background polling for new orders (every 30 seconds)
+        this.pollingInterval = setInterval(() => {
+            this.loadOrders();
+        }, 30000);
+    }
+
+    ngOnDestroy() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
+    onSearchChange(immediate: boolean = false) {
+        if (immediate) {
+            this.isSearching = true;
+            this.productService.searchProducts(this.searchTerm).subscribe(results => {
+                this.backendResults = results;
+                this.isSearching = false;
+                this.cdr.detectChanges();
+            });
+        } else {
+            this.searchSubject.next(this.searchTerm);
+        }
     }
 
     loadUsers() {
@@ -612,13 +687,6 @@ export class AdminPanelComponent implements OnInit {
                 queryParamsHandling: 'merge'
             });
         }
-        if (mainCategory) {
-            this.activeMainCategory = mainCategory;
-            this.activeCompanionGroup = mainCategory === 'Accessories' ? 'Accessories' : 'All';
-            this.productCategoryFilter = 'All';
-            this.searchTerm = '';
-        }
-
         if (tab === 'dashboard' || tab === 'users') {
             this.loadUsers();
         } else if (tab === 'products') {
@@ -638,6 +706,23 @@ export class AdminPanelComponent implements OnInit {
         } else if (tab === 'inquiries') {
             this.loadInquiries();
         }
+    }
+
+    playNotificationSound() {
+        this.notificationAudio.play().catch(e => console.log('Audio play failed:', e));
+    }
+
+    triggerNewNotification() {
+        this.hasNotifications = true;
+        this.unreadNotificationsCount++;
+        this.playNotificationSound();
+        this.cdr.detectChanges();
+    }
+
+    clearNotifications() {
+        this.hasNotifications = false;
+        this.unreadNotificationsCount = 0;
+        this.cdr.detectChanges();
     }
 
     loadPlacements() {
@@ -932,26 +1017,40 @@ export class AdminPanelComponent implements OnInit {
     }
 
     getProductsForCategory(category: string): any[] {
-        // --- SPECIAL CASE: Dynamic Bestsellers from Backend aggregation ---
-        if (category === 'Bestsellers' && this.productMap['Bestsellers']) {
-            const list = this.productMap['Bestsellers'];
-            if (this.searchTerm && this.searchTerm.trim() !== '') {
-                const term = this.searchTerm.toLowerCase();
-                return list.filter((p: any) =>
-                    p.name.toLowerCase().includes(term) ||
-                    (p.category || '').toLowerCase().includes(term) ||
-                    (Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(term)))
-                );
+        // --- BACKEND SEARCH INTEGRATION ---
+        if (this.searchTerm && this.searchTerm.trim().length >= 2) {
+            const results = this.backendResults || [];
+
+            // If a specific sub-category filter is active (not "All"), only show matches for THAT sub-category.
+            // If "All" is active, we show all search results that belong to the current MAIN category (Plants/Seeds/Accessories).
+            if (this.productCategoryFilter !== 'All') {
+                return results.filter((p: any) => {
+                    const pCat = (p.category || '').toLowerCase();
+                    const targetCat = category.toLowerCase();
+                    return pCat === targetCat || pCat.includes(targetCat) || targetCat.includes(pCat);
+                });
+            } else {
+                // When in "All" view, we don't restrict by the sub-category tab's key.
+                // We show all results that the search returned.
+                // However, to keep the UI from duplicating results for every tab in the loop,
+                // we only return them for the "First" category in the loop.
+                const categories = this.filteredProductCategories;
+                if (categories && categories[0] === category) {
+                    return results;
+                }
+                return [];
             }
-            return list;
         }
 
-        // Find defining items for this sub-category from our navbar mapping
+        // --- SPECIAL CASE: Dynamic Bestsellers ---
+        if (category === 'Bestsellers' && this.productMap['Bestsellers']) {
+            return this.productMap['Bestsellers'];
+        }
+
+        // --- LOCAL FILTERING LOGIC ---
         const navItems = this.navbarDefinitions[category] || [];
         const itemsToSearch = [category.toLowerCase(), ...navItems.map((i: string) => i.toLowerCase())];
 
-        // 1. Get ALL products as potential pool (since categories in DB are messy)
-        // We combine all lists from the productMap
         let allPotentialProducts: any[] = [];
         Object.values(this.productMap).forEach(products => {
             if (Array.isArray(products)) {
@@ -959,31 +1058,25 @@ export class AdminPanelComponent implements OnInit {
             }
         });
 
-        // 2. Clear duplicates (by _id) to be safe
         const uniqueProducts = Array.from(new Map(allPotentialProducts.map(p => [p._id, p])).values());
-
-        // 3. Filter by name, category or tags matching our navbar list
         const filtered = uniqueProducts.filter((p: any) => {
-            const pName = p.name.toLowerCase();
-            const pCat = p.category.toLowerCase();
+            const pName = (p.name || '').toLowerCase();
+            const pCat = (p.category || '').toLowerCase();
             const pTags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
 
-            const match = itemsToSearch.some(item =>
-                pName.includes(item) ||
-                pCat === item ||
-                pTags.includes(item)
+            return itemsToSearch.some(item =>
+                pName.includes(item) || pCat === item || pTags.includes(item)
             );
-
-            if (!match) return false;
-
-            // Apply search filter if active
-            if (this.searchTerm && this.searchTerm.trim() !== '') {
-                const term = this.searchTerm.toLowerCase();
-                return pName.includes(term) || pCat.includes(term) || pTags.some((t: string) => t.includes(term));
-            }
-
-            return true;
         });
+
+        // Apply local search filter for short terms (< 2 chars)
+        if (this.searchTerm && this.searchTerm.trim().length > 0 && this.searchTerm.trim().length < 2) {
+            const term = this.searchTerm.toLowerCase();
+            return filtered.filter((p: any) =>
+                (p.name || '').toLowerCase().includes(term) ||
+                (p.category || '').toLowerCase().includes(term)
+            );
+        }
 
         return filtered;
     }
@@ -1559,6 +1652,11 @@ export class AdminPanelComponent implements OnInit {
         this.http.get('/api/admin/orders', { headers: { 'x-auth-token': token } }).subscribe({
             next: (data: any) => {
                 this.ngZone.run(() => {
+                    if (this.lastOrderCount !== -1 && data.length > this.lastOrderCount) {
+                        this.triggerNewNotification();
+                    }
+                    this.lastOrderCount = data.length;
+
                     this.orders = data;
                     this.updateDashboardStats();
                     this.isLoadingOrders = false;
@@ -2022,6 +2120,11 @@ export class AdminPanelComponent implements OnInit {
             const windowStart = new Date(refDate);
             windowStart.setDate(windowStart.getDate() - 7);
 
+            // Calculate New Users this week
+            const newOnes = this.users.filter(u => u.regDate && new Date(u.regDate) >= windowStart);
+            this.newUsersThisWeek = newOnes.length;
+            this.newUsersPercentage = this.users.length > 0 ? Math.round((this.newUsersThisWeek / this.users.length) * 100) : 0;
+
             this.orders.forEach(order => {
                 if (order.orderDate) {
                     const date = new Date(order.orderDate);
@@ -2039,13 +2142,43 @@ export class AdminPanelComponent implements OnInit {
 
             this.dashboardTrends = orderedDays.map(day => {
                 const count = counts[day];
-                const visualHeight = count > 0 ? Math.max((count / maxCount) * 100, 15) : 0;
+                // Base height of 8% even if 0, so bars are always visible.
+                const visualHeight = count > 0 ? Math.max((count / maxCount) * 100, 20) : 8;
                 return {
                     day,
                     count,
                     visualHeight
                 };
             });
+
+            // Calculate Day-wise Pie Distribution
+            const totalTrendOrders = Object.values(counts).reduce((a, b) => a + b, 0);
+            this.totalWeeklyOrders = totalTrendOrders;
+            const dayColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+
+            if (totalTrendOrders > 0) {
+                let currentDayOffset = 0;
+                this.daySlices = orderedDays.map((day, i) => {
+                    const count = counts[day];
+                    const percentage = (count / totalTrendOrders) * 100;
+                    const dashArray = `${percentage} ${100 - percentage}`;
+                    const dashOffset = 100 - currentDayOffset + 25;
+                    currentDayOffset += percentage;
+                    return {
+                        label: day,
+                        count,
+                        percentage: Math.round(percentage),
+                        color: dayColors[i],
+                        dashArray,
+                        dashOffset: dashOffset % 100
+                    };
+                });
+            } else {
+                this.daySlices = orderedDays.map((day, i) => ({
+                    label: day, count: 0, percentage: 0, color: dayColors[i],
+                    dashArray: '0 100', dashOffset: 25
+                }));
+            }
 
             // Update Pie Chart (Full distribution)
             const total = this.orders.length;
@@ -2126,16 +2259,39 @@ export class AdminPanelComponent implements OnInit {
                 }));
             }
 
+            // --- SVG Line Chart Path Generation (Stock style) ---
+            if (this.dashboardTrends && this.dashboardTrends.length > 0) {
+                const points = this.dashboardTrends.map((t, i) => {
+                    const x = (i / (this.dashboardTrends.length - 1)) * 100;
+                    const y = 100 - t.visualHeight;
+                    return { x, y };
+                });
+
+                // Line Path
+                this.lineChartPath = points.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p.x},${p.y}`).join(' ');
+
+                // Fill Path (closes at bottom corners)
+                this.areaChartPath = `${this.lineChartPath} L 100,100 L 0,100 Z`;
+            }
+
         } else {
             this.stats[1].value = '0';
             this.stats[2].value = '₹0';
             this.stats[3].value = '0%';
-            if (this.dashboardTrends) {
-                this.dashboardTrends.forEach(t => {
-                    t.count = 0;
-                    t.visualHeight = 0;
-                });
-            }
+            this.dashboardTrends.forEach(t => {
+                t.count = 0;
+                t.visualHeight = 10;
+            });
+
+            // Update chart paths for empty state
+            const points = this.dashboardTrends.map((t, i) => {
+                const x = (i / (this.dashboardTrends.length - 1)) * 100;
+                const y = 100 - t.visualHeight;
+                return { x, y };
+            });
+            this.lineChartPath = points.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p.x},${p.y}`).join(' ');
+            this.areaChartPath = `${this.lineChartPath} L 100,100 L 0,100 Z`;
+
             this.fulfillmentRate = 0;
             this.donutDashArray = '0 100';
             this.pieChartStyle = 'lightgray';

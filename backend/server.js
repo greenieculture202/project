@@ -452,8 +452,11 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
 // Cart Routes
 app.get('/api/cart', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
         const user = await User.findById(req.user.id).select('cart').lean();
-        res.json(user.cart || []);
+        res.json(user?.cart || []);
     } catch (err) {
         console.error('[CART] Fetch error:', err.message);
         res.status(500).send('Server error');
@@ -633,12 +636,12 @@ app.get('/api/products/search', async (req, res) => {
             { score: { $meta: "textScore" } }
         )
             .sort({ score: { $meta: "textScore" } })
-            .limit(10)
-            .select('name category price image slug')
+            .limit(50)
+            .select('name category price originalPrice discount image slug tags')
             .lean();
 
         // If text search yields few results, fallback to regex for partial matches
-        if (products.length < 3) {
+        if (products.length < 5) {
             const searchTerms = q.split(' ').filter(term => term.length > 0);
             const regexes = searchTerms.map(term => new RegExp(term, 'i'));
 
@@ -650,14 +653,14 @@ app.get('/api/products/search', async (req, res) => {
                     ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
                 ]
             })
-                .limit(10)
-                .select('name category price image slug')
+                .limit(50)
+                .select('name category price originalPrice discount image slug tags')
                 .lean();
 
             // Merge and de-duplicate
             const combined = [...products, ...regexProducts];
             const unique = Array.from(new Map(combined.map(p => [p._id.toString(), p])).values());
-            return res.json(unique.slice(0, 10));
+            return res.json(unique.slice(0, 50));
         }
 
         res.json(products);
@@ -807,6 +810,9 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
 // User Orders API - GET all orders for current user
 app.get('/api/user/orders', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
         const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
         res.json(orders);
     } catch (err) {
@@ -817,6 +823,9 @@ app.get('/api/user/orders', auth, async (req, res) => {
 // User Orders API - POST place new order
 app.post('/api/user/orders', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.status(403).json({ message: 'Admin cannot place regular orders' });
+        }
         const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit } = req.body;
 
         if (!items || items.length === 0) {
@@ -924,6 +933,15 @@ app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
 app.get('/api/user/profile', auth, async (req, res) => {
     try {
         console.log(`[ProfileAPI] Loading profile for ID: ${req.user.id}`);
+        if (req.user.id === 'admin-special-id') {
+            return res.json({
+                _id: 'admin-special-id',
+                fullName: 'System Admin',
+                email: 'admin@greenie.com',
+                role: 'admin',
+                profilePic: 'https://cdn-icons-png.flaticon.com/512/6024/6024190.png'
+            });
+        }
         const user = await User.findById(req.user.id).select('-password').lean();
         if (!user) {
             console.log(`[ProfileAPI] User not found: ${req.user.id}`);
@@ -951,6 +969,14 @@ app.put('/api/user/profile', auth, async (req, res) => {
         if (city !== undefined) updateData.city = city;
         if (state !== undefined) updateData.state = state;
 
+        if (req.user.id === 'admin-special-id') {
+            return res.json({
+                _id: 'admin-special-id',
+                fullName: fullName || 'System Admin',
+                email: 'admin@greenie.com',
+                role: 'admin'
+            });
+        }
         const updatedUser = await User.findByIdAndUpdate(
             req.user.id,
             { $set: updateData },
@@ -1570,8 +1596,12 @@ app.put('/api/admin/inquiries/:id/reply', auth, async (req, res) => {
 });
 
 // USER: Get Notifications
+// USER: Get Notifications
 app.get('/api/user/notifications', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
         const notifications = await Notification.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.json(notifications);
     } catch (err) {
@@ -1592,6 +1622,9 @@ app.put('/api/user/notifications/:id/read', auth, async (req, res) => {
 // USER: Delete all notifications
 app.delete('/api/user/notifications', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json({ message: 'Notifications cleared (Admin)' });
+        }
         await Notification.deleteMany({ userId: req.user.id });
         res.json({ message: 'All notifications cleared' });
     } catch (err) {

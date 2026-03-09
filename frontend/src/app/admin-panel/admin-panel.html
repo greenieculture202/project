@@ -49,9 +49,7 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
                 <i class="fas fa-shopping-cart"></i> Orders
             </a>
-            <a href="javascript:void(0)" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
-                <i class="fas fa-chart-line"></i> Analytics
-            </a>
+
             <div class="nav-separator" style="height: 1px; background: #e2e8f0; margin: 10px 0;"></div>
             <a routerLink="/delivery-panel">
                 <i class="fas fa-truck"></i> Delivery Panel
@@ -89,6 +87,23 @@
                     <div class="date-picker-mini">
                         <i class="far fa-calendar-alt"></i>
                         <span>{{ today | date:'longDate' }}</span>
+                    </div>
+                    <div class="notification-trigger" (mouseenter)="showNotiMenu = true"
+                        (mouseleave)="showNotiMenu = false">
+                        <i class="far fa-bell" (click)="clearNotifications()"></i>
+                        <span class="noti-badge" *ngIf="hasNotifications"></span>
+
+                        <!-- Mini Noti Menu -->
+                        <div class="noti-mini-menu" *ngIf="showNotiMenu">
+                            <div class="noti-menu-header">Notifications</div>
+                            <div class="noti-menu-body">
+                                <span *ngIf="!hasNotifications" class="no-noti-txt">No new alerts</span>
+                                <span *ngIf="hasNotifications" class="has-noti-txt">You have new orders!</span>
+                            </div>
+                            <button class="btn-test-sound" (click)="playNotificationSound()">
+                                <i class="fas fa-volume-up"></i> Test Sound
+                            </button>
+                        </div>
                     </div>
                     <div class="user-profile-premium">
                         <div class="avatar-glow">A</div>
@@ -128,8 +143,8 @@
                 <div class="data-card-premium chart-card">
                     <div class="card-header-premium">
                         <div class="header-title">
-                            <h3>Sales Performance</h3>
-                            <span>Weekly trend of completed orders</span>
+                            <h3>Weekly Sales Distribution</h3>
+                            <span>Order contribution by day of week</span>
                         </div>
                         <div class="header-options">
                             <button class="btn-premium-export" (click)="exportDashboardPDF()">
@@ -138,52 +153,43 @@
                             </button>
                         </div>
                     </div>
-                    <div class="pie-chart-container-flex compact">
-                        <!-- Chart Side -->
-                        <div class="hologram-pie-container mini">
+                    <div class="pie-distribution-flex">
+                        <!-- Holographic Pie Section -->
+                        <div class="hologram-pie-container">
                             <div class="pie-glow-layer"
-                                [style.background]="hoveredSalesSegment ? hoveredSalesSegment.color : 'rgba(16, 185, 129, 0.1)'">
+                                [style.background]="'radial-gradient(circle, var(--primary-green) 0%, transparent 70%)'">
                             </div>
 
-                            <svg viewBox="0 0 42 42" class="donut-svg-interactive">
-                                <circle class="donut-ring" cx="21" cy="21" r="15.915" fill="transparent"
-                                    stroke="rgba(241, 245, 249, 0.8)" stroke-width="3.2"></circle>
-
-                                <circle *ngFor="let slice of salesSlices" class="donut-segment-interactive" cx="21"
-                                    cy="21" r="15.915" fill="transparent" [attr.stroke]="slice.color" stroke-width="4.8"
-                                    [attr.stroke-dasharray]="slice.dashArray"
+                            <svg viewBox="0 0 100 100" class="donut-svg-interactive">
+                                <circle *ngFor="let slice of daySlices" class="donut-segment-interactive" cx="50"
+                                    cy="50" r="25" fill="transparent" pathLength="100" [attr.stroke]="slice.color"
+                                    stroke-width="50" [attr.stroke-dasharray]="slice.dashArray"
                                     [attr.stroke-dashoffset]="slice.dashOffset"
                                     (mouseenter)="hoveredSalesSegment = slice"
-                                    (mouseleave)="hoveredSalesSegment = null">
-                                </circle>
+                                    (mouseleave)="hoveredSalesSegment = null"></circle>
                             </svg>
 
-                            <div class="pie-inner-glass small">
-                                <div class="center-content-box"
-                                    style="display: flex; flex-direction: column; align-items: center;">
-                                    <ng-container *ngIf="!hoveredSalesSegment">
-                                        <span class="revenue-val" style="font-size: 1.5rem;">{{totalSalesItems}}</span>
-                                        <span class="revenue-lbl" style="font-size: 0.55rem;">Units Sold</span>
-                                    </ng-container>
-                                    <ng-container *ngIf="hoveredSalesSegment">
-                                        <span class="revenue-val" [style.color]="hoveredSalesSegment.color"
-                                            style="font-size: 1.5rem; -webkit-text-fill-color: initial; background: none;">{{hoveredSalesSegment.count}}</span>
-                                        <span class="revenue-lbl"
-                                            style="font-size: 0.55rem; color: #64748b;">{{hoveredSalesSegment.label}}</span>
-                                    </ng-container>
-                                </div>
+                            <div class="pie-inner-glass" style="width: 38%; height: 38%;">
+                                <ng-container *ngIf="!hoveredSalesSegment">
+                                    <span class="revenue-val" style="font-size: 1.4rem;">{{totalWeeklyOrders}}</span>
+                                    <span class="revenue-lbl" style="font-size: 0.6rem;">Total Items</span>
+                                </ng-container>
+                                <ng-container *ngIf="hoveredSalesSegment">
+                                    <span class="revenue-val"
+                                        style="font-size: 1.4rem; color: var(--primary-green);">{{hoveredSalesSegment.percentage}}%</span>
+                                    <span class="revenue-lbl"
+                                        style="font-size: 0.6rem;">{{hoveredSalesSegment.label}}</span>
+                                </ng-container>
                             </div>
                         </div>
 
-                        <!-- Legend Side -->
-                        <div class="modern-grid-legend compact">
-                            <div class="legend-card-item mini" *ngFor="let cat of categoryStats"
-                                [class.active-link]="hoveredSalesSegment?.label === cat.name"
-                                (mouseenter)="hoveredSalesSegment = {label: cat.name, color: cat.color, count: cat.count}">
-                                <div class="cat-chip" [style.background-color]="cat.color"></div>
-                                <div class="cat-info-unit">
-                                    <div class="cat-head">{{cat.name}}</div>
-                                    <div class="cat-meta">{{cat.percentage}}% contribution</div>
+                        <!-- Multi-Column Legend -->
+                        <div class="modern-grid-legend">
+                            <div class="legend-card-item" *ngFor="let slice of daySlices">
+                                <div class="cat-chip" [style.background]="slice.color"></div>
+                                <div class="legend-info">
+                                    <div class="cat-head">{{slice.label}}</div>
+                                    <div class="cat-meta">{{slice.count}} orders ({{slice.percentage}}%)</div>
                                 </div>
                             </div>
                         </div>
@@ -212,37 +218,37 @@
                                 <i class="fas fa-shipping-fast"></i>
                                 <span>Shipments</span>
                             </button>
-                            <button class="premium-action-btn" (click)="setTab('analytics')">
-                                <i class="fas fa-chart-pie"></i>
-                                <span>Insights</span>
+                            <button class="premium-action-btn" (click)="setTab('products', 'Accessories')">
+                                <i class="fas fa-spa"></i>
+                                <span>Companions</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="data-card-premium order-snapshot-card">
-                        <div class="card-header-premium" style="padding: 0; margin-bottom: 5px; border: none;">
+                    <div class="data-card-premium user-growth-card" (click)="setTab('users')" style="cursor: pointer;">
+                        <div class="card-header-premium" style="padding: 0; margin-bottom: 12px; border: none;">
                             <div class="header-title">
-                                <h3 style="font-size: 1rem;">Order Snapshot</h3>
+                                <h3 style="font-size: 1rem;">New Growth</h3>
+                                <span style="font-size: 0.7rem;">Active registrations this week</span>
                             </div>
                         </div>
 
-                        <div class="status-ring-container">
-                            <div class="mini-pie-stage">
-                                <div class="stage-floor"></div>
-                                <div class="premium-pie-chart mini-pie" [style.background]="pieChartStyle"
-                                    style="width: 130px; height: 130px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                                    <div class="mini-inner">
-                                        <i class="fas fa-fingerprint"
-                                            style="color: var(--slate-300); font-size: 1.5rem;"></i>
-                                    </div>
-                                </div>
+                        <div class="growth-focus">
+                            <div class="growth-value">{{newUsersThisWeek}}</div>
+                            <div class="growth-label">New Users</div>
+                            <div class="growth-trend-pill" [ngClass]="{'positive': newUsersThisWeek > 0}">
+                                <i class="fas" [ngClass]="newUsersThisWeek > 0 ? 'fa-arrow-trend-up' : 'fa-minus'"></i>
+                                {{newUsersPercentage}}% Growth
                             </div>
+                        </div>
 
-                            <div class="status-grid-compact">
-                                <div class="status-pill-lite"><span class="dot pending"></span>Pending</div>
-                                <div class="status-pill-lite"><span class="dot shipped"></span>Shipped</div>
-                                <div class="status-pill-lite"><span class="dot delivered"></span>Final</div>
-                                <div class="status-pill-lite"><span class="dot cancelled"></span>Void</div>
+                        <div class="growth-visualization">
+                            <div class="mini-progress-bar">
+                                <div class="fill" [style.width.%]="newUsersPercentage"></div>
+                            </div>
+                            <div class="profile-stack">
+                                <span class="stack-dot" *ngFor="let i of [1,2,3,4,5]"></span>
+                                <span class="stack-more">+{{newUsersThisWeek > 5 ? newUsersThisWeek - 5 : 0}}</span>
                             </div>
                         </div>
                     </div>
@@ -373,10 +379,11 @@
                     <div class="search-row">
                         <div class="search-box-premium wide">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" [(ngModel)]="searchTerm"
+                            <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()"
                                 [placeholder]="'Search in ' + (productCategoryFilter === 'All' ? activeMainCategory : getCategoryLabel(productCategoryFilter)) + '...'"
                                 class="search-field">
-                            <button class="clear-btn" *ngIf="searchTerm" (click)="searchTerm = ''">
+                            <button class="clear-btn" *ngIf="searchTerm"
+                                (click)="searchTerm = ''; onSearchChange(true)">
                                 <i class="fas fa-times-circle"></i>
                             </button>
                         </div>
@@ -399,10 +406,13 @@
 
                 <!-- Search Results Indicator -->
                 <div class="search-status-bar" *ngIf="searchTerm">
-                    <span><i class="fas fa-search"></i> Searching for <strong>"{{searchTerm}}"</strong> in
-                        {{productCategoryFilter === 'All' ? 'Current Tab' :
-                        getCategoryLabel(productCategoryFilter)}}</span>
-                    <button (click)="searchTerm = ''">Clear Search</button>
+                    <span>
+                        <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
+                        <i class="fas fa-search" *ngIf="!isSearching"></i>
+                        Searching for <strong>"{{searchTerm}}"</strong> in
+                        {{productCategoryFilter === 'All' ? 'Current Tab' : getCategoryLabel(productCategoryFilter)}}
+                    </span>
+                    <button (click)="searchTerm = ''; onSearchChange(true)">Clear Search</button>
                 </div>
 
                 <div class="category-explorer-grid" *ngIf="productCategoryFilter === 'All' && !searchTerm">
