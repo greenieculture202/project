@@ -410,9 +410,14 @@ export class AdminPanelComponent implements OnInit {
         stock: 0
     };
 
+    // Duplicate Check State
+    showDuplicateModal: boolean = false;
+    duplicateProduct: any = null;
+
     // Tracking and Courier Fields
     selectedCourier: string = '';
     trackingNumber: string = '';
+    expectedDeliveryDate: string = '';
     courierOptions: string[] = ['Blue Dart', 'Delhivery', 'DTDC'];
 
     // Tracking Generation Limits
@@ -648,9 +653,14 @@ export class AdminPanelComponent implements OnInit {
     }
 
     onSearchChange(immediate: boolean = false) {
+        if (this.searchTerm && this.searchTerm.trim().length >= 2) {
+            console.log(`🔍 [Admin Search] Fetching from backend: "${this.searchTerm}"`);
+        }
+
         if (immediate) {
             this.isSearching = true;
             this.productService.searchProducts(this.searchTerm).subscribe(results => {
+                console.log(`✅ [Admin Search] Received ${results.length} results from backend`);
                 this.backendResults = results;
                 this.isSearching = false;
                 this.cdr.detectChanges();
@@ -731,6 +741,15 @@ export class AdminPanelComponent implements OnInit {
 
     viewOrderDetails(order: any) {
         this.selectedOrder = order;
+
+        // Auto-select courier based on state if not already set
+        if (!order.courierName) {
+            const state = this.extractState(order);
+            this.selectedCourier = this.findRecommendedCourier(state);
+        } else {
+            this.selectedCourier = order.courierName;
+        }
+
         this.showOrderModal = true;
         this.showCourierMismatchError = false;
         this.suggestedCourier = '';
@@ -763,6 +782,9 @@ export class AdminPanelComponent implements OnInit {
 
     setTab(tab: string, mainCategory?: string, updateUrl: boolean = true) {
         this.activeTab = tab;
+        if (mainCategory) {
+            this.activeMainCategory = mainCategory;
+        }
 
         // Update URL to persist tab state across refreshes
         if (updateUrl) {
@@ -1177,25 +1199,25 @@ export class AdminPanelComponent implements OnInit {
         if (this.searchTerm && this.searchTerm.trim().length >= 2) {
             const results = this.backendResults || [];
 
-            // If a specific sub-category filter is active (not "All"), only show matches for THAT sub-category.
-            // If "All" is active, we show all search results that belong to the current MAIN category (Plants/Seeds/Accessories).
-            if (this.productCategoryFilter !== 'All') {
-                return results.filter((p: any) => {
-                    const pCat = (p.category || '').toLowerCase();
-                    const targetCat = category.toLowerCase();
-                    return pCat === targetCat || pCat.includes(targetCat) || targetCat.includes(pCat);
-                });
-            } else {
-                // When in "All" view, we don't restrict by the sub-category tab's key.
-                // We show all results that the search returned.
-                // However, to keep the UI from duplicating results for every tab in the loop,
-                // we only return them for the "First" category in the loop.
+            // If "All" view is active, we don't duplicate results for every group tab.
+            // We just show them once in the first available tab.
+            if (this.productCategoryFilter === 'All') {
                 const categories = this.filteredProductCategories;
                 if (categories && categories[0] === category) {
                     return results;
                 }
                 return [];
             }
+
+            // If a specific sub-category filter is active (OR if we are in "All" loop above),
+            // show results that match the current category.
+            // However, we relax the check so that if the user searches for something, they see it.
+            return results.filter((p: any) => {
+                const pCat = (p.category || '').toLowerCase();
+                const targetCat = category.toLowerCase();
+                // Match exact category or if it belongs to this sub-category
+                return pCat === targetCat || pCat.includes(targetCat) || targetCat.includes(pCat);
+            });
         }
 
         // --- SPECIAL CASE: Dynamic Bestsellers ---
@@ -1462,6 +1484,30 @@ export class AdminPanelComponent implements OnInit {
             return; // Don't set isSubmitting, just return
         }
 
+        // --- Duplicate Check (Only for NEW products) ---
+        if (!this.isEditingProduct) {
+            let existingProd = null;
+            // Iterate through all categories in productMap to find a product with the same name
+            for (const cat in this.productMap) {
+                if (Array.isArray(this.productMap[cat])) {
+                    const found = this.productMap[cat].find((p: any) =>
+                        p.name.toLowerCase().trim() === this.newProduct.name.toLowerCase().trim()
+                    );
+                    if (found) {
+                        existingProd = found;
+                        break;
+                    }
+                }
+            }
+
+            if (existingProd) {
+                this.duplicateProduct = existingProd;
+                this.showDuplicateModal = true;
+                this.toggleBodyScroll(true);
+                return; // Stop submission if duplicate is found
+            }
+        }
+
         this.isSubmitting = true;
         this.cdr.detectChanges(); // force UI update immediately
 
@@ -1535,6 +1581,17 @@ export class AdminPanelComponent implements OnInit {
     closeSuccessModal() {
         this.showSuccessModal = false;
         this.toggleBodyScroll(false);
+    }
+
+    handleUpdateDuplicate() {
+        if (!this.duplicateProduct) return;
+
+        const prodToEdit = { ...this.duplicateProduct };
+        this.showDuplicateModal = false;
+        this.duplicateProduct = null;
+
+        // This will open the edit modal with the existing product's data
+        this.openEditProductModal(prodToEdit);
     }
 
     getProductPath(category: string): string {
@@ -1831,16 +1888,31 @@ export class AdminPanelComponent implements OnInit {
         const token = sessionStorage.getItem('auth_token');
         if (!token) return;
 
+        const targetOrder = this.orders.find(o => o._id === orderId);
+        if (!targetOrder) return;
+
         const body: any = { status: newStatus };
+
+        // Auto-select courier if not manually selected and transitioning to Shipped
+        let currentCourier = this.selectedCourier;
+        if (newStatus === 'Shipped' && !currentCourier) {
+            const state = this.extractState(targetOrder);
+            currentCourier = this.findRecommendedCourier(state);
+        }
+
+        if (currentCourier) body.courierName = currentCourier;
+        if (this.trackingNumber) body.trackingNumber = this.trackingNumber;
+        if (this.expectedDeliveryDate) body.expectedDeliveryDate = this.expectedDeliveryDate;
+
         if (newStatus === 'Shipped') {
-            if (!this.selectedCourier) {
+            if (!currentCourier) {
                 alert('Please select a courier partner.');
                 return;
             }
 
             // VALIDATION: Check if courier matches state
-            const orderState = this.extractState(this.selectedOrder);
-            const allowedStates = this.courierStateMapping[this.selectedCourier] || [];
+            const orderState = this.extractState(targetOrder);
+            const allowedStates = this.courierStateMapping[currentCourier] || [];
 
             if (!allowedStates.includes(orderState)) {
                 this.suggestedCourier = this.findRecommendedCourier(orderState);
@@ -1863,10 +1935,8 @@ export class AdminPanelComponent implements OnInit {
             // Auto-generate if not manually entered (this doesn't count towards the 3-click limit)
             if (!this.trackingNumber) {
                 this.trackingNumber = this.createTrackingNumberString();
+                body.trackingNumber = this.trackingNumber;
             }
-
-            body.courierName = this.selectedCourier;
-            body.trackingNumber = this.trackingNumber;
         }
 
         this.http.put(`/api/admin/orders/${orderId}/status`, body, { headers: { 'x-auth-token': token } })
@@ -1885,12 +1955,42 @@ export class AdminPanelComponent implements OnInit {
                 error: (err) => console.error('Error updating order:', err)
             });
     }
-
     dispatchOrder(orderId: string) {
         this.updateOrderStatus(orderId, 'Shipped');
     }
 
-    // Manual generation with limit
+    // WhatsApp Notifications (Free Method)
+    sendWhatsAppUpdate(order: any) {
+        if (!order || !order.userId?.phone || order.userId.phone === 'Not provided') {
+            alert('User phone number not available.');
+            return;
+        }
+
+        const phone = order.userId.phone.replace(/\D/g, ''); // Keep only digits
+        const orderId = order.orderId;
+        const status = order.status;
+        const tracking = order.trackingNumber || 'Processing...';
+        const courier = order.courierName || 'Will be updated';
+        const deliveryDate = order.expectedDeliveryDate ?
+            new Date(order.expectedDeliveryDate).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' }) :
+            'Coming Soon';
+        const pin = order.deliveryPin || 'Will be shared on Shipping';
+
+        const message = encodeURIComponent(
+            `*Greenie Culture Order Update*\n\n` +
+            `Hello ${order.userId.fullName},\n` +
+            `Your order *${orderId}* status is: *${status}*\n\n` +
+            `Courier: ${courier}\n` +
+            `Tracking ID: ${tracking}\n` +
+            `Expected Delivery: ${deliveryDate}\n` +
+            `Delivery PIN: ${pin}\n\n` +
+            `Note: Please share this PIN ONLY with the delivery partner.\n\n` +
+            `Track here: http://localhost:3000/my-account/orders`
+        );
+        window.open(`https://wa.me/91${phone}?text=${message}`, '_blank');
+    }
+
+    // Modal helpers
     generateTrackingNumber(orderId: string) {
         if (!orderId) return;
 
@@ -1914,11 +2014,11 @@ export class AdminPanelComponent implements OnInit {
             state.lockUntil = 0;
         }
 
-        if (state.count < 3) {
+        if (state.count < 1) {
             this.trackingNumber = this.createTrackingNumberString();
             state.count++;
 
-            if (state.count === 3) {
+            if (state.count === 1) {
                 state.lockUntil = now + (5 * 60 * 1000); // 5 minutes lock
             }
         }
@@ -1928,7 +2028,7 @@ export class AdminPanelComponent implements OnInit {
     isTrackingDisabled(orderId: string): boolean {
         const state = this.trackingGenLimits[orderId];
         if (!state) return false;
-        return state.count >= 3 && Date.now() < state.lockUntil;
+        return state.count >= 1 && Date.now() < state.lockUntil;
     }
 
     private createTrackingNumberString(): string {

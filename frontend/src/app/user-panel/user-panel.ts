@@ -4,6 +4,8 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 @Component({
     selector: 'app-user-panel',
@@ -38,6 +40,7 @@ export class UserPanelComponent implements OnInit {
     city = '';
     stateName = '';
     address = '';
+    selectedOrderForBill: any = null;
     profilePic = '';
     profilePicPreview = '';
     showStateDropdown = false;
@@ -328,6 +331,49 @@ export class UserPanelComponent implements OnInit {
                 alert('Failed to cancel order: ' + (err.error?.message || 'Error occurred'));
             }
         });
+    }
+
+    async downloadBill(order: any) {
+        this.selectedOrderForBill = order;
+
+        // Wait for Angular to render the hidden template
+        setTimeout(async () => {
+            const element = document.getElementById('pdf-invoice-template');
+            if (!element) {
+                alert('Could not generate bill. Please try again.');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Bill_${order.orderId}.pdf`);
+
+                // Clear selection
+                this.selectedOrderForBill = null;
+            } catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('Error generating PDF. Please try again.');
+                this.selectedOrderForBill = null;
+            }
+        }, 100);
     }
 
     logout() {

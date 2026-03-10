@@ -6996,3 +6996,163 @@ td {
     color: #94a3b8;
     margin-left: 10px;
 }
+
+/* --- Duplicate Product Warning Modal Styles --- */
+.duplicate-warning-modal {
+    background: #ffffff;
+    width: 100%;
+    max-width: 450px;
+    border-radius: 28px;
+    padding: 2.5rem;
+    position: relative;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.2);
+    animation: slideUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.warning-icon-animation {
+    width: 70px;
+    height: 70px;
+    background: #fffbeb;
+    color: #d97706;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin: 0 auto 1.5rem;
+    animation: pulseWarning 2s infinite;
+}
+
+@keyframes pulseWarning {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.2);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(217, 119, 6, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+    }
+}
+
+.warning-title {
+    font-size: 1.5rem;
+    font-weight: 850;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+}
+
+.warning-subtitle {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+.duplicate-preview-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.dup-img-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.dup-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.duplicate-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dup-cat-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #059669;
+    letter-spacing: 0.5px;
+}
+
+.dup-prod-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.dup-prod-price {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0;
+}
+
+.warning-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-update-duplicate {
+    width: 100%;
+    padding: 14px;
+    background: #15803d;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(21, 128, 61, 0.15);
+}
+
+.btn-update-duplicate:hover {
+    background: #166534;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(21, 128, 61, 0.2);
+}
+
+.btn-cancel-duplicate {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    color: #15803d;
+    border: 1.5px solid #15803d;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel-duplicate:hover {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #166534;
+}

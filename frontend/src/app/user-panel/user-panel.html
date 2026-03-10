@@ -141,6 +141,10 @@
                             <strong>{{order.trackingNumber}}</strong>
                         </div>
                         <div class="order-total">₹{{ order.totalAmount }}</div>
+                        <button class="bill-download-btn" (click)="downloadBill(order)" title="Download Bill">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Download Bill</span>
+                        </button>
                     </div>
                 </div>
                 <div class="no-orders" *ngIf="allOrders.length === 0">
@@ -269,4 +273,110 @@
             </div>
         </ng-container>
     </main>
+
+    <!-- Hidden PDF Template for Download -->
+    <div id="pdf-invoice-template" class="pdf-template-wrapper" *ngIf="selectedOrderForBill">
+        <div style="padding: 40px; border: 2px solid #166534; border-radius: 20px; background: white;">
+            <!-- Header -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div>
+                    <h1 style="margin: 0; color: #166534; font-size: 2.5rem; letter-spacing: -1px;">GREENIE CULTURE 🌿
+                    </h1>
+                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">123 Botanical Avenue, Green City,
+                        400001</p>
+                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.9rem;">support@greenieculture.com | +91
+                        9876543210</p>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; color: #1e293b; font-size: 1.5rem;">INVOICE</h2>
+                    <p style="margin: 5px 0 0 0; font-weight: 700; color: #166534;">#{{ selectedOrderForBill.orderId }}
+                    </p>
+                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.8rem;">Date: {{
+                        selectedOrderForBill.orderDate | date:'dd MMM yyyy' }}</p>
+                </div>
+            </div>
+
+            <!-- Billing Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
+                <div>
+                    <h4
+                        style="margin: 0 0 10px 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                        Bill To</h4>
+                    <p style="margin: 0; font-weight: 700; color: #1e293b; font-size: 1.1rem;">{{
+                        selectedOrderForBill.userId?.fullName || fullName }}</p>
+                    <p style="margin: 5px 0 0 0; color: #475569; line-height: 1.5;">
+                        {{ selectedOrderForBill.userId?.address || address }}<br>
+                        {{ selectedOrderForBill.userId?.city || city }}, {{ selectedOrderForBill.userId?.state ||
+                        stateName }}
+                    </p>
+                </div>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                    <h4
+                        style="margin: 0 0 10px 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                        Payment Method</h4>
+                    <p style="margin: 0; font-weight: 700; color: #1e293b;">{{ selectedOrderForBill.paymentMethod ||
+                        'Online Payment' }}</p>
+                    <p
+                        style="margin: 10px 0 0 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                        Status</p>
+                    <p style="margin: 0; font-weight: 700; color: #16a34a;">{{ selectedOrderForBill.status }}</p>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                <thead>
+                    <tr style="background: #166534; color: white;">
+                        <th style="padding: 15px; text-align: left; border-radius: 8px 0 0 8px;">Item Description</th>
+                        <th style="padding: 15px; text-align: center;">Qty</th>
+                        <th style="padding: 15px; text-align: right;">Price</th>
+                        <th style="padding: 15px; text-align: right; border-radius: 0 8px 8px 0;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of selectedOrderForBill.items" style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 15px;">
+                            <div style="font-weight: 700; color: #1e293b;">{{ item.name }}</div>
+                            <div style="font-size: 0.8rem; color: #64748b;" *ngIf="item.weight || item.planter">
+                                {{ item.weight }} {{ item.planter ? '| ' + item.planter : '' }}
+                            </div>
+                        </td>
+                        <td style="padding: 15px; text-align: center; color: #475569;">{{ item.quantity }}</td>
+                        <td style="padding: 15px; text-align: right; color: #475569;">₹{{ item.price }}</td>
+                        <td style="padding: 15px; text-align: right; font-weight: 700; color: #1e293b;">₹{{ item.price *
+                            item.quantity }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div style="display: flex; justify-content: flex-end;">
+                <div style="width: 300px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; color: #64748b;">
+                        <span>Subtotal</span>
+                        <span>₹{{ selectedOrderForBill.totalAmount }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; color: #64748b;">
+                        <span>Shipping</span>
+                        <span style="color: #16a34a; font-weight: 700;">FREE</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding: 20px 0; border-top: 2px solid #166534; margin-top: 10px;">
+                        <span style="font-weight: 800; color: #1e293b; font-size: 1.2rem;">Grand Total</span>
+                        <span style="font-weight: 800; color: #166534; font-size: 1.2rem;">₹{{
+                            selectedOrderForBill.totalAmount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="margin-top: 60px; text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 30px;">
+                <p style="margin: 0; color: #1e293b; font-weight: 700;">Thank you for shopping with Greenie Culture! 🌿
+                </p>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.8rem;">This is a computer generated invoice
+                    and does not require a signature.</p>
+            </div>
+        </div>
+    </div>
 </div>

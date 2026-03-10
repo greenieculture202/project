@@ -36,7 +36,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
         default: 'Pending'
     },
     courierName: {
@@ -71,13 +71,24 @@ const orderSchema = new mongoose.Schema({
     offerBenefit: {
         type: String,
         default: null
+    },
+    deliveryPin: {
+        type: String,
+        default: ''
+    },
+    expectedDeliveryDate: {
+        type: String,
+        default: ''
     }
 });
 
-// Generate a random Order ID like #ORD-7742
+// Generate a random Order ID like #ORD-7742 and a 6-digit Delivery PIN
 orderSchema.pre('save', function (next) {
     if (!this.orderId) {
         this.orderId = '#ORD-' + Math.floor(1000 + Math.random() * 9000);
+    }
+    if (!this.deliveryPin) {
+        this.deliveryPin = Math.floor(100000 + Math.random() * 900000).toString();
     }
     next();
 });

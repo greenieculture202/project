@@ -56,7 +56,12 @@ const transporter = nodemailer.createTransport({
 // Helper: Send Order Confirmation Email
 const sendOrderConfirmationEmail = async (user, order) => {
     try {
-        const itemsHtml = order.items.map(item => `
+        if (!user || !user.email) {
+            console.error('[EMAIL-ERROR] No recipient email provided');
+            return;
+        }
+
+        const itemsHtml = (order.items || []).map(item => `
             <tr>
                 <td style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
                     <img src="${item.image}" alt="${item.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">
@@ -73,25 +78,19 @@ const sendOrderConfirmationEmail = async (user, order) => {
             subject: `Hooray! Your order ${order.orderId} is confirmed 🌿`,
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f3; border-radius: 16px; overflow: hidden;">
-                    <!-- Header -->
                     <div style="background: linear-gradient(135deg, #2d8c6f, #1a5d1a); padding: 40px 20px; text-align: center; color: white;">
                         <h1 style="margin: 0; font-size: 32px; letter-spacing: -0.5px;">Greenie Culture</h1>
                         <p style="margin: 10px 0 0; opacity: 0.9; font-size: 16px;">🌱 Your Green Journey Just Got Better!</p>
                     </div>
-
-                    <!-- Content -->
                     <div style="padding: 30px;">
                         <h2 style="color: #1a5d1a; margin-top: 0;">Order Confirmed!</h2>
-                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${user.fullName.split(' ')[0]},</p>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${user.fullName ? user.fullName.split(' ')[0] : 'Gardener'},</p>
                         <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">We've received your order <strong>${order.orderId}</strong>. Our team is already busy picking out the healthiest plants for you!</p>
-
-                        <!-- Order Details Box -->
                         <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin: 25px 0;">
                             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">
                                 <span style="color: #6b7280; font-size: 14px;">ORDER ID: <strong>${order.orderId}</strong></span>
-                                <span style="color: #6b7280; font-size: 14px;">DATE: <strong>${new Date().toLocaleDateString()}</strong></span>
+                                <span style="color: #6b7280; font-size: 14px;">DATE: <strong>${new Date(order.orderDate).toLocaleDateString()}</strong></span>
                             </div>
-
                             <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr>
@@ -100,31 +99,96 @@ const sendOrderConfirmationEmail = async (user, order) => {
                                         <th style="text-align: right; padding: 10px 0; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Price</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${itemsHtml}
-                                </tbody>
+                                <tbody>${itemsHtml}</tbody>
                             </table>
-
                             <div style="margin-top: 20px; text-align: right;">
                                 <p style="margin: 5px 0; color: #6b7280;">Payment Method: <strong>${order.paymentMethod}</strong></p>
                                 <p style="margin: 10px 0; color: #1a5d1a; font-size: 20px; font-weight: 800;">Total: ₹${order.totalAmount}</p>
                             </div>
                         </div>
-
-                        <!-- Thank You Note -->
                         <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #f3f4f6;">
                             <p style="font-size: 18px; color: #2d8c6f; font-weight: 700; margin-bottom: 5px;">Thank you for buying!</p>
                             <p style="color: #6b7280; font-size: 14px;">We'll notify you as soon as your plants leave our greenhouse.</p>
-                            
-                            <div style="margin-top: 25px;">
-                                <a href="http://localhost:3000/my-account/orders" style="background-color: #2d8c6f; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Track My Order</a>
-                            </div>
                         </div>
                     </div>
+                </div>
+            `
+        };
 
-                    <!-- Footer -->
+        await transporter.sendMail(mailOptions);
+        console.log(`[EMAIL] Order confirmation sent to ${user.email} for ${order.orderId}`);
+    } catch (err) {
+        console.error('[EMAIL-ERROR] Failed to send confirmation:', err.message);
+    }
+};
+
+// Helper: Send Order Status Update Email
+const sendOrderStatusEmail = async (order) => {
+    try {
+        const userEmail = order.userId?.email;
+        if (!userEmail) {
+            console.error('[EMAIL-ERROR] User email not available for order:', order.orderId);
+            return;
+        }
+
+        let statusText = '';
+        let statusMessage = '';
+        let trackingSection = '';
+        let pinSection = '';
+
+        if (order.status === 'Processing') {
+            statusText = 'Order is being processed 🛠️';
+            statusMessage = 'Great news! We have started preparing your order for shipment.';
+        } else if (order.status === 'Shipped') {
+            statusText = 'Order on the move! 🚚';
+            statusMessage = `Your package has been handed over to <strong>${order.courierName}</strong>.`;
+
+            const deliveryDate = order.expectedDeliveryDate ?
+                new Date(order.expectedDeliveryDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) :
+                'Coming Soon';
+
+            trackingSection = `
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+                    <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 700;">TRACKING ID</p>
+                    <p style="margin: 5px 0 0; color: #14532d; font-size: 24px; font-weight: 800; font-family: monospace;">${order.trackingNumber}</p>
+                    <p style="margin: 10px 0 0; color: #166534; font-size: 14px;"><strong>Expected Delivery:</strong> ${deliveryDate}</p>
+                </div>
+            `;
+
+            pinSection = `
+                <div style="background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;">
+                    <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 700;">DELIVERY VERIFICATION PIN</p>
+                    <p style="margin: 5px 0 0; color: #b45309; font-size: 28px; font-weight: 900; letter-spacing: 4px;">${order.deliveryPin}</p>
+                    <p style="margin: 5px 0 0; color: #92400e; font-size: 11px;">Please share this PIN only with the delivery partner.</p>
+                </div>
+            `;
+        } else if (order.status === 'Delivered') {
+            statusText = 'Delivered & Green! 🎁';
+            statusMessage = 'Your plants have reached their new home. We hope they bring you joy!';
+        } else {
+            return;
+        }
+
+        const mailOptions = {
+            from: `"Greenie Culture" <${process.env.GMAIL_USER || 'greenieculture202@gmail.com'}>`,
+            to: userEmail,
+            subject: `Update for Order ${order.orderId}: ${order.status} 🌿`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f3; border-radius: 16px; overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #2d8c6f, #1a5d1a); padding: 30px 20px; text-align: center; color: white;">
+                        <h1 style="margin: 0; font-size: 28px;">Greenie Culture</h1>
+                    </div>
+                    <div style="padding: 30px; text-align: center;">
+                        <h2 style="color: #1a5d1a; margin-top: 0;">${statusText}</h2>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${order.userId?.fullName ? order.userId.fullName.split(' ')[0] : 'Gardener'},</p>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">${statusMessage}</p>
+                        
+                        ${trackingSection}
+                        ${pinSection}
+
+                        <p style="color: #6b7280; font-size: 14px; margin-top: 25px;">You can track the live status on our website under "My Orders".</p>
+                    </div>
                     <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-                        <p>Need help? Contact us at support@greenieculture.com</p>
                         <p>&copy; 2026 Greenie Culture. All rights reserved.</p>
                     </div>
                 </div>
@@ -132,9 +196,9 @@ const sendOrderConfirmationEmail = async (user, order) => {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL] Order invoice sent to ${user.email} for ${order.orderId}`);
+        console.log(`[EMAIL] Status update email sent to ${userEmail} for ${order.orderId} (${order.status})`);
     } catch (err) {
-        console.error('[EMAIL-ERROR] Failed to send invoice:', err.message);
+        console.error('[EMAIL-ERROR] Failed to send status update:', err.message);
     }
 };
 
@@ -179,12 +243,74 @@ app.use((req, res, next) => {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
 console.log('Attempting to connect to MongoDB...');
 console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
-mongoose.connect(MONGODB_URI)
-    .then(() => {
+
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 15000, // 15 seconds timeout
+    connectTimeoutMS: 15000
+})
+    .then(async () => {
         console.log('✅ MongoDB connected successfully');
         console.log('📊 Active Database:', mongoose.connection.name);
+
+        // Run seeds only after connection is established
+        console.log('🔄 Starting data seeding...');
+        try {
+            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers()]);
+            console.log('✅ Seeding completed');
+        } catch (seedErr) {
+            console.error('⚠️ Seeding internal error:', seedErr.message);
+        }
+
+        // Start listening only after DB is ready (or skip if port already in use)
+        app.listen(PORT, '127.0.0.1', () => {
+            console.log(`🚀 Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
+        });
     })
-    .catch(err => console.error('❌ MongoDB connection error:', err));
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err);
+        console.log('💡 TIP: Check if your IP is whitelisted in MongoDB Atlas and if your connection string is correct.');
+    });
+
+// Helper: Send SMS/WhatsApp Notification (Placeholder)
+const sendSMSWhatsAppNotification = async (order) => {
+    try {
+        const phone = order.userId?.phone;
+        if (!phone || phone === 'Not provided') {
+            console.error('[SMS-ERROR] Phone number not available for order:', order.orderId);
+            return;
+        }
+
+        const orderId = order.orderId;
+        const trackingId = order.trackingNumber;
+        const pin = order.deliveryPin;
+        const deliveryDate = order.expectedDeliveryDate || 'Soon';
+        const status = order.status;
+
+        // --- MESSAGE TEMPLATE ---
+        const message = `🌿 Greenie Culture: Order ${orderId} Update! 
+Status: ${status}
+Tracking ID: ${trackingId}
+Expected Delivery: ${deliveryDate}
+Delivery PIN: ${pin} (Share with delivery boy only)
+Track here: http://localhost:3000/my-account/orders`;
+
+        console.log(`[SMS-MOCK] Sending to ${phone}:`);
+        console.log(`----------------------------------\n${message}\n----------------------------------`);
+
+        /* 
+        NOTE: To make this work for REAL, you need an API key from a provider:
+        1. Fast2SMS (Cheap and popular in India)
+        2. Twilio (Global, premium)
+        3. Gupshup (WhatsApp API Specialists)
+
+        SMS services usually charge ~20-30 paise per transactional SMS.
+        WhatsApp API usually charges ~50 paise per message.
+        */
+
+    } catch (err) {
+        console.error('[SMS-ERROR] Failed to prepare notification:', err.message);
+    }
+};
 
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
@@ -636,7 +762,8 @@ app.get('/api/products/search', async (req, res) => {
         const { q } = req.query;
         if (!q || q.length < 2) return res.json([]);
 
-        console.log(`[Backend Search] Processing query: "${q}"`);
+        console.log(`\n🔍 [ADMIN SEARCH] Query: "${q}"`);
+        console.log(`🕐 Time: ${new Date().toISOString()}`);
 
         // Use text search for performance if possible, with regex fallback
         // Text search is generally faster and handles weights
@@ -929,13 +1056,10 @@ app.get('/api/admin/orders', auth, async (req, res) => {
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
         const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
-        if (!['Pending', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status update' });
-        }
-
         const updateData = { status };
         if (courierName) updateData.courierName = courierName;
         if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
         if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
 
         // Automatically set to Shipped if courier and tracking are provided
@@ -951,6 +1075,13 @@ app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
+
+        // Asynchronously send status update email
+        sendOrderStatusEmail(order);
+
+        // Asynchronously send SMS/WhatsApp (Mock for now)
+        sendSMSWhatsAppNotification(order);
+
         res.json(order);
     } catch (err) {
         console.error('[AdminOrdersAPI] Update error:', err.message);
@@ -1439,10 +1570,15 @@ app.put('/api/admin/products/:id', auth, async (req, res) => {
 // ADMIN API - Delete product
 app.delete('/api/admin/products/:id', auth, async (req, res) => {
     try {
+        console.log(`\n🗑️  [ADMIN DELETE] Attempting to delete product with ID: ${req.params.id}`);
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+
         if (!deletedProduct) {
+            console.log(`❌ [ADMIN DELETE] Product not found for ID: ${req.params.id}`);
             return res.status(404).json({ message: 'Product not found' });
         }
+
+        console.log(`✅ [ADMIN DELETE] Successfully deleted product: ${deletedProduct.name}`);
         console.log('[AdminAPI] Product deleted:', deletedProduct.name);
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
@@ -1827,9 +1963,4 @@ app.delete('/api/user/notifications', auth, async (req, res) => {
 
 // --- End of Inquiry & Notification System ---
 
-// Start Server
-Promise.all([seedPlacements(), seedFaqs(), seedCouriers()]).then(() => {
-    app.listen(PORT, '127.0.0.1', () => {
-        console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
-    });
-});
+// Server startup is now handled inside the MongoDB connection block (line 182-205)

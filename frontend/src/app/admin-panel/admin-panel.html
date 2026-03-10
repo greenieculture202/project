@@ -54,7 +54,7 @@
             <a routerLink="/delivery-panel">
                 <i class="fas fa-truck"></i> Delivery Panel
             </a>
-            <a routerLink="/ai-analytics">
+            <a routerLink="/ai-analytics" target="_blank" rel="opener">
                 <i class="fas fa-robot"></i> AI Analytics
             </a>
             <a routerLink="/all-reviews">
@@ -456,8 +456,8 @@
                     <span>
                         <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
                         <i class="fas fa-search" *ngIf="!isSearching"></i>
-                        Searching for <strong>"{{searchTerm}}"</strong> in
-                        {{productCategoryFilter === 'All' ? 'Current Tab' : getCategoryLabel(productCategoryFilter)}}
+                        Searching for <strong>"{{searchTerm}}"</strong> in {{activeMainCategory}}
+                        <span class="search-scope-note">(Showing all matches in this section)</span>
                     </span>
                     <button (click)="searchTerm = ''; onSearchChange(true)">Clear Search</button>
                 </div>
@@ -794,6 +794,13 @@
                             </div>
                         </div>
 
+                        <!-- Tracking Info (Mini) -->
+                        <div class="tracking-mini-bar" *ngIf="order.trackingNumber"
+                            style="margin: 0 25px 15px; padding: 10px 15px; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; display: flex; justify-content: space-between; align-items: center; border: 1px solid #dcfce7;">
+                            <span><i class="fas fa-truck-fast"></i> <strong>{{order.courierName}}</strong></span>
+                            <span>ID: <strong>{{order.trackingNumber}}</strong></span>
+                        </div>
+
                         <div class="order-card-content">
                             <!-- Customer Info -->
                             <div class="customer-section">
@@ -853,7 +860,7 @@
                                 </select>
                             </div>
                             <div class="action-buttons-v2">
-                                <button class="btn-invoice" (click)="viewInvoice(order)"><i
+                                <button class="btn-invoice" (click)="viewInvoice(order)" title="Invoice"><i
                                         class="fas fa-file-invoice"></i></button>
                                 <button class="btn-details-v2" (click)="viewOrderDetails(order)">Details <i
                                         class="fas fa-arrow-right"></i></button>
@@ -1410,7 +1417,7 @@
                     <p>Comprehensive breakdown of your store's performance metrics.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="add-floating-btn" routerLink="/ai-analytics">
+                    <button class="add-floating-btn" routerLink="/ai-analytics" target="_blank" rel="opener">
                         <i class="fas fa-robot"></i>
                         <span>AI Analytics</span>
                     </button>
@@ -1548,7 +1555,7 @@
 
                     <div class="dispatch-controls" [class.shake-error]="isShaking"
                         style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7; transition: all 0.3s;"
-                        *ngIf="selectedOrder.status === 'Pending'">
+                        *ngIf="selectedOrder.status === 'Pending' || selectedOrder.status === 'Processing'">
 
                         <!-- Territory Mismatch Warning -->
                         <div *ngIf="showCourierMismatchError"
@@ -1575,17 +1582,20 @@
 
                         <h4 style="margin: 0 0 15px 0; color: #92400e;"><i class="fas fa-shipping-fast"></i> Dispatch
                             this Order</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
+
+                        <!-- Tracking Row — only show if no tracking number yet -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;"
+                            *ngIf="!selectedOrder.trackingNumber">
+                            <div style="flex: 1;">
                                 <label
                                     style="display: block; font-size: 0.8rem; color: #92400e; font-weight: 700; margin-bottom: 5px;">Courier
                                     Partner</label>
-                                <select [(ngModel)]="selectedCourier" (ngModelChange)="onCourierChange()"
-                                    name="scourier"
-                                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
-                                    <option value="" disabled>Select Courier</option>
-                                    <option *ngFor="let opt of courierOptions" [value]="opt">{{opt}}</option>
-                                </select>
+                                <!-- Static display instead of dropdown -->
+                                <div
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; background: #fff5f5; color: #b91c1c; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-building-flag"></i>
+                                    {{selectedCourier || 'Detecting...'}}
+                                </div>
                             </div>
                             <div>
                                 <label
@@ -1616,6 +1626,7 @@
                             style="width: 100%; margin-top: 12px; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <i class="fas fa-times-circle"></i> Cancel Order
                         </button>
+
                     </div>
 
                     <!-- Status Controls for Other Statuses -->
@@ -1633,13 +1644,21 @@
                     </div>
 
                     <!-- Tracking Info Display -->
-                    <div class="tracking-display"
-                        style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 12px;"
-                        *ngIf="selectedOrder.trackingNumber">
-                        <p style="margin: 0; color: #166534; font-size: 0.9rem;">
-                            <strong>Carrier:</strong> {{selectedOrder.courierName}} | <strong>Tracking:</strong>
-                            {{selectedOrder.trackingNumber}}
-                        </p>
+                    <div class="tracking-display-premium" *ngIf="selectedOrder.trackingNumber"
+                        style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                        <div
+                            style="background: #16a34a; color: white; width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div
+                                style="text-transform: uppercase; font-size: 0.75rem; font-weight: 800; color: #166534; letter-spacing: 0.05em; margin-bottom: 2px;">
+                                Shipping Details</div>
+                            <p style="margin: 0; color: #14532d; font-size: 1.05rem; font-weight: 700;">
+                                {{selectedOrder.courierName}} — <span
+                                    style="font-family: 'Courier New', Courier, monospace; background: rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 4px;">{{selectedOrder.trackingNumber}}</span>
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Items List -->
@@ -1674,10 +1693,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-actions" style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
-                <button class="btn-cancel" (click)="closeOrderModal()"
-                    style="padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#475569; border:none;">Close</button>
-            </div>
+
         </div>
     </div>
 
@@ -2356,6 +2372,41 @@
                 <button class="btn-success-ok" (click)="closeSuccessModal()">
                     Everything Looks Good!
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Duplicate Product Warning Modal -->
+    <div class="modal-overlay duplicate-overlay" *ngIf="showDuplicateModal" (click)="showDuplicateModal = false">
+        <div class="duplicate-warning-modal" (click)="$event.stopPropagation()">
+            <div class="warning-icon-animation">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="warning-content text-center">
+                <h3 class="warning-title">Duplicate Masterpiece Found!</h3>
+                <p class="warning-subtitle">A product named <strong
+                        style="color: #1e293b;">"{{newProduct.name}}"</strong> already exists in your digital
+                    collection.</p>
+
+                <div class="duplicate-preview-card" *ngIf="duplicateProduct">
+                    <div class="dup-img-container">
+                        <img [src]="duplicateProduct.image" alt="Existing Product">
+                    </div>
+                    <div class="duplicate-info">
+                        <span class="dup-cat-tag">{{duplicateProduct.category}}</span>
+                        <h4 class="dup-prod-name">{{duplicateProduct.name}}</h4>
+                        <p class="dup-prod-price">₹{{duplicateProduct.price}}</p>
+                    </div>
+                </div>
+
+                <div class="warning-actions-stack">
+                    <button class="btn-update-duplicate" (click)="handleUpdateDuplicate()">
+                        <i class="fas fa-edit"></i> Update Existing Masterpiece
+                    </button>
+                    <button class="btn-cancel-duplicate" (click)="showDuplicateModal = false">
+                        <i class="fas fa-arrow-left"></i> Cancel & Rename
+                    </button>
+                </div>
             </div>
         </div>
     </div>
