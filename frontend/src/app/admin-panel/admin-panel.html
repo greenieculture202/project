@@ -1467,12 +1467,12 @@
     <!-- Order Details Modal -->
     <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
         <div class="user-detail-modal order-modal" (click)="$event.stopPropagation()">
-            <div class="modal-header">
+            <button class="close-modal" (click)="closeOrderModal()">&times;</button>
+            <div class="modal-header-premium">
                 <h2>Order Details</h2>
                 <p>Complete view of the order information and customer address.</p>
-                <button class="close-modal" (click)="closeOrderModal()">&times;</button>
             </div>
-            <div class="modal-body" *ngIf="selectedOrder">
+            <div class="modal-body-premium" *ngIf="selectedOrder" style="padding-top: 30px;">
                 <!-- Customer Details Section -->
                 <div class="form-section" style="margin-bottom: 24px;">
                     <div class="section-tag"
@@ -1580,7 +1580,8 @@
                                 <label
                                     style="display: block; font-size: 0.8rem; color: #92400e; font-weight: 700; margin-bottom: 5px;">Courier
                                     Partner</label>
-                                <select [(ngModel)]="selectedCourier" name="scourier"
+                                <select [(ngModel)]="selectedCourier" (ngModelChange)="onCourierChange()"
+                                    name="scourier"
                                     style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
                                     <option value="" disabled>Select Courier</option>
                                     <option *ngFor="let opt of courierOptions" [value]="opt">{{opt}}</option>
@@ -1611,11 +1612,15 @@
                             style="width: 100%; margin-top: 15px; background: #d97706; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">
                             Ship Order Now
                         </button>
+                        <button (click)="updateOrderStatus(selectedOrder._id, 'Cancelled')"
+                            style="width: 100%; margin-top: 12px; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-times-circle"></i> Cancel Order
+                        </button>
                     </div>
 
                     <!-- Status Controls for Other Statuses -->
                     <div class="status-controls" style="margin-top: 20px; display: flex; gap: 10px;"
-                        *ngIf="selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled'">
+                        *ngIf="(selectedOrder.status === 'Shipped' || selectedOrder.status === 'Processing')">
                         <button *ngIf="selectedOrder.status === 'Shipped'"
                             (click)="updateOrderStatus(selectedOrder._id, 'Delivered')"
                             style="flex: 1; background: #16a34a; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">

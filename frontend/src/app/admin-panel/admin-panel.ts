@@ -453,6 +453,9 @@ export class AdminPanelComponent implements OnInit {
     suggestedCourier: string = '';
 
     extractState(order: any): string {
+        const addrState = order.userId?.state || order.state || '';
+        if (addrState) return addrState;
+
         const address = (order.userId?.address || order.shippingAddress || '').toLowerCase();
         const city = (order.userId?.city || '').toLowerCase();
 
@@ -464,6 +467,27 @@ export class AdminPanelComponent implements OnInit {
             }
         }
         return 'Unknown';
+    }
+
+    onCourierChange() {
+        if (!this.selectedCourier || !this.selectedOrder) {
+            this.showCourierMismatchError = false;
+            return;
+        }
+
+        const orderState = this.extractState(this.selectedOrder);
+        const allowedStates = this.courierStateMapping[this.selectedCourier] || [];
+
+        if (!allowedStates.includes(orderState)) {
+            this.suggestedCourier = this.findRecommendedCourier(orderState);
+            this.showCourierMismatchError = true;
+            this.isShaking = true;
+            setTimeout(() => this.isShaking = false, 500);
+        } else {
+            this.showCourierMismatchError = false;
+            this.suggestedCourier = '';
+        }
+        this.cdr.detectChanges();
     }
 
     findRecommendedCourier(state: string): string {
@@ -710,6 +734,7 @@ export class AdminPanelComponent implements OnInit {
         this.showOrderModal = true;
         this.showCourierMismatchError = false;
         this.suggestedCourier = '';
+        this.toggleBodyScroll(true);
     }
 
     closeOrderModal() {
@@ -723,6 +748,7 @@ export class AdminPanelComponent implements OnInit {
     viewInvoice(order: any) {
         this.selectedOrder = order;
         this.showInvoiceModal = true;
+        this.toggleBodyScroll(true);
     }
 
     closeInvoiceModal() {

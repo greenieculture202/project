@@ -928,7 +928,7 @@ app.get('/api/admin/orders', auth, async (req, res) => {
 
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
-        const { status, courierName, trackingNumber } = req.body;
+        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
         if (!['Pending', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status update' });
         }
@@ -936,6 +936,7 @@ app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
         const updateData = { status };
         if (courierName) updateData.courierName = courierName;
         if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
 
         // Automatically set to Shipped if courier and tracking are provided
         if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled') {
@@ -1621,6 +1622,101 @@ const seedFaqs = async () => {
     }
 };
 
+// --- Courier Management Routes ---
+const Courier = require('./models/Courier');
+
+// Seed default couriers if none exist
+const seedCouriers = async () => {
+    try {
+        const count = await Courier.countDocuments();
+        if (count === 0) {
+            const defaultCouriers = [
+                {
+                    name: 'Blue Dart',
+                    password: 'bluedart@greenie',
+                    fee: 60,
+                    states: ['Maharashtra', 'Gujarat', 'Goa', 'Rajasthan', 'Madhya Pradesh', 'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu'],
+                    icon: 'fa-bolt',
+                    email: 'support@bluedart.com',
+                    phone: '18602331234',
+                    certificate: ''
+                },
+                {
+                    name: 'Delhivery',
+                    password: 'delhivery@greenie',
+                    fee: 45,
+                    states: ['Delhi', 'Uttar Pradesh', 'Haryana', 'Punjab', 'Himachal Pradesh', 'Uttarakhand', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Bihar', 'Jharkhand'],
+                    icon: 'fa-paper-plane',
+                    email: 'customer.support@delhivery.com',
+                    phone: '1246719500',
+                    certificate: ''
+                },
+                {
+                    name: 'DTDC',
+                    password: 'dtdc@greenie',
+                    fee: 50,
+                    states: ['Karnataka', 'Kerala', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana', 'West Bengal', 'Odisha', 'Assam', 'Arunachal Pradesh', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Puducherry', 'Andaman and Nicobar Islands', 'Lakshadweep'],
+                    icon: 'fa-truck',
+                    email: 'customersupport@dtdc.com',
+                    phone: '7305081234',
+                    certificate: ''
+                }
+            ];
+            await Courier.insertMany(defaultCouriers);
+            console.log('[SEED] Default couriers seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding couriers:', err.message);
+    }
+};
+
+// ADMIN: Get all Couriers
+app.get('/api/admin/couriers', auth, async (req, res) => {
+    try {
+        const couriers = await Courier.find();
+        res.json(couriers);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Add New Courier
+app.post('/api/admin/couriers', auth, async (req, res) => {
+    try {
+        const { name, password, states, fee, icon, email, phone, certificate } = req.body;
+        const newCourier = new Courier({ name, password, states, fee, icon, email, phone, certificate });
+        await newCourier.save();
+        res.status(201).json(newCourier);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Update Courier
+app.put('/api/admin/couriers/:id', auth, async (req, res) => {
+    try {
+        const { name, password, states, fee, icon, email, phone, certificate } = req.body;
+        const updatedCourier = await Courier.findByIdAndUpdate(
+            req.params.id,
+            { name, password, states, fee, icon, email, phone, certificate },
+            { new: true }
+        );
+        res.json(updatedCourier);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Delete Courier
+app.delete('/api/admin/couriers/:id', auth, async (req, res) => {
+    try {
+        await Courier.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Courier deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
 // --- Inquiry & Notification System Routes ---
 
 // USER: Submit Inquiry
@@ -1732,7 +1828,7 @@ app.delete('/api/user/notifications', auth, async (req, res) => {
 // --- End of Inquiry & Notification System ---
 
 // Start Server
-Promise.all([seedPlacements(), seedFaqs()]).then(() => {
+Promise.all([seedPlacements(), seedFaqs(), seedCouriers()]).then(() => {
     app.listen(PORT, '127.0.0.1', () => {
         console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
     });
