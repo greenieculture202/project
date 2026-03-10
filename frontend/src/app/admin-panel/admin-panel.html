@@ -49,6 +49,9 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
                 <i class="fas fa-shopping-cart"></i> Orders
             </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'settings'" (click)="setTab('settings')">
+                <i class="fas fa-cog"></i> Settings
+            </a>
 
             <div class="nav-separator" style="height: 1px; background: #e2e8f0; margin: 10px 0;"></div>
             <a routerLink="/delivery-panel">
@@ -1466,12 +1469,210 @@
                 </div>
             </div>
         </ng-container>
+
+        <!-- Settings Content -->
+        <ng-container *ngIf="activeTab === 'settings'">
+
+            <div class="settings-premium-wrap">
+
+                <!-- ── Left: Decorative Panel ── -->
+                <div class="settings-brand-panel">
+                    <div class="settings-brand-glow"></div>
+                    <div class="settings-brand-content">
+                        <div class="settings-brand-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h2>Admin Control Center</h2>
+                        <p>Manage your credentials securely. Changes take effect immediately.</p>
+                        <div class="settings-brand-stats">
+                            <div class="sbstat">
+                                <i class="fas fa-shield-halved"></i>
+                                <span>Secured</span>
+                            </div>
+                            <div class="sbstat">
+                                <i class="fas fa-lock"></i>
+                                <span>Encrypted</span>
+                            </div>
+                            <div class="sbstat">
+                                <i class="fas fa-circle-check"></i>
+                                <span>Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Right: Form Panel ── -->
+                <div class="settings-form-panel">
+
+                    <!-- Alerts -->
+                    <div *ngIf="settingsMessage" class="sprem-alert success">
+                        <div class="sprem-alert-icon"><i class="fas fa-check-circle"></i></div>
+                        <span>{{ settingsMessage }}</span>
+                    </div>
+                    <div *ngIf="settingsError" class="sprem-alert error">
+                        <div class="sprem-alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <span>{{ settingsError }}</span>
+                    </div>
+
+                    <form (submit)="updateAdminProfile($event)" class="sprem-form">
+
+                        <div class="sprem-section-tag">
+                            <i class="fas fa-id-badge"></i> Identity
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>Display Name</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-user"></i>
+                                <input type="text" [(ngModel)]="currentAdminSettings.fullName" name="fullName"
+                                    placeholder="Your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="sprem-section-tag" style="margin-top: 28px;">
+                            <i class="fas fa-lock"></i> Change Password
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>Current Password</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" [(ngModel)]="currentAdminSettings.oldPassword" name="oldPassword"
+                                    placeholder="Required if changing password">
+                            </div>
+                            <p class="sprem-hint">Leave blank to only update your display name</p>
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>New Password</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-key"></i>
+                                <input type="password" [(ngModel)]="currentAdminSettings.newPassword" name="newPassword"
+                                    placeholder="Enter new secure password">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="sprem-save-btn" [disabled]="isSettingsSubmitting">
+                            <span class="sprem-btn-glow"></span>
+                            <i class="fas fa-spinner fa-spin" *ngIf="isSettingsSubmitting"></i>
+                            <i class="fas fa-floppy-disk" *ngIf="!isSettingsSubmitting"></i>
+                            {{ isSettingsSubmitting ? 'Saving…' : 'Save Changes' }}
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="sprem-divider">
+                        <span>Admin Management</span>
+                    </div>
+
+                    <!-- Add New Admin Trigger -->
+                    <div class="sprem-add-admin-btn" (click)="showAddAdminModal = true">
+                        <div class="sprem-add-admin-bg"></div>
+                        <div class="sprem-add-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="sprem-add-text">
+                            <strong>Add New Administrator</strong>
+                            <span>Register a new admin with secure password verification</span>
+                        </div>
+                        <div class="sprem-add-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+
     </main>
 
+    <!-- ══════════════════════════════════════════
+         ADD NEW ADMIN MODAL (Secure, Password-Gated)
+         ══════════════════════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showAddAdminModal" (click)="closeAddAdminModal()">
+        <div class="add-admin-modal" (click)="$event.stopPropagation()">
 
+            <!-- Header -->
+            <div class="add-admin-modal-header">
+                <div class="add-admin-modal-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div>
+                    <h2>Add New Administrator</h2>
+                    <p>Verify your identity to register a new admin</p>
+                </div>
+                <button class="add-admin-close" (click)="closeAddAdminModal()">&times;</button>
+            </div>
 
+            <!-- Alerts -->
+            <div *ngIf="newAdminMessage" class="settings-alert success" style="margin: 0 0 16px;">
+                <i class="fas fa-check-circle"></i> {{ newAdminMessage }}
+            </div>
+            <div *ngIf="newAdminError" class="settings-alert error" style="margin: 0 0 16px;">
+                <i class="fas fa-exclamation-circle"></i> {{ newAdminError }}
+            </div>
 
-    <!-- Order Details Modal -->
+            <form (submit)="addNewAdmin($event)">
+
+                <!-- Security Section -->
+                <div class="add-admin-section-label">
+                    <i class="fas fa-shield-halved"></i> Your Credentials (for verification)
+                </div>
+                <div class="settings-form-row">
+                    <label>Your Current Password</label>
+                    <div class="settings-input-wrap">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" [(ngModel)]="newAdminPayload.currentAdminPassword"
+                            name="currentAdminPassword" placeholder="Enter your admin password to authorize" required>
+                    </div>
+                    <p class="settings-form-hint">This verifies that you are authorized to create new admins.</p>
+                </div>
+
+                <!-- New Admin Section -->
+                <div class="add-admin-section-label" style="margin-top: 20px;">
+                    <i class="fas fa-user-plus"></i> New Admin Details
+                </div>
+                <div class="settings-form-row">
+                    <label>Full Name</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-id-card input-icon"></i>
+                        <input type="text" [(ngModel)]="newAdminPayload.fullName" name="newAdminName"
+                            placeholder="e.g. Bappa Sharma" required>
+                    </div>
+                </div>
+
+                <div class="settings-form-row">
+                    <label>Admin Username</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-at input-icon"></i>
+                        <input type="text" [(ngModel)]="newAdminPayload.email" name="newAdminEmail"
+                            placeholder="e.g. bappa" required>
+                        <span class="domain-tag">@greenie.com</span>
+                    </div>
+                    <p class="settings-form-hint">They will log in as <strong>username&#64;greenie.com</strong></p>
+                </div>
+
+                <div class="settings-form-row">
+                    <label>Password for New Admin</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" [(ngModel)]="newAdminPayload.password" name="newAdminPassword"
+                            placeholder="Set a secure password" required>
+                    </div>
+                </div>
+
+                <div class="add-admin-modal-actions">
+                    <button type="button" class="add-admin-cancel" (click)="closeAddAdminModal()">Cancel</button>
+                    <button type="submit" class="settings-btn purple" style="margin-top:0; flex:1;"
+                        [disabled]="isNewAdminSubmitting">
+                        <i class="fas fa-spinner fa-spin" *ngIf="isNewAdminSubmitting"></i>
+                        <i class="fas fa-user-plus" *ngIf="!isNewAdminSubmitting"></i>
+                        {{ isNewAdminSubmitting ? 'Registering…' : 'Register Admin' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div> <!-- Order Details Modal -->
     <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
         <div class="user-detail-modal order-modal" (click)="$event.stopPropagation()">
             <button class="close-modal" (click)="closeOrderModal()">&times;</button>

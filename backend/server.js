@@ -315,16 +315,129 @@ Track here: http://localhost:3000/my-account/orders`;
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
     const { email, password } = req.body;
-    if (email === 'admin@greenie.com' && password === 'radheradhe') {
-        // Create a special admin JWT (using a fixed admin ID)
-        const token = jwt.sign(
-            { user: { id: 'admin-special-id', isAdmin: true } },
-            JWT_SECRET,
-            { expiresIn: '8h' }
-        );
-        return res.json({ token, isAdmin: true });
+
+    try {
+        console.log(`[ADMIN-LOGIN] Request received for: ${email}`);
+        // Try to find admin in DB
+        const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' }).lean();
+        if (user) {
+            if (user.isBlocked) {
+                return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Invalid admin credentials' });
+            }
+            const token = jwt.sign(
+                { user: { id: user._id, isAdmin: true, email: user.email, fullName: user.fullName } },
+                JWT_SECRET,
+                { expiresIn: '8h' }
+            );
+            return res.json({ token, isAdmin: true, user: { _id: user._id, email: user.email, fullName: user.fullName, role: 'admin' } });
+        }
+
+        // Fallback to hardcoded admin
+        if (email === 'admin@greenie.com' && password === 'radheradhe') {
+            // Create a special admin JWT (using a fixed admin ID)
+            const token = jwt.sign(
+                { user: { id: 'admin-special-id', isAdmin: true, email, fullName: 'Super Admin' } },
+                JWT_SECRET,
+                { expiresIn: '8h' }
+            );
+            return res.json({ token, isAdmin: true, user: { _id: 'admin-special-id', email, fullName: 'Super Admin', role: 'admin' } });
+        }
+
+        return res.status(401).json({ message: 'Invalid admin credentials' });
+    } catch (err) {
+        console.error('Admin login error:', err);
+        return res.status(500).json({ message: 'Server error' });
     }
-    return res.status(401).json({ message: 'Invalid admin credentials' });
+});
+
+// Admin Add (requires current admin password verification)
+app.post('/api/auth/admin-register', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Only admins can register new admins' });
+        }
+        const { fullName, email, password, currentAdminPassword } = req.body;
+
+        // ── Verify current admin's password ─────────────────────────────
+        if (!currentAdminPassword) {
+            return res.status(400).json({ message: 'Your current password is required for authorization.' });
+        }
+
+        // Super-admin (hardcoded) verification
+        if (req.user.id === 'admin-special-id') {
+            const SUPER_ADMIN_PASSWORD = 'radheradhe';
+            if (currentAdminPassword !== SUPER_ADMIN_PASSWORD) {
+                return res.status(401).json({ message: 'Incorrect admin password. Authorization failed.' });
+            }
+        } else {
+            // DB admin password verification
+            const adminUser = await User.findById(req.user.id);
+            if (!adminUser) return res.status(404).json({ message: 'Admin not found' });
+            const isMatch = await bcrypt.compare(currentAdminPassword, adminUser.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Incorrect admin password. Authorization failed.' });
+            }
+        }
+
+        // ── Register new admin ───────────────────────────────────────────
+        let user = await User.findOne({ email: email.toLowerCase() });
+        if (user) {
+            return res.status(400).json({ message: 'Admin with this email already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        user = new User({
+            fullName,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: 'admin'
+        });
+        await user.save();
+        res.status(201).json({ message: `Admin "${fullName}" registered successfully!` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin Update (Change password or name)
+app.put('/api/auth/admin-update', auth, async (req, res) => {
+    try {
+        const { fullName, oldPassword, newPassword } = req.body;
+        // Super admin cannot change credentials via UI since they are hardcoded
+        if (req.user.id === 'admin-special-id') {
+            return res.status(400).json({ message: 'Super admin credentials cannot be changed through this interface. Add a database admin first and login with that.' });
+        }
+
+        let user = await User.findById(req.user.id);
+        if (!user || user.role !== 'admin') {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        if (newPassword && oldPassword) {
+            const isMatch = await bcrypt.compare(oldPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Incorrect old password' });
+            }
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+        }
+
+        if (fullName) {
+            user.fullName = fullName;
+        }
+
+        await user.save();
+        res.json({ message: 'Admin updated successfully', user: { _id: user._id, email: user.email, fullName: user.fullName, role: 'admin' } });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // Auth Routes

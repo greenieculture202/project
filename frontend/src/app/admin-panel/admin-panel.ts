@@ -68,6 +68,26 @@ export class AdminPanelComponent implements OnInit {
     isLoadingProducts: boolean = false;
     productCategoryFilter: string = 'All';
 
+    // Settings
+    settingsMessage: string = '';
+    settingsError: string = '';
+    newAdminMessage: string = '';
+    newAdminError: string = '';
+    isSettingsSubmitting: boolean = false;
+    isNewAdminSubmitting: boolean = false;
+    currentAdminSettings = {
+        fullName: '',
+        oldPassword: '',
+        newPassword: ''
+    };
+    newAdminPayload = {
+        fullName: '',
+        email: '',
+        password: '',
+        currentAdminPassword: ''
+    };
+    showAddAdminModal: boolean = false;
+
     // Inquiries
     inquiries: Inquiry[] = [];
     isLoadingInquiries: boolean = false;
@@ -642,6 +662,12 @@ export class AdminPanelComponent implements OnInit {
             this.loadOrders();
             this.loadAdminNotifications();
         }, 30000);
+
+        // Initialize settings with current admin name
+        const userName = this.authService.getCurrentUser();
+        if (userName) {
+            this.currentAdminSettings.fullName = userName;
+        }
     }
 
     ngOnDestroy() {
@@ -813,6 +839,84 @@ export class AdminPanelComponent implements OnInit {
         } else if (tab === 'inquiries') {
             this.loadInquiries();
         }
+    }
+
+    updateAdminProfile(event: Event) {
+        event.preventDefault();
+        this.settingsMessage = '';
+        this.settingsError = '';
+        this.isSettingsSubmitting = true;
+
+        const payload: any = { fullName: this.currentAdminSettings.fullName };
+        if (this.currentAdminSettings.newPassword) {
+            if (!this.currentAdminSettings.oldPassword) {
+                this.settingsError = 'Old password is required to change password';
+                this.isSettingsSubmitting = false;
+                return;
+            }
+            payload.oldPassword = this.currentAdminSettings.oldPassword;
+            payload.newPassword = this.currentAdminSettings.newPassword;
+        }
+
+        this.http.put(`${this.authService.apiUrl}/admin-update`, payload, {
+            headers: { 'x-auth-token': this.authService.getToken() || '' }
+        }).subscribe({
+            next: (res: any) => {
+                this.settingsMessage = res.message;
+                this.currentAdminSettings.oldPassword = '';
+                this.currentAdminSettings.newPassword = '';
+                this.isSettingsSubmitting = false;
+                // Update local user data if name changed
+                this.authService.updateUserLocalInfo(payload.fullName);
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => {
+                this.settingsError = err.error?.message || 'Failed to update settings';
+                this.isSettingsSubmitting = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    closeAddAdminModal() {
+        this.showAddAdminModal = false;
+        this.newAdminMessage = '';
+        this.newAdminError = '';
+        this.newAdminPayload = { fullName: '', email: '', password: '', currentAdminPassword: '' };
+    }
+
+    addNewAdmin(event: Event) {
+        event.preventDefault();
+        this.newAdminMessage = '';
+        this.newAdminError = '';
+        this.isNewAdminSubmitting = true;
+
+        // Prepare payload with @greenie.com domain
+        const username = this.newAdminPayload.email.trim().split('@')[0];
+        const payload = {
+            fullName: this.newAdminPayload.fullName,
+            email: `${username}@greenie.com`.toLowerCase(),
+            password: this.newAdminPayload.password,
+            currentAdminPassword: this.newAdminPayload.currentAdminPassword
+        };
+
+        this.http.post(`${this.authService.apiUrl}/admin-register`, payload, {
+            headers: { 'x-auth-token': this.authService.getToken() || '' }
+        }).subscribe({
+            next: (res: any) => {
+                this.newAdminMessage = res.message || 'Admin registered successfully!';
+                this.newAdminPayload = { fullName: '', email: '', password: '', currentAdminPassword: '' };
+                this.isNewAdminSubmitting = false;
+                this.cdr.detectChanges();
+                // Auto-close after 2 seconds on success
+                setTimeout(() => { this.showAddAdminModal = false; this.newAdminMessage = ''; }, 3000);
+            },
+            error: (err: any) => {
+                this.newAdminError = err.error?.message || 'Failed to register new admin';
+                this.isNewAdminSubmitting = false;
+                this.cdr.detectChanges();
+            }
+        });
     }
 
     playNotificationSound() {
