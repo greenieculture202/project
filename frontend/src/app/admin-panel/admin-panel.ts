@@ -836,7 +836,7 @@ export class AdminPanelComponent implements OnInit {
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
-            }).then((canvas: HTMLCanvasElement) => {
+            } as any).then((canvas: HTMLCanvasElement) => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 
