@@ -194,7 +194,7 @@ export class DeliveryPanelComponent implements OnInit {
       });
     }
 
-    if (tab === 'dashboard' || tab === 'orders' || tab === 'payment') {
+    if (tab === 'dashboard' || tab === 'orders' || tab === 'customers') {
       this.loadShipments();
     } else {
       this.calculatePaymentSummary();

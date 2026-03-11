@@ -1166,6 +1166,52 @@ app.get('/api/admin/orders', auth, async (req, res) => {
     }
 });
 
+app.get('/api/admin/payment-summary', auth, async (req, res) => {
+    try {
+        // Fetch ALL orders to match the record count in the transaction table
+        const rawOrders = await Order.find({}).populate('userId', 'fullName').lean();
+
+        // Filter out "Guest Customer" and missing user data to match frontend table logic
+        const orders = rawOrders.filter(o => {
+            const name = (o.userName || o.userId?.fullName || '').trim();
+            return name !== 'Guest Customer' && o.userId;
+        });
+
+        let cod = 0;
+        let online = 0;
+        let totalRevenue = 0;
+
+        orders.forEach(o => {
+            const method = (o.paymentMethod || '').toUpperCase();
+
+            // Counts should include all records (including cancelled) to match the table
+            if (method.includes('CASH') || method.includes('COD')) {
+                cod++;
+            } else {
+                online++;
+            }
+
+            // ONLY include successful/shipped orders in the revenue total
+            if (o.status !== 'Cancelled') {
+                totalRevenue += (o.totalAmount || 0);
+            }
+        });
+
+        const totalOrders = cod + online;
+        res.json({
+            total: totalOrders,
+            cod,
+            online,
+            codPercentage: totalOrders > 0 ? Math.round((cod / totalOrders) * 100) : 0,
+            onlinePercentage: totalOrders > 0 ? Math.round((online / totalOrders) * 100) : 0,
+            totalRevenue
+        });
+    } catch (err) {
+        console.error('[AdminPaymentAPI] Error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
         const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;

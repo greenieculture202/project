@@ -62,7 +62,16 @@ export class AdminPanelComponent implements OnInit {
     showInvoiceModal: boolean = false;
     orderSearchQuery: string = '';
     orderStatusFilter: string = 'All';
+    paymentSummary: any = {
+        total: 0,
+        cod: 0,
+        online: 0,
+        codPercentage: 0,
+        onlinePercentage: 0
+    };
+    hoveredPaymentSegment: any = null;
     isLoadingOrders: boolean = false;
+    backendRevenue: number = 0;
     isLoading: boolean = false;
     productMap: { [key: string]: any[] } = {};
     isLoadingProducts: boolean = false;
@@ -838,6 +847,9 @@ export class AdminPanelComponent implements OnInit {
             this.loadOrders();
         } else if (tab === 'inquiries') {
             this.loadInquiries();
+        } else if (tab === 'payment') {
+            this.loadOrders();
+            this.loadPaymentSummary();
         }
     }
 
@@ -1974,7 +1986,13 @@ export class AdminPanelComponent implements OnInit {
                     }
                     this.lastOrderCount = data.length;
 
-                    this.orders = data;
+                    // Filter out orders marked as "Guest Customer" or those missing registered user data
+                    this.orders = data.filter((order: any) => {
+                        const name = (order.userName || order.userId?.fullName || '').trim();
+                        return name !== 'Guest Customer' && order.userId;
+                    });
+
+                    this.calculatePaymentSummary();
                     this.updateDashboardStats();
                     this.isLoadingOrders = false;
                     this.cdr.detectChanges();
@@ -1985,6 +2003,48 @@ export class AdminPanelComponent implements OnInit {
                 this.isLoadingOrders = false;
                 this.cdr.detectChanges();
             }
+        });
+    }
+
+    calculatePaymentSummary() {
+        if (!this.orders || this.orders.length === 0) {
+            this.paymentSummary = { total: 0, cod: 0, online: 0, codPercentage: 0, onlinePercentage: 0 };
+            return;
+        }
+
+        let cod = 0;
+        let online = 0;
+
+        this.orders.forEach(o => {
+            const method = (o.paymentMethod || '').toUpperCase();
+            if (method.includes('CASH') || method.includes('COD')) {
+                cod++;
+            } else {
+                online++;
+            }
+        });
+
+        const total = cod + online;
+        this.paymentSummary = {
+            total,
+            cod,
+            online,
+            codPercentage: total > 0 ? Math.round((cod / total) * 100) : 0,
+            onlinePercentage: total > 0 ? Math.round((online / total) * 100) : 0
+        };
+    }
+
+    loadPaymentSummary() {
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) return;
+
+        this.http.get('/api/admin/payment-summary', { headers: { 'x-auth-token': token } }).subscribe({
+            next: (data: any) => {
+                this.paymentSummary = data;
+                this.backendRevenue = data.totalRevenue || 0;
+                this.cdr.detectChanges();
+            },
+            error: (err) => console.error('Error loading payment summary:', err)
         });
     }
 

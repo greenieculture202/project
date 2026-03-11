@@ -14,9 +14,6 @@
             <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders', '')">
                 <i class="fas fa-chart-pie"></i> Reports & Dashboard
             </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'payment'" (click)="setTab('payment')">
-                <i class="fas fa-wallet"></i> Payment Hub
-            </a>
             <a class="nav-item" [class.active]="activeMainTab === 'customers'" (click)="setTab('customers')">
                 <i class="fas fa-boxes-stacked"></i> All Shipments
             </a>
@@ -505,99 +502,15 @@
             </div>
         </ng-container>
 
-        <!-- Payment View -->
-        <div class="payment-view" *ngIf="activeMainTab === 'payment'">
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon pending">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span class="label">COD Orders</span>
-                        <span class="count">{{ paymentSummary.cod }}</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon delivered">
-                        <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span class="label">Online Payments</span>
-                        <span class="count">{{ paymentSummary.online }}</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon out">
-                        <i class="fas fa-truck-ramp-box"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span class="label">{{ selectedCourier ? 'Service Fee / Order' : 'Avg. Service Fee'
-                            }}</span>
-                        <span class="count">{{ selectedCourier ? '₹' + courierFees[selectedCourier] : 'Market Rates'
-                            }}</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Payment Distribution Chart -->
-            <div class="pie-distribution-flex premium-chart-container"
-                style="margin: 2rem 0; background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; position: relative;">
-                <div style="padding: 1.5rem 2rem;">
-                    <h3 style="margin:0; font-size: 1.25rem; font-weight: 800; color: #1e293b;">Payment Distribution
-                    </h3>
-                </div>
 
-                <div class="hologram-pie-container" style="margin-top: 1rem;">
-                    <div class="pie-glow-layer"
-                        [style.background]="'radial-gradient(circle, #166534 0%, transparent 70%)'">
-                    </div>
-                    <svg viewBox="0 0 100 100" class="donut-svg-interactive">
-                        <!-- Online Slice -->
-                        <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
-                            pathLength="100" stroke="#3b82f6" stroke-width="50"
-                            [attr.stroke-dasharray]="paymentSummary.onlinePercentage + ' ' + (100 - paymentSummary.onlinePercentage)"
-                            stroke-dashoffset="25">
-                        </circle>
-                        <!-- COD Slice -->
-                        <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
-                            pathLength="100" stroke="#f59e0b" stroke-width="50"
-                            [attr.stroke-dasharray]="paymentSummary.codPercentage + ' ' + (100 - paymentSummary.codPercentage)"
-                            [attr.stroke-dashoffset]="100 - paymentSummary.onlinePercentage + 25">
-                        </circle>
-                    </svg>
+        <!-- Shipments View (Previously Payment View) -->
+        <div class="customers-view payment-view" *ngIf="activeMainTab === 'customers'">
 
-                    <div class="pie-inner-glass" style="width: 38%; height: 38%;">
-                        <span class="revenue-val" style="font-size: 1.4rem;">{{ paymentSummary.cod +
-                            paymentSummary.online }}</span>
-                        <span class="revenue-lbl" style="font-size: 0.6rem;">Total Orders</span>
-                    </div>
-                </div>
-
-                <div class="modern-grid-legend">
-                    <div class="legend-card-item">
-                        <div class="cat-chip" style="background: #3b82f6;"></div>
-                        <div class="legend-info">
-                            <div class="cat-head">Online Payment</div>
-                            <div class="cat-meta">{{ paymentSummary.online }} orders ({{
-                                paymentSummary.onlinePercentage
-                                }}%)</div>
-                        </div>
-                    </div>
-                    <div class="legend-card-item">
-                        <div class="cat-chip" style="background: #f59e0b;"></div>
-                        <div class="legend-info">
-                            <div class="cat-head">Cash on Delivery</div>
-                            <div class="cat-meta">{{ paymentSummary.cod }} orders ({{ paymentSummary.codPercentage
-                                }}%)
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div class="table-card">
                 <div class="table-header">
-                    <h3>Payment Records ({{ selectedCourier || 'All Partners' }})</h3>
+                    <h3>All Shipment Records ({{ selectedCourier || 'All Partners' }})</h3>
                 </div>
                 <div style="flex: 1; overflow-x: auto;">
                     <table class="delivery-table">
@@ -644,20 +557,7 @@
                 </div>
                 <div class="empty-table" *ngIf="paymentFilteredOrders.length === 0">
                     <i class="fas fa-credit-card"></i>
-                    <p>No payment records found for {{ selectedCourier || 'any courier' }}.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customers View -->
-        <div class="customers-view" *ngIf="activeMainTab === 'customers'">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Total Orders List ({{ selectedCourier }})</h3>
-                </div>
-                <div class="empty-table">
-                    <i class="fas fa-shopping-cart"></i>
-                    <p>No orders found associated with {{ selectedCourier }} shipments.</p>
+                    <p>No records found associated with {{ selectedCourier || 'any courier' }}.</p>
                 </div>
             </div>
         </div>

@@ -345,7 +345,7 @@ export class UserPanelComponent implements OnInit {
             }
 
             try {
-                const canvas = await html2canvas(element, {
+                const canvas = await (html2canvas as any)(element, {
                     scale: 2, // Higher quality
                     useCORS: true,
                     logging: false,

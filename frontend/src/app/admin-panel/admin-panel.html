@@ -46,6 +46,9 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
                 <i class="fas fa-users"></i> Users
             </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'payment'" (click)="setTab('payment')">
+                <i class="fas fa-wallet"></i> Payment Hub
+            </a>
             <a href="javascript:void(0)" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
                 <i class="fas fa-shopping-cart"></i> Orders
             </a>
@@ -689,6 +692,176 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Payment Management Content -->
+        <ng-container *ngIf="activeTab === 'payment'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Payment Analytics</h1>
+                    <p>Overview of revenue streams and transaction methods.</p>
+                </div>
+            </header>
+
+            <div class="payment-hub-container">
+                <!-- Payment Stats Row -->
+                <div class="stats-row-premium" style="margin-bottom: 2rem;">
+                    <div class="premium-stat-card" style="--accent-color: #f59e0b;">
+                        <div class="stat-main">
+                            <div class="stat-icon-wrapper">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">COD Orders</span>
+                                <h2 class="stat-value">{{ paymentSummary.cod }}</h2>
+                            </div>
+                        </div>
+                        <div class="card-wave"></div>
+                    </div>
+                    <div class="premium-stat-card" style="--accent-color: #3b82f6;">
+                        <div class="stat-main">
+                            <div class="stat-icon-wrapper">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Online Payments</span>
+                                <h2 class="stat-value">{{ paymentSummary.online }}</h2>
+                            </div>
+                        </div>
+                        <div class="card-wave"></div>
+                    </div>
+                    <div class="premium-stat-card" style="--accent-color: #10b981;">
+                        <div class="stat-main">
+                            <div class="stat-icon-wrapper">
+                                <i class="fas fa-indian-rupee-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total Revenue</span>
+                                <h2 class="stat-value">₹{{ backendRevenue.toLocaleString() }}</h2>
+                            </div>
+                        </div>
+                        <div class="card-wave"></div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="data-card-premium" style="margin-bottom: 2rem; padding: 2rem;">
+                    <div class="card-header-premium" style="padding: 0; margin-bottom: 1.5rem; border: none;">
+                        <div class="header-title">
+                            <h3>Revenue Distribution</h3>
+                            <span>Proportional breakdown of payment methods</span>
+                        </div>
+                    </div>
+
+                    <div class="pie-distribution-flex">
+                        <div class="hologram-pie-container">
+                            <div class="pie-glow-layer"
+                                [style.background]="'radial-gradient(circle, #6366f1 0%, transparent 70%)'">
+                            </div>
+                            <svg viewBox="0 0 100 100" class="donut-svg-interactive">
+                                <!-- Online Slice -->
+                                <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
+                                    pathLength="100" stroke="#3b82f6" stroke-width="50"
+                                    [attr.stroke-dasharray]="paymentSummary.onlinePercentage + ' ' + (100 - paymentSummary.onlinePercentage)"
+                                    stroke-dashoffset="25">
+                                </circle>
+                                <!-- COD Slice -->
+                                <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
+                                    pathLength="100" stroke="#f59e0b" stroke-width="50"
+                                    [attr.stroke-dasharray]="paymentSummary.codPercentage + ' ' + (100 - paymentSummary.codPercentage)"
+                                    [attr.stroke-dashoffset]="100 - paymentSummary.onlinePercentage + 25">
+                                </circle>
+                            </svg>
+
+                            <div class="pie-inner-glass" style="width: 38%; height: 38%;">
+                                <span class="revenue-val" style="font-size: 1.4rem;">{{ paymentSummary.total }}</span>
+                                <span class="revenue-lbl" style="font-size: 0.6rem;">Total Orders</span>
+                            </div>
+                        </div>
+
+                        <div class="modern-grid-legend">
+                            <div class="legend-card-item">
+                                <div class="cat-chip" style="background: #3b82f6;"></div>
+                                <div class="legend-info">
+                                    <div class="cat-head">Online Payment</div>
+                                    <div class="cat-meta">{{ paymentSummary.online }} orders ({{
+                                        paymentSummary.onlinePercentage }}%)</div>
+                                </div>
+                            </div>
+                            <div class="legend-card-item">
+                                <div class="cat-chip" style="background: #f59e0b;"></div>
+                                <div class="legend-info">
+                                    <div class="cat-head">Cash on Delivery</div>
+                                    <div class="cat-meta">{{ paymentSummary.cod }} orders ({{
+                                        paymentSummary.codPercentage }}%)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Table -->
+                <div class="data-card-premium">
+                    <div class="card-header-premium">
+                        <div class="header-title">
+                            <h3>Payment Records</h3>
+                            <span>Latest transactions across the platform</span>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-minimal-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer Details</th>
+                                    <th>Method</th>
+                                    <th>Billing Amount</th>
+                                    <th>Transaction Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let order of orders">
+                                    <td class="id-col">
+                                        <span class="id-pill">{{ order.orderId }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="customer-preview">
+                                            <div class="mini-avatar">{{ (order.userName || order.userId?.fullName ||
+                                                'U').charAt(0).toUpperCase() }}</div>
+                                            <div class="c-info">
+                                                <span class="c-name">{{ order.userName || order.userId?.fullName ||
+                                                    'Guest Customer' }}</span>
+                                                <span class="c-email">{{ order.userId?.email || 'via Direct Purchase'
+                                                    }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas"
+                                                [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'fa-wallet text-warning' : 'fa-credit-card text-primary'"></i>
+                                            <span style="font-weight: 600;">{{ order.paymentMethod === 'Cash on
+                                                Delivery' ? 'COD' : order.paymentMethod }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="amount-col">
+                                        <span class="amount-val">₹{{ order.totalAmount }}</span>
+                                    </td>
+                                    <td class="date-col">
+                                        <span class="d-val">{{ order.orderDate | date:'mediumDate' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="premium-status-badge" [ngClass]="getStatusClass(order.status)">
+                                            {{ order.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
