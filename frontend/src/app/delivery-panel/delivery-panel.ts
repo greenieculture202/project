@@ -26,6 +26,7 @@ export class DeliveryPanelComponent implements OnInit {
   activeMainTab: string = 'orders';
   filterStatus: string = 'All';
   selectedCourier: string = '';
+  shipCourier: string = '';
   searchQuery: string = '';
   isLoading: boolean = true;
   today: Date = new Date();
@@ -68,6 +69,28 @@ export class DeliveryPanelComponent implements OnInit {
     certificate: ''
   };
   managementError: string = '';
+  showShipModal: boolean = false;
+  selectedOrderForShip: any = null;
+  trackingNumber: string = '';
+  expectedDeliveryDate: string = '';
+  trackingGenLimits: { [key: string]: any } = {};
+  showCourierMismatchError: boolean = false;
+  suggestedCourier: string = '';
+  isShaking: boolean = false;
+
+  // Territory View State
+  showTerritoryModal: boolean = false;
+  selectedTerritoryView: any = null;
+
+  openTerritoryView(courier: any) {
+    this.selectedTerritoryView = courier;
+    this.showTerritoryModal = true;
+  }
+
+  closeTerritoryView() {
+    this.showTerritoryModal = false;
+    this.selectedTerritoryView = null;
+  }
 
   // Payment Stats
   paymentSummary: any = {
@@ -439,6 +462,8 @@ export class DeliveryPanelComponent implements OnInit {
   generateCourierChart(courierName: string) {
     if (!courierName) return;
 
+    this.dashboardChartCourier = courierName;
+
     const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const counts: { [key: string]: number } = { 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0 };
 
@@ -464,7 +489,8 @@ export class DeliveryPanelComponent implements OnInit {
     this.totalWeeklyOrders = totalTrendOrders;
 
     // Colors matching Admin layout
-    const dayColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+    // Colors matching Blue/Premium layout
+    const dayColors = ['#3b82f6', '#0ea5e9', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e'];
 
     if (totalTrendOrders > 0) {
       let currentDayOffset = 0;
@@ -489,6 +515,38 @@ export class DeliveryPanelComponent implements OnInit {
         dashArray: '0 100', dashOffset: 25
       }));
     }
+  }
+
+  get dashboardPendingOrders() {
+    if (!this.dashboardChartCourier) return [];
+    const states = (this.courierStateMapping as any)[this.dashboardChartCourier] || [];
+    return this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      const isAssigned = states.includes(orderState) || o.courierName === this.dashboardChartCourier;
+      return isAssigned && o.status === 'Pending';
+    });
+  }
+
+  get dashboardOutOrders() {
+    if (!this.dashboardChartCourier) return [];
+    const states = (this.courierStateMapping as any)[this.dashboardChartCourier] || [];
+    return this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      const isAssigned = states.includes(orderState) || o.courierName === this.dashboardChartCourier;
+      return isAssigned && o.status === 'Shipped';
+    });
+  }
+
+  get dashboardDeliveredOrders() {
+    if (!this.dashboardChartCourier) return [];
+    const states = (this.courierStateMapping as any)[this.dashboardChartCourier] || [];
+    const delivered = this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      const isAssigned = states.includes(orderState) || o.courierName === this.dashboardChartCourier;
+      return isAssigned && o.status === 'Delivered';
+    });
+    // Return last 5 sorted by date
+    return delivered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()).slice(0, 5);
   }
 
   setFilter(status: string) {
@@ -631,5 +689,107 @@ export class DeliveryPanelComponent implements OnInit {
 
   backToAdmin() {
     this.router.navigate(['/admin-dashboard']);
+  }
+
+  openShipModal(order: any) {
+    this.selectedOrderForShip = order;
+    this.showShipModal = true;
+    this.trackingNumber = '';
+    this.expectedDeliveryDate = '';
+    this.showCourierMismatchError = false;
+    // Default to the courier associated with the order or the current dashboard view
+    this.shipCourier = this.dashboardChartCourier || order.courierName || this.getCourierForState(this.extractState(order)) || '';
+  }
+
+  closeShipModal() {
+    this.showShipModal = false;
+    this.selectedOrderForShip = null;
+    this.trackingNumber = '';
+    this.expectedDeliveryDate = '';
+    this.showCourierMismatchError = false;
+    this.shipCourier = '';
+  }
+
+  dispatchOrder(orderId: string) {
+    if (!this.shipCourier) {
+      alert('Please select a courier partner.');
+      return;
+    }
+
+    const token = sessionStorage.getItem('auth_token');
+    if (!token) return;
+
+    // VALIDATION: Check if courier matches state
+    const orderState = this.extractState(this.selectedOrderForShip);
+    const allowedStates = this.courierStateMapping[this.shipCourier] || [];
+
+    if (!allowedStates.includes(orderState)) {
+      this.suggestedCourier = this.getCourierForState(orderState);
+      this.showCourierMismatchError = true;
+      this.isShaking = true;
+      setTimeout(() => { this.isShaking = false; this.cdr.detectChanges(); }, 500);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.showCourierMismatchError = false;
+
+    if (!this.trackingNumber) {
+      this.trackingNumber = this.createTrackingNumberString();
+    }
+
+    const payload: any = {
+      status: 'Shipped',
+      courierName: this.shipCourier,
+      trackingNumber: this.trackingNumber
+    };
+
+    if (this.expectedDeliveryDate) {
+      payload.expectedDeliveryDate = new Date(this.expectedDeliveryDate).toISOString();
+    }
+
+    this.http.put(`/api/admin/orders/${this.selectedOrderForShip._id}/status`, payload, {
+      headers: { 'x-auth-token': token }
+    }).subscribe({
+      next: () => {
+        this.loadShipments();
+        this.closeShipModal();
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error dispatching order:', err)
+    });
+  }
+
+  generateTrackingNumber(orderId: string) {
+    if (!orderId) return;
+    const now = Date.now();
+    if (!this.trackingGenLimits[orderId]) this.trackingGenLimits[orderId] = { count: 0, lockUntil: 0 };
+    const state = this.trackingGenLimits[orderId];
+
+    if (state.lockUntil > now) {
+      const mins = Math.ceil((state.lockUntil - now) / 60000);
+      alert(`Limit reached. Please wait ${mins} minutes.`);
+      return;
+    }
+
+    if (state.lockUntil !== 0 && now > state.lockUntil) {
+      state.count = 0;
+      state.lockUntil = 0;
+    }
+
+    if (state.count < 1) {
+      this.trackingNumber = this.createTrackingNumberString();
+      state.count++;
+      if (state.count === 1) state.lockUntil = now + (5 * 60 * 1000);
+    }
+  }
+
+  isTrackingDisabled(orderId: string): boolean {
+    const state = this.trackingGenLimits[orderId];
+    return state ? (state.count >= 1 && Date.now() < state.lockUntil) : false;
+  }
+
+  private createTrackingNumberString(): string {
+    return `GC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   }
 }
