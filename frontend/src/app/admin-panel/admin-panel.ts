@@ -12,6 +12,8 @@ import { AboutService, AboutSection } from '../services/about.service';
 import { InquiryService, Inquiry } from '../services/inquiry.service';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 @Component({
     selector: 'app-admin-panel',
@@ -44,6 +46,7 @@ export class AdminPanelComponent implements OnInit {
     faqs: Faq[] = [];
     isLoadingFaqs: boolean = false;
     showAddFaqModal: boolean = false;
+    isDownloading: boolean = false;
     isEditingFaq: boolean = false;
     editingFaqId: string | null = null;
     newFaq: Faq = {
@@ -174,6 +177,9 @@ export class AdminPanelComponent implements OnInit {
     showAddProductToOfferModal: boolean = false;
     addProductSearchTerm: string = '';
     allProductsList: any[] = [];
+    showItemsPopup: boolean = false;
+    selectedOrderItems: any[] = [];
+    selectedOrderForItems: any = null;
 
     // Offer Codes (Admin Only)
     offerSectionCodes: any[] = [
@@ -811,8 +817,46 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(false);
     }
 
-    printInvoice() {
-        window.print();
+    downloadInvoice() {
+        if (this.isDownloading) return;
+
+        const invoiceElement = document.querySelector('.printable-invoice-wrap') as HTMLElement;
+        if (!invoiceElement) {
+            alert('Invoice content not found');
+            return;
+        }
+
+        this.isDownloading = true;
+        this.cdr.detectChanges();
+
+        // Small delay to ensure any UI updates are rendered
+        setTimeout(() => {
+            html2canvas(invoiceElement, {
+                scale: 2, // Higher quality
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            }).then((canvas: HTMLCanvasElement) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                const fileName = `Greenie_Invoice_${this.selectedOrder?.orderId || 'Download'}.pdf`;
+                pdf.save(fileName);
+                
+                this.isDownloading = false;
+                this.cdr.detectChanges();
+            }).catch((err: any) => {
+                console.error('Download failed:', err);
+                alert('Failed to generate PDF. Please try again.');
+                this.isDownloading = false;
+                this.cdr.detectChanges();
+            });
+        }, 100);
     }
 
     setTab(tab: string, mainCategory?: string, updateUrl: boolean = true) {
@@ -2746,5 +2790,21 @@ export class AdminPanelComponent implements OnInit {
 
     exportDashboardPDF() {
         window.print();
+    }
+
+    openItemsPopup(order: any) {
+        this.selectedOrderForItems = order;
+        this.selectedOrderItems = order.items || [];
+        this.showItemsPopup = true;
+        this.toggleBodyScroll(true);
+        this.cdr.detectChanges();
+    }
+
+    closeItemsPopup() {
+        this.showItemsPopup = false;
+        this.selectedOrderItems = [];
+        this.selectedOrderForItems = null;
+        this.toggleBodyScroll(false);
+        this.cdr.detectChanges();
     }
 }

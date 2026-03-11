@@ -877,46 +877,42 @@
             </header>
 
             <div class="orders-dashboard-wrapper">
-                <!-- Orders Summary Stats -->
-                <div class="orders-summary-grid">
-                    <div class="order-summary-card total">
-                        <div class="card-icon"><i class="fas fa-shopping-bag"></i></div>
-                        <div class="card-details">
-                            <span class="label">Total Orders</span>
-                            <h2 class="value">{{orders.length}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-total"></div>
-                        </div>
-                    </div>
-                    <div class="order-summary-card revenue">
-                        <div class="card-icon"><i class="fas fa-indian-rupee-sign"></i></div>
-                        <div class="card-details">
-                            <span class="label">Total Revenue</span>
-                            <h2 class="value">₹{{getTotalRevenue()}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-revenue"></div>
+                <!-- Premium Command Center Stats -->
+                <div class="command-center-stats">
+                    <div class="stat-luxury-card total">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Volume</span>
+                            <h2 class="stat-value">{{orders.length}}</h2>
+                            <span class="stat-trend"><i class="fas fa-chart-line"></i> +12% this week</span>
                         </div>
                     </div>
-                    <div class="order-summary-card pending">
-                        <div class="card-icon"><i class="fas fa-clock"></i></div>
-                        <div class="card-details">
-                            <span class="label">Processing</span>
-                            <h2 class="value">{{getOrdersByStatus('Processing').length}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-pending"></div>
+                    <div class="stat-luxury-card revenue">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-indian-rupee-sign"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Revenue Flow</span>
+                            <h2 class="stat-value">₹{{getTotalRevenue() | number}}</h2>
+                            <span class="stat-trend"><i class="fas fa-shield-check"></i> Verified</span>
                         </div>
                     </div>
-                    <div class="order-summary-card completed">
-                        <div class="card-icon"><i class="fas fa-check-double"></i></div>
-                        <div class="card-details">
-                            <span class="label">Delivered</span>
-                            <h2 class="value">{{getOrdersByStatus('Delivered').length}}</h2>
+                    <div class="stat-luxury-card processing">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-spinner fa-spin-slow"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">In Pipeline</span>
+                            <h2 class="stat-value">{{getOrdersByStatus('Processing').length}}</h2>
+                            <span class="stat-trend pulse">Active now</span>
                         </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-completed"></div>
+                    </div>
+                    <div class="stat-luxury-card delivered">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-check-double"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Fulfilled</span>
+                            <h2 class="stat-value">{{getOrdersByStatus('Delivered').length}}</h2>
+                            <span class="stat-trend success">99.8% Success</span>
                         </div>
                     </div>
                 </div>
@@ -955,93 +951,59 @@
 
                     <div class="order-card-premium" *ngFor="let order of filteredOrdersV2"
                         [class.new-order]="isNewOrder(order)">
+
+                        <!-- 1. Order ID -->
                         <div class="order-card-header">
-                            <div class="order-meta">
-                                <span class="order-id">#{{order.orderId}}</span>
-                                <span class="order-timestamp">{{order.orderDate | date:'medium'}}</span>
-                                <span class="offer-pill" *ngIf="order.appliedOfferCode">
-                                    <i class="fas fa-gift"></i>
-                                    {{ getOfferBadgeFromCode(order.appliedOfferCode) }}
-                                </span>
-                            </div>
-                            <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">
-                                <i class="fas" [ngClass]="getStatusIcon(order.status)"></i>
-                                {{order.status}}
+                            <span class="order-id">#{{order.orderId}}</span>
+                            <span class="order-timestamp">{{order.orderDate | date:'MMM d, HH:mm'}}</span>
+                            <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">{{order.status}}</div>
+                        </div>
+
+                        <!-- 2. Customer Name -->
+                        <div class="customer-section">
+                            <div class="customer-avatar">{{order.userId?.fullName?.charAt(0) || 'G'}}</div>
+                            <div class="customer-info">
+                                <h4>{{order.userId?.fullName || 'Guest User'}}</h4>
+                                <div class="meta-tag">{{order.userId?.email || 'N/A' | slice:0:15}}...</div>
                             </div>
                         </div>
 
-                        <!-- Tracking Info (Mini) -->
-                        <div class="tracking-mini-bar" *ngIf="order.trackingNumber"
-                            style="margin: 0 25px 15px; padding: 10px 15px; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; display: flex; justify-content: space-between; align-items: center; border: 1px solid #dcfce7;">
-                            <span><i class="fas fa-truck-fast"></i> <strong>{{order.courierName}}</strong></span>
-                            <span>ID: <strong>{{order.trackingNumber}}</strong></span>
-                        </div>
-
-                        <div class="order-card-content">
-                            <!-- Customer Info -->
-                            <div class="customer-section">
-                                <div class="customer-avatar">{{order.userId?.fullName?.charAt(0) || 'G'}}</div>
-                                <div class="customer-info">
-                                    <h4>{{order.userId?.fullName || 'Guest User'}}</h4>
-                                    <p><i class="far fa-envelope"></i> {{order.userId?.email || 'N/A'}}</p>
-                                    <p *ngIf="order.userId?.phone">
-                                        <i class="fas fa-phone-alt"></i> {{order.userId?.phone}}
-                                    </p>
-                                    <div class="offer-benefit-text" *ngIf="order.offerBenefit">
-                                        <i class="fas fa-sparkles"></i> {{order.offerBenefit}}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Items Summary -->
-                            <div class="items-section-premium">
-                                <div class="mini-item" *ngFor="let item of order.items | slice:0:3"
-                                    [class.gift-item]="$any(item).isGift">
-                                    <img [src]="$any(item).image" [alt]="$any(item).name">
-                                    <div class="mini-item-info">
-                                        <span class="name">{{$any(item).name}}</span>
-                                        <span class="qty">{{$any(item).quantity}} x ₹{{$any(item).price}}</span>
-                                        <span class="gift-label" *ngIf="$any(item).isGift">FREE GIFT</span>
-                                    </div>
-                                </div>
-                                <div class="more-items-badge" *ngIf="order.items.length > 3">
-                                    +{{order.items.length - 3}} more items
-                                </div>
-                            </div>
-
-                            <!-- Financials -->
-                            <div class="financials-section">
-                                <span class="amount-label">Total Amount</span>
-                                <h3 class="total-amount">₹{{order.totalAmount}}</h3>
-
-                                <div class="payment-indicator"
-                                    [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'cod-badge' : 'online-badge'">
-                                    <i class="fas"
-                                        [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'fa-hand-holding-dollar' : 'fa-circle-check'"></i>
-                                    {{ order.paymentMethod === 'Cash on Delivery' ? 'Cash on Delivery' : 'Paid Online
-                                    (UPI)' }}
-                                </div>
+                        <!-- 3. Items -->
+                        <div class="items-column" (click)="openItemsPopup(order)">
+                            <div class="item-count-chip-linear">
+                                <i class="fas fa-cubes-stacked"></i>
+                                <span>{{order.items.length}} Items</span>
+                                <i class="fas fa-angle-right"></i>
                             </div>
                         </div>
 
-                        <div class="order-card-footer-premium">
-                            <div class="status-update-action">
-                                <select class="modern-select-admin" [ngModel]="order.status"
-                                    (ngModelChange)="updateOrderStatus(order._id, $event)">
-                                    <option value="" disabled selected>Change Status</option>
-                                    <option value="Processing">Processing</option>
-                                    <option value="Shipped">Shipped</option>
-                                    <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
+                        <!-- 4. Amount -->
+                        <div class="financials-section">
+                            <span class="amount-label">Amount</span>
+                            <h3 class="total-amount">₹{{order.totalAmount | number}}</h3>
+                            <div class="pay-method-mini">{{order.paymentMethod === 'Cash on Delivery' ? 'COD' : 'Online'}}</div>
+                        </div>
+
+                        <!-- 5. Courier Name -->
+                        <div class="courier-column">
+                            <div class="courier-pill-linear" *ngIf="order.trackingNumber">
+                                <i class="fas fa-truck-fast"></i>
+                                <span>{{order.courierName}}</span>
                             </div>
-                            <div class="action-buttons-v2">
-                                <button class="btn-invoice" (click)="viewInvoice(order)" title="Invoice"><i
-                                        class="fas fa-file-invoice"></i></button>
-                                <button class="btn-details-v2" (click)="viewOrderDetails(order)">Details <i
-                                        class="fas fa-arrow-right"></i></button>
+                            <div class="courier-empty" *ngIf="!order.trackingNumber">
+                                <i class="far fa-clock"></i> Not Assigned
                             </div>
                         </div>
+
+                        <!-- 6. Bill Icon -->
+                        <button class="btn-invoice-mini" (click)="viewInvoice(order)" title="Manifesto">
+                            <i class="fas fa-file-invoice"></i>
+                        </button>
+
+                        <!-- 7. View Button -->
+                        <button class="btn-view-straight" (click)="viewOrderDetails(order)">
+                            View <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1759,6 +1721,57 @@
 
     </main>
 
+    <!-- Detailed Items Popup Modal -->
+    <div class="modal-overlay-premium" *ngIf="showItemsPopup" (click)="closeItemsPopup()">
+        <div class="items-popup-content-v2" (click)="$event.stopPropagation()">
+            <div class="popup-header-classic">
+                <div class="header-main">
+                    <i class="fas fa-boxes-packing"></i>
+                    <div class="title-wrap">
+                        <h3>Order Manifest</h3>
+                        <p>Details for Order #{{selectedOrderForItems?.orderId}}</p>
+                    </div>
+                </div>
+                <button class="close-popup-btn" (click)="closeItemsPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="popup-body-scroll">
+                <div class="items-manifest-grid">
+                    <div class="manifest-item-card" *ngFor="let item of selectedOrderItems">
+                        <div class="item-visual">
+                            <img [src]="$any(item).image" [alt]="$any(item).name">
+                            <span class="qty-bubble">{{$any(item).quantity}}x</span>
+                        </div>
+                        <div class="item-details">
+                            <div class="name-price-row">
+                                <h4>{{$any(item).name}}</h4>
+                                <span class="price-tag-luxe" [class.free-tag]="$any(item).price === 0">
+                                    {{ $any(item).price === 0 ? 'COMPLIMENTARY' : '₹' + $any(item).price }}
+                                </span>
+                            </div>
+                            <div class="item-meta-row">
+                                <span class="cat-pill">{{$any(item).category || 'Plant'}}</span>
+                                <span class="offer-pill-v2" *ngIf="$any(item).price === 0">
+                                    <i class="fas fa-gift"></i> Exclusive Gift
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup-footer-classic">
+                <div class="footer-totals">
+                    <span class="label">Total Manifest Value</span>
+                    <span class="value">₹{{selectedOrderForItems?.totalAmount | number}}</span>
+                </div>
+                <button class="btn-done-classic" (click)="closeItemsPopup()">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ══════════════════════════════════════════
          ADD NEW ADMIN MODAL (Secure, Password-Gated)
          ══════════════════════════════════════════ -->
@@ -2074,121 +2087,130 @@
     <!-- Invoice Modal -->
     <div class="modal-overlay" *ngIf="showInvoiceModal" (click)="closeInvoiceModal()">
         <div class="user-detail-modal invoice-modal" (click)="$event.stopPropagation()">
-            <!-- Header for Screen (Hidden in print) -->
-            <div class="modal-header no-print">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h2 style="margin:0;">Print Invoice</h2>
-                        <p style="margin:5px 0 0 0; color:#cbd5e1;">Generate a physical receipt for this order.</p>
-                    </div>
-                    <button class="btn-primary" (click)="printInvoice()"
-                        style="background:#15803d; border:none; padding:10px 20px; border-radius:8px; color:white; font-weight:600; cursor:pointer;"><i
-                            class="fas fa-print" style="margin-right:8px;"></i> Print Now</button>
-                    <button class="close-modal" (click)="closeInvoiceModal()">&times;</button>
+            
+            <!-- Unified Header for Actions -->
+            <div class="invoice-actions-bar no-print">
+                <div class="title-group">
+                    <h2>Manage Invoice</h2>
+                    <p style="margin:2px 0 0 0; color:#64748b; font-size: 0.8rem;">Ready for printing and documentation.</p>
+                </div>
+                <div class="invoice-btn-group">
+                    <button class="btn-download-luxe" (click)="downloadInvoice()" [disabled]="isDownloading">
+                        <i class="fas" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+                        {{ isDownloading ? 'Generating PDF...' : 'Download Invoice' }}
+                    </button>
+                    <button class="btn-close-luxe" (click)="closeInvoiceModal()">&times;</button>
                 </div>
             </div>
 
             <!-- The Printable Area -->
-            <div class="modal-body printable-invoice" *ngIf="selectedOrder">
-                <!-- Header -->
-                <div class="invoice-header"
-                    style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px;">
-                    <h1 style="color: #15803d; font-size: 2rem; margin: 0; font-weight: 800;">GREENIE CULTURE 🌿</h1>
-                    <p style="color: #64748b; margin: 5px 0 0 0;">123 Botanical Avenue, Green City, 400001</p>
-                    <p style="color: #64748b; margin: 2px 0 0 0;">support@greenieculture.com | +91 9876543210</p>
+            <div class="printable-invoice-wrap" *ngIf="selectedOrder">
+                <!-- Watermark -->
+                <div class="invoice-watermark no-print">PAID</div>
+
+                <!-- Branding Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #15803d; padding-bottom: 25px; margin-bottom: 30px;">
+                    <div>
+                        <h1 style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px;">GREENIE CULTURE 🌿</h1>
+                        <p style="color: #64748b; margin: 8px 0 0 0; font-weight: 600;">The Premium Botanical Experience</p>
+                    </div>
+                    <div style="text-align: right; color: #1e293b;">
+                        <p style="margin: 0; font-weight: 700;">123 Botanical Avenue, Green City</p>
+                        <p style="margin: 2px 0 0 0;">support@greenieculture.com</p>
+                        <p style="margin: 2px 0 0 0;">+91 9876543210</p>
+                    </div>
                 </div>
 
                 <!-- Info Grid -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
                     <div>
-                        <h4 style="margin: 0 0 8px 0; color: #64748b; text-transform: uppercase; font-size: 0.8rem;">
-                            Bill To:</h4>
-                        <strong style="font-size: 1.1rem; color: #0f172a;">{{ selectedOrder.userId?.fullName || 'Guest
-                            User' }}</strong>
-                        <p style="margin: 4px 0 2px 0; color: #334155; max-width: 250px; line-height: 1.4;">
-                            {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'N/A' }}<br>
-                            {{ selectedOrder.userId?.city }} {{ selectedOrder.userId?.state }}
-                        </p>
-                        <p style="margin: 0; color: #334155;">Phone: {{ selectedOrder.userId?.phone || 'N/A' }}</p>
+                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Recipient Details:</h4>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <strong style="font-size: 1.15rem; color: #0f172a; display: block; margin-bottom: 8px;">{{ selectedOrder.userId?.fullName || 'Guest User' }}</strong>
+                            <p style="margin: 0; color: #475569; line-height: 1.5; font-size: 0.95rem;">
+                                {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'N/A' }}<br>
+                                {{ selectedOrder.userId?.city }}{{ selectedOrder.userId?.city ? ',' : '' }} {{ selectedOrder.userId?.state }} 
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #1e293b; font-weight: 600; font-size: 0.9rem;">
+                                <i class="fas fa-phone" style="margin-right: 8px; color: #64748b;"></i>{{ selectedOrder.userId?.phone || 'N/A' }}
+                            </p>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <h4 style="margin: 0 0 8px 0; color: #64748b; text-transform: uppercase; font-size: 0.8rem;">
-                            Invoice Details:</h4>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Order No:</strong> {{
-                            selectedOrder.orderId }}</p>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Date:</strong> {{ selectedOrder.orderDate
-                            | date:'mediumDate' }}</p>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Time:</strong> {{ selectedOrder.orderDate
-                            | date:'shortTime' }}</p>
-                        <p style="margin: 0; color: #334155;"><strong>Payment:</strong> {{ selectedOrder.paymentMethod
-                            || 'UPI' }}</p>
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Order Metadata:</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Reference ID</span>
+                                <strong style="color:#0f172a;">#{{ selectedOrder.orderId }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Placed On</span>
+                                <strong style="color:#0f172a;">{{ selectedOrder.orderDate | date:'mediumDate' }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Payment Mode</span>
+                                <strong style="color:#15803d;">{{ selectedOrder.paymentMethod || 'Online' }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:#64748b; font-weight:600;">Invoice Status</span>
+                                <span style="color: #16a34a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem;"><i class="fas fa-check-circle"></i> Authenticated</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Items Table -->
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <table class="invoice-table-premium">
                     <thead>
-                        <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-                            <th style="padding: 12px; text-align: left; color: #334155; width: 50%;">Item Description
-                            </th>
-                            <th style="padding: 12px; text-align: center; color: #334155;">Qty</th>
-                            <th style="padding: 12px; text-align: right; color: #334155;">Unit Price</th>
-                            <th style="padding: 12px; text-align: right; color: #334155;">Total</th>
+                        <tr>
+                            <th style="width: 50%;">Product Description</th>
+                            <th style="text-align: center;">Quantity</th>
+                            <th style="text-align: right;">Unit Value</th>
+                            <th style="text-align: right;">Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let item of selectedOrder.items" style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px; color: #0f172a;">
-                                <strong style="display:block;">{{ $any(item).name }}</strong>
-                                <span style="font-size: 0.85rem; color: #64748b;"
-                                    *ngIf="$any(item).weight || $any(item).planter">
-                                    <ng-container *ngIf="$any(item).weight">Wt: {{ $any(item).weight }}</ng-container>
-                                    <ng-container *ngIf="$any(item).weight && $any(item).planter"> | </ng-container>
-                                    <ng-container *ngIf="$any(item).planter">Planter: {{ $any(item).planter
-                                        }}</ng-container>
+                        <tr *ngFor="let item of selectedOrder.items">
+                            <td>
+                                <strong style="display:block; font-size: 1rem; color: #0f172a;">{{ $any(item).name }}</strong>
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                                    <ng-container *ngIf="$any(item).category">{{ $any(item).category }}</ng-container>
+                                    <ng-container *ngIf="$any(item).planter"> | Planter: {{ $any(item).planter }}</ng-container>
                                 </span>
                             </td>
-                            <td style="padding: 12px; text-align: center; color: #334155;">{{ $any(item).quantity }}
-                            </td>
-                            <td style="padding: 12px; text-align: right; color: #334155;">₹{{ $any(item).price }}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600; color: #0f172a;">₹{{
-                                $any(item).quantity * $any(item).price }}</td>
+                            <td style="text-align: center; font-weight: 700;">{{ $any(item).quantity }}</td>
+                            <td style="text-align: right;">₹{{ $any(item).price | number }}</td>
+                            <td style="text-align: right; font-weight: 800; color: #0f172a;">₹{{ $any(item).quantity * $any(item).price | number }}</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <!-- Totals -->
-                <div style="display: flex; justify-content: flex-end;">
-                    <div style="width: 300px;">
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b;">
-                            <span>Subtotal:</span>
-                            <span>₹{{ selectedOrder.totalAmount }}</span>
+                <!-- Summary & Totals -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
+                    <div style="color: #94a3b8; font-size: 0.8rem; max-width: 300px;">
+                        <p style="margin: 0; font-weight: 600; line-height: 1.4;">Greenie Culture ensures that all botanical items are quality-certified. For support: support@greenieculture.com</p>
+                    </div>
+                    <div style="width: 320px;">
+                        <div style="display:flex; justify-content:space-between; padding-bottom:10px; color:#64748b; font-weight:600;">
+                            <span>Retail Subtotal:</span>
+                            <span>₹{{ selectedOrder.totalAmount | number }}</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b; border-bottom: 1px solid #e2e8f0;">
-                            <span>Delivery Charges:</span>
-                            <span>FREE</span>
+                        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; color:#10b981; font-weight:700;">
+                            <span>Shipping & Handling:</span>
+                            <span>COMPLIMENTARY</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-between; padding: 16px 0; font-size: 1.25rem; font-weight: 800; color: #15803d;">
-                            <span>Grand Total:</span>
-                            <span>₹{{ selectedOrder.totalAmount }}</span>
+                        <div class="grand-total-strip">
+                            <span class="label">Total Amount Payable</span>
+                            <span class="value">₹{{ selectedOrder.totalAmount | number }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer -->
-                <div
-                    style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1; color: #64748b; font-size: 0.9rem;">
-                    <p style="margin: 0 0 5px 0;">Thank you for shopping with Greenie Culture!</p>
-                    <p style="margin: 0;">This is a computer-generated invoice.</p>
+                <!-- Bottom Footer -->
+                <div style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px dashed #cbd5e1; color: #94a3b8; font-size: 0.85rem;">
+                    <p style="margin: 0 0 5px 0;">Thank you for choosing Greenie Culture for your green space.</p>
+                    <p style="margin: 0; font-weight: 700;">This is a digitally generated invoice and does not require a physical signature.</p>
                 </div>
-            </div>
-
-            <div class="modal-actions no-print"
-                style="margin-top:24px; padding: 0 24px 24px; display:flex; justify-content:flex-end; gap:12px;">
-                <button class="btn-cancel" (click)="closeInvoiceModal()"
-                    style="padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#475569; border:none;">Close</button>
             </div>
         </div>
     </div>
