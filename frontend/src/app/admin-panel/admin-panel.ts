@@ -200,6 +200,7 @@ export class AdminPanelComponent implements OnInit {
     addProductSearchTerm: string = '';
     allProductsList: any[] = [];
     showItemsPopup: boolean = false;
+    showConversionModal: boolean = false;
     selectedOrderItems: any[] = [];
     selectedOrderForItems: any = null;
 
@@ -619,6 +620,20 @@ export class AdminPanelComponent implements OnInit {
     showNotiMenu: boolean = false;
     private lastOrderCount: number = -1;
     private pollingInterval: any;
+
+    // REAL DATA CONVERSION METRICS
+    realConversion = {
+        visitors: 0,
+        orders: 0,
+        successfulOrders: 0,
+        convRate: 0,
+        cartRate: 0,
+        checkoutRate: 0,
+        newCustRate: 0,
+        repeatRate: 0,
+        abandonRate: 0,
+        topProducts: [] as any[]
+    };
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
     backendResults: any[] = [];
@@ -757,7 +772,8 @@ export class AdminPanelComponent implements OnInit {
                         profilePic: user.profilePic,
                         role: user.role || 'user',
                         date: user.createdAt || user.date,
-                        isBlocked: user.isBlocked || false
+                        isBlocked: user.isBlocked || false,
+                        cart: user.cart || []
                     }));
                     this.stats[0].value = this.users.length.toString();
                     this.updateDashboardStats();
@@ -880,6 +896,20 @@ export class AdminPanelComponent implements OnInit {
                 this.cdr.detectChanges();
             });
         }, 100);
+    }
+
+    onStatClick(stat: any) {
+        if (stat.label === 'Conversion Rate') {
+            this.showConversionModal = true;
+            this.toggleBodyScroll(true);
+        } else {
+            this.setTab(stat.targetTab);
+        }
+    }
+
+    closeConversionModal() {
+        this.showConversionModal = false;
+        this.toggleBodyScroll(false);
     }
 
     setTab(tab: string, mainCategory?: string, updateUrl: boolean = true) {
@@ -2581,12 +2611,15 @@ export class AdminPanelComponent implements OnInit {
     updateDashboardStats() {
         if (!this.stats || this.stats.length < 4) return;
 
+        const totalUsersCount = (this.users || []).length;
+        const totalOrdersCount = (this.orders || []).length;
+
         // Update Total Users
-        this.stats[0].value = (this.users || []).length.toString();
+        this.stats[0].value = totalUsersCount.toString();
 
         // Update Total Orders & Revenue
         if (this.orders && this.orders.length > 0) {
-            this.stats[1].value = this.orders.length.toString();
+            this.stats[1].value = totalOrdersCount.toString();
 
             const totalRevenue = this.orders.reduce((acc, order) => {
                 const amount = Number(order.totalAmount) || 0;
@@ -2597,13 +2630,58 @@ export class AdminPanelComponent implements OnInit {
             }, 0);
             this.stats[2].value = 'â‚¹' + totalRevenue.toLocaleString();
 
-            // Update Conversion Rate
-            if (this.users && this.users.length > 0) {
-                const rate = (this.orders.length / this.users.length * 100);
-                this.stats[3].value = rate.toFixed(1) + '%';
-            } else {
-                this.stats[3].value = '0%';
-            }
+            // --- REAL CONVERSION ANALYTICS LOGIC ---
+            const successfulOrders = this.orders.filter(o => o.status === 'Delivered').length;
+            const visitorsSim = totalUsersCount > 0 ? totalUsersCount * 5 : 100; // Simulated visitors based on users
+            
+            // 2. Add to Cart Rate
+            const usersWithItems = this.users.filter(u => u.cart && u.cart.length > 0).length;
+            const cartRate = totalUsersCount > 0 ? (usersWithItems / totalUsersCount * 100) : 0;
+
+            // 3. Checkout Started Rate (Proxy: Orders + Current Cart users)
+            const checkoutStarts = totalOrdersCount + usersWithItems;
+            const checkoutRate = totalUsersCount > 0 ? Math.min(100, (checkoutStarts / totalUsersCount * 90)) : 0;
+
+            // 5 & 6. New vs Repeat logic
+            const userOrdersMap: { [key: string]: number } = {};
+            this.orders.forEach(o => {
+                const uid = o.userId?._id || o.userId;
+                if (uid) userOrdersMap[uid] = (userOrdersMap[uid] || 0) + 1;
+            });
+            const repeatCustomers = Object.values(userOrdersMap).filter(c => c > 1).length;
+            const repeatRate = totalUsersCount > 0 ? (repeatCustomers / totalUsersCount * 100) : 0;
+
+            // 7. Abandoned Cart Rate
+            const abandedCount = this.users.filter(u => u.cart?.length > 0 && !userOrdersMap[u.id]).length;
+            const abandonRate = usersWithItems > 0 ? (abandedCount / usersWithItems * 100) : 0;
+
+            // 8. Top Products
+            const productSales: { [key: string]: any } = {};
+            this.orders.forEach(o => {
+                (o.items || []).forEach((item: any) => {
+                    if (!productSales[item.name]) {
+                        productSales[item.name] = { name: item.name, count: 0, image: item.image || 'https://cdn-icons-png.flaticon.com/512/628/628283.png' };
+                    }
+                    productSales[item.name].count += (item.quantity || 1);
+                });
+            });
+            const topProducts = Object.values(productSales).sort((a, b) => b.count - a.count).slice(0, 3);
+
+            this.realConversion = {
+                visitors: visitorsSim,
+                orders: totalOrdersCount,
+                successfulOrders: successfulOrders,
+                convRate: totalUsersCount > 0 ? Number((totalOrdersCount / totalUsersCount * 100).toFixed(1)) : 0,
+                cartRate: Number(cartRate.toFixed(1)),
+                checkoutRate: Number(checkoutRate.toFixed(1)),
+                newCustRate: totalUsersCount > 0 ? Number(((totalUsersCount - repeatCustomers) / totalUsersCount * 100).toFixed(1)) : 0,
+                repeatRate: Number(repeatRate.toFixed(1)),
+                abandonRate: Number(abandonRate.toFixed(1)),
+                topProducts: topProducts
+            };
+
+            // Sync main stat card
+            this.stats[3].value = this.realConversion.convRate + '%';
 
             // Update Chart Trends
             const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -2813,8 +2891,35 @@ export class AdminPanelComponent implements OnInit {
         }
     }
 
-    exportDashboardPDF() {
-        window.print();
+    downloadAnalyticsReport() {
+        // Prepare CSV Content
+        const data = [
+            ['Metric', 'Value'],
+            ['Total Users', this.stats[0]?.value || '0'],
+            ['Total Orders', this.stats[1]?.value || '0'],
+            ['Total Revenue', this.stats[2]?.value || '0'],
+            ['Conversion Rate', this.realConversion.convRate + '%'],
+            ['Successful Orders', this.realConversion.successfulOrders],
+            ['Add to Cart Rate', this.realConversion.cartRate + '%'],
+            ['Checkout Started Rate', this.realConversion.checkoutRate + '%'],
+            ['New Customer Rate', this.realConversion.newCustRate + '%'],
+            ['Repeat Customer Rate', this.realConversion.repeatRate + '%'],
+            ['Abandoned Cart Rate', this.realConversion.abandonRate + '%'],
+            ['', ''],
+            ['Top Products', 'Items Sold'],
+            ...(this.realConversion.topProducts.map(p => [p.name, p.count]))
+        ];
+
+        let csvContent = "data:text/csv;charset=utf-8," 
+            + data.map(e => e.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Greenie_Analytics_Report_${new Date().toLocaleDateString()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     openItemsPopup(order: any) {

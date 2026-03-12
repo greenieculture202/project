@@ -171,7 +171,7 @@
             <!-- Premium Stats Row -->
             <div class="stats-row-premium">
                 <div class="premium-stat-card" *ngFor="let stat of stats" [style.--accent-color]="stat.color"
-                    (click)="setTab(stat.targetTab)">
+                    (click)="onStatClick(stat)">
                     <div class="stat-main">
                         <div class="stat-icon-wrapper">
                             <i class="fas fa-{{stat.icon}}"></i>
@@ -200,9 +200,9 @@
                             <span>Order contribution by day of week</span>
                         </div>
                         <div class="header-options">
-                            <button class="btn-premium-export" (click)="exportDashboardPDF()">
-                                <i class="fas fa-file-pdf"></i>
-                                Export PDF
+                            <button class="btn-premium-export" (click)="downloadAnalyticsReport()" title="Download CSV Report">
+                                <i class="fas fa-download"></i>
+                                Download
                             </button>
                         </div>
                     </div>
@@ -3127,6 +3127,98 @@
                     <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
                     {{ isSubmitting ? 'Sending...' : 'Send Reply' }}
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Rate Details Modal -->
+    <div class="cv-ultra-overlay" *ngIf="showConversionModal" (click)="closeConversionModal()">
+        <div class="cv-ultra-container" (click)="$event.stopPropagation()" style="max-width: 750px !important;">
+            <!-- Modal Header -->
+            <div class="cv-header">
+                <div class="cv-header-left">
+                    <div class="cv-icon-box">
+                        <i class="fas fa-chart-line" style="font-size: 1.5rem; color: white;"></i>
+                    </div>
+                    <div class="cv-title-area">
+                        <h2>Conversion Analytics</h2>
+                        <p>Detailed performance breakdown & user behavior</p>
+                    </div>
+                </div>
+                <button class="cv-close-btn" (click)="closeConversionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="cv-body" style="padding: 24px !important;">
+                
+                <!-- 1 & 4: Visitors & Successful Orders -->
+                <div class="cv-stats-row" style="margin-bottom: 20px;">
+                    <div class="cv-card" style="border-left: 5px solid #15803d !important;">
+                        <span class="cv-label">1. Visitors to Purchase</span>
+                        <div class="cv-val">{{ realConversion.convRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #64748b;">{{ realConversion.visitors }} Visitors → {{ realConversion.orders }} Orders</small>
+                    </div>
+                    <div class="cv-card" style="border-left: 5px solid #10b981 !important;">
+                        <span class="cv-label">4. Successful Orders</span>
+                        <div class="cv-val">{{ realConversion.successfulOrders }}</div>
+                        <small style="color: #64748b;">Completed successfully</small>
+                    </div>
+                </div>
+
+                <!-- 2, 3, 7: Funnel & Abandonment -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.05em;">User Journey (Funnel)</h3>
+                    <div class="cv-stats-row" style="grid-template-columns: 1fr 1fr 1fr !important; gap: 12px !important;">
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important;">2. Add to Cart</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.cartRate }}%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important;">3. Checkout Start</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.checkoutRate }}%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important; color: #ef4444;">7. Abandoned</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #ef4444;">{{ realConversion.abandonRate }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 & 6: Customer Conversion -->
+                <div class="cv-stats-row" style="margin-bottom: 20px;">
+                    <div class="cv-card" style="background: #f0fdf4 !important;">
+                        <span class="cv-label">5. New Customer Conv.</span>
+                        <div class="cv-val" style="color: #166534 !important;">{{ realConversion.newCustRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #166534; opacity: 0.8;">First time buyers</small>
+                    </div>
+                    <div class="cv-card" style="background: #eff6ff !important;">
+                        <span class="cv-label">6. Repeat Cust. Rate</span>
+                        <div class="cv-val" style="color: #1e40af !important;">{{ realConversion.repeatRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #1e40af; opacity: 0.8;">Returning plant lovers</small>
+                    </div>
+                </div>
+
+                <!-- 8: Top Converting Products -->
+                <div style="border-top: 2px solid #f1f5f9; padding-top: 15px;">
+                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 12px;">8. Top Converting Products</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" *ngIf="realConversion.topProducts.length > 0; else noProducts">
+                        <div *ngFor="let p of realConversion.topProducts" style="background: white; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <i class="fas fa-leaf" style="color: #10b981; font-size: 0.9rem;"></i>
+                            <span style="font-weight: 700; color: #0f172a;">{{ p.name }}</span>
+                            <small style="color: #64748b; font-weight: 600;">({{ p.count }} sold)</small>
+                        </div>
+                    </div>
+                    <ng-template #noProducts>
+                        <p style="color: #64748b; font-style: italic; font-size: 0.85rem;">No sales data available yet.</p>
+                    </ng-template>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="cv-footer" style="justify-content: center !important;">
+                <button (click)="closeConversionModal()" style="background: #111827; border: none; padding: 12px 40px; border-radius: 12px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">Close Analytics</button>
             </div>
         </div>
     </div>
