@@ -100,6 +100,20 @@ export class DeliveryPanelComponent implements OnInit {
     onlinePercentage: 0
   };
 
+  // Payment View State
+  paymentFilterMethod: string = 'All';
+  paymentStats: any = {
+    totalRevenue: 0,
+    codCount: 0,
+    onlineCount: 0,
+    codRevenue: 0,
+    onlineRevenue: 0,
+    totalCourierCharges: 0,
+    codPercentage: 0,
+    onlinePercentage: 0,
+    totalOrders: 0
+  };
+
   hoveredPaymentSegment: any = null;
 
   get paymentFilteredOrders() {
@@ -166,6 +180,8 @@ export class DeliveryPanelComponent implements OnInit {
       codPercentage: Math.round((codCount / total) * 100),
       onlinePercentage: Math.round((onlineCount / total) * 100)
     };
+
+    this.calculatePaymentStats();
   }
 
   // Similar to Admin Panel: Consistent tab navigation
@@ -194,7 +210,7 @@ export class DeliveryPanelComponent implements OnInit {
       });
     }
 
-    if (tab === 'dashboard' || tab === 'orders' || tab === 'customers') {
+    if (tab === 'dashboard' || tab === 'orders' || tab === 'customers' || tab === 'payments' || tab === 'settlements') {
       this.loadShipments();
     } else {
       this.calculatePaymentSummary();
@@ -791,5 +807,155 @@ export class DeliveryPanelComponent implements OnInit {
 
   private createTrackingNumberString(): string {
     return `GC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  }
+
+  // Payment View Helpers
+  isPaymentCOD(method: string): boolean {
+    const m = (method || '').toUpperCase();
+    return m === 'COD' || m === 'CASH ON DELIVERY';
+  }
+
+  get paymentViewOrders() {
+    let orders = this.allOrders;
+    if (this.paymentFilterMethod === 'COD') {
+      orders = orders.filter(o => this.isPaymentCOD(o.paymentMethod));
+    } else if (this.paymentFilterMethod === 'UPI') {
+      orders = orders.filter(o => !this.isPaymentCOD(o.paymentMethod));
+    }
+    return orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+  }
+
+  calculatePaymentStats() {
+    const orders = this.selectedCourier ? this.paymentFilteredOrders : this.allOrders;
+    let codCount = 0;
+    let onlineCount = 0;
+    let codRevenue = 0;
+    let onlineRevenue = 0;
+    let totalCourierCharges = 0;
+
+    let totalOwedToCouriers = 0;
+    let totalPaidToCouriers = 0;
+    let totalPendingToCouriers = 0;
+    let totalCollectedFromCouriers = 0;
+    let totalPendingFromCouriers = 0;
+
+    orders.forEach(o => {
+      const amount = o.totalAmount || 0;
+      const fee = this.getFeeForOrder(o);
+      totalCourierCharges += fee;
+
+      if (this.isPaymentCOD(o.paymentMethod)) {
+        codCount++;
+        codRevenue += amount;
+
+        const adminGets = amount - fee;
+        totalCollectedFromCouriers += adminGets;
+        if (!o.courierSettled) {
+          totalPendingFromCouriers += adminGets;
+        }
+      } else {
+        onlineCount++;
+        onlineRevenue += amount;
+
+        totalOwedToCouriers += fee;
+        if (o.courierSettled) {
+          totalPaidToCouriers += fee;
+        } else {
+          totalPendingToCouriers += fee;
+        }
+      }
+    });
+
+    const totalOrders = codCount + onlineCount || 1;
+    this.paymentStats = {
+      totalRevenue: codRevenue + onlineRevenue,
+      codCount,
+      onlineCount,
+      codRevenue,
+      onlineRevenue,
+      totalCourierCharges,
+      codPercentage: Math.round((codCount / totalOrders) * 100),
+      onlinePercentage: Math.round((onlineCount / totalOrders) * 100),
+      totalOrders: codCount + onlineCount,
+      totalOwedToCouriers,
+      totalPaidToCouriers,
+      totalPendingToCouriers,
+      totalCollectedFromCouriers,
+      totalPendingFromCouriers
+    };
+  }
+
+  // Courier Settlement Tracking
+  getCourierSettlement(courierName: string) {
+    const states = this.courierStateMapping[courierName] || [];
+    const orders = this.allOrders.filter(o => {
+      const orderState = this.extractState(o);
+      return states.includes(orderState) || o.courierName === courierName;
+    });
+    const fee = this.courierFees[courierName] || 0;
+
+    // UPI Orders: Admin owes courier the delivery charges
+    const upiOrders = orders.filter(o => !this.isPaymentCOD(o.paymentMethod));
+    const upiSettled = upiOrders.filter(o => o.courierSettled);
+    const upiUnsettled = upiOrders.filter(o => !o.courierSettled);
+    const upiTotalOwed = upiOrders.length * fee;
+    const upiPaid = upiSettled.length * fee;
+    const upiPending = upiUnsettled.length * fee;
+
+    // COD Orders: Courier owes admin (totalAmount - delivery fee)
+    const codOrders = orders.filter(o => this.isPaymentCOD(o.paymentMethod));
+    const codSettled = codOrders.filter(o => o.courierSettled);
+    const codUnsettled = codOrders.filter(o => !o.courierSettled);
+    const codTotalCollected = codOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const codCourierKeeps = codOrders.length * fee;
+    const codAdminGets = codTotalCollected - codCourierKeeps;
+    const codReceived = codSettled.reduce((sum, o) => sum + ((o.totalAmount || 0) - fee), 0);
+    const codPending = codUnsettled.reduce((sum, o) => sum + ((o.totalAmount || 0) - fee), 0);
+
+    return {
+      courierName,
+      fee,
+      // UPI Settlement (Admin → Courier)
+      upiOrders: upiOrders.length,
+      upiTotalOwed,
+      upiPaid,
+      upiPending,
+      upiSettledOrders: upiSettled,
+      upiUnsettledOrders: upiUnsettled,
+      // COD Settlement (Courier → Admin)
+      codOrders: codOrders.length,
+      codTotalCollected,
+      codCourierKeeps,
+      codAdminGets,
+      codReceived,
+      codPending,
+      codSettledOrders: codSettled,
+      codUnsettledOrders: codUnsettled
+    };
+  }
+
+  toggleCourierSettled(order: any) {
+    const token = sessionStorage.getItem('auth_token');
+    const newStatus = !order.courierSettled;
+    this.http.put(`/api/admin/orders/${order._id}/courier-settled`, 
+      { courierSettled: newStatus }, 
+      { headers: { 'x-auth-token': token || '' } }
+    ).subscribe({
+      next: (updated: any) => {
+        order.courierSettled = updated.courierSettled;
+        this.calculatePaymentStats();
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Settlement toggle error:', err)
+    });
+  }
+
+  getSettlementForCourier(courierName: string) {
+    const s = this.getCourierSettlement(courierName);
+    return {
+      upiPending: s.upiPending,
+      codPending: s.codPending,
+      totalPending: s.upiPending + s.codPending
+    };
   }
 }

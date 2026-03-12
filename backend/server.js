@@ -1270,6 +1270,26 @@ app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
     }
 });
 
+// Toggle courier settlement status
+app.put('/api/admin/orders/:id/courier-settled', auth, async (req, res) => {
+    try {
+        const { courierSettled } = req.body;
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { courierSettled: !!courierSettled },
+            { new: true }
+        ).populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        console.log(`[AdminOrdersAPI] Courier settlement for Order ${order.orderId}: ${courierSettled ? 'Settled' : 'Unsettled'}`);
+        res.json(order);
+    } catch (err) {
+        console.error('[AdminOrdersAPI] Courier settlement error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // User Profile API
 app.get('/api/user/profile', auth, async (req, res) => {

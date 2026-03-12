@@ -2648,3 +2648,420 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
+
+/* ===== Payments View ===== */
+.payments-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.payments-view .stats-row {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.payments-view .stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.payments-view .stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.03;
+    transition: all 0.4s ease;
+}
+
+.payments-view .stat-card:hover::before {
+    transform: scale(1.5);
+    opacity: 0.06;
+}
+
+.payment-chart-card svg circle {
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.payments-view .table-card {
+    animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.payments-view .empty-table {
+    text-align: center;
+    padding: 4rem;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.payments-view .empty-table i {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+/* ===== Courier Settlement Tracker ===== */
+.settlement-section {
+    background: white;
+    border-radius: 24px;
+    padding: 0;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    border: 1px solid rgba(226,232,240,0.8);
+    overflow: hidden;
+    margin-top: 0.5rem;
+    animation: fadeInUp 0.5s ease both;
+}
+
+.settlement-courier-header {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.settlement-courier-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.settlement-courier-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #22c55e;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.settlement-courier-name {
+    margin: 0;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 850;
+}
+
+.settlement-courier-fee {
+    margin: 3px 0 0 0;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.settlement-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.settlement-card {
+    padding: 1.75rem 2rem;
+    border-right: 1px solid #f1f5f9;
+}
+
+.settlement-card:last-child {
+    border-right: none;
+}
+
+.settlement-card-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+}
+
+.settlement-card-head h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 850;
+    color: #0f172a;
+}
+
+.settlement-card-head p {
+    margin: 3px 0 0 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.settlement-icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.upi-badge {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.cod-badge {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+}
+
+.settlement-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.settlement-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sstat-label {
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sstat-value {
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+}
+
+/* Settlement Order Lists */
+.settlement-orders-list {
+    margin-top: 0.75rem;
+}
+
+.settlement-list-head {
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 8px 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.pending-head {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.settled-head {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.settlement-order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #fafafa;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+}
+
+.settlement-order-row:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.settled-row {
+    background: #f0fdf4;
+    border-color: #dcfce7;
+    opacity: 0.75;
+}
+
+.settled-row:hover {
+    background: #ecfdf5;
+    opacity: 1;
+}
+
+.so-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.so-id {
+    font-weight: 900;
+    color: #0f172a;
+    font-size: 0.85rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.so-customer {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.so-amount {
+    font-weight: 900;
+    color: #0f172a;
+    font-size: 1rem;
+    min-width: 80px;
+    text-align: center;
+}
+
+.so-amounts-dual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.so-amount-main {
+    font-weight: 900;
+    color: #0f172a;
+    font-size: 1rem;
+}
+
+.so-amount-sub {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* Settle Buttons */
+.settle-btn {
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.78rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.pay-btn {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+}
+
+.pay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+}
+
+.collect-btn {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    color: white;
+    box-shadow: 0 4px 12px rgba(234,88,12,0.25);
+}
+
+.collect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(234,88,12,0.35);
+}
+
+.undo-btn {
+    background: #f1f5f9;
+    color: #64748b;
+    box-shadow: none;
+}
+
+.undo-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.settlement-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.settlement-empty i {
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.settlement-empty span {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Courier Sidebar Pending Badge */
+.courier-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.courier-pending-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    width: fit-content;
+    border: 1px solid #fecaca;
+    animation: pulsePending 2s infinite;
+}
+
+@keyframes pulsePending {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@media (max-width: 900px) {
+    .settlement-grid {
+        grid-template-columns: 1fr;
+    }
+    .settlement-card {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .settlement-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

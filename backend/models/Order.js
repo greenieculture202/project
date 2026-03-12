@@ -79,6 +79,10 @@ const orderSchema = new mongoose.Schema({
     expectedDeliveryDate: {
         type: String,
         default: ''
+    },
+    courierSettled: {
+        type: Boolean,
+        default: false
     }
 });
 

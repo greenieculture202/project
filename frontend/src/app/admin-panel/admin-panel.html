@@ -701,167 +701,229 @@
         <ng-container *ngIf="activeTab === 'payment'">
             <header class="top-header">
                 <div class="welcome">
-                    <h1>Payment Analytics</h1>
-                    <p>Overview of revenue streams and transaction methods.</p>
+                    <h1>Payment Hub</h1>
+                    <p>Complete overview of revenue streams, payment methods and transaction records.</p>
                 </div>
             </header>
 
-            <div class="payment-hub-container">
-                <!-- Payment Stats Row -->
-                <div class="stats-row-premium" style="margin-bottom: 2rem;">
-                    <div class="premium-stat-card" style="--accent-color: #f59e0b;">
-                        <div class="stat-main">
-                            <div class="stat-icon-wrapper">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <div class="stat-content">
-                                <span class="stat-label">COD Orders</span>
-                                <h2 class="stat-value">{{ paymentSummary.cod }}</h2>
-                            </div>
-                        </div>
-                        <div class="card-wave"></div>
-                    </div>
-                    <div class="premium-stat-card" style="--accent-color: #3b82f6;">
-                        <div class="stat-main">
-                            <div class="stat-icon-wrapper">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <div class="stat-content">
-                                <span class="stat-label">Online Payments</span>
-                                <h2 class="stat-value">{{ paymentSummary.online }}</h2>
-                            </div>
-                        </div>
-                        <div class="card-wave"></div>
-                    </div>
-                    <div class="premium-stat-card" style="--accent-color: #10b981;">
-                        <div class="stat-main">
-                            <div class="stat-icon-wrapper">
-                                <i class="fas fa-indian-rupee-sign"></i>
-                            </div>
-                            <div class="stat-content">
-                                <span class="stat-label">Total Revenue</span>
-                                <h2 class="stat-value">₹{{ backendRevenue.toLocaleString() }}</h2>
-                            </div>
-                        </div>
-                        <div class="card-wave"></div>
-                    </div>
-                </div>
+            <div class="payment-hub-container admin-payments-view">
 
-                <!-- Chart Section -->
-                <div class="data-card-premium" style="margin-bottom: 2rem; padding: 2rem;">
-                    <div class="card-header-premium" style="padding: 0; margin-bottom: 1.5rem; border: none;">
-                        <div class="header-title">
-                            <h3>Revenue Distribution</h3>
-                            <span>Proportional breakdown of payment methods</span>
+                <!-- Payment Summary Stats -->
+                <div class="payment-stats-grid">
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; box-shadow: 0 6px 16px rgba(22, 163, 74, 0.2);">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">Total Revenue</span>
+                            <span class="pstat-value">₹{{ adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
                         </div>
                     </div>
-
-                    <div class="pie-distribution-flex">
-                        <div class="hologram-pie-container">
-                            <div class="pie-glow-layer"
-                                [style.background]="'radial-gradient(circle, #6366f1 0%, transparent 70%)'">
-                            </div>
-                            <svg viewBox="0 0 100 100" class="donut-svg-interactive">
-                                <!-- Online Slice -->
-                                <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
-                                    pathLength="100" stroke="#3b82f6" stroke-width="50"
-                                    [attr.stroke-dasharray]="paymentSummary.onlinePercentage + ' ' + (100 - paymentSummary.onlinePercentage)"
-                                    stroke-dashoffset="25">
-                                </circle>
-                                <!-- COD Slice -->
-                                <circle class="donut-segment-interactive" cx="50" cy="50" r="25" fill="transparent"
-                                    pathLength="100" stroke="#f59e0b" stroke-width="50"
-                                    [attr.stroke-dasharray]="paymentSummary.codPercentage + ' ' + (100 - paymentSummary.codPercentage)"
-                                    [attr.stroke-dashoffset]="100 - paymentSummary.onlinePercentage + 25">
-                                </circle>
-                            </svg>
-
-                            <div class="pie-inner-glass" style="width: 38%; height: 38%;">
-                                <span class="revenue-val" style="font-size: 1.4rem;">{{ paymentSummary.total }}</span>
-                                <span class="revenue-lbl" style="font-size: 0.6rem;">Total Orders</span>
-                            </div>
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #fff7ed, #ffedd5); color: #ea580c; box-shadow: 0 6px 16px rgba(234, 88, 12, 0.2);">
+                            <i class="fas fa-money-bill-wave"></i>
                         </div>
-
-                        <div class="modern-grid-legend">
-                            <div class="legend-card-item">
-                                <div class="cat-chip" style="background: #3b82f6;"></div>
-                                <div class="legend-info">
-                                    <div class="cat-head">Online Payment</div>
-                                    <div class="cat-meta">{{ paymentSummary.online }} orders ({{
-                                        paymentSummary.onlinePercentage }}%)</div>
-                                </div>
-                            </div>
-                            <div class="legend-card-item">
-                                <div class="cat-chip" style="background: #f59e0b;"></div>
-                                <div class="legend-info">
-                                    <div class="cat-head">Cash on Delivery</div>
-                                    <div class="cat-meta">{{ paymentSummary.cod }} orders ({{
-                                        paymentSummary.codPercentage }}%)</div>
-                                </div>
-                            </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">COD Orders</span>
+                            <span class="pstat-value">{{ adminPaymentStats.codCount }}</span>
+                        </div>
+                    </div>
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">UPI / Online</span>
+                            <span class="pstat-value">{{ adminPaymentStats.onlineCount }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Transactions Table -->
-                <div class="data-card-premium">
-                    <div class="card-header-premium">
-                        <div class="header-title">
-                            <h3>Payment Records</h3>
-                            <span>Latest transactions across the platform</span>
+
+
+                <!-- Payment Chart + Revenue Breakdown Row -->
+                <div class="payment-analytics-row">
+
+                    <!-- Payment Method Distribution Chart -->
+                    <div class="payment-card-white">
+                        <div class="payment-card-header">
+                            <div class="payment-card-icon"
+                                style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; border: 1px solid #bfdbfe;">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div>
+                                <h3 class="payment-card-title">Payment Split</h3>
+                                <p class="payment-card-sub">Method-wise order distribution</p>
+                            </div>
+                        </div>
+
+                        <div class="payment-chart-body">
+                            <div class="payment-donut-wrap">
+                                <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#e2e8f0" stroke-width="20"></circle>
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#ea580c" stroke-width="20"
+                                        pathLength="100"
+                                        [attr.stroke-dasharray]="adminPaymentStats.codPercentage + ' ' + (100 - adminPaymentStats.codPercentage)"
+                                        stroke-dashoffset="0"
+                                        style="transition: all 0.8s ease;"></circle>
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#2563eb" stroke-width="20"
+                                        pathLength="100"
+                                        [attr.stroke-dasharray]="adminPaymentStats.onlinePercentage + ' ' + (100 - adminPaymentStats.onlinePercentage)"
+                                        [attr.stroke-dashoffset]="'-' + adminPaymentStats.codPercentage"
+                                        style="transition: all 0.8s ease;"></circle>
+                                </svg>
+                                <div class="payment-donut-center">
+                                    <span class="donut-center-val">{{ adminPaymentStats.totalOrders }}</span>
+                                    <span class="donut-center-lbl">Orders</span>
+                                </div>
+                            </div>
+
+                            <div class="payment-legend-col">
+                                <div class="payment-legend-item">
+                                    <div class="legend-dot" style="background: #ea580c;"></div>
+                                    <div>
+                                        <div class="legend-name">Cash on Delivery</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.codCount }} orders · {{ adminPaymentStats.codPercentage }}%</div>
+                                    </div>
+                                </div>
+                                <div class="payment-legend-item">
+                                    <div class="legend-dot" style="background: #2563eb;"></div>
+                                    <div>
+                                        <div class="legend-name">UPI / Online</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.onlineCount }} orders · {{ adminPaymentStats.onlinePercentage }}%</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="premium-table-wrapper">
-                        <table class="premium-minimal-table">
+
+                    <!-- Revenue Breakdown Card -->
+                    <div class="payment-card-white">
+                        <div class="payment-card-header">
+                            <div class="payment-card-icon"
+                                style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; border: 1px solid #bbf7d0;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h3 class="payment-card-title">Revenue Breakdown</h3>
+                                <p class="payment-card-sub">Payment method wise revenue</p>
+                            </div>
+                        </div>
+
+                        <div class="revenue-breakdown-body">
+                            <!-- COD Revenue -->
+                            <div class="revenue-item" style="background: #fffbeb; border: 1px solid #fde68a;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-money-bill-wave" style="color: #ea580c;"></i>
+                                        <span style="color: #92400e;">COD Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.codRevenue | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="revenue-progress-bg" style="background: #fde68a;">
+                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #f97316, #ea580c);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.codRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                </div>
+                            </div>
+
+                            <!-- UPI Revenue -->
+                            <div class="revenue-item" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-qrcode" style="color: #2563eb;"></i>
+                                        <span style="color: #1e3a5f;">UPI / Online Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.onlineRevenue | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="revenue-progress-bg" style="background: #bfdbfe;">
+                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #3b82f6, #2563eb);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.onlineRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                </div>
+                            </div>
+
+                            <!-- Net Revenue -->
+                            <div class="revenue-item" style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-hand-holding-dollar" style="color: #16a34a;"></i>
+                                        <span style="color: #14532d;">Net Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount" style="color: #16a34a;">₹{{ adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Records Table -->
+                <div class="payment-card-white" style="margin-top: 0;">
+                    <div class="payment-table-header">
+                        <h3 class="payment-table-title">
+                            <i class="fas fa-receipt"></i> Payment Records ({{ adminPaymentViewOrders.length }})
+                        </h3>
+                        <div class="payment-filter-group">
+                            <span class="payment-filter-label">Method:</span>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'All'"
+                                (click)="adminPaymentFilterMethod = 'All'">All</button>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'COD'"
+                                (click)="adminPaymentFilterMethod = 'COD'">COD</button>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'UPI'"
+                                (click)="adminPaymentFilterMethod = 'UPI'">UPI</button>
+                        </div>
+                    </div>
+                    <div class="payment-table-wrap">
+                        <table class="payment-records-table">
                             <thead>
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Customer Details</th>
-                                    <th>Method</th>
-                                    <th>Billing Amount</th>
-                                    <th>Transaction Date</th>
-                                    <th>Status</th>
+                                    <th>Customer</th>
+                                    <th>Payment Method</th>
+                                    <th>Order Amount</th>
+                                    <th>Order Status</th>
+                                    <th>Courier Settlement</th>
+                                    <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let order of orders">
-                                    <td class="id-col">
-                                        <span class="id-pill">{{ order.orderId }}</span>
-                                    </td>
+                                <tr *ngFor="let order of adminPaymentViewOrders">
+                                    <td class="pay-order-id">#{{ order.orderId }}</td>
+                                    <td class="pay-customer">{{ order.userName || order.userId?.fullName || 'Guest' }}</td>
                                     <td>
-                                        <div class="customer-preview">
-                                            <div class="mini-avatar">{{ (order.userName || order.userId?.fullName ||
-                                                'U').charAt(0).toUpperCase() }}</div>
-                                            <div class="c-info">
-                                                <span class="c-name">{{ order.userName || order.userId?.fullName ||
-                                                    'Guest Customer' }}</span>
-                                                <span class="c-email">{{ order.userId?.email || 'via Direct Purchase'
-                                                    }}</span>
-                                            </div>
+                                        <div class="pay-method-badge"
+                                            [style.background]="isAdminPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
+                                            [style.color]="isAdminPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
+                                            [style.border]="isAdminPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
+                                            <i class="fas" [class.fa-money-bill-wave]="isAdminPaymentCOD(order.paymentMethod)"
+                                                [class.fa-qrcode]="!isAdminPaymentCOD(order.paymentMethod)"></i>
+                                            {{ isAdminPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class="fas"
-                                                [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'fa-wallet text-warning' : 'fa-credit-card text-primary'"></i>
-                                            <span style="font-weight: 600;">{{ order.paymentMethod === 'Cash on
-                                                Delivery' ? 'COD' : order.paymentMethod }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="amount-col">
-                                        <span class="amount-val">₹{{ order.totalAmount }}</span>
-                                    </td>
-                                    <td class="date-col">
-                                        <span class="d-val">{{ order.orderDate | date:'mediumDate' }}</span>
-                                    </td>
+                                    <td class="pay-amount">₹{{ order.totalAmount | number:'1.0-0' }}</td>
                                     <td>
                                         <span class="premium-status-badge" [ngClass]="getStatusClass(order.status)">
                                             {{ order.status }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <button class="btn-settlement-toggle" 
+                                            [class.settled]="order.courierSettled"
+                                            [class.pending]="!order.courierSettled"
+                                            (click)="toggleCourierSettled(order)">
+                                            <i class="fas" [class.fa-check-circle]="order.courierSettled" [class.fa-clock]="!order.courierSettled"></i>
+                                            {{ order.courierSettled ? 'Settled' : 'Mark Settled' }}
+                                        </button>
+                                    </td>
+                                    <td class="pay-date">{{ order.orderDate | date:'mediumDate' }}</td>
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="payment-empty" *ngIf="adminPaymentViewOrders.length === 0">
+                            <i class="fas fa-receipt"></i>
+                            <p>No payment records found for the selected filter.</p>
+                        </div>
                     </div>
                 </div>
             </div>
