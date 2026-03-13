@@ -1,0 +1,121 @@
+<div class="ai-assistant-wrapper" [class.is-open]="isOpen()">
+  <!-- Floating Bubble -->
+  <button class="chat-bubble ripple" (click)="toggleChat()" [class.hidden]="isOpen()">
+    <div class="bubble-icon">
+      <i class="fas fa-leaf"></i>
+      <span class="pulse"></span>
+    </div>
+    <span class="bubble-label">AI Assistant</span>
+  </button>
+
+  <!-- Chat Window -->
+  <div class="chat-window shadow-premium" [class.active]="isOpen()">
+    <div class="chat-header">
+      <div class="bot-info">
+        <div class="bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div>
+          <h4>Plant Expert AI</h4>
+          <div class="status">
+            <span class="dot"></span> 
+            Online
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="new-chat-btn" (click)="startNewChat()" title="Start New Chat">
+          <i class="fas fa-plus"></i>
+        </button>
+        <button class="history-btn" (click)="toggleHistory()" [class.active]="showHistory()" title="View Chat History">
+          <i class="fas fa-history"></i>
+        </button>
+        <button class="close-btn" (click)="toggleChat()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="messages-container" #scrollMe>
+      <div *ngFor="let msg of messages" class="message-row" [class.user]="msg.type === 'user'">
+        <div class="message-bubble" [class.has-image]="msg.image">
+          <img *ngIf="msg.image" [src]="msg.image" class="msg-img">
+          
+          <!-- Render HTML for AI, plain text for User -->
+          <div *ngIf="msg.type === 'ai'" [innerHTML]="msg.safeText"></div>
+          <p *ngIf="msg.type === 'user'">{{ msg.text }}</p>
+          
+          <span class="time">{{ msg.time | date:'shortTime' }}</span>
+        </div>
+      </div>
+      <div *ngIf="isTyping()" class="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+
+      <!-- Quick Shortcuts -->
+      <div class="chat-shortcuts" *ngIf="messages.length < 5">
+        <button class="shortcut-btn" (click)="sendShortcut('Is my plant dying?')">Is my plant dying? 🥀</button>
+        <button class="shortcut-btn" (click)="sendShortcut('Pani ki kami (Watering help)')">Watering help 💧</button>
+        <button class="shortcut-btn" (click)="sendShortcut('Fertilizer tips')">Fertilizer tips 🧪</button>
+        <button class="shortcut-btn" (click)="sendShortcut('Yellowing leaves')">Yellow leaves? 🍂</button>
+      </div>
+    </div>
+
+    <!-- History Drawer Overlay -->
+    <div class="history-drawer" [class.open]="showHistory()">
+      <div class="drawer-header">
+        <h5><i class="fas fa-history"></i> Chat History</h5>
+        <button class="close-drawer" (click)="toggleHistory()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="history-list">
+        <div *ngIf="messages.length === 0" class="no-history">No history found.</div>
+        <div *ngFor="let msg of messages" class="history-item" [class.user]="msg.type === 'user'">
+          <div class="item-meta">
+            <span class="sender">{{ msg.type === 'user' ? 'You' : 'AI Assistant' }}</span>
+            <span class="time">{{ msg.time | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="item-text">{{ msg.text }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-footer">
+      <div class="input-container">
+        <div *ngIf="selectedImage" class="image-preview-strip">
+          <div class="preview-thumb">
+            <img [src]="selectedImage">
+            <button class="remove-img" (click)="$event.stopPropagation(); removeImage()">
+              <i class="fas fa-times-circle"></i>
+            </button>
+          </div>
+          <span class="preview-text">Plant image attached</span>
+        </div>
+        
+        <div class="input-actions">
+          <button class="plus-btn" (click)="triggerFileInput()" title="Add Plant Photo">
+            <i class="fas fa-camera-retro"></i>
+          </button>
+          <input 
+            #fileInput
+            type="file" 
+            hidden 
+            accept="image/*" 
+            (change)="onFileSelected($event)"
+          >
+          <input 
+            type="text" 
+            [(ngModel)]="userMessage" 
+            (keyup.enter)="sendMessage()" 
+            placeholder="Ask about your plant..."
+            class="chat-input"
+          >
+          <button class="send-btn" [disabled]="!userMessage.trim() && !selectedImage" (click)="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

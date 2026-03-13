@@ -1,5 +1,7 @@
 <div class="delivery-layout">
-    <!-- Sidebar -->
+
+
+    <!-- Main Layout -->
     <aside class="sidebar">
         <div class="logo-section">
             <div class="logo-circle">
@@ -9,53 +11,49 @@
         </div>
 
         <nav class="nav-menu">
-            <a class="nav-item" [class.active]="activeMainTab === 'dashboard'" (click)="setTab('dashboard')">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders')">
-                <i class="fas fa-shopping-basket"></i> Orders
-            </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'payment'" (click)="setTab('payment')">
-                <i class="fas fa-credit-card"></i> Payment
+            <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders', '')">
+                <i class="fas fa-chart-pie"></i> Reports & Dashboard
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'customers'" (click)="setTab('customers')">
-                <i class="fas fa-user-friends"></i> Customers
+                <i class="fas fa-boxes-stacked"></i> All Shipments
+            </a>
+            <a class="nav-item" [class.active]="activeMainTab === 'payments'" (click)="setTab('payments')">
+                <i class="fas fa-indian-rupee-sign"></i> Payments
+            </a>
+            <a class="nav-item" [class.active]="activeMainTab === 'settlements'" (click)="setTab('settlements')">
+                <i class="fas fa-hand-holding-dollar"></i> Settlements
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'setting'" (click)="setTab('setting')">
-                <i class="fas fa-cog"></i> Setting
+                <i class="fas fa-sliders"></i> Configurations
             </a>
         </nav>
 
         <!-- Bottom Courier Section -->
-        <div class="courier-footer"
-            style="margin-top: auto; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <p
-                style="font-size: 0.7rem; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem; font-weight: 800;">
-                Courier Partners</p>
-            <div class="courier-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div class="courier-item" [class.selected]="selectedCourier === 'Blue Dart'"
-                    (click)="selectCourier('Blue Dart')"
-                    style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
-                    <i class="fas fa-bolt" style="color: #60a5fa;"></i>
-                    <span style="font-size: 0.85rem; font-weight: 700;">Blue Dart</span>
-                </div>
-                <div class="courier-item" [class.selected]="selectedCourier === 'Delhivery'"
-                    (click)="selectCourier('Delhivery')"
-                    style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
-                    <i class="fas fa-paper-plane" style="color: #34d399;"></i>
-                    <span style="font-size: 0.85rem; font-weight: 700;">Delhivery</span>
-                </div>
-                <div class="courier-item" [class.selected]="selectedCourier === 'DTDC'" (click)="selectCourier('DTDC')"
-                    style="cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 10px; transition: all 0.2s;">
-                    <i class="fas fa-truck" style="color: #f87171;"></i>
-                    <span style="font-size: 0.85rem; font-weight: 700;">DTDC</span>
+        <div class="courier-footer">
+            <span class="courier-label">Courier Partners</span>
+            <div class="courier-list">
+                <div *ngFor="let courier of couriers" class="courier-item"
+                    [class.selected]="selectedCourier === courier.name" (click)="selectCourier(courier.name)">
+                    <div class="courier-icon-box">
+                        <i class="fas {{ courier.icon || 'fa-truck' }}"></i>
+                    </div>
+                    <div class="courier-item-info">
+                        <span class="courier-name">{{ courier.name }}</span>
+                        <span class="courier-pending-badge"
+                            *ngIf="getSettlementForCourier(courier.name).totalPending > 0">
+                            ₹{{ getSettlementForCourier(courier.name).totalPending | number:'1.0-0' }} pending
+                        </span>
+                    </div>
+
+                    <i class="fas fa-lock lock-status locked" *ngIf="activeUnlockedCourier !== courier.name"></i>
+                    <i class="fas fa-lock-open lock-status unlocked" *ngIf="activeUnlockedCourier === courier.name"></i>
                 </div>
             </div>
         </div>
 
-        <div class="logout-section" style="margin-top: 2rem;">
-            <a href="javascript:void(0)" (click)="backToAdmin()" class="nav-item" style="color: #60a5fa;">
-                <i class="fas fa-arrow-left"></i> Back to Admin
+        <div class="logout-section">
+            <a href="javascript:void(0)" (click)="backToAdmin()" class="back-btn">
+                <i class="fas fa-arrow-left-long"></i> Return to Admin
             </a>
         </div>
     </aside>
@@ -67,10 +65,9 @@
                 <h1>Delivery Management</h1>
                 <p>Track and manage your plant shipments in real-time.</p>
             </div>
-            <div class="user-profile"
-                style="display: flex; align-items: center; gap: 1rem; background: white; padding: 0.5rem 1.25rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
+            <div class="user-profile">
                 <div class="avatar"
-                    style="width: 40px; height: 40px; background: #166534; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    style="width: 40px; height: 40px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
                     {{ authService.getCurrentUser()?.charAt(0) || 'D' }}
                 </div>
                 <div style="display: flex; flex-direction: column;">
@@ -82,15 +79,16 @@
         </header>
 
         <!-- Dashboard / Orders View -->
-        <ng-container *ngIf="activeMainTab === 'dashboard' || activeMainTab === 'orders'">
+        <ng-container *ngIf="activeMainTab === 'orders'">
             <!-- Stats Row -->
-            <div class="stats-row" *ngIf="activeMainTab === 'dashboard'">
+            <div class="stats-row" *ngIf="activeMainTab === 'orders' && selectedCourier">
                 <div class="stat-card">
-                    <div class="stat-icon pending">
-                        <i class="fas fa-clock"></i>
+                    <div class="stat-icon pending"
+                        style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); color: #0284c7;">
+                        <i class="fas fa-list-check"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="label">Pending Deliveries</span>
+                        <span class="label">Order Queue</span>
                         <span class="count">{{ getCount('Pending') }}</span>
                     </div>
                 </div>
@@ -114,16 +112,313 @@
                 </div>
             </div>
 
-            <!-- Control Bar -->
-            <div class="control-bar">
+            <!-- Main Dashboard View (Central Monitoring) -->
+            <ng-container *ngIf="activeMainTab === 'orders' && !selectedCourier">
+                <div class="reports-dashboard">
+
+                    <!-- Performance Highlight -->
+                    <div class="top-performance-card" *ngIf="topCourier">
+                        <div class="glass-streak"></div>
+                        <div class="performance-info">
+                            <span class="performance-label">Top Courier This Month</span>
+                            <h2 class="performance-value">{{ topCourier?.name }}</h2>
+                            <p class="performance-subtext">Handling {{ topCourier?.total }} total shipments</p>
+                        </div>
+                        <div class="performance-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                    </div>
+
+                    <!-- Courier Reports Grid -->
+                    <div class="reports-grid">
+                        <div class="report-card" *ngFor="let courier of comparisonData">
+                            <div class="report-card-header">
+                                <div class="courier-badge-large"
+                                    [style.background]="(getPartnerColor(courier.name) || '#166534') + '20'"
+                                    [style.color]="getPartnerColor(courier.name) || '#166534'">
+                                    <i class="fas {{ getPartnerIcon(courier.name) }}"></i>
+                                </div>
+                                <h3 class="courier-title">{{ courier.name }}</h3>
+                            </div>
+
+                            <div class="report-stats-list">
+                                <!-- Out for Delivery -->
+                                <div class="report-stat-item">
+                                    <div class="stat-header-row">
+                                        <span class="stat-name">Out for Delivery</span>
+                                        <span class="stat-value text-blue">{{ courier.shipped }}</span>
+                                    </div>
+                                    <div class="stat-progress-bg">
+                                        <div class="stat-progress-bar bg-blue"
+                                            [style.width.%]="(courier.shipped / (courier.total || 1)) * 100">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Delivered -->
+                                <div class="report-stat-item">
+                                    <div class="stat-header-row">
+                                        <span class="stat-name">Delivered</span>
+                                        <span class="stat-value text-green">{{ courier.delivered }}</span>
+                                    </div>
+                                    <div class="stat-progress-bg">
+                                        <div class="stat-progress-bar bg-green"
+                                            [style.width.%]="(courier.delivered / (courier.total || 1)) * 100">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- EfficiencyRate -->
+                                <div class="report-stat-item">
+                                    <div class="stat-header-row">
+                                        <span class="stat-name">Efficiency Rate</span>
+                                        <span class="stat-value text-purple">{{ ((courier.delivered / (courier.total ||
+                                            1)) * 100) | number:'1.0-0' }}%</span>
+                                    </div>
+                                    <div class="stat-progress-bg">
+                                        <div class="stat-progress-bar bg-purple"
+                                            [style.width.%]="(courier.delivered / (courier.total || 1)) * 100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="report-footer">
+                                <span class="total-orders-label">Total Assigned <strong
+                                        style="color: #0f172a; margin-left: 5px;">{{ courier.total || 0
+                                        }}</strong></span>
+                                <button class="btn-view" (click)="toggleCourierChart(courier.name)"
+                                    style="margin-left: auto; padding: 0.6rem 1.25rem; background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);">View
+                                    Analytics</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Popup Modal (Courier Overview) -->
+                    <div class="modal-overlay" *ngIf="dashboardChartCourier" style="z-index: 3000;">
+                        <div class="dashboard-modal-content"
+                            style="width: 95%; max-width: 1200px; height: 90vh; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.4s ease; box-shadow: 0 30px 60px rgba(0,0,0,0.3);">
+
+                            <!-- Modal Header -->
+                            <div class="dashboard-modal-header"
+                                style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div class="courier-badge-large"
+                                        [style.background]="(getPartnerColor(dashboardChartCourier) || '#166534') + '20'"
+                                        [style.color]="getPartnerColor(dashboardChartCourier) || '#166534'">
+                                        <i class="fas {{ getPartnerIcon(dashboardChartCourier) }}"></i>
+                                    </div>
+                                    <div>
+                                        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 900; color: #0f172a;">{{
+                                            dashboardChartCourier }} Overview</h2>
+                                        <span
+                                            style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Real-time
+                                            Statistics & Orders</span>
+                                    </div>
+                                </div>
+                                <button (click)="dashboardChartCourier = null"
+                                    style="background: #f1f5f9; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: #64748b; transition: all 0.2s;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Modal Body -->
+                            <div class="dashboard-modal-body"
+                                style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2.5rem;">
+
+                                <!-- Top Charts Row -->
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+
+                                    <!-- Order Distribution Chart -->
+                                    <div class="pie-distribution-flex premium-chart-container">
+                                        <div class="card-header-abs">
+                                            <h3>Weekly Trends</h3>
+                                        </div>
+
+                                        <div class="hologram-pie-container" style="margin-top: 2rem;">
+                                            <div class="pie-glow-layer"
+                                                [style.background]="'radial-gradient(circle, #3b82f6 0%, transparent 70%)'">
+                                            </div>
+                                            <svg viewBox="0 0 100 100" class="donut-svg-interactive">
+                                                <circle *ngFor="let slice of daySlices"
+                                                    class="donut-segment-interactive" cx="50" cy="50" r="25"
+                                                    fill="transparent" pathLength="100" [attr.stroke]="slice.color"
+                                                    stroke-width="50" [attr.stroke-dasharray]="slice.dashArray"
+                                                    [attr.stroke-dashoffset]="slice.dashOffset"
+                                                    (mouseenter)="hoveredSalesSegment = slice"
+                                                    (mouseleave)="hoveredSalesSegment = null"></circle>
+                                            </svg>
+                                            <div class="pie-inner-glass">
+                                                <ng-container *ngIf="!hoveredSalesSegment">
+                                                    <span class="revenue-val">{{totalWeeklyOrders}}</span>
+                                                    <span class="revenue-lbl">Total Items</span>
+                                                </ng-container>
+                                                <ng-container *ngIf="hoveredSalesSegment">
+                                                    <span class="revenue-val"
+                                                        [style.color]="hoveredSalesSegment.color">{{hoveredSalesSegment.percentage}}%</span>
+                                                    <span class="revenue-lbl">{{hoveredSalesSegment.label}}</span>
+                                                </ng-container>
+                                            </div>
+                                        </div>
+
+                                        <div class="modern-grid-legend">
+                                            <div class="legend-card-item" *ngFor="let slice of daySlices">
+                                                <div class="cat-chip" [style.background]="slice.color"></div>
+                                                <div class="legend-info">
+                                                    <span class="cat-head">{{slice.label}}</span>
+                                                    <span class="cat-meta">{{slice.count}} orders
+                                                        ({{slice.percentage}}%)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Territory Coverage Section -->
+                                    <div class="territory-coverage-section"
+                                        style="background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(226, 232, 240, 0.8); padding: 2.5rem; display: flex; flex-direction: column;">
+                                        <div
+                                            style="display: flex; align-items: center; gap: 16px; margin-bottom: 2rem;">
+                                            <div
+                                                style="background: linear-gradient(135deg, #eff6ff, #dbeafe); width: 68px; height: 68px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #bfdbfe; color: #2563eb; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);">
+                                                <i class="fas fa-map-location-dot"></i>
+                                            </div>
+                                            <div>
+                                                <h3
+                                                    style="margin: 0; font-size: 1.35rem; font-weight: 850; color: #0f172a;">
+                                                    Territory Coverage</h3>
+                                                <p
+                                                    style="margin: 5px 0 0 0; font-size: 0.9rem; color: #64748b; font-weight: 600;">
+                                                    Active regions serviced by {{ dashboardChartCourier }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="state-tags" style="display: flex; flex-wrap: wrap; gap: 0.85rem;">
+                                            <div *ngFor="let state of getTerritoryStates(dashboardChartCourier)"
+                                                style="background: #ffffff; color: #1e293b; font-size: 0.95rem; padding: 12px 22px; border-radius: 14px; font-weight: 700; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.2s;">
+                                                <span
+                                                    style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);"></span>
+                                                {{ state }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recent Deliveries Table (Replaced Pending) -->
+                                <div class="table-card" style="flex: none; min-height: 250px; flex-shrink: 0;">
+                                    <div class="table-header"
+                                        style="background: linear-gradient(90deg, #f0fdf4, #ffffff); border-bottom: 1px solid #dcfce7;">
+                                        <h3 style="color: #166534; display: flex; align-items: center; gap: 10px;"><i
+                                                class="fas fa-circle-check"></i> Recent Success (Last {{
+                                            dashboardDeliveredOrders.length
+                                            }})</h3>
+                                    </div>
+                                    <div style="flex: 1; overflow-x: auto; padding-bottom: 1rem;">
+                                        <table class="delivery-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Customer Name</th>
+                                                    <th>Address</th>
+                                                    <th>Order Date</th>
+                                                    <th>Status</th>
+                                                    <th>Performance</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let order of dashboardDeliveredOrders">
+                                                    <td class="order-id-cell">#{{ order.orderId }}</td>
+                                                    <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest'
+                                                        }}</td>
+                                                    <td class="address-cell">{{ order.userId?.address ||
+                                                        order.shippingAddress || 'N/A' }}, {{ order.userId?.city || ''
+                                                        }}</td>
+                                                    <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
+                                                    <td>
+                                                        <div
+                                                            style="font-size: 0.75rem; font-weight: 800; color: #166534; background: #f0fdf4; padding: 4px 10px; border-radius: 8px; display: inline-block; border: 1px solid #bbf7d0;">
+                                                            Delivered
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div
+                                                            style="display: flex; align-items: center; gap: 5px; color: #fbbf24; font-weight: 800; font-size: 0.85rem;">
+                                                            <i class="fas fa-star"></i> 5.0
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div *ngIf="dashboardDeliveredOrders.length === 0"
+                                            style="text-align: center; padding: 4rem; color: #94a3b8; font-weight: 600; font-size: 1.1rem; border-top: 1px dashed #f1f5f9; margin-top: 5px;">
+                                            <i class="fas fa-award"
+                                                style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+                                            Awaiting initial deliveries for this partner.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Out for Delivery Table -->
+                                <div class="table-card" style="flex: none; min-height: 250px; flex-shrink: 0;">
+                                    <div class="table-header"
+                                        style="background: linear-gradient(90deg, #eff6ff, #ffffff); border-bottom: 1px solid #dbeafe;">
+                                        <h3 style="color: #2563eb; display: flex; align-items: center; gap: 10px;"><i
+                                                class="fas fa-truck-fast"></i> Out for Delivery ({{
+                                            dashboardOutOrders.length }})</h3>
+                                    </div>
+                                    <div style="flex: 1; overflow-x: auto; padding-bottom: 1rem;">
+                                        <table class="delivery-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Tracking ID</th>
+                                                    <th>Address</th>
+                                                    <th>Expected Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let order of dashboardOutOrders">
+                                                    <td class="order-id-cell">#{{ order.orderId }}</td>
+                                                    <td class="customer-name-cell"><span
+                                                            style="background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px;">{{
+                                                            order.trackingId || 'TRK-' + (order.orderId | slice:0:6)
+                                                            }}</span></td>
+                                                    <td class="address-cell">{{ order.userId?.address ||
+                                                        order.shippingAddress || 'N/A' }}, {{ order.userId?.city || ''
+                                                        }}</td>
+                                                    <td class="date-cell">
+                                                        <div style="font-weight: 700; color: #0f172a;">{{
+                                                            order.expectedDeliveryDate | date:'mediumDate' }}</div>
+                                                        <div
+                                                            style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                                                            {{ getDaysRemaining(order.expectedDeliveryDate) }}</div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div *ngIf="dashboardOutOrders.length === 0"
+                                            style="text-align: center; padding: 4rem; color: #94a3b8; font-weight: 600; font-size: 1.1rem; border-top: 1px dashed #f1f5f9; margin-top: 5px;">
+                                            <i class="fas fa-truck-ramp-box"
+                                                style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+                                            There are currently no orders out for delivery.
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- Control Bar (Courier Specific) -->
+            <div class="control-bar" *ngIf="selectedCourier">
                 <div class="filter-group">
                     <span class="filter-label">Filter:</span>
                     <button class="filter-btn" [class.active]="filterStatus === 'All'"
                         (click)="setFilter('All')">All</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Pending'"
-                        (click)="setFilter('Pending')">Pending</button>
+                        (click)="setFilter('Pending')">Ready to Ship</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Shipped'"
-                        (click)="setFilter('Shipped')">Out for Delivery</button>
+                        (click)="setFilter('Shipped')">Out for
+                        Delivery</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Delivered'"
                         (click)="setFilter('Delivered')">Delivered</button>
                 </div>
@@ -135,7 +430,7 @@
             </div>
 
             <!-- Table Container -->
-            <div class="table-card">
+            <div class="table-card" *ngIf="selectedCourier">
                 <div class="table-header">
                     <h3>Delivery Orders</h3>
                 </div>
@@ -147,24 +442,49 @@
                                 <th>Order ID</th>
                                 <th>Customer Name</th>
                                 <th>Address</th>
+                                <th>Order Date</th>
+                                <th>Expected Delivery</th>
                                 <th>Status</th>
                                 <th style="text-align: center;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let order of filteredOrdersV2">
-                                <td class="order-id-cell">#{{ order.orderId }}</td>
+                                <td class="order-id-cell">{{ order.orderId }}</td>
                                 <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest' }}</td>
-                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
+                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A'
+                                    }},
                                     {{
                                     order.userId?.city || '' }}</td>
+                                <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
+                                <td>
+                                    <input #dateInput type="date"
+                                        [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
+                                        (change)="updateExpectedDate(order.orderId, $event)"
+                                        (click)="dateInput.showPicker()" [disabled]="order.status === 'Delivered'">
+                                </td>
                                 <td>
                                     <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : order.status }}
+                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : (order.status === 'Pending'
+                                        ? 'Ready' : order.status) }}
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button class="btn-view" *ngIf="order.status !== 'Delivered'">View</button>
+                                    <div class="action-stack">
+                                        <div class="days-indicator" [ngClass]="{'soon': getDaysRemaining(order.expectedDeliveryDate) === 'Tomorrow' || getDaysRemaining(order.expectedDeliveryDate) === 'Today'}">
+                                            {{ getDaysRemaining(order.expectedDeliveryDate) }}
+                                        </div>
+                                        
+                                        <div class="btn-group-mini">
+                                            <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)" class="btn-action-mini ship" title="Dispatch Order">
+                                                <i class="fas fa-truck-fast"></i> Ship
+                                            </button>
+                                            
+                                            <button (click)="sendWhatsApp(order)" class="btn-action-mini whatsapp" title="Notify Customer via WhatsApp">
+                                                <i class="fab fa-whatsapp"></i> Notify
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="delivered-check" *ngIf="order.status === 'Delivered'">
                                         <i class="fas fa-check"></i>
                                     </div>
@@ -181,7 +501,8 @@
 
                 <!-- Table Footer / Pagination -->
                 <div class="table-footer">
-                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length > 5 ? 5 : filteredOrdersV2.length
+                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length > 5 ? 5 :
+                        filteredOrdersV2.length
                         }} of
                         {{ filteredOrdersV2.length }} entries</span>
                     <div class="pagination">
@@ -189,51 +510,950 @@
                         <button class="page-btn">2</button>
                         <button class="page-btn">3</button>
                         <button class="page-btn">...</button>
-                        <button class="page-btn next">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Courier-Specific Settlement Tracker -->
+            <div class="settlement-section" *ngIf="selectedCourier" style="margin-top: 2rem;">
+                <div class="settlement-courier-header" style="border-radius: 20px 20px 0 0;">
+                    <div class="settlement-courier-info">
+                        <div class="settlement-courier-icon">
+                            <i class="fas fa-hand-holding-dollar"></i>
+                        </div>
+                        <div>
+                            <h3 class="settlement-courier-name">Settlement Tracking: {{ selectedCourier }}</h3>
+                            <p class="settlement-courier-fee">Real-time payment & collection status for this partner</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settlement-grid">
+                    <!-- UPI Settlement Card -->
+                    <div class="settlement-card upi-card">
+                        <div class="settlement-card-head">
+                            <div class="settlement-icon-badge upi-badge">
+                                <i class="fas fa-arrow-right-to-bracket"></i>
+                            </div>
+                            <div>
+                                <h4>UPI Orders · Pay Charges</h4>
+                                <p>Delivery fee owed to courier</p>
+                            </div>
+                        </div>
+
+                        <div class="settlement-stats-row">
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Total Owed</span>
+                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(selectedCourier).upiTotalOwed | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Paid</span>
+                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(selectedCourier).upiPaid | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Pending</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).upiPending | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Unsettled UPI -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).upiUnsettledOrders.length > 0">
+                            <div class="settlement-list-head pending-head">
+                                <i class="fas fa-clock"></i> Pending Payment
+                            </div>
+                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).upiUnsettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amount">₹{{ courierFees[selectedCourier] || 0 }}</div>
+                                <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
+                                    Pay Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COD Settlement Card -->
+                    <div class="settlement-card cod-card">
+                        <div class="settlement-card-head">
+                            <div class="settlement-icon-badge cod-badge">
+                                <i class="fas fa-arrow-left-long"></i>
+                            </div>
+                            <div>
+                                <h4>COD Orders · Collect Funds</h4>
+                                <p>Funds to receive from courier</p>
+                            </div>
+                        </div>
+
+                        <div class="settlement-stats-row" style="grid-template-columns: repeat(2, 1fr);">
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Total Expected</span>
+                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(selectedCourier).codAdminGets | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Pending</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).codPending | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Unsettled COD -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).codUnsettledOrders.length > 0">
+                            <div class="settlement-list-head pending-head">
+                                <i class="fas fa-clock"></i> Pending Collection
+                            </div>
+                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).codUnsettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amounts-dual">
+                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[selectedCourier] || 0)) | number:'1.0-0' }}</span>
+                                </div>
+                                <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
+                                    Collect
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </ng-container>
 
-        <!-- Payment View -->
-        <div class="payment-view" *ngIf="activeMainTab === 'payment'">
+
+
+        <!-- Shipments View (Previously Payment View) -->
+        <div class="customers-view payment-view" *ngIf="activeMainTab === 'customers'">
+
+
             <div class="table-card">
                 <div class="table-header">
-                    <h3>Payment History ({{ selectedCourier }})</h3>
+                    <h3>All Shipment Records ({{ selectedCourier || 'All Partners' }})</h3>
                 </div>
-                <div class="empty-table">
+                <div style="flex: 1; overflow-x: auto;">
+                    <table class="delivery-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th *ngIf="!selectedCourier">Partner</th>
+                                <th>Method</th>
+                                <th>Order Amount</th>
+                                <th>Courier Charges</th>
+                                <th>Final Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let order of paymentFilteredOrders">
+                                <td class="order-id-cell">#{{ order.orderId }}</td>
+                                <td *ngIf="!selectedCourier" style="font-weight: 800; color: #166534;">
+                                    {{ order.courierName || getCourierForState(extractState(order)) }}
+                                </td>
+                                <td>
+                                    <span style="font-weight: 700; color: #1e293b;">
+                                        {{ order.paymentMethod === 'Cash on Delivery' ? 'COD' : order.paymentMethod
+                                        }}
+                                    </span>
+                                </td>
+                                <td>₹{{ order.totalAmount }}</td>
+                                <td style="color: #ef4444; font-weight: 700;">₹{{ getFeeForOrder(order) }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                                            {{ order.status }}
+                                        </span>
+                                        <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)" class="btn-action-mini ship">
+                                            <i class="fas fa-truck-fast"></i> Ship
+                                        </button>
+                                        <button (click)="sendWhatsApp(order)" class="btn-action-mini whatsapp">
+                                            <i class="fab fa-whatsapp"></i> Notify
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-table" *ngIf="paymentFilteredOrders.length === 0">
                     <i class="fas fa-credit-card"></i>
-                    <p>No payment records found for {{ selectedCourier }}.</p>
+                    <p>No records found associated with {{ selectedCourier || 'any courier' }}.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Customers View -->
-        <div class="customers-view" *ngIf="activeMainTab === 'customers'">
+        <!-- Payments View -->
+        <div class="payments-view" *ngIf="activeMainTab === 'payments'">
+
+            <!-- Payment Summary Stats -->
+            <div class="stats-row" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; box-shadow: 0 6px 16px rgba(22, 163, 74, 0.2);">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="label">Total Revenue</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalRevenue | number:'1.0-0' }}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, #fff7ed, #ffedd5); color: #ea580c; box-shadow: 0 6px 16px rgba(234, 88, 12, 0.2);">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="label">COD Orders</span>
+                        <span class="count">{{ paymentStats.codCount }}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="label">UPI / Online</span>
+                        <span class="count">{{ paymentStats.onlineCount }}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, #fdf2f8, #fce7f3); color: #db2777; box-shadow: 0 6px 16px rgba(219, 39, 119, 0.2);">
+                        <i class="fas fa-truck-arrow-right"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="label">Courier Charges</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalCourierCharges | number:'1.0-0' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Courier Settlement Summary -->
+            <div class="stats-row" style="grid-template-columns: repeat(2, 1fr); margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="stat-card" style="padding: 1.5rem;">
+                    <div class="stat-info" style="width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
+                            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                                <i class="fas fa-hand-holding-dollar"></i>
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="label" style="text-transform: uppercase;">Owed to Partners (Delivery Fees)</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalOwedToCouriers | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Paid: <span style="color: #16a34a;">₹{{ paymentStats.totalPaidToCouriers | number:'1.0-0' }}</span></div>
+                            <div>Pending: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingToCouriers | number:'1.0-0' }}</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="padding: 1.5rem;">
+                    <div class="stat-info" style="width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
+                            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                                <i class="fas fa-sack-dollar"></i>
+                            </div>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="label" style="text-transform: uppercase;">COD Collection Balance</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalCollectedFromCouriers | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Pending Transfer: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingFromCouriers | number:'1.0-0' }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Payment Records Table -->
             <div class="table-card">
-                <div class="table-header">
-                    <h3>Customers List ({{ selectedCourier }})</h3>
+                <div class="table-header"
+                    style="background: linear-gradient(90deg, #fffbeb, #ffffff); border-bottom: 1px solid #fde68a;">
+                    <h3 style="color: #92400e; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-receipt"></i> Payment Records ({{ paymentViewOrders.length }})
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div class="filter-group" style="background: #fef3c7;">
+                            <span class="filter-label" style="color: #92400e;">Method:</span>
+                            <button class="filter-btn" [class.active]="paymentFilterMethod === 'All'"
+                                (click)="paymentFilterMethod = 'All'"
+                                [style.background]="paymentFilterMethod === 'All' ? '#92400e' : 'transparent'"
+                                [style.color]="paymentFilterMethod === 'All' ? 'white' : '#92400e'">All</button>
+                            <button class="filter-btn" [class.active]="paymentFilterMethod === 'COD'"
+                                (click)="paymentFilterMethod = 'COD'"
+                                [style.background]="paymentFilterMethod === 'COD' ? '#92400e' : 'transparent'"
+                                [style.color]="paymentFilterMethod === 'COD' ? 'white' : '#92400e'">COD</button>
+                            <button class="filter-btn" [class.active]="paymentFilterMethod === 'UPI'"
+                                (click)="paymentFilterMethod = 'UPI'"
+                                [style.background]="paymentFilterMethod === 'UPI' ? '#92400e' : 'transparent'"
+                                [style.color]="paymentFilterMethod === 'UPI' ? 'white' : '#92400e'">UPI</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="empty-table">
-                    <i class="fas fa-user-friends"></i>
-                    <p>No customers associated with {{ selectedCourier }} shipments.</p>
+                <div style="flex: 1; overflow-x: auto;">
+                    <table class="delivery-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Payment Method</th>
+                                <th>Order Amount</th>
+                                <th>Courier Partner</th>
+                                <th>Courier Fee</th>
+                                <th>Order Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let order of paymentViewOrders">
+                                <td class="order-id-cell">#{{ order.orderId }}</td>
+                                <td class="customer-name-cell">{{ order.userId?.fullName || order.userName || 'Guest' }}</td>
+                                <td>
+                                    <div [style.display]="'inline-flex'" [style.alignItems]="'center'" [style.gap]="'8px'"
+                                        [style.padding]="'6px 14px'" [style.borderRadius]="'10px'" [style.fontWeight]="'800'"
+                                        [style.fontSize]="'0.8rem'"
+                                        [style.background]="isPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
+                                        [style.color]="isPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
+                                        [style.border]="isPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
+                                        <i class="fas" [class.fa-money-bill-wave]="isPaymentCOD(order.paymentMethod)"
+                                            [class.fa-qrcode]="!isPaymentCOD(order.paymentMethod)"></i>
+                                        {{ isPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
+                                    </div>
+                                </td>
+                                <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                                <td>
+                                    <span style="font-weight: 700; color: #166534; font-size: 0.85rem;">{{ order.courierName || getCourierForState(extractState(order)) || '—' }}</span>
+                                </td>
+                                <td style="color: #ef4444; font-weight: 700;">₹{{ getFeeForOrder(order) }}</td>
+                                <td>
+                                    <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td class="date-cell" style="font-weight: 600; color: #64748b;">{{ order.orderDate | date:'mediumDate' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-table" *ngIf="paymentViewOrders.length === 0">
+                        <i class="fas fa-receipt" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <p>No payment records found for the selected filter.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Setting View -->
+        <!-- Settlements View -->
+        <div class="settlements-view" *ngIf="activeMainTab === 'settlements'">
+            <!-- ===== COURIER SETTLEMENT TRACKER ===== -->
+            <div class="settlement-section" *ngFor="let courier of couriers">
+                <div class="settlement-courier-header">
+                    <div class="settlement-courier-info">
+                        <div class="settlement-courier-icon">
+                            <i class="fas {{ courier.icon || 'fa-truck' }}"></i>
+                        </div>
+                        <div>
+                            <h3 class="settlement-courier-name">{{ courier.name }}</h3>
+                            <p class="settlement-courier-fee">₹{{ courierFees[courier.name] || 0 }} per delivery</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settlement-grid">
+
+                    <!-- UPI Settlement Card (Admin → Courier: Pay delivery charges) -->
+                    <div class="settlement-card upi-card">
+                        <div class="settlement-card-head">
+                            <div class="settlement-icon-badge upi-badge">
+                                <i class="fas fa-arrow-right-to-bracket"></i>
+                            </div>
+                            <div>
+                                <h4>UPI Orders · Pay to Courier</h4>
+                                <p>Delivery charges owed to {{ courier.name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="settlement-stats-row">
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Total Owed</span>
+                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(courier.name).upiTotalOwed | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Paid</span>
+                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).upiPaid | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Pending</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).upiPending | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Unsettled UPI Orders -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiUnsettledOrders.length > 0">
+                            <div class="settlement-list-head pending-head">
+                                <i class="fas fa-clock"></i> Pending Payment ({{ getCourierSettlement(courier.name).upiUnsettledOrders.length }})
+                            </div>
+                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).upiUnsettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amount">₹{{ courierFees[courier.name] || 0 }}</div>
+                                <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
+                                    <i class="fas fa-paper-plane"></i> Pay Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Settled UPI Orders -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiSettledOrders.length > 0">
+                            <div class="settlement-list-head settled-head">
+                                <i class="fas fa-check-circle"></i> Paid ({{ getCourierSettlement(courier.name).upiSettledOrders.length }})
+                            </div>
+                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).upiSettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amount" style="color: #16a34a;">₹{{ courierFees[courier.name] || 0 }}</div>
+                                <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
+                                    <i class="fas fa-rotate-left"></i> Undo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).upiOrders === 0">
+                            <i class="fas fa-inbox"></i>
+                            <span>No UPI orders for this courier</span>
+                        </div>
+                    </div>
+
+                    <!-- COD Settlement Card (Courier → Admin: Collect order payments) -->
+                    <div class="settlement-card cod-card">
+                        <div class="settlement-card-head">
+                            <div class="settlement-icon-badge cod-badge">
+                                <i class="fas fa-arrow-left-long"></i>
+                            </div>
+                            <div>
+                                <h4>COD Orders · Collect from Courier</h4>
+                                <p>Payment {{ courier.name }} owes (after deducting delivery fee)</p>
+                            </div>
+                        </div>
+
+                        <div class="settlement-stats-row">
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Total Collected</span>
+                                <span class="sstat-value" style="color: #ea580c;">₹{{ getCourierSettlement(courier.name).codTotalCollected | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Courier Keeps</span>
+                                <span class="sstat-value" style="color: #7c3aed;">₹{{ getCourierSettlement(courier.name).codCourierKeeps | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Admin Receives</span>
+                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(courier.name).codAdminGets | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="settlement-stats-row" style="margin-top: -0.5rem;">
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Received</span>
+                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).codReceived | number:'1.0-0' }}</span>
+                            </div>
+                            <div class="settlement-stat">
+                                <span class="sstat-label">Pending</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).codPending | number:'1.0-0' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Unsettled COD Orders -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codUnsettledOrders.length > 0">
+                            <div class="settlement-list-head pending-head">
+                                <i class="fas fa-clock"></i> Pending Collection ({{ getCourierSettlement(courier.name).codUnsettledOrders.length }})
+                            </div>
+                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).codUnsettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amounts-dual">
+                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</span>
+                                    <span class="so-amount-sub">of ₹{{ order.totalAmount | number:'1.0-0' }}</span>
+                                </div>
+                                <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
+                                    <i class="fas fa-hand-holding-dollar"></i> Collect
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Settled COD Orders -->
+                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codSettledOrders.length > 0">
+                            <div class="settlement-list-head settled-head">
+                                <i class="fas fa-check-circle"></i> Collected ({{ getCourierSettlement(courier.name).codSettledOrders.length }})
+                            </div>
+                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).codSettledOrders">
+                                <div class="so-info">
+                                    <span class="so-id">#{{ order.orderId }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                </div>
+                                <div class="so-amount" style="color: #16a34a;">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</div>
+                                <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
+                                    <i class="fas fa-rotate-left"></i> Undo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).codOrders === 0">
+                            <i class="fas fa-inbox"></i>
+                            <span>No COD orders for this courier</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="setting-view" *ngIf="activeMainTab === 'setting'">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3>Panel Settings</h3>
+            <div class="courier-mgmt-card">
+                <div class="mgmt-header">
+                    <div class="mgmt-title-area">
+                        <h3>Courier Management</h3>
+                        <p>Track and manage your logistics partners in real-time.</p>
+                    </div>
+                    <button class="btn-add-courier" (click)="openAddCourier()">
+                        <i class="fas fa-plus-circle"></i> Add New Partner
+                    </button>
                 </div>
-                <div class="empty-table">
-                    <i class="fas fa-cog"></i>
-                    <p>Configuration options will appear here.</p>
+
+                <div class="mgmt-table-wrapper">
+                    <table class="mgmt-table">
+                        <thead>
+                            <tr>
+                                <th>Courier & Contact</th>
+                                <th>Service Fee</th>
+                                <th>Service Area</th>
+                                <th>Credentials</th>
+                                <th>Verification</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let c of couriers">
+                                <td>
+                                    <div class="courier-profile">
+                                        <div class="mgmt-icon-box">
+                                            <i class="fas {{ c.icon || 'fa-truck' }}"></i>
+                                        </div>
+                                        <div class="courier-info">
+                                            <div class="c-name">{{ c.name }}</div>
+                                            <div class="c-email"><i class="fas fa-envelope"></i> {{ c.email || 'No
+                                                email' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fee-policy-stack">
+                                        <span class="fee-badge">₹{{ c.fee || 50 }}</span>
+                                        <div class="fee-logic-hint">Min ₹50 • Area Max</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="state-badges">
+                                        <span *ngFor="let s of (c.states || []).slice(0, 2)" class="state-chip">
+                                            {{ s }}
+                                        </span>
+                                        <span *ngIf="(c.states || []).length > 2" class="state-more"
+                                            (click)="openTerritoryView(c)" title="View all coverage">
+                                            +{{ (c.states || []).length - 2 }} more
+                                        </span>
+                                    </div>
+                                </td>
+                                ...
+                                <!-- Territory Coverage Modal (Interactive) -->
+                                <div class="modal-overlay" *ngIf="showTerritoryModal" style="z-index: 5000;">
+                                    <div class="territory-view-modal">
+                                        <div class="modal-header">
+                                            <div class="logo-circle"
+                                                style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                                                <i class="fas fa-map-location-dot"></i>
+                                            </div>
+                                            <div class="header-text">
+                                                <h3>Territory Coverage</h3>
+                                                <p>Full service area list for <strong>{{ selectedTerritoryView?.name
+                                                        }}</strong></p>
+                                            </div>
+                                            <button class="close-btn" (click)="closeTerritoryView()"><i
+                                                    class="fas fa-times"></i></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="territory-grid">
+                                                <div *ngFor="let state of selectedTerritoryView?.states" class="t-chip">
+                                                    <i class="fas fa-circle-dot"></i>
+                                                    {{ state }}
+                                                </div>
+                                            </div>
+                                            <div *ngIf="!selectedTerritoryView?.states?.length" class="empty-territory">
+                                                <i class="fas fa-earth-asia"></i>
+                                                <p>No territories assigned to this partner yet.</p>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <span class="total-territories">Total Reach: <strong>{{
+                                                    selectedTerritoryView?.states?.length || 0 }}
+                                                    Locations</strong></span>
+                                            <button class="btn-primary" (click)="closeTerritoryView()">Close
+                                                Overview</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <td>
+                                    <div class="cred-info">
+                                        <div class="c-phone"><i class="fas fa-phone"></i> {{ c.phone || 'N/A' }}</div>
+                                        <div class="c-pass"><code>{{ c.password }}</code></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div *ngIf="c.certificate" class="v-status verified">
+                                        <i class="fas fa-check-decagram"></i>
+                                        <span>Verified (DOC)</span>
+                                    </div>
+                                    <div *ngIf="!c.certificate" class="v-status unverified">
+                                        <i class="fas fa-circle-notch fa-spin"></i>
+                                        <span>Syncing...</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mgmt-actions">
+                                        <button class="btn-edit" (click)="openEditCourier(c)" title="Edit Partner">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-delete" (click)="deleteCourier(c._id)"
+                                            title="Remove Partner">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Courier Modal (Professional Redesign) -->
+        <div class="modal-overlay" *ngIf="showCourierModal"
+            style="display: flex; align-items: center; justify-content: center; padding: 2rem; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; overflow-y: auto;">
+            <div class="password-modal"
+                style="width: 700px; max-width: 100%; border-radius: 32px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; background: white; pointer-events: auto;">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 2.5rem 2rem; position: relative; flex-shrink: 0;">
+                    <div style="position: absolute; top: 0; right: 0; padding: 2rem; opacity: 0.1; font-size: 10rem;">
+                        <i class="fas {{ courierForm.icon || 'fa-truck' }}"></i>
+                    </div>
+                    <div class="lock-icon"
+                        style="background: rgba(255,255,255,0.1); color: white; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="fas" [class.fa-plus]="!editingCourier" [class.fa-pen-nib]="editingCourier"></i>
+                    </div>
+                    <h3 style="color: white; margin-bottom: 0.5rem; font-size: 1.8rem;">{{ editingCourier ? 'Update
+                        Logistics Partner' : 'Onboard New Partner' }}</h3>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem;">Please provide official company
+                        credentials and contact information.</p>
+                </div>
+
+                <div class="modal-body"
+                    style="padding: 2.5rem; background: white; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; overflow-y: auto; flex-grow: 1;">
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Partner
+                            Name</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-building" style="color: #2563eb;"></i>
+                            <input type="text" [(ngModel)]="courierForm.name" placeholder="Official business name"
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Access
+                            Password</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-shield-halved" style="color: #2563eb;"></i>
+                            <input type="text" [(ngModel)]="courierForm.password" placeholder="Dashboard access code"
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Support
+                            Email</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-envelope-open-text" style="color: #2563eb;"></i>
+                            <input type="email" [(ngModel)]="courierForm.email" placeholder="official@company.com"
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Contact
+                            Hotline</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-headset" style="color: #2563eb;"></i>
+                            <input type="tel" [(ngModel)]="courierForm.phone" placeholder="+91-XXXX-XXXXXX"
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div class="input-group-stack" style="grid-column: span 2;">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Service
+                            Territories (Comma separated)</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-map-location-dot" style="color: #2563eb;"></i>
+                            <input type="text" [(ngModel)]="courierForm.states"
+                                placeholder="e.g. Maharashtra, Gujarat, Goa..."
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Base
+                            Handling Fee (Min ₹50)</label>
+                        <div class="input-group" style="margin-top: 0.65rem;">
+                            <i class="fas fa-receipt" style="color: #2563eb;"></i>
+                            <input type="number" [(ngModel)]="courierForm.fee" min="50"
+                                placeholder="Auto-capped by area"
+                                style="height: 54px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc;">
+                        </div>
+                        <p style="margin: 8px 0 0 0; font-size: 0.7rem; color: #94a3b8; font-weight: 600;">Fee adjusts
+                            based on delivery territory (Max logic applied).</p>
+                    </div>
+
+                    <div class="input-group-stack">
+                        <label
+                            style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Verified
+                            Certificate (PDF/PPT < 800KB)</label>
+                                <div class="input-group"
+                                    style="margin-top: 0.65rem; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 0.5rem; transition: all 0.2s;">
+                                    <i class="fas fa-file-export" style="color: #2563eb; margin-left: 1rem;"></i>
+                                    <input type="file" (change)="onFileSelected($event)" accept=".pdf,.ppt,.pptx"
+                                        style="border: none; background: transparent; padding-left: 3rem; font-size: 0.85rem; height: 38px; cursor: pointer;">
+                                </div>
+                                <div *ngIf="courierForm.certificate"
+                                    style="font-size: 0.7rem; color: #059669; margin-top: 8px; font-weight: 700;">
+                                    <i class="fas fa-check-double"></i> Document attached successfully
+                                </div>
+                    </div>
+
+                    <div style="grid-column: span 2;">
+                        <p class="error-msg" *ngIf="managementError"
+                            style="text-align: left; margin: 0; padding: 12px; background: #fff1f2; color: #e11d48; border-radius: 10px; font-size: 0.85rem; border: 1px solid #fee2e2;">
+                            <i class="fas fa-circle-exclamation"></i> {{ managementError }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="modal-footer"
+                    style="padding: 1.5rem 2.5rem; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 1rem; flex-shrink: 0;">
+                    <button class="btn-cancel" (click)="showCourierModal = false"
+                        style="background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 12px 24px; border-radius: 12px; font-weight: 700; height: auto;">Cancel</button>
+                    <button class="btn-verify" (click)="saveCourier()"
+                        style="background: #1e293b; color: white; border: none; padding: 12px 32px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; height: auto;">
+                        <i class="fas fa-cloud-arrow-up"></i> {{ editingCourier ? 'Update Record' : 'Save Partner'
+                        }}
+                    </button>
                 </div>
             </div>
         </div>
 
 
     </main>
+
+    <!-- Password Protection Modal -->
+    <div class="modal-overlay" *ngIf="showPasswordModal">
+        <div class="password-modal">
+            <div class="modal-header">
+                <div class="lock-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3>Access Protected</h3>
+                <p>Please enter the password for <strong>{{ pendingCourier }}</strong></p>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input [type]="showPasswordText ? 'text' : 'password'" [(ngModel)]="enteredPassword"
+                        placeholder="Enter password" (keyup.enter)="verifyCourierPassword()">
+                    <button type="button" class="btn-toggle" (click)="togglePasswordVisibility()">
+                        <i class="fas" [class.fa-eye]="!showPasswordText" [class.fa-eye-slash]="showPasswordText"></i>
+                    </button>
+                </div>
+                <p class="error-msg" *ngIf="passwordError">{{ passwordError }}</p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closePasswordModal()">Cancel</button>
+                <button class="btn-verify" (click)="verifyCourierPassword()">Verify & Open</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping / Dispatch Modal -->
+    <div class="modal-overlay" *ngIf="showShipModal" (click)="closeShipModal()" style="z-index: 10001;">
+        <div class="ship-modal-content" (click)="$event.stopPropagation()">
+
+            <div class="ship-modal-header" style="
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+                padding: 2rem 2rem 2.2rem;
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            ">
+                <!-- Decorative background orb -->
+                <div style="
+                    position: absolute; top: -60px; left: -60px;
+                    width: 220px; height: 220px; border-radius: 50%;
+                    background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+                    pointer-events: none;
+                "></div>
+                <div style="
+                    position: absolute; bottom: -40px; right: -30px;
+                    width: 160px; height: 160px; border-radius: 50%;
+                    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+                    pointer-events: none;
+                "></div>
+
+                <!-- Left: icon + text -->
+                <div style="display: flex; align-items: center; gap: 18px; position: relative; z-index: 2;">
+                    <!-- Truck icon box with glow -->
+                    <div style="
+                        background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.15));
+                        width: 64px; height: 64px; border-radius: 20px;
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 1.75rem;
+                        border: 1px solid rgba(59,130,246,0.3);
+                        box-shadow: 0 0 25px rgba(59,130,246,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+                    ">
+                        <i class="fas fa-truck-fast" style="color: #93c5fd;"></i>
+                    </div>
+
+                    <!-- Text -->
+                    <div>
+                        <div style="
+                            font-size: 0.7rem; font-weight: 800; letter-spacing: 0.2em;
+                            text-transform: uppercase; color: #60a5fa; margin-bottom: 4px;
+                        ">DISPATCH CENTER</div>
+                        <h2 style="
+                            margin: 0; font-size: 1.7rem; font-weight: 900;
+                            color: #ffffff; letter-spacing: -0.02em; line-height: 1.1;
+                        ">Ship Order</h2>
+                        <p style="
+                            margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.55);
+                            font-weight: 500;
+                        ">Tracking for &nbsp;<span style="
+                            color: #93c5fd; font-weight: 800;
+                            background: rgba(59,130,246,0.15);
+                            padding: 2px 10px; border-radius: 20px;
+                            border: 1px solid rgba(59,130,246,0.25);
+                            font-size: 0.8rem;
+                        ">{{selectedOrderForShip?.orderId}}</span></p>
+                    </div>
+                </div>
+
+                <!-- Close button -->
+                <button class="close-modal" (click)="closeShipModal()" style="
+                    position: static;
+                    background: rgba(255,255,255,0.08) !important;
+                    border: 1px solid rgba(255,255,255,0.12) !important;
+                    color: rgba(255,255,255,0.6) !important;
+                    width: 36px !important; height: 36px !important;
+                    border-radius: 10px !important;
+                    box-shadow: none !important;
+                    font-size: 0.85rem;
+                    z-index: 2;
+                    transition: all 0.25s ease;
+                " onmouseover="this.style.background='rgba(239,68,68,0.9)';this.style.color='white';this.style.borderColor='transparent';"
+                    onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)';this.style.borderColor='rgba(255,255,255,0.12)';">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding: 2.5rem 2.5rem 1.5rem; background: #ffffff;">
+                <div class="dispatch-controls" [class.shake-error]="isShaking">
+
+                    <!-- Territory Mismatch Warning -->
+                    <div *ngIf="showCourierMismatchError" class="territory-alert"
+                        style="border-radius: 16px; padding: 16px; margin-bottom: 25px; display: flex; align-items: flex-start; gap: 14px; animation: slideIn 0.3s ease;">
+                        <i class="fas fa-triangle-exclamation" style="font-size: 1.4rem; margin-top: 2px;"></i>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; font-size: 0.9rem; font-weight: 800;">Courier
+                                Territory Mismatch!</p>
+                            <p style="margin: 6px 0 10px 0; font-size: 0.8rem; line-height: 1.5;">
+                                <strong>{{shipCourier}}</strong> does not service
+                                <strong>{{extractState(selectedOrderForShip)}}</strong>. This might cause delivery
+                                issues.
+                            </p>
+                            <button class="btn-switch-courier"
+                                (click)="shipCourier = suggestedCourier; showCourierMismatchError = false"
+                                style="color: white; border: none; padding: 8px 16px; border-radius: 10px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s;">
+                                Switch to {{suggestedCourier}} (Recommended)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+
+                        <!-- Courier Partner Selection -->
+                        <div class="input-stack">
+                            <label><i class="fas fa-building" style="margin-right: 8px; color: #64748b;"></i> Logistics
+                                Partner</label>
+                            <select [(ngModel)]="shipCourier">
+                                <option value="" disabled>Select a Partner</option>
+                                <option *ngFor="let c of couriers" [value]="c.name">{{c.name}} ({{c.fee |
+                                    currency:'INR'}}/order)</option>
+                            </select>
+                        </div>
+
+                        <!-- Tracking Number -->
+                        <div class="input-stack">
+                            <label><i class="fas fa-hashtag" style="margin-right: 8px; color: #64748b;"></i> Tracking
+                                Number</label>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" [(ngModel)]="trackingNumber"
+                                    placeholder="System will generate if empty">
+                                <button class="btn-generate" (click)="generateTrackingNumber(selectedOrderForShip?._id)"
+                                    [disabled]="isTrackingDisabled(selectedOrderForShip?._id)"
+                                    [title]="isTrackingDisabled(selectedOrderForShip?._id) ? 'Limit Reached' : 'Auto Generate'">
+                                    <i class="fas"
+                                        [class.fa-wand-magic-sparkles]="!isTrackingDisabled(selectedOrderForShip?._id)"
+                                        [class.fa-lock]="isTrackingDisabled(selectedOrderForShip?._id)"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Expected Delivery -->
+                        <div class="input-stack">
+                            <label><i class="fas fa-calendar-day" style="margin-right: 8px; color: #64748b;"></i>
+                                Estimated Delivery Date</label>
+                            <input type="date" [(ngModel)]="expectedDeliveryDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 2rem 2.5rem; border-top: 1px solid #f1f5f9; background: #ffffff;">
+                <button class="btn-ship-confirm" (click)="dispatchOrder(selectedOrderForShip?._id)"
+                    style="padding: 14px 28px; border-radius: 14px; font-weight: 800; color: white; width: 100%; border: none; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Confirm & Dispatch
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

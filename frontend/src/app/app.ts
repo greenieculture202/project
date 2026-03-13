@@ -8,11 +8,12 @@ import { OffersStripComponent } from './offers-strip/offers-strip';
 import { NotificationModalComponent } from './notification-modal/notification-modal';
 import { CartDrawerComponent } from './cart-drawer/cart-drawer';
 import { FooterComponent } from './footer/footer';
+import { AiPlantAssistantComponent } from './ai-plant-assistant/ai-plant-assistant';
 
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, NavbarComponent, CategoryNavComponent, OffersStripComponent, NotificationModalComponent, CartDrawerComponent, FooterComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, CategoryNavComponent, OffersStripComponent, NotificationModalComponent, CartDrawerComponent, FooterComponent, AiPlantAssistantComponent],
 
   templateUrl: './app.html',
   styleUrl: './app.css'

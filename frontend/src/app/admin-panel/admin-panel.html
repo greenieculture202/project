@@ -46,18 +46,25 @@
             <a href="javascript:void(0)" [class.active]="activeTab === 'users'" (click)="setTab('users')">
                 <i class="fas fa-users"></i> Users
             </a>
+            <a href="javascript:void(0)" [class.active]="activeTab === 'payment'" (click)="setTab('payment')">
+                <i class="fas fa-wallet"></i> Payment Hub
+            </a>
             <a href="javascript:void(0)" [class.active]="activeTab === 'orders'" (click)="setTab('orders')">
                 <i class="fas fa-shopping-cart"></i> Orders
             </a>
-            <a href="javascript:void(0)" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
-                <i class="fas fa-chart-line"></i> Analytics
+            <a href="javascript:void(0)" [class.active]="activeTab === 'settings'" (click)="setTab('settings')">
+                <i class="fas fa-cog"></i> Settings
             </a>
+
             <div class="nav-separator" style="height: 1px; background: #e2e8f0; margin: 10px 0;"></div>
             <a routerLink="/delivery-panel">
                 <i class="fas fa-truck"></i> Delivery Panel
             </a>
             <a routerLink="/ai-analytics">
                 <i class="fas fa-robot"></i> AI Analytics
+            </a>
+            <a routerLink="/all-reviews">
+                <i class="fas fa-star"></i> All Reviews
             </a>
         </nav>
 
@@ -87,6 +94,70 @@
                         <i class="far fa-calendar-alt"></i>
                         <span>{{ today | date:'longDate' }}</span>
                     </div>
+                    <div class="notification-trigger" (click)="toggleNotiMenu($event)">
+                        <i class="far fa-bell" (click)="clearNotifications($event)"></i>
+                        <span class="noti-badge" *ngIf="hasNotifications"></span>
+
+                        <!-- Premium Notification Popup -->
+                        <div class="noti-mini-menu" *ngIf="showNotiMenu" (click)="$event.stopPropagation()">
+                            <div class="noti-menu-header">
+                                <h4>Notifications</h4>
+                                <div class="noti-header-actions">
+                                    <span class="noti-count-badge"
+                                        *ngIf="unreadNotificationsCount > 0">{{unreadNotificationsCount}}</span>
+                                    <button class="btn-mark-all" (click)="clearNotifications($event)"
+                                        *ngIf="hasNotifications">Mark all as read</button>
+                                </div>
+                            </div>
+
+                            <div class="noti-menu-body">
+                                <div *ngIf="adminNotifications.length === 0" class="noti-empty-state">
+                                    <div class="noti-empty-icon">
+                                        <i class="fas fa-bell-slash"></i>
+                                    </div>
+                                    <span>All caught up! No new alerts.</span>
+                                </div>
+
+                                <div class="noti-list" *ngIf="adminNotifications.length > 0">
+                                    <div class="noti-item" *ngFor="let noti of adminNotifications"
+                                        [class.unread]="!noti.isRead" (click)="markOneAsRead(noti)">
+                                        <div class="noti-image-wrapper" *ngIf="noti.type === 'LowStock'">
+                                            <img [src]="noti.product?.image || 'assets/placeholder-plant.png'"
+                                                alt="product" class="noti-prod-img">
+                                        </div>
+                                        <div class="noti-item-content">
+                                            <div class="noti-item-title">
+                                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"
+                                                    *ngIf="noti.type === 'LowStock'"></i>
+                                                {{noti.title}}
+                                            </div>
+                                            <div class="noti-item-msg">{{noti.message}}</div>
+
+                                            <div class="noti-item-footer" *ngIf="noti.product">
+                                                <div class="noti-price-tag" *ngIf="noti.product.price">
+                                                    ₹{{noti.product.price}}
+                                                </div>
+                                                <div class="noti-stock-info">
+                                                    <i class="fas fa-cubes"></i>
+                                                    Stock: {{noti.product.stock}}
+                                                </div>
+                                            </div>
+                                            <div class="noti-time-stamp">{{noti.createdAt | date:'shortTime'}}</div>
+                                        </div>
+                                        <i class="fas fa-trash-alt noti-delete-btn"
+                                            (click)="deleteNotification(noti._id, $event)"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="noti-footer-controls">
+                                <button class="btn-premium-toggle" (click)="playNotificationSound()">
+                                    <i class="fas fa-volume-up"></i>
+                                    Test Notification Sound
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="user-profile-premium">
                         <div class="avatar-glow">A</div>
                         <div class="profile-info">
@@ -99,7 +170,8 @@
 
             <!-- Premium Stats Row -->
             <div class="stats-row-premium">
-                <div class="premium-stat-card" *ngFor="let stat of stats" [style.--accent-color]="stat.color">
+                <div class="premium-stat-card" *ngFor="let stat of stats" [style.--accent-color]="stat.color"
+                    (click)="onStatClick(stat)">
                     <div class="stat-main">
                         <div class="stat-icon-wrapper">
                             <i class="fas fa-{{stat.icon}}"></i>
@@ -124,28 +196,55 @@
                 <div class="data-card-premium chart-card">
                     <div class="card-header-premium">
                         <div class="header-title">
-                            <h3>Sales Performance</h3>
-                            <span>Weekly trend of completed orders</span>
+                            <h3>Weekly Sales Distribution</h3>
+                            <span>Order contribution by day of week</span>
                         </div>
                         <div class="header-options">
-                            <button class="btn-ghost">Export PDF</button>
+                            <button class="btn-premium-export" (click)="downloadAnalyticsReport()" title="Download CSV Report">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
                         </div>
                     </div>
-                    <div class="chart-container-mock">
-                        <div class="chart-bars">
-                            <div class="bar-item" *ngFor="let trend of dashboardTrends">
-                                <div class="bar-pillar" [style.height.%]="trend.count">
-                                    <span class="bar-tooltip">{{trend.count}} Orders</span>
-                                </div>
-                                <span class="bar-label">{{trend.day}}</span>
+                    <div class="pie-distribution-flex">
+                        <!-- Holographic Pie Section -->
+                        <div class="hologram-pie-container">
+                            <div class="pie-glow-layer"
+                                [style.background]="'radial-gradient(circle, var(--primary-green) 0%, transparent 70%)'">
+                            </div>
+
+                            <svg viewBox="0 0 100 100" class="donut-svg-interactive">
+                                <circle *ngFor="let slice of daySlices" class="donut-segment-interactive" cx="50"
+                                    cy="50" r="25" fill="transparent" pathLength="100" [attr.stroke]="slice.color"
+                                    stroke-width="50" [attr.stroke-dasharray]="slice.dashArray"
+                                    [attr.stroke-dashoffset]="slice.dashOffset"
+                                    (mouseenter)="hoveredSalesSegment = slice"
+                                    (mouseleave)="hoveredSalesSegment = null"></circle>
+                            </svg>
+
+                            <div class="pie-inner-glass" style="width: 38%; height: 38%;">
+                                <ng-container *ngIf="!hoveredSalesSegment">
+                                    <span class="revenue-val" style="font-size: 1.4rem;">{{totalWeeklyOrders}}</span>
+                                    <span class="revenue-lbl" style="font-size: 0.6rem;">Total Items</span>
+                                </ng-container>
+                                <ng-container *ngIf="hoveredSalesSegment">
+                                    <span class="revenue-val"
+                                        style="font-size: 1.4rem; color: var(--primary-green);">{{hoveredSalesSegment.percentage}}%</span>
+                                    <span class="revenue-lbl"
+                                        style="font-size: 0.6rem;">{{hoveredSalesSegment.label}}</span>
+                                </ng-container>
                             </div>
                         </div>
-                        <div class="chart-y-axis">
-                            <span>100</span>
-                            <span>75</span>
-                            <span>50</span>
-                            <span>25</span>
-                            <span>0</span>
+
+                        <!-- Multi-Column Legend -->
+                        <div class="modern-grid-legend">
+                            <div class="legend-card-item" *ngFor="let slice of daySlices">
+                                <div class="cat-chip" [style.background]="slice.color"></div>
+                                <div class="legend-info">
+                                    <div class="cat-head">{{slice.label}}</div>
+                                    <div class="cat-meta">{{slice.count}} orders ({{slice.percentage}}%)</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -154,40 +253,55 @@
                 <div class="side-analytics-group">
                     <!-- Quick Actions Card -->
                     <div class="data-card-premium actions-card">
-                        <h3>Quick Navigation</h3>
+                        <div class="card-header-premium" style="padding: 0; margin-bottom: 20px; border: none;">
+                            <div class="header-title">
+                                <h3>Control Center</h3>
+                            </div>
+                        </div>
                         <div class="action-grid-premium">
                             <button class="premium-action-btn" (click)="setTab('products', 'Plants')">
-                                <i class="fas fa-plus"></i>
-                                <span>Add Product</span>
+                                <i class="fas fa-layer-group"></i>
+                                <span>Catalog</span>
                             </button>
                             <button class="premium-action-btn" (click)="setTab('offers')">
-                                <i class="fas fa-tag"></i>
-                                <span>Manage Deals</span>
+                                <i class="fas fa-rocket"></i>
+                                <span>Promos</span>
                             </button>
                             <button class="premium-action-btn" (click)="setTab('orders')">
-                                <i class="fas fa-truck"></i>
-                                <span>Process Orders</span>
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>Shipments</span>
                             </button>
-                            <button class="premium-action-btn" (click)="setTab('analytics')">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Full Report</span>
+                            <button class="premium-action-btn" (click)="setTab('products', 'Accessories')">
+                                <i class="fas fa-spa"></i>
+                                <span>Companions</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Category Distrubution Card -->
-                    <div class="data-card-premium category-dist-card">
-                        <h3>Category Focus</h3>
-                        <div class="dist-list">
-                            <div class="dist-item" *ngFor="let cat of categoryStats">
-                                <div class="dist-info">
-                                    <span class="dist-name">{{cat.name}}</span>
-                                    <span class="dist-count">{{cat.count}} items</span>
-                                </div>
-                                <div class="dist-progress-bg">
-                                    <div class="dist-progress-fill" [style.width.%]="cat.percentage"
-                                        [style.background-color]="cat.color"></div>
-                                </div>
+                    <div class="data-card-premium user-growth-card" (click)="setTab('users')" style="cursor: pointer;">
+                        <div class="card-header-premium" style="padding: 0; margin-bottom: 12px; border: none;">
+                            <div class="header-title">
+                                <h3 style="font-size: 1rem;">New Growth</h3>
+                                <span style="font-size: 0.7rem;">Active registrations this week</span>
+                            </div>
+                        </div>
+
+                        <div class="growth-focus">
+                            <div class="growth-value">{{newUsersThisWeek}}</div>
+                            <div class="growth-label">New Users</div>
+                            <div class="growth-trend-pill" [ngClass]="{'positive': newUsersThisWeek > 0}">
+                                <i class="fas" [ngClass]="newUsersThisWeek > 0 ? 'fa-arrow-trend-up' : 'fa-minus'"></i>
+                                {{newUsersPercentage}}% Growth
+                            </div>
+                        </div>
+
+                        <div class="growth-visualization">
+                            <div class="mini-progress-bar">
+                                <div class="fill" [style.width.%]="newUsersPercentage"></div>
+                            </div>
+                            <div class="profile-stack">
+                                <span class="stack-dot" *ngFor="let i of [1,2,3,4,5]"></span>
+                                <span class="stack-more">+{{newUsersThisWeek > 5 ? newUsersThisWeek - 5 : 0}}</span>
                             </div>
                         </div>
                     </div>
@@ -318,10 +432,11 @@
                     <div class="search-row">
                         <div class="search-box-premium wide">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" [(ngModel)]="searchTerm"
+                            <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()"
                                 [placeholder]="'Search in ' + (productCategoryFilter === 'All' ? activeMainCategory : getCategoryLabel(productCategoryFilter)) + '...'"
                                 class="search-field">
-                            <button class="clear-btn" *ngIf="searchTerm" (click)="searchTerm = ''">
+                            <button class="clear-btn" *ngIf="searchTerm"
+                                (click)="searchTerm = ''; onSearchChange(true)">
                                 <i class="fas fa-times-circle"></i>
                             </button>
                         </div>
@@ -333,9 +448,10 @@
                                 (click)="productCategoryFilter = 'All'">
                                 All {{activeMainCategory === 'Accessories' ? activeCompanionGroup : activeMainCategory}}
                             </button>
-                            <button *ngFor="let cat of getCategoryList()" [class.active]="productCategoryFilter === cat"
-                                (click)="productCategoryFilter = cat">
-                                {{getCategoryLabel(cat)}}
+                            <button *ngFor="let cat of getCategoryList()"
+                                [class.active]="productCategoryFilter === cat.key"
+                                (click)="productCategoryFilter = cat.key">
+                                {{cat.label}}
                             </button>
                         </div>
                     </div>
@@ -343,10 +459,13 @@
 
                 <!-- Search Results Indicator -->
                 <div class="search-status-bar" *ngIf="searchTerm">
-                    <span><i class="fas fa-search"></i> Searching for <strong>"{{searchTerm}}"</strong> in
-                        {{productCategoryFilter === 'All' ? 'Current Tab' :
-                        getCategoryLabel(productCategoryFilter)}}</span>
-                    <button (click)="searchTerm = ''">Clear Search</button>
+                    <span>
+                        <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
+                        <i class="fas fa-search" *ngIf="!isSearching"></i>
+                        Searching for <strong>"{{searchTerm}}"</strong> in {{activeMainCategory}}
+                        <span class="search-scope-note">(Showing all matches in this section)</span>
+                    </span>
+                    <button (click)="searchTerm = ''; onSearchChange(true)">Clear Search</button>
                 </div>
 
                 <div class="category-explorer-grid" *ngIf="productCategoryFilter === 'All' && !searchTerm">
@@ -394,7 +513,13 @@
                                             <td class="price-cell text-muted">₹{{prod.originalPrice || '-'}}</td>
                                             <td><span class="discount-pill"
                                                     *ngIf="prod.discount">{{prod.discount}}</span></td>
-                                            <td><span class="status-badge delivered">In Stock</span></td>
+                                            <td>
+                                                <span class="status-badge"
+                                                    [ngClass]="prod.stock > 0 ? 'delivered' : 'cancelled'">
+                                                    {{ prod.stock }} {{ prod.category?.includes('Seeds') ? 'Packets' :
+                                                    (prod.stock > 0 ? 'In Stock' : 'Out of Stock') }}
+                                                </span>
+                                            </td>
                                             <td class="action-cell">
                                                 <button class="btn-icon edit" title="Edit"
                                                     (click)="openEditProductModal(prod)">
@@ -477,17 +602,328 @@
                                             {{user.method}}
                                         </span>
                                     </td>
-                                    <td><span class="status-dot online"></span> Active</td>
+                                    <td>
+                                        <span class="status-dot"
+                                            [ngClass]="user.isBlocked ? 'offline' : 'online'"></span>
+                                        {{ user.isBlocked ? 'Blocked' : 'Active' }}
+                                    </td>
                                     <td class="action-cell">
                                         <button (click)="viewUserDetails(user)" class="btn-icon view" title="View"><i
                                                 class="far fa-eye"></i></button>
-                                        <button class="btn-icon edit" title="Edit"><i class="far fa-edit"></i></button>
+                                        <button (click)="toggleBlockUser(user)" class="btn-icon block"
+                                            [title]="user.isBlocked ? 'Unblock User' : 'Block User'">
+                                            <i class="fas"
+                                                [ngClass]="user.isBlocked ? 'fa-user-check' : 'fa-user-slash'"></i>
+                                        </button>
                                         <button (click)="deleteUser(user.id, user.name)" class="btn-icon delete"
                                             title="Delete"><i class="far fa-trash-alt"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Details Modal (Inside Users Content) -->
+            <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+                <div class="user-detail-modal" (click)="$event.stopPropagation()">
+                    <button class="close-modal" (click)="closeDetailModal()">&times;</button>
+
+                    <div class="modal-header-premium">
+                        <h2>User Profile</h2>
+                        <p>Complete account overview and registration data</p>
+                    </div>
+
+                    <div class="modal-body-premium" *ngIf="selectedUser">
+                        <div class="profile-card-floating">
+                            <div class="large-avatar-premium" [ngClass]="selectedUser.method?.toLowerCase()">
+                                {{ selectedUser.name?.charAt(0) || 'U' }}
+                                <div class="method-badge-floating" *ngIf="selectedUser.method === 'Google'">
+                                    <i class="fab fa-google"></i>
+                                </div>
+                                <div class="method-badge-floating" *ngIf="selectedUser.method === 'Website'">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                            </div>
+                            <div class="user-info-main">
+                                <h3>{{ selectedUser.name }}</h3>
+                                <span class="user-id-text">REF ID: {{ selectedUser.id }}</span>
+                                <div class="badge-stack">
+                                    <span class="premium-badge role">{{ selectedUser.role || 'user' }}</span>
+                                    <span class="premium-badge status">Active Member</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-sections-grid">
+                            <div class="info-card-premium">
+                                <span class="label">Primary Email</span>
+                                <span class="value"><i class="far fa-envelope"></i> {{ selectedUser.email }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Contact Phone</span>
+                                <span class="value"><i class="fas fa-phone-alt"></i> {{ selectedUser.phone || 'N/A'
+                                    }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Alternate Contact</span>
+                                <span class="value"><i class="fas fa-mobile-alt"></i> {{ selectedUser.alternatePhone ||
+                                    'N/A' }}</span>
+                            </div>
+                            <div class="info-card-premium">
+                                <span class="label">Registration Date</span>
+                                <span class="value"><i class="far fa-calendar-alt"></i> {{ selectedUser.date ?
+                                    (selectedUser.date | date: 'mediumDate') : 'Unknown' }}</span>
+                            </div>
+
+                            <div class="address-hero-card">
+                                <div class="address-icon-wrapper">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div class="address-content">
+                                    <h4>Account Address</h4>
+                                    <p>{{ selectedUser.address || 'User has not provided a primary address yet.' }}</p>
+                                    <p *ngIf="selectedUser.city || selectedUser.state"
+                                        style="color: #6366f1; font-size: 0.9rem; margin-top: 4px;">
+                                        {{ selectedUser.city }}{{ selectedUser.city && selectedUser.state ? ',' : '' }}
+                                        {{ selectedUser.state }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Payment Management Content -->
+        <ng-container *ngIf="activeTab === 'payment'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Payment Hub</h1>
+                    <p>Complete overview of revenue streams, payment methods and transaction records.</p>
+                </div>
+            </header>
+
+            <div class="payment-hub-container admin-payments-view">
+
+                <!-- Payment Summary Stats -->
+                <div class="payment-stats-grid">
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; box-shadow: 0 6px 16px rgba(22, 163, 74, 0.2);">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">Total Revenue</span>
+                            <span class="pstat-value">₹{{ adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
+                        </div>
+                    </div>
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #fff7ed, #ffedd5); color: #ea580c; box-shadow: 0 6px 16px rgba(234, 88, 12, 0.2);">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">COD Orders</span>
+                            <span class="pstat-value">{{ adminPaymentStats.codCount }}</span>
+                        </div>
+                    </div>
+                    <div class="payment-stat-card">
+                        <div class="pstat-icon"
+                            style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="pstat-info">
+                            <span class="pstat-label">UPI / Online</span>
+                            <span class="pstat-value">{{ adminPaymentStats.onlineCount }}</span>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Payment Chart + Revenue Breakdown Row -->
+                <div class="payment-analytics-row">
+
+                    <!-- Payment Method Distribution Chart -->
+                    <div class="payment-card-white">
+                        <div class="payment-card-header">
+                            <div class="payment-card-icon"
+                                style="background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; border: 1px solid #bfdbfe;">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div>
+                                <h3 class="payment-card-title">Payment Split</h3>
+                                <p class="payment-card-sub">Method-wise order distribution</p>
+                            </div>
+                        </div>
+
+                        <div class="payment-chart-body">
+                            <div class="payment-donut-wrap">
+                                <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#e2e8f0" stroke-width="20"></circle>
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#ea580c" stroke-width="20"
+                                        pathLength="100"
+                                        [attr.stroke-dasharray]="adminPaymentStats.codPercentage + ' ' + (100 - adminPaymentStats.codPercentage)"
+                                        stroke-dashoffset="0"
+                                        style="transition: all 0.8s ease;"></circle>
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#2563eb" stroke-width="20"
+                                        pathLength="100"
+                                        [attr.stroke-dasharray]="adminPaymentStats.onlinePercentage + ' ' + (100 - adminPaymentStats.onlinePercentage)"
+                                        [attr.stroke-dashoffset]="'-' + adminPaymentStats.codPercentage"
+                                        style="transition: all 0.8s ease;"></circle>
+                                </svg>
+                                <div class="payment-donut-center">
+                                    <span class="donut-center-val">{{ adminPaymentStats.totalOrders }}</span>
+                                    <span class="donut-center-lbl">Orders</span>
+                                </div>
+                            </div>
+
+                            <div class="payment-legend-col">
+                                <div class="payment-legend-item">
+                                    <div class="legend-dot" style="background: #ea580c;"></div>
+                                    <div>
+                                        <div class="legend-name">Cash on Delivery</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.codCount }} orders · {{ adminPaymentStats.codPercentage }}%</div>
+                                    </div>
+                                </div>
+                                <div class="payment-legend-item">
+                                    <div class="legend-dot" style="background: #2563eb;"></div>
+                                    <div>
+                                        <div class="legend-name">UPI / Online</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.onlineCount }} orders · {{ adminPaymentStats.onlinePercentage }}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Breakdown Card -->
+                    <div class="payment-card-white">
+                        <div class="payment-card-header">
+                            <div class="payment-card-icon"
+                                style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; border: 1px solid #bbf7d0;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h3 class="payment-card-title">Revenue Breakdown</h3>
+                                <p class="payment-card-sub">Payment method wise revenue</p>
+                            </div>
+                        </div>
+
+                        <div class="revenue-breakdown-body">
+                            <!-- COD Revenue -->
+                            <div class="revenue-item" style="background: #fffbeb; border: 1px solid #fde68a;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-money-bill-wave" style="color: #ea580c;"></i>
+                                        <span style="color: #92400e;">COD Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.codRevenue | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="revenue-progress-bg" style="background: #fde68a;">
+                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #f97316, #ea580c);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.codRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                </div>
+                            </div>
+
+                            <!-- UPI Revenue -->
+                            <div class="revenue-item" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-qrcode" style="color: #2563eb;"></i>
+                                        <span style="color: #1e3a5f;">UPI / Online Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.onlineRevenue | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="revenue-progress-bg" style="background: #bfdbfe;">
+                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #3b82f6, #2563eb);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.onlineRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                </div>
+                            </div>
+
+                            <!-- Net Revenue -->
+                            <div class="revenue-item" style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0;">
+                                <div class="revenue-item-header">
+                                    <div class="revenue-item-label">
+                                        <i class="fas fa-hand-holding-dollar" style="color: #16a34a;"></i>
+                                        <span style="color: #14532d;">Net Revenue</span>
+                                    </div>
+                                    <span class="revenue-item-amount" style="color: #16a34a;">₹{{ adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Records Table -->
+                <div class="payment-card-white" style="margin-top: 0;">
+                    <div class="payment-table-header">
+                        <h3 class="payment-table-title">
+                            <i class="fas fa-receipt"></i> Payment Records ({{ adminPaymentViewOrders.length }})
+                        </h3>
+                        <div class="payment-filter-group">
+                            <span class="payment-filter-label">Method:</span>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'All'"
+                                (click)="adminPaymentFilterMethod = 'All'">All</button>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'COD'"
+                                (click)="adminPaymentFilterMethod = 'COD'">COD</button>
+                            <button class="payment-filter-btn" [class.active]="adminPaymentFilterMethod === 'UPI'"
+                                (click)="adminPaymentFilterMethod = 'UPI'">UPI</button>
+                        </div>
+                    </div>
+                    <div class="payment-table-wrap">
+                        <table class="payment-records-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Payment Method</th>
+                                    <th>Order Amount</th>
+                                    <th>Order Status</th>
+                                    <th>Courier Settlement</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let order of adminPaymentViewOrders">
+                                    <td class="pay-order-id">#{{ order.orderId }}</td>
+                                    <td class="pay-customer">{{ order.userName || order.userId?.fullName || 'Guest' }}</td>
+                                    <td>
+                                        <div class="pay-method-badge"
+                                            [style.background]="isAdminPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
+                                            [style.color]="isAdminPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
+                                            [style.border]="isAdminPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
+                                            <i class="fas" [class.fa-money-bill-wave]="isAdminPaymentCOD(order.paymentMethod)"
+                                                [class.fa-qrcode]="!isAdminPaymentCOD(order.paymentMethod)"></i>
+                                            {{ isAdminPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
+                                        </div>
+                                    </td>
+                                    <td class="pay-amount">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                                    <td>
+                                        <span class="premium-status-badge" [ngClass]="getStatusClass(order.status)">
+                                            {{ order.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-settlement-toggle" 
+                                            [class.settled]="order.courierSettled"
+                                            [class.pending]="!order.courierSettled"
+                                            (click)="toggleCourierSettled(order)">
+                                            <i class="fas" [class.fa-check-circle]="order.courierSettled" [class.fa-clock]="!order.courierSettled"></i>
+                                            {{ order.courierSettled ? 'Settled' : 'Mark Settled' }}
+                                        </button>
+                                    </td>
+                                    <td class="pay-date">{{ order.orderDate | date:'mediumDate' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="payment-empty" *ngIf="adminPaymentViewOrders.length === 0">
+                            <i class="fas fa-receipt"></i>
+                            <p>No payment records found for the selected filter.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -503,46 +939,42 @@
             </header>
 
             <div class="orders-dashboard-wrapper">
-                <!-- Orders Summary Stats -->
-                <div class="orders-summary-grid">
-                    <div class="order-summary-card total">
-                        <div class="card-icon"><i class="fas fa-shopping-bag"></i></div>
-                        <div class="card-details">
-                            <span class="label">Total Orders</span>
-                            <h2 class="value">{{orders.length}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-total"></div>
-                        </div>
-                    </div>
-                    <div class="order-summary-card revenue">
-                        <div class="card-icon"><i class="fas fa-indian-rupee-sign"></i></div>
-                        <div class="card-details">
-                            <span class="label">Total Revenue</span>
-                            <h2 class="value">₹{{getTotalRevenue()}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-revenue"></div>
+                <!-- Premium Command Center Stats -->
+                <div class="command-center-stats">
+                    <div class="stat-luxury-card total">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Volume</span>
+                            <h2 class="stat-value">{{orders.length}}</h2>
+                            <span class="stat-trend"><i class="fas fa-chart-line"></i> +12% this week</span>
                         </div>
                     </div>
-                    <div class="order-summary-card pending">
-                        <div class="card-icon"><i class="fas fa-clock"></i></div>
-                        <div class="card-details">
-                            <span class="label">Processing</span>
-                            <h2 class="value">{{getOrdersByStatus('Processing').length}}</h2>
-                        </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-pending"></div>
+                    <div class="stat-luxury-card revenue">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-indian-rupee-sign"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Revenue Flow</span>
+                            <h2 class="stat-value">₹{{getTotalRevenue() | number}}</h2>
+                            <span class="stat-trend"><i class="fas fa-shield-check"></i> Verified</span>
                         </div>
                     </div>
-                    <div class="order-summary-card completed">
-                        <div class="card-icon"><i class="fas fa-check-double"></i></div>
-                        <div class="card-details">
-                            <span class="label">Delivered</span>
-                            <h2 class="value">{{getOrdersByStatus('Delivered').length}}</h2>
+                    <div class="stat-luxury-card processing">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-spinner fa-spin-slow"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">In Pipeline</span>
+                            <h2 class="stat-value">{{getOrdersByStatus('Processing').length}}</h2>
+                            <span class="stat-trend pulse">Active now</span>
                         </div>
-                        <div class="card-graph">
-                            <div class="mini-bar-completed"></div>
+                    </div>
+                    <div class="stat-luxury-card delivered">
+                        <div class="card-glow"></div>
+                        <div class="stat-icon-wrapper"><i class="fas fa-check-double"></i></div>
+                        <div class="stat-content">
+                            <span class="stat-label">Fulfilled</span>
+                            <h2 class="stat-value">{{getOrdersByStatus('Delivered').length}}</h2>
+                            <span class="stat-trend success">99.8% Success</span>
                         </div>
                     </div>
                 </div>
@@ -581,86 +1013,59 @@
 
                     <div class="order-card-premium" *ngFor="let order of filteredOrdersV2"
                         [class.new-order]="isNewOrder(order)">
+
+                        <!-- 1. Order ID -->
                         <div class="order-card-header">
-                            <div class="order-meta">
-                                <span class="order-id">#{{order.orderId}}</span>
-                                <span class="order-timestamp">{{order.orderDate | date:'medium'}}</span>
-                                <span class="offer-pill" *ngIf="order.appliedOfferCode">
-                                    <i class="fas fa-gift"></i>
-                                    {{ getOfferBadgeFromCode(order.appliedOfferCode) }}
-                                </span>
-                            </div>
-                            <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">
-                                <i class="fas" [ngClass]="getStatusIcon(order.status)"></i>
-                                {{order.status}}
+                            <span class="order-id">#{{order.orderId}}</span>
+                            <span class="order-timestamp">{{order.orderDate | date:'MMM d, HH:mm'}}</span>
+                            <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">{{order.status}}</div>
+                        </div>
+
+                        <!-- 2. Customer Name -->
+                        <div class="customer-section">
+                            <div class="customer-avatar">{{order.userId?.fullName?.charAt(0) || 'G'}}</div>
+                            <div class="customer-info">
+                                <h4>{{order.userId?.fullName || 'Guest User'}}</h4>
+                                <div class="meta-tag">{{order.userId?.email || 'N/A' | slice:0:15}}...</div>
                             </div>
                         </div>
 
-                        <div class="order-card-content">
-                            <!-- Customer Info -->
-                            <div class="customer-section">
-                                <div class="customer-avatar">{{order.userId?.fullName?.charAt(0) || 'G'}}</div>
-                                <div class="customer-info">
-                                    <h4>{{order.userId?.fullName || 'Guest User'}}</h4>
-                                    <p><i class="far fa-envelope"></i> {{order.userId?.email || 'N/A'}}</p>
-                                    <p *ngIf="order.userId?.phone">
-                                        <i class="fas fa-phone-alt"></i> {{order.userId?.phone}}
-                                    </p>
-                                    <div class="offer-benefit-text" *ngIf="order.offerBenefit">
-                                        <i class="fas fa-sparkles"></i> {{order.offerBenefit}}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Items Summary -->
-                            <div class="items-section-premium">
-                                <div class="mini-item" *ngFor="let item of order.items | slice:0:3"
-                                    [class.gift-item]="$any(item).isGift">
-                                    <img [src]="$any(item).image" [alt]="$any(item).name">
-                                    <div class="mini-item-info">
-                                        <span class="name">{{$any(item).name}}</span>
-                                        <span class="qty">{{$any(item).quantity}} x ₹{{$any(item).price}}</span>
-                                        <span class="gift-label" *ngIf="$any(item).isGift">FREE GIFT</span>
-                                    </div>
-                                </div>
-                                <div class="more-items-badge" *ngIf="order.items.length > 3">
-                                    +{{order.items.length - 3}} more items
-                                </div>
-                            </div>
-
-                            <!-- Financials -->
-                            <div class="financials-section">
-                                <span class="amount-label">Total Amount</span>
-                                <h3 class="total-amount">₹{{order.totalAmount}}</h3>
-
-                                <div class="payment-indicator"
-                                    [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'cod-badge' : 'online-badge'">
-                                    <i class="fas"
-                                        [ngClass]="order.paymentMethod === 'Cash on Delivery' ? 'fa-hand-holding-dollar' : 'fa-circle-check'"></i>
-                                    {{ order.paymentMethod === 'Cash on Delivery' ? 'Cash on Delivery' : 'Paid Online
-                                    (UPI)' }}
-                                </div>
+                        <!-- 3. Items -->
+                        <div class="items-column" (click)="openItemsPopup(order)">
+                            <div class="item-count-chip-linear">
+                                <i class="fas fa-cubes-stacked"></i>
+                                <span>{{order.items.length}} Items</span>
+                                <i class="fas fa-angle-right"></i>
                             </div>
                         </div>
 
-                        <div class="order-card-footer-premium">
-                            <div class="status-update-action">
-                                <select class="modern-select-admin" [ngModel]="order.status"
-                                    (ngModelChange)="updateOrderStatus(order._id, $event)">
-                                    <option value="" disabled selected>Change Status</option>
-                                    <option value="Processing">Processing</option>
-                                    <option value="Shipped">Shipped</option>
-                                    <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
+                        <!-- 4. Amount -->
+                        <div class="financials-section">
+                            <span class="amount-label">Amount</span>
+                            <h3 class="total-amount">₹{{order.totalAmount | number}}</h3>
+                            <div class="pay-method-mini">{{order.paymentMethod === 'Cash on Delivery' ? 'COD' : 'Online'}}</div>
+                        </div>
+
+                        <!-- 5. Courier Name -->
+                        <div class="courier-column">
+                            <div class="courier-pill-linear" *ngIf="order.trackingNumber">
+                                <i class="fas fa-truck-fast"></i>
+                                <span>{{order.courierName}}</span>
                             </div>
-                            <div class="action-buttons-v2">
-                                <button class="btn-invoice" (click)="viewInvoice(order)"><i
-                                        class="fas fa-file-invoice"></i></button>
-                                <button class="btn-details-v2" (click)="viewOrderDetails(order)">Details <i
-                                        class="fas fa-arrow-right"></i></button>
+                            <div class="courier-empty" *ngIf="!order.trackingNumber">
+                                <i class="far fa-clock"></i> Not Assigned
                             </div>
                         </div>
+
+                        <!-- 6. Bill Icon -->
+                        <button class="btn-invoice-mini" (click)="viewInvoice(order)" title="Manifesto">
+                            <i class="fas fa-file-invoice"></i>
+                        </button>
+
+                        <!-- 7. View Button -->
+                        <button class="btn-view-straight" (click)="viewOrderDetails(order)">
+                            View <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1203,19 +1608,327 @@
                 </div>
             </div>
         </ng-container>
+
+        <!-- Analytics Content -->
+        <ng-container *ngIf="activeTab === 'analytics'">
+            <header class="top-header">
+                <div class="welcome">
+                    <h1>Advanced Analytics</h1>
+                    <p>Comprehensive breakdown of your store's performance metrics.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="add-floating-btn" routerLink="/ai-analytics">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Analytics</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="analytics-layout-grid">
+                <div class="data-card-premium">
+                    <h3>Conversion Funnel</h3>
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="fas fa-filter fa-3x" style="color: #ef4444; margin-bottom: 15px;"></i>
+                        <p>Detailed conversion metrics are being calculated based on recent traffic.</p>
+                    </div>
+                </div>
+                <div class="data-card-premium">
+                    <div class="card-header-premium">
+                        <div class="header-title">
+                            <h3>Order Fulfillment</h3>
+                            <span>Ratio of completed deliveries</span>
+                        </div>
+                    </div>
+                    <div class="donut-chart-container">
+                        <svg width="160" height="160" viewBox="0 0 40 40" class="donut-svg">
+                            <circle class="donut-ring" cx="20" cy="20" r="15.9155"></circle>
+                            <circle class="donut-segment" cx="20" cy="20" r="15.9155"
+                                [style.stroke-dasharray]="donutDashArray" stroke-dashoffset="25"></circle>
+                            <g class="donut-text">
+                                <text x="20" y="20" class="donut-center-text">
+                                    {{fulfillmentRate | number:'1.0-1'}}%
+                                </text>
+                                <text x="20" y="26" class="donut-center-label">DELIVERED</text>
+                            </g>
+                        </svg>
+
+                        <div class="donut-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background: var(--primary-green);"></span>
+                                <span>Delivered</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background: #f1f5f9;"></span>
+                                <span>Remaining</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Settings Content -->
+        <ng-container *ngIf="activeTab === 'settings'">
+
+            <div class="settings-premium-wrap">
+
+                <!-- ── Left: Decorative Panel ── -->
+                <div class="settings-brand-panel">
+                    <div class="settings-brand-glow"></div>
+                    <div class="settings-brand-content">
+                        <div class="settings-brand-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h2>Admin Control Center</h2>
+                        <p>Manage your credentials securely. Changes take effect immediately.</p>
+                        <div class="settings-brand-stats">
+                            <div class="sbstat">
+                                <i class="fas fa-shield-halved"></i>
+                                <span>Secured</span>
+                            </div>
+                            <div class="sbstat">
+                                <i class="fas fa-lock"></i>
+                                <span>Encrypted</span>
+                            </div>
+                            <div class="sbstat">
+                                <i class="fas fa-circle-check"></i>
+                                <span>Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Right: Form Panel ── -->
+                <div class="settings-form-panel">
+
+                    <!-- Alerts -->
+                    <div *ngIf="settingsMessage" class="sprem-alert success">
+                        <div class="sprem-alert-icon"><i class="fas fa-check-circle"></i></div>
+                        <span>{{ settingsMessage }}</span>
+                    </div>
+                    <div *ngIf="settingsError" class="sprem-alert error">
+                        <div class="sprem-alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <span>{{ settingsError }}</span>
+                    </div>
+
+                    <form (submit)="updateAdminProfile($event)" class="sprem-form">
+
+                        <div class="sprem-section-tag">
+                            <i class="fas fa-id-badge"></i> Identity
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>Display Name</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-user"></i>
+                                <input type="text" [(ngModel)]="currentAdminSettings.fullName" name="fullName"
+                                    placeholder="Your full name" required>
+                            </div>
+                        </div>
+
+                        <div class="sprem-section-tag" style="margin-top: 28px;">
+                            <i class="fas fa-lock"></i> Change Password
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>Current Password</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" [(ngModel)]="currentAdminSettings.oldPassword" name="oldPassword"
+                                    placeholder="Required if changing password">
+                            </div>
+                            <p class="sprem-hint">Leave blank to only update your display name</p>
+                        </div>
+
+                        <div class="sprem-field">
+                            <label>New Password</label>
+                            <div class="sprem-input">
+                                <i class="fas fa-key"></i>
+                                <input type="password" [(ngModel)]="currentAdminSettings.newPassword" name="newPassword"
+                                    placeholder="Enter new secure password">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="sprem-save-btn" [disabled]="isSettingsSubmitting">
+                            <span class="sprem-btn-glow"></span>
+                            <i class="fas fa-spinner fa-spin" *ngIf="isSettingsSubmitting"></i>
+                            <i class="fas fa-floppy-disk" *ngIf="!isSettingsSubmitting"></i>
+                            {{ isSettingsSubmitting ? 'Saving…' : 'Save Changes' }}
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="sprem-divider">
+                        <span>Admin Management</span>
+                    </div>
+
+                    <!-- Add New Admin Trigger -->
+                    <div class="sprem-add-admin-btn" (click)="showAddAdminModal = true">
+                        <div class="sprem-add-admin-bg"></div>
+                        <div class="sprem-add-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="sprem-add-text">
+                            <strong>Add New Administrator</strong>
+                            <span>Register a new admin with secure password verification</span>
+                        </div>
+                        <div class="sprem-add-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+
     </main>
 
-    <!-- User Details Modal ... existing ... -->
+    <!-- Detailed Items Popup Modal -->
+    <div class="modal-overlay-premium" *ngIf="showItemsPopup" (click)="closeItemsPopup()">
+        <div class="items-popup-content-v2" (click)="$event.stopPropagation()">
+            <div class="popup-header-classic">
+                <div class="header-main">
+                    <i class="fas fa-boxes-packing"></i>
+                    <div class="title-wrap">
+                        <h3>Order Manifest</h3>
+                        <p>Details for Order #{{selectedOrderForItems?.orderId}}</p>
+                    </div>
+                </div>
+                <button class="close-popup-btn" (click)="closeItemsPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-    <!-- Order Details Modal -->
+            <div class="popup-body-scroll">
+                <div class="items-manifest-grid">
+                    <div class="manifest-item-card" *ngFor="let item of selectedOrderItems">
+                        <div class="item-visual">
+                            <img [src]="$any(item).image" [alt]="$any(item).name">
+                            <span class="qty-bubble">{{$any(item).quantity}}x</span>
+                        </div>
+                        <div class="item-details">
+                            <div class="name-price-row">
+                                <h4>{{$any(item).name}}</h4>
+                                <span class="price-tag-luxe" [class.free-tag]="$any(item).price === 0">
+                                    {{ $any(item).price === 0 ? 'COMPLIMENTARY' : '₹' + $any(item).price }}
+                                </span>
+                            </div>
+                            <div class="item-meta-row">
+                                <span class="cat-pill">{{$any(item).category || 'Plant'}}</span>
+                                <span class="offer-pill-v2" *ngIf="$any(item).price === 0">
+                                    <i class="fas fa-gift"></i> Exclusive Gift
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup-footer-classic">
+                <div class="footer-totals">
+                    <span class="label">Total Manifest Value</span>
+                    <span class="value">₹{{selectedOrderForItems?.totalAmount | number}}</span>
+                </div>
+                <button class="btn-done-classic" (click)="closeItemsPopup()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ADD NEW ADMIN MODAL (Secure, Password-Gated)
+         ══════════════════════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showAddAdminModal" (click)="closeAddAdminModal()">
+        <div class="add-admin-modal" (click)="$event.stopPropagation()">
+
+            <!-- Header -->
+            <div class="add-admin-modal-header">
+                <div class="add-admin-modal-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div>
+                    <h2>Add New Administrator</h2>
+                    <p>Verify your identity to register a new admin</p>
+                </div>
+                <button class="add-admin-close" (click)="closeAddAdminModal()">&times;</button>
+            </div>
+
+            <!-- Alerts -->
+            <div *ngIf="newAdminMessage" class="settings-alert success" style="margin: 0 0 16px;">
+                <i class="fas fa-check-circle"></i> {{ newAdminMessage }}
+            </div>
+            <div *ngIf="newAdminError" class="settings-alert error" style="margin: 0 0 16px;">
+                <i class="fas fa-exclamation-circle"></i> {{ newAdminError }}
+            </div>
+
+            <form (submit)="addNewAdmin($event)">
+
+                <!-- Security Section -->
+                <div class="add-admin-section-label">
+                    <i class="fas fa-shield-halved"></i> Your Credentials (for verification)
+                </div>
+                <div class="settings-form-row">
+                    <label>Your Current Password</label>
+                    <div class="settings-input-wrap">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" [(ngModel)]="newAdminPayload.currentAdminPassword"
+                            name="currentAdminPassword" placeholder="Enter your admin password to authorize" required>
+                    </div>
+                    <p class="settings-form-hint">This verifies that you are authorized to create new admins.</p>
+                </div>
+
+                <!-- New Admin Section -->
+                <div class="add-admin-section-label" style="margin-top: 20px;">
+                    <i class="fas fa-user-plus"></i> New Admin Details
+                </div>
+                <div class="settings-form-row">
+                    <label>Full Name</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-id-card input-icon"></i>
+                        <input type="text" [(ngModel)]="newAdminPayload.fullName" name="newAdminName"
+                            placeholder="e.g. Bappa Sharma" required>
+                    </div>
+                </div>
+
+                <div class="settings-form-row">
+                    <label>Admin Username</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-at input-icon"></i>
+                        <input type="text" [(ngModel)]="newAdminPayload.email" name="newAdminEmail"
+                            placeholder="e.g. bappa" required>
+                        <span class="domain-tag">@greenie.com</span>
+                    </div>
+                    <p class="settings-form-hint">They will log in as <strong>username&#64;greenie.com</strong></p>
+                </div>
+
+                <div class="settings-form-row">
+                    <label>Password for New Admin</label>
+                    <div class="settings-input-wrap purple-focus">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" [(ngModel)]="newAdminPayload.password" name="newAdminPassword"
+                            placeholder="Set a secure password" required>
+                    </div>
+                </div>
+
+                <div class="add-admin-modal-actions">
+                    <button type="button" class="add-admin-cancel" (click)="closeAddAdminModal()">Cancel</button>
+                    <button type="submit" class="settings-btn purple" style="margin-top:0; flex:1;"
+                        [disabled]="isNewAdminSubmitting">
+                        <i class="fas fa-spinner fa-spin" *ngIf="isNewAdminSubmitting"></i>
+                        <i class="fas fa-user-plus" *ngIf="!isNewAdminSubmitting"></i>
+                        {{ isNewAdminSubmitting ? 'Registering…' : 'Register Admin' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div> <!-- Order Details Modal -->
     <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
         <div class="user-detail-modal order-modal" (click)="$event.stopPropagation()">
-            <div class="modal-header">
+            <button class="close-modal" (click)="closeOrderModal()">&times;</button>
+            <div class="modal-header-premium">
                 <h2>Order Details</h2>
                 <p>Complete view of the order information and customer address.</p>
-                <button class="close-modal" (click)="closeOrderModal()">&times;</button>
             </div>
-            <div class="modal-body" *ngIf="selectedOrder">
+            <div class="modal-body-premium" *ngIf="selectedOrder" style="padding-top: 30px;">
                 <!-- Customer Details Section -->
                 <div class="form-section" style="margin-bottom: 24px;">
                     <div class="section-tag"
@@ -1289,22 +2002,49 @@
                         </div>
                     </div>
 
-                    <!-- Dispatch Controls for Pending Orders -->
-                    <div class="dispatch-controls"
-                        style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7;"
-                        *ngIf="selectedOrder.status === 'Pending'">
+                    <div class="dispatch-controls" [class.shake-error]="isShaking"
+                        style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7; transition: all 0.3s;"
+                        *ngIf="selectedOrder.status === 'Pending' || selectedOrder.status === 'Processing'">
+
+                        <!-- Territory Mismatch Warning -->
+                        <div *ngIf="showCourierMismatchError"
+                            style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 12px; padding: 12px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease;">
+                            <i class="fas fa-triangle-exclamation"
+                                style="color: #ef4444; font-size: 1.2rem; margin-top: 2px;"></i>
+                            <div>
+                                <p style="margin: 0; color: #991b1b; font-size: 0.85rem; font-weight: 800;">Courier
+                                    Territory Mismatch!</p>
+                                <p style="margin: 4px 0 0 0; color: #b91c1c; font-size: 0.75rem; line-height: 1.4;">
+                                    <strong>{{selectedCourier}}</strong> does not service this location. Sending here
+                                    might cause delays or cancellations.
+                                </p>
+                                <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.7rem; color: #7f1d1d; font-weight: 700;">Suggested:</span>
+                                    <button
+                                        (click)="selectedCourier = suggestedCourier; showCourierMismatchError = false"
+                                        style="background: #ef4444; color: white; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: all 0.2s;">
+                                        Switch to {{suggestedCourier}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <h4 style="margin: 0 0 15px 0; color: #92400e;"><i class="fas fa-shipping-fast"></i> Dispatch
                             this Order</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
+
+                        <!-- Tracking Row — only show if no tracking number yet -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;"
+                            *ngIf="!selectedOrder.trackingNumber">
+                            <div style="flex: 1;">
                                 <label
                                     style="display: block; font-size: 0.8rem; color: #92400e; font-weight: 700; margin-bottom: 5px;">Courier
                                     Partner</label>
-                                <select [(ngModel)]="selectedCourier" name="scourier"
-                                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #fecaca;">
-                                    <option value="" disabled>Select Courier</option>
-                                    <option *ngFor="let opt of courierOptions" [value]="opt">{{opt}}</option>
-                                </select>
+                                <!-- Static display instead of dropdown -->
+                                <div
+                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; background: #fff5f5; color: #b91c1c; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-building-flag"></i>
+                                    {{selectedCourier || 'Detecting...'}}
+                                </div>
                             </div>
                             <div>
                                 <label
@@ -1331,11 +2071,16 @@
                             style="width: 100%; margin-top: 15px; background: #d97706; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">
                             Ship Order Now
                         </button>
+                        <button (click)="updateOrderStatus(selectedOrder._id, 'Cancelled')"
+                            style="width: 100%; margin-top: 12px; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-times-circle"></i> Cancel Order
+                        </button>
+
                     </div>
 
                     <!-- Status Controls for Other Statuses -->
                     <div class="status-controls" style="margin-top: 20px; display: flex; gap: 10px;"
-                        *ngIf="selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled'">
+                        *ngIf="(selectedOrder.status === 'Shipped' || selectedOrder.status === 'Processing')">
                         <button *ngIf="selectedOrder.status === 'Shipped'"
                             (click)="updateOrderStatus(selectedOrder._id, 'Delivered')"
                             style="flex: 1; background: #16a34a; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;">
@@ -1348,13 +2093,21 @@
                     </div>
 
                     <!-- Tracking Info Display -->
-                    <div class="tracking-display"
-                        style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 12px;"
-                        *ngIf="selectedOrder.trackingNumber">
-                        <p style="margin: 0; color: #166534; font-size: 0.9rem;">
-                            <strong>Carrier:</strong> {{selectedOrder.courierName}} | <strong>Tracking:</strong>
-                            {{selectedOrder.trackingNumber}}
-                        </p>
+                    <div class="tracking-display-premium" *ngIf="selectedOrder.trackingNumber"
+                        style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                        <div
+                            style="background: #16a34a; color: white; width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div
+                                style="text-transform: uppercase; font-size: 0.75rem; font-weight: 800; color: #166534; letter-spacing: 0.05em; margin-bottom: 2px;">
+                                Shipping Details</div>
+                            <p style="margin: 0; color: #14532d; font-size: 1.05rem; font-weight: 700;">
+                                {{selectedOrder.courierName}} — <span
+                                    style="font-family: 'Courier New', Courier, monospace; background: rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 4px;">{{selectedOrder.trackingNumber}}</span>
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Items List -->
@@ -1389,131 +2142,137 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-actions" style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
-                <button class="btn-cancel" (click)="closeOrderModal()"
-                    style="padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#475569; border:none;">Close</button>
-            </div>
+
         </div>
     </div>
 
     <!-- Invoice Modal -->
     <div class="modal-overlay" *ngIf="showInvoiceModal" (click)="closeInvoiceModal()">
         <div class="user-detail-modal invoice-modal" (click)="$event.stopPropagation()">
-            <!-- Header for Screen (Hidden in print) -->
-            <div class="modal-header no-print">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h2 style="margin:0;">Print Invoice</h2>
-                        <p style="margin:5px 0 0 0; color:#cbd5e1;">Generate a physical receipt for this order.</p>
-                    </div>
-                    <button class="btn-primary" (click)="printInvoice()"
-                        style="background:#15803d; border:none; padding:10px 20px; border-radius:8px; color:white; font-weight:600; cursor:pointer;"><i
-                            class="fas fa-print" style="margin-right:8px;"></i> Print Now</button>
-                    <button class="close-modal" (click)="closeInvoiceModal()">&times;</button>
+            
+            <!-- Unified Header for Actions -->
+            <div class="invoice-actions-bar no-print">
+                <div class="title-group">
+                    <h2>Manage Invoice</h2>
+                    <p style="margin:2px 0 0 0; color:#64748b; font-size: 0.8rem;">Ready for printing and documentation.</p>
+                </div>
+                <div class="invoice-btn-group">
+                    <button class="btn-download-luxe" (click)="downloadInvoice()" [disabled]="isDownloading">
+                        <i class="fas" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+                        {{ isDownloading ? 'Generating PDF...' : 'Download Invoice' }}
+                    </button>
+                    <button class="btn-close-luxe" (click)="closeInvoiceModal()">&times;</button>
                 </div>
             </div>
 
             <!-- The Printable Area -->
-            <div class="modal-body printable-invoice" *ngIf="selectedOrder">
-                <!-- Header -->
-                <div class="invoice-header"
-                    style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px;">
-                    <h1 style="color: #15803d; font-size: 2rem; margin: 0; font-weight: 800;">GREENIE CULTURE 🌿</h1>
-                    <p style="color: #64748b; margin: 5px 0 0 0;">123 Botanical Avenue, Green City, 400001</p>
-                    <p style="color: #64748b; margin: 2px 0 0 0;">support@greenieculture.com | +91 9876543210</p>
+            <div class="printable-invoice-wrap" *ngIf="selectedOrder">
+                <!-- Watermark -->
+                <div class="invoice-watermark no-print">PAID</div>
+
+                <!-- Branding Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #15803d; padding-bottom: 25px; margin-bottom: 30px;">
+                    <div>
+                        <h1 style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px;">GREENIE CULTURE 🌿</h1>
+                        <p style="color: #64748b; margin: 8px 0 0 0; font-weight: 600;">The Premium Botanical Experience</p>
+                    </div>
+                    <div style="text-align: right; color: #1e293b;">
+                        <p style="margin: 0; font-weight: 700;">123 Botanical Avenue, Green City</p>
+                        <p style="margin: 2px 0 0 0;">support@greenieculture.com</p>
+                        <p style="margin: 2px 0 0 0;">+91 9876543210</p>
+                    </div>
                 </div>
 
                 <!-- Info Grid -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
                     <div>
-                        <h4 style="margin: 0 0 8px 0; color: #64748b; text-transform: uppercase; font-size: 0.8rem;">
-                            Bill To:</h4>
-                        <strong style="font-size: 1.1rem; color: #0f172a;">{{ selectedOrder.userId?.fullName || 'Guest
-                            User' }}</strong>
-                        <p style="margin: 4px 0 2px 0; color: #334155; max-width: 250px; line-height: 1.4;">
-                            {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'N/A' }}<br>
-                            {{ selectedOrder.userId?.city }} {{ selectedOrder.userId?.state }}
-                        </p>
-                        <p style="margin: 0; color: #334155;">Phone: {{ selectedOrder.userId?.phone || 'N/A' }}</p>
+                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Recipient Details:</h4>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <strong style="font-size: 1.15rem; color: #0f172a; display: block; margin-bottom: 8px;">{{ selectedOrder.userId?.fullName || 'Guest User' }}</strong>
+                            <p style="margin: 0; color: #475569; line-height: 1.5; font-size: 0.95rem;">
+                                {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'N/A' }}<br>
+                                {{ selectedOrder.userId?.city }}{{ selectedOrder.userId?.city ? ',' : '' }} {{ selectedOrder.userId?.state }} 
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #1e293b; font-weight: 600; font-size: 0.9rem;">
+                                <i class="fas fa-phone" style="margin-right: 8px; color: #64748b;"></i>{{ selectedOrder.userId?.phone || 'N/A' }}
+                            </p>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <h4 style="margin: 0 0 8px 0; color: #64748b; text-transform: uppercase; font-size: 0.8rem;">
-                            Invoice Details:</h4>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Order No:</strong> {{
-                            selectedOrder.orderId }}</p>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Date:</strong> {{ selectedOrder.orderDate
-                            | date:'mediumDate' }}</p>
-                        <p style="margin: 0 0 4px 0; color: #334155;"><strong>Time:</strong> {{ selectedOrder.orderDate
-                            | date:'shortTime' }}</p>
-                        <p style="margin: 0; color: #334155;"><strong>Payment:</strong> {{ selectedOrder.paymentMethod
-                            || 'UPI' }}</p>
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Order Metadata:</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Reference ID</span>
+                                <strong style="color:#0f172a;">#{{ selectedOrder.orderId }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Placed On</span>
+                                <strong style="color:#0f172a;">{{ selectedOrder.orderDate | date:'mediumDate' }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                <span style="color:#64748b; font-weight:600;">Payment Mode</span>
+                                <strong style="color:#15803d;">{{ selectedOrder.paymentMethod || 'Online' }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:#64748b; font-weight:600;">Invoice Status</span>
+                                <span style="color: #16a34a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem;"><i class="fas fa-check-circle"></i> Authenticated</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Items Table -->
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <table class="invoice-table-premium">
                     <thead>
-                        <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-                            <th style="padding: 12px; text-align: left; color: #334155; width: 50%;">Item Description
-                            </th>
-                            <th style="padding: 12px; text-align: center; color: #334155;">Qty</th>
-                            <th style="padding: 12px; text-align: right; color: #334155;">Unit Price</th>
-                            <th style="padding: 12px; text-align: right; color: #334155;">Total</th>
+                        <tr>
+                            <th style="width: 50%;">Product Description</th>
+                            <th style="text-align: center;">Quantity</th>
+                            <th style="text-align: right;">Unit Value</th>
+                            <th style="text-align: right;">Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let item of selectedOrder.items" style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px; color: #0f172a;">
-                                <strong style="display:block;">{{ $any(item).name }}</strong>
-                                <span style="font-size: 0.85rem; color: #64748b;"
-                                    *ngIf="$any(item).weight || $any(item).planter">
-                                    <ng-container *ngIf="$any(item).weight">Wt: {{ $any(item).weight }}</ng-container>
-                                    <ng-container *ngIf="$any(item).weight && $any(item).planter"> | </ng-container>
-                                    <ng-container *ngIf="$any(item).planter">Planter: {{ $any(item).planter
-                                        }}</ng-container>
+                        <tr *ngFor="let item of selectedOrder.items">
+                            <td>
+                                <strong style="display:block; font-size: 1rem; color: #0f172a;">{{ $any(item).name }}</strong>
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                                    <ng-container *ngIf="$any(item).category">{{ $any(item).category }}</ng-container>
+                                    <ng-container *ngIf="$any(item).planter"> | Planter: {{ $any(item).planter }}</ng-container>
                                 </span>
                             </td>
-                            <td style="padding: 12px; text-align: center; color: #334155;">{{ $any(item).quantity }}
-                            </td>
-                            <td style="padding: 12px; text-align: right; color: #334155;">₹{{ $any(item).price }}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600; color: #0f172a;">₹{{
-                                $any(item).quantity * $any(item).price }}</td>
+                            <td style="text-align: center; font-weight: 700;">{{ $any(item).quantity }}</td>
+                            <td style="text-align: right;">₹{{ $any(item).price | number }}</td>
+                            <td style="text-align: right; font-weight: 800; color: #0f172a;">₹{{ $any(item).quantity * $any(item).price | number }}</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <!-- Totals -->
-                <div style="display: flex; justify-content: flex-end;">
-                    <div style="width: 300px;">
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b;">
-                            <span>Subtotal:</span>
-                            <span>₹{{ selectedOrder.totalAmount }}</span>
+                <!-- Summary & Totals -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
+                    <div style="color: #94a3b8; font-size: 0.8rem; max-width: 300px;">
+                        <p style="margin: 0; font-weight: 600; line-height: 1.4;">Greenie Culture ensures that all botanical items are quality-certified. For support: support@greenieculture.com</p>
+                    </div>
+                    <div style="width: 320px;">
+                        <div style="display:flex; justify-content:space-between; padding-bottom:10px; color:#64748b; font-weight:600;">
+                            <span>Retail Subtotal:</span>
+                            <span>₹{{ selectedOrder.totalAmount | number }}</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-between; padding: 8px 0; color: #64748b; border-bottom: 1px solid #e2e8f0;">
-                            <span>Delivery Charges:</span>
-                            <span>FREE</span>
+                        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; color:#10b981; font-weight:700;">
+                            <span>Shipping & Handling:</span>
+                            <span>COMPLIMENTARY</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-between; padding: 16px 0; font-size: 1.25rem; font-weight: 800; color: #15803d;">
-                            <span>Grand Total:</span>
-                            <span>₹{{ selectedOrder.totalAmount }}</span>
+                        <div class="grand-total-strip">
+                            <span class="label">Total Amount Payable</span>
+                            <span class="value">₹{{ selectedOrder.totalAmount | number }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer -->
-                <div
-                    style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1; color: #64748b; font-size: 0.9rem;">
-                    <p style="margin: 0 0 5px 0;">Thank you for shopping with Greenie Culture!</p>
-                    <p style="margin: 0;">This is a computer-generated invoice.</p>
+                <!-- Bottom Footer -->
+                <div style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px dashed #cbd5e1; color: #94a3b8; font-size: 0.85rem;">
+                    <p style="margin: 0 0 5px 0;">Thank you for choosing Greenie Culture for your green space.</p>
+                    <p style="margin: 0; font-weight: 700;">This is a digitally generated invoice and does not require a physical signature.</p>
                 </div>
-            </div>
-
-            <div class="modal-actions no-print"
-                style="margin-top:24px; padding: 0 24px 24px; display:flex; justify-content:flex-end; gap:12px;">
-                <button class="btn-cancel" (click)="closeInvoiceModal()"
-                    style="padding:12px 24px; border-radius:12px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#475569; border:none;">Close</button>
             </div>
         </div>
     </div>
@@ -1570,6 +2329,10 @@
                                 <label><i class="fas fa-history"></i> Original Value (₹)</label>
                                 <input type="text" [(ngModel)]="newProduct.originalPrice" name="originalPrice"
                                     placeholder="e.g. 1999">
+                            </div>
+                            <div class="info-item">
+                                <label><i class="fas fa-cubes"></i> Inventory Stock</label>
+                                <input type="number" [(ngModel)]="newProduct.stock" name="stock" placeholder="e.g. 25">
                             </div>
                         </div>
                     </div>
@@ -2071,6 +2834,41 @@
         </div>
     </div>
 
+    <!-- Duplicate Product Warning Modal -->
+    <div class="modal-overlay duplicate-overlay" *ngIf="showDuplicateModal" (click)="showDuplicateModal = false">
+        <div class="duplicate-warning-modal" (click)="$event.stopPropagation()">
+            <div class="warning-icon-animation">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="warning-content text-center">
+                <h3 class="warning-title">Duplicate Masterpiece Found!</h3>
+                <p class="warning-subtitle">A product named <strong
+                        style="color: #1e293b;">"{{newProduct.name}}"</strong> already exists in your digital
+                    collection.</p>
+
+                <div class="duplicate-preview-card" *ngIf="duplicateProduct">
+                    <div class="dup-img-container">
+                        <img [src]="duplicateProduct.image" alt="Existing Product">
+                    </div>
+                    <div class="duplicate-info">
+                        <span class="dup-cat-tag">{{duplicateProduct.category}}</span>
+                        <h4 class="dup-prod-name">{{duplicateProduct.name}}</h4>
+                        <p class="dup-prod-price">₹{{duplicateProduct.price}}</p>
+                    </div>
+                </div>
+
+                <div class="warning-actions-stack">
+                    <button class="btn-update-duplicate" (click)="handleUpdateDuplicate()">
+                        <i class="fas fa-edit"></i> Update Existing Masterpiece
+                    </button>
+                    <button class="btn-cancel-duplicate" (click)="showDuplicateModal = false">
+                        <i class="fas fa-arrow-left"></i> Cancel & Rename
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Delete Confirmation Modal -->
     <div class="modal-overlay delete-overlay" *ngIf="showDeleteModal" (click)="!deleteSuccess && cancelDelete()">
@@ -2118,19 +2916,32 @@
     <div class="modal-overlay" *ngIf="showAssociatedProductsModal" (click)="closeAssociatedProductsModal()">
         <div class="user-detail-modal product-modal" (click)="$event.stopPropagation()" style="max-width: 900px;">
             <div class="modal-header" [style.background]="'#4f46e5'" style="color: white; padding: 25px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div
-                        style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                        <i class="fas fa-th"></i>
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div
+                            style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            <i class="fas fa-th"></i>
+                        </div>
+                        <div>
+                            <h2 style="color: white; margin: 0;">Associated Products</h2>
+                            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Code: <strong
+                                    style="color: white; font-family: monospace;">{{ activeOfferCode }}</strong></p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 style="color: white; margin: 0;">Associated Products</h2>
-                        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Code: <strong
-                                style="color: white; font-family: monospace;">{{ activeOfferCode }}</strong></p>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="add-floating-btn"
+                            (click)="openAddProductModal(activeOfferCode); closeAssociatedProductsModal()"
+                            style="padding: 10px 18px; font-size: 0.9rem; background: #10b981; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);">
+                            <i class="fas fa-plus"></i> Create New
+                        </button>
+                        <button class="add-floating-btn" (click)="openAddProductToOfferModal()"
+                            style="padding: 10px 18px; font-size: 0.9rem; background: #6366f1; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);">
+                            <i class="fas fa-th"></i> Add Existing
+                        </button>
+                        <button class="close-modal" (click)="closeAssociatedProductsModal()"
+                            style="color: white; opacity: 0.8; font-size: 2rem; background: none; border: none; cursor: pointer;">&times;</button>
                     </div>
                 </div>
-                <button class="close-modal" (click)="closeAssociatedProductsModal()"
-                    style="color: white; opacity: 0.8;">&times;</button>
             </div>
 
             <div class="modal-body" style="padding: 25px; max-height: 70vh; overflow-y: auto;">
@@ -2155,6 +2966,13 @@
                 <div class="product-grid" *ngIf="!isLoadingProducts && associatedProducts.length > 0"
                     style="padding: 10px;">
                     <div class="product-card" *ngFor="let prod of associatedProducts" style="position: relative;">
+                        <!-- Remove button -->
+                        <button class="btn-icon delete"
+                            style="position: absolute; top: 10px; right: 10px; z-index: 20; background: rgba(255,255,255,0.9); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; cursor: pointer;"
+                            title="Remove from Offer" (click)="removeProductFromOffer(prod)">
+                            <i class="fas fa-times" style="color: #ef4444;"></i>
+                        </button>
+
                         <!-- Badge -->
                         <div class="badge" style="z-index: 10;" *ngIf="prod.discount || activeOfferBadge">
                             {{ prod.discount || activeOfferBadge }}
@@ -2193,7 +3011,72 @@
         </div>
     </div>
 
-    <!-- Inquiry Reply Modal -->
+    <!-- Add Product to Offer Modal -->
+    <div class="modal-overlay" *ngIf="showAddProductToOfferModal" (click)="showAddProductToOfferModal = false"
+        style="z-index: 1100;">
+        <div class="user-detail-modal" (click)="$event.stopPropagation()"
+            style="max-width: 700px; border-radius: 20px;">
+            <!-- ... existing content ... -->
+            <div class="modal-header" style="background: #6366f1; color: white; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fas fa-plus-circle" style="font-size: 1.5rem;"></i>
+                    <h2 style="color: white; margin: 0;">Add Product to Offer</h2>
+                </div>
+                <button class="close-modal" (click)="showAddProductToOfferModal = false"
+                    style="color: white;">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Search Box -->
+                <div class="search-box-premium" style="margin-bottom: 20px; width: 100%;">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" [(ngModel)]="addProductSearchTerm"
+                        placeholder="Search by name, category or brand..." class="search-field"
+                        style="width: 100%; padding-left: 45px;">
+                </div>
+
+                <div class="selection-list" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Loading State -->
+                    <div *ngIf="isLoadingProducts" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"
+                            style="font-size: 2.5rem; color: #6366f1; margin-bottom: 10px;"></i>
+                        <p style="color: #64748b;">Loading products...</p>
+                    </div>
+
+                    <!-- No Products / Empty Search -->
+                    <div *ngIf="!isLoadingProducts && filteredProductsForOfferList.length === 0"
+                        style="text-align: center; padding: 30px; color: #64748b;">
+                        <i class="fas fa-search" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        <p>No products found matching your search.</p>
+                    </div>
+
+                    <div class="selection-item" *ngFor="let prod of filteredProductsForOfferList"
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img [src]="prod.image"
+                                style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                            <div>
+                                <h4 style="margin: 0; font-size: 1rem; color: #1e293b;">{{prod.name}}</h4>
+                                <span style="font-size: 0.8rem; color: #64748b;">{{prod.category}}</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary" (click)="addProductToOffer(prod)"
+                            style="padding: 6px 15px; font-size: 0.8rem; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer"
+                    style="padding: 15px 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                    <button class="btn-secondary" (click)="showAddProductToOfferModal = false"
+                        style="padding: 8px 20px; border-radius: 8px;">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
     <div class="modal-overlay" *ngIf="showReplyModal" (click)="closeReplyModal()">
         <div class="user-detail-modal" (click)="$event.stopPropagation()" style="max-width: 600px;">
             <div class="modal-header"
@@ -2217,7 +3100,8 @@
                     style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #6366f1;">
                     <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #1e293b;">Original
                         Message:</div>
-                    <div style="color: #475569; font-style: italic; line-height: 1.5;">"{{selectedInquiry?.message}}"
+                    <div style="color: #475569; font-style: italic; line-height: 1.5;">
+                        "{{selectedInquiry?.message}}"
                     </div>
                     <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
                         From: <span style="font-weight: 500;">{{selectedInquiry?.name}}</span>
@@ -2243,6 +3127,98 @@
                     <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
                     {{ isSubmitting ? 'Sending...' : 'Send Reply' }}
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Rate Details Modal -->
+    <div class="cv-ultra-overlay" *ngIf="showConversionModal" (click)="closeConversionModal()">
+        <div class="cv-ultra-container" (click)="$event.stopPropagation()" style="max-width: 750px !important;">
+            <!-- Modal Header -->
+            <div class="cv-header">
+                <div class="cv-header-left">
+                    <div class="cv-icon-box">
+                        <i class="fas fa-chart-line" style="font-size: 1.5rem; color: white;"></i>
+                    </div>
+                    <div class="cv-title-area">
+                        <h2>Conversion Analytics</h2>
+                        <p>Detailed performance breakdown & user behavior</p>
+                    </div>
+                </div>
+                <button class="cv-close-btn" (click)="closeConversionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="cv-body" style="padding: 24px !important;">
+                
+                <!-- 1 & 4: Visitors & Successful Orders -->
+                <div class="cv-stats-row" style="margin-bottom: 20px;">
+                    <div class="cv-card" style="border-left: 5px solid #15803d !important;">
+                        <span class="cv-label">1. Visitors to Purchase</span>
+                        <div class="cv-val">{{ realConversion.convRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #64748b;">{{ realConversion.visitors }} Visitors → {{ realConversion.orders }} Orders</small>
+                    </div>
+                    <div class="cv-card" style="border-left: 5px solid #10b981 !important;">
+                        <span class="cv-label">4. Successful Orders</span>
+                        <div class="cv-val">{{ realConversion.successfulOrders }}</div>
+                        <small style="color: #64748b;">Completed successfully</small>
+                    </div>
+                </div>
+
+                <!-- 2, 3, 7: Funnel & Abandonment -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.05em;">User Journey (Funnel)</h3>
+                    <div class="cv-stats-row" style="grid-template-columns: 1fr 1fr 1fr !important; gap: 12px !important;">
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important;">2. Add to Cart</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.cartRate }}%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important;">3. Checkout Start</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.checkoutRate }}%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <span class="cv-label" style="font-size: 0.65rem !important; color: #ef4444;">7. Abandoned</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #ef4444;">{{ realConversion.abandonRate }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 & 6: Customer Conversion -->
+                <div class="cv-stats-row" style="margin-bottom: 20px;">
+                    <div class="cv-card" style="background: #f0fdf4 !important;">
+                        <span class="cv-label">5. New Customer Conv.</span>
+                        <div class="cv-val" style="color: #166534 !important;">{{ realConversion.newCustRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #166534; opacity: 0.8;">First time buyers</small>
+                    </div>
+                    <div class="cv-card" style="background: #eff6ff !important;">
+                        <span class="cv-label">6. Repeat Cust. Rate</span>
+                        <div class="cv-val" style="color: #1e40af !important;">{{ realConversion.repeatRate }}<span class="cv-perc">%</span></div>
+                        <small style="color: #1e40af; opacity: 0.8;">Returning plant lovers</small>
+                    </div>
+                </div>
+
+                <!-- 8: Top Converting Products -->
+                <div style="border-top: 2px solid #f1f5f9; padding-top: 15px;">
+                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 12px;">8. Top Converting Products</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" *ngIf="realConversion.topProducts.length > 0; else noProducts">
+                        <div *ngFor="let p of realConversion.topProducts" style="background: white; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <i class="fas fa-leaf" style="color: #10b981; font-size: 0.9rem;"></i>
+                            <span style="font-weight: 700; color: #0f172a;">{{ p.name }}</span>
+                            <small style="color: #64748b; font-weight: 600;">({{ p.count }} sold)</small>
+                        </div>
+                    </div>
+                    <ng-template #noProducts>
+                        <p style="color: #64748b; font-style: italic; font-size: 0.85rem;">No sales data available yet.</p>
+                    </ng-template>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="cv-footer" style="justify-content: center !important;">
+                <button (click)="closeConversionModal()" style="background: #111827; border: none; padding: 12px 40px; border-radius: 12px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">Close Analytics</button>
             </div>
         </div>
     </div>

@@ -16,6 +16,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -158,15 +159,80 @@ app.use((req, res, next) => {
     next();
 });
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-    console.error('FATAL ERROR: MONGODB_URI is not defined in .env');
-    process.exit(1);
+// MongoDB Connection (with graceful fallback so server can still start)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mejor';
+console.log('Attempting to connect to MongoDB...');
+console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
+
+let hasDbConnection = false;
+
+async function bootstrapServer() {
+    try {
+        await mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 15000,
+            connectTimeoutMS: 15000
+        });
+
+        hasDbConnection = true;
+        console.log('✅ MongoDB connected successfully');
+        console.log('📊 Active Database:', mongoose.connection.name);
+
+        console.log('🔄 Starting data seeding...');
+        try {
+            const { seedPlacements, seedFaqs, seedCouriers } = require('./seed_functions'); // Assuming these are defined elsewhere or need to be imported
+            // If they are regular functions in the file, use them directly. 
+            // Looking at previous content, it seems they might be missing or defined below.
+            // I'll keep the calls but make sure they don't break if missing.
+            if (typeof seedPlacements === 'function') await seedPlacements();
+            if (typeof seedFaqs === 'function') await seedFaqs();
+            if (typeof seedCouriers === 'function') await seedCouriers();
+            console.log('✅ Seeding completed');
+        } catch (seedErr) {
+            console.error('⚠️ Seeding internal error:', seedErr.message);
+        }
+    } catch (err) {
+        console.error('❌ MongoDB connection error:', err);
+        console.log('💡 TIP: Check if your IP is whitelisted in MongoDB Atlas and if your connection string is correct.');
+    } finally {
+        app.listen(PORT, '127.0.0.1', () => {
+            console.log(`🚀 Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
+            if (!hasDbConnection) {
+                console.warn('⚠️ Server started WITHOUT MongoDB connection. Most data APIs will fail until MongoDB is reachable.');
+            }
+        });
+    }
 }
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+
+bootstrapServer();
+
+// Helper: Send SMS/WhatsApp Notification (Placeholder)
+const sendSMSWhatsAppNotification = async (order) => {
+    try {
+        const phone = order.userId?.phone;
+        if (!phone || phone === 'Not provided') {
+            console.error('[SMS-ERROR] Phone number not available for order:', order.orderId);
+            return;
+        }
+
+        const orderId = order.orderId;
+        const trackingId = order.trackingNumber;
+        const pin = order.deliveryPin;
+        const deliveryDate = order.expectedDeliveryDate || 'Soon';
+        const status = order.status;
+
+        const message = `🌿 Greenie Culture: Order ${orderId} Update! 
+Status: ${status}
+Tracking ID: ${trackingId}
+Expected Delivery: ${deliveryDate}
+Delivery PIN: ${pin} (Share with delivery boy only)
+Track here: http://localhost:3000/my-account/orders`;
+
+        console.log(`[SMS-MOCK] Sending to ${phone}:`);
+        console.log(`----------------------------------\n${message}\n----------------------------------`);
+    } catch (err) {
+        console.error('[SMS-ERROR] Failed to prepare notification:', err.message);
+    }
+};
 
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
@@ -656,6 +722,107 @@ app.post('/api/user/orders', auth, async (req, res) => {
     } catch (err) {
         console.error('[OrdersAPI] Error placing order:', err.message);
         res.status(500).json({ message: 'Failed to place order' });
+    }
+});
+
+// --- AI ASSISTANT (PLANT EXPERT) ---
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AI_KEY_PLACEHOLDER');
+
+app.post('/api/ai-assistant', async (req, res) => {
+    try {
+        const { message, image } = req.body;
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+
+        let promptText = `You are "Plant Expert AI" for Greenie Culture. Keep responses VERY short and professional. 
+
+        User Question: "${message}"
+
+        Guidelines:
+        1. Identification: Identify the plant briefly with an emoji (e.g. 🌿, 🌵).
+        2. Proactive Health Audit: Briefly mention "Pani ki kami" (underwatering), Fertilizer, or Sunlight issues with icons (💧, 🔋, ☀️).
+        3. Diagnostic Report (Strictly Concise):
+           - **Status**: (Healthy 🟢/Critical 🔴/Warning 🟡)
+           - **Diagnosis**: 1 clear sentence with relevant emojis.
+           - **Action**: 2-3 bullet points max with action icons (✂️, 🚿, 🪴).
+           - **Expert Tip**: 1 short tip with a ✨ icon.
+        4. Style: Be friendly but extremely direct. Use Markdown and emojis liberally to make it visual.
+        5. Tone: Use simple English with Hindi terms like "pani" or "khad".`;
+
+        let result;
+        if (image) {
+            // image is expected as base64 string
+            const base64Data = image.split(',')[1] || image;
+            const imageData = {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: "image/jpeg"
+                }
+            };
+            result = await model.generateContent([promptText, imageData]);
+        } else {
+            result = await model.generateContent(promptText);
+        }
+
+        const response = await result.response;
+        res.json({ text: response.text() });
+    } catch (err) {
+        console.error('[AI-ASSISTANT] Error:', err.message);
+        res.status(500).json({
+            message: 'AI Assistant is taking a nap. Please try again later.',
+            error: err.message.includes('API_KEY') ? 'Configuration Error: API Key missing.' : err.message
+        });
+    }
+});
+
+// --- ADMIN MASTER AI ASSISTANT ---
+app.post('/api/admin/ai-assistant', auth, async (req, res) => {
+    try {
+        const { message, contextData } = req.body;
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+        // Fetch systemic data for context
+        const [recentOrders, recentInquiries, lowStockProducts] = await Promise.all([
+            Order.find({}).sort({ orderDate: -1 }).limit(10).populate('userId', 'fullName').lean(),
+            Inquiry.find({}).sort({ createdAt: -1 }).limit(5).lean(),
+            Product.find({ stock: { $lte: 30 } }).sort({ stock: 1 }).limit(15).lean()
+        ]);
+
+        const orderCtx = recentOrders.map(o => `#${o.orderId}: ${o.userId?.fullName || 'Guest'} - ₹${o.totalAmount} (${o.status})`).join('\n');
+        const inquiryCtx = recentInquiries.map(i => `${i.name}: ${i.subject} - ${i.status}`).join('\n');
+        const stockCtx = lowStockProducts.map(p => `${p.name}: ${p.stock} units left`).join('\n');
+
+        let promptText = `You are "Greenie Culture Master Intelligence". You have a birds-eye view of all business operations. 
+        
+        CURRENT SYSTEM SNAPSHOT:
+        
+        Recent Orders:
+        ${orderCtx || 'No recent orders.'}
+        
+        Recent User Inquiries:
+        ${inquiryCtx || 'No recent inquiries.'}
+        
+        Inventory Alerts (Low Stock):
+        ${stockCtx || 'All products well stocked.'}
+        
+        Live Dashboard Stats:
+        Revenue: ₹${contextData?.totalRevenue || 0}
+        Orders: ${contextData?.totalOrders || 0}
+        
+        User Query: "${message}"
+        
+        Instructions:
+        1. Be a Master Business Strategist. Provide insights based on the data provided above.
+        2. If asked about recent orders or messages, use the names and IDs from the snapshot.
+        3. Keep responses professional, data-driven, and concise. Use emojis for visual clarity.
+        4. Use Hinglish (English + Hindi terms like "pani", "khad", "kaam").
+        5. Format using beautiful Markdown.`;
+
+        const result = await model.generateContent(promptText);
+        const response = await result.response;
+        res.json({ text: response.text() });
+    } catch (err) {
+        console.error('[MASTER-AI] Error:', err.message);
+        res.status(500).json({ message: 'Master AI is processing high-level data. Try later.' });
     }
 });
 

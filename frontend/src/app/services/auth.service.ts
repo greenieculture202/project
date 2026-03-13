@@ -135,6 +135,7 @@ export class AuthService {
         this.currentUserSubject.next(null);
         this.profilePicSubject.next(null);
         this.cartService.clear();
+        localStorage.removeItem('ai_plant_chat_history');
     }
 
     updateUserLocalInfo(name: string, pic?: string) {
