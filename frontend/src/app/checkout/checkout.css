@@ -1800,6 +1800,78 @@
     letter-spacing: 1px;
 }
 
+/* New Payment Flow Styles */
+.status-box {
+    margin: 20px 0;
+    min-height: 40px;
+}
+
+.upi-pre-pay-card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.upi-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.upi-info-row .label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.upi-info-row .value {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.upi-info-row .value.amount {
+    color: #2d8c6f;
+    font-size: 1.1rem;
+}
+
+.pay-now-btn {
+    width: 100%;
+    padding: 14px;
+    background: #2d8c6f;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.pay-now-btn:hover {
+    background: #236e57;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(45, 140, 111, 0.2);
+}
+
+.secure-tag {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.secure-tag i {
+    color: #10b981;
+}
+
 .popup-ok-btn {
     width: 100%;
     padding: 16px;

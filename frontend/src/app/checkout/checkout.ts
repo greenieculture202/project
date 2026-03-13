@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '../services/user.service';
+import { HttpClient } from '@angular/common/http';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -25,6 +26,7 @@ export class CheckoutComponent implements OnInit {
     reviewService = inject(ReviewService);
     userService = inject(UserService);
     router = inject(Router);
+    http = inject(HttpClient);
 
     // New signals for delivery calculation
     private couriersList = signal<any[]>([]);
@@ -219,6 +221,16 @@ export class CheckoutComponent implements OnInit {
         this.isScanning = true;
         this.isVerifying = false;
         this.paymentReceived = false;
+
+        // NOTIFY ANALYTICS / ADMIN IMMEDIATELY
+        this.http.post('/api/admin/notifications', {
+            title: 'UPI Payment Initiated',
+            message: `User ${this.firstName} ${this.lastName} is scanned for ₹${this.totalAmount()}. (ID: ${this.tempOrderId})`,
+            type: 'PaymentInitiated'
+        }).subscribe({
+            next: () => console.log('[ANALYTICS] Admin notified of pending payment'),
+            error: (err) => console.error('[ANALYTICS] Failed to notify admin:', err)
+        });
         
         // Step 1: Simulated "Waiting for Scan" (User pretends to scan)
         // After 5 seconds, we assume scan is done, and start 1 min verification

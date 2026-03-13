@@ -1403,6 +1403,22 @@ app.put('/api/admin/notifications/read', auth, async (req, res) => {
     }
 });
 
+app.post('/api/admin/notifications', async (req, res) => {
+    try {
+        const { title, message, type } = req.body;
+        const newNotification = new Notification({
+            title,
+            message,
+            type: type || 'Alert'
+        });
+        await newNotification.save();
+        res.status(201).json(newNotification);
+    } catch (err) {
+        console.error('[AdminNotificationsAPI] Create error:', err.message);
+        res.status(500).json({ message: 'Server error creating notification' });
+    }
+});
+
 // ADMIN API - Offers
 app.get('/api/admin/offers', auth, async (req, res) => {
     try {
