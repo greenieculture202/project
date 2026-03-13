@@ -6,4 +6,7 @@ coverage/
 .idea/
 .vscode/
 *.log
+.angular/
+tmp/
+.cache/
 
