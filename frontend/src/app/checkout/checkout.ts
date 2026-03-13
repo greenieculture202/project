@@ -691,7 +691,7 @@ export class CheckoutComponent implements OnInit {
             const xOffset = (pdfWidth - finalImgWidth) / 2;
             const yOffset = margin;
 
-            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
+            pdf.addImage(canvas, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
             pdf.save(`Greenie_Culture_Invoice_${this.placedOrder?.orderId || 'Download'}.pdf`);
 
             // Restore the buttons and proceed to review

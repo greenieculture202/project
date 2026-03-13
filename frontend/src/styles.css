@@ -49,65 +49,35 @@ img {
     background: #555;
 }
 
-/* Payment Hub Global Styles (Backup) */
-.payment-hub-container {
-    padding: 20px 0;
-}
-.payment-stats-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 25px !important;
-    margin-bottom: 35px !important;
-}
-.payment-stat-card {
-    background: white !important;
-    padding: 28px 24px !important;
-    border-radius: 24px !important;
+/* Force Admin Sidebar & Layout (Ultimate Backup) */
+.admin-container {
     display: flex !important;
-    align-items: center !important;
-    gap: 20px !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
-    border: 1px solid #f1f5f9 !important;
-    transition: all 0.3s ease !important;
+    background: #f8fafc !important;
 }
-.pstat-icon {
-    width: 60px !important; height: 60px !important; border-radius: 18px !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 1.6rem !important;
-}
-.pstat-info { display: flex !important; flex-direction: column !important; }
-.pstat-label { font-size: 0.85rem !important; font-weight: 700 !important; color: #64748b !important; text-transform: uppercase !important; }
-.pstat-value { font-size: 1.8rem !important; font-weight: 800 !important; color: #1e293b !important; }
 
-.payment-analytics-row {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 25px !important;
-    margin-bottom: 35px !important;
-    align-items: start !important;
+.sidebar {
+    width: 260px !important;
+    background: #1e293b !important;
+    color: white !important;
+    min-height: 100vh !important;
 }
-.payment-card-white {
-    background: white !important;
-    border-radius: 24px !important;
+
+.sidebar a {
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+
+.sidebar a.active {
+    background: #4f46e5 !important;
+    color: white !important;
+}
+
+.main-content {
+    flex: 1 !important;
     padding: 30px !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
-    border: 1px solid #f1f5f9 !important;
+    background: #f8fafc !important;
 }
-.payment-card-header {
-    display: flex !important; align-items: center !important; gap: 15px !important; margin-bottom: 30px !important;
+
+.admin-payments-view {
+    padding: 20px 0 !important;
 }
-.payment-card-title { font-size: 1.25rem !important; font-weight: 800 !important; color: #1e293b !important; margin: 0 !important; }
-
-.revenue-breakdown-body { display: flex !important; flex-direction: column !important; gap: 20px !important; }
-.revenue-item { padding: 20px !important; border-radius: 18px !important; }
-.revenue-progress-bg { height: 8px !important; border-radius: 4px !important; overflow: hidden !important; background: #f1f5f9 !important; }
-.revenue-progress-fill { height: 100% !important; border-radius: 4px !important; }
-
-.payment-records-table { width: 100% !important; border-collapse: collapse !important; }
-.payment-records-table th { text-align: left !important; padding: 12px 15px !important; font-size: 0.75rem !important; font-weight: 800 !important; color: #94a3b8 !important; text-transform: uppercase !important; }
-.payment-records-table td { padding: 18px 15px !important; font-size: 0.9rem !important; color: #1e293b !important; border-bottom: 1px solid #f8fafc !important; }
-
-@media (max-width: 1200px) {
-    .payment-stats-grid { grid-template-columns: auto !important; }
-    .payment-analytics-row { grid-template-columns: 1fr !important; }
-}

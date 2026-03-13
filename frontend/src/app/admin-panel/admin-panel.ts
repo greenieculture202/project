@@ -1,4 +1,4 @@
-﻿import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
@@ -882,7 +882,7 @@ export class AdminPanelComponent implements OnInit {
                 const imgWidth = 210; // A4 width in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                pdf.addImage(canvas, 'PNG', 0, 0, imgWidth, imgHeight);
                 
                 const fileName = `Greenie_Invoice_${this.selectedOrder?.orderId || 'Download'}.pdf`;
                 pdf.save(fileName);
@@ -2907,7 +2907,7 @@ export class AdminPanelComponent implements OnInit {
             ['Abandoned Cart Rate', this.realConversion.abandonRate + '%'],
             ['', ''],
             ['Top Products', 'Items Sold'],
-            ...(this.realConversion.topProducts.map(p => [p.name, p.count]))
+            ...(this.realConversion.topProducts.map((p: any) => [p.name, p.count]))
         ];
 
         let csvContent = "data:text/csv;charset=utf-8," 
