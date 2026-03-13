@@ -1075,7 +1075,7 @@ app.post('/api/user/orders', auth, async (req, res) => {
         if (req.user.id === 'admin-special-id') {
             return res.status(403).json({ message: 'Admin cannot place regular orders' });
         }
-        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit } = req.body;
+        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit, shippingDetails } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Order must have at least one item' });
@@ -1093,7 +1093,8 @@ app.post('/api/user/orders', auth, async (req, res) => {
             paymentScreenshot: paymentScreenshot || '',
             paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending',
             appliedOfferCode: appliedOfferCode || null,
-            offerBenefit: offerBenefit || null
+            offerBenefit: offerBenefit || null,
+            shippingDetails: shippingDetails || null
         });
 
         const savedOrder = await newOrder.save();
@@ -1989,6 +1990,17 @@ const seedCouriers = async () => {
 app.get('/api/admin/couriers', auth, async (req, res) => {
     try {
         const couriers = await Courier.find();
+        res.json(couriers);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// PUBLIC: Get Courier fees and availability
+app.get('/api/couriers/public', async (req, res) => {
+    try {
+        // Only returning fields necessary for delivery calculation
+        const couriers = await Courier.find({}, 'name states fee');
         res.json(couriers);
     } catch (err) {
         res.status(500).json({ message: 'Server error: ' + err.message });

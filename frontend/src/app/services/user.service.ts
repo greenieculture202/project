@@ -56,4 +56,8 @@ export class UserService {
     blockUser(id: string, isBlocked: boolean): Observable<any> {
         return this.http.put(`/api/admin/users/${id}/block`, { isBlocked }, { headers: this.getHeaders() });
     }
+
+    getPublicCouriers(): Observable<any[]> {
+        return this.http.get<any[]>('/api/couriers/public');
+    }
 }

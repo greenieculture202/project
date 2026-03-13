@@ -82,6 +82,9 @@ export class DeliveryPanelComponent implements OnInit {
   showTerritoryModal: boolean = false;
   selectedTerritoryView: any = null;
 
+  // Settlement Tab State
+  activeSettlementCourier: string = '';
+
   openTerritoryView(courier: any) {
     this.selectedTerritoryView = courier;
     this.showTerritoryModal = true;
@@ -349,6 +352,9 @@ export class DeliveryPanelComponent implements OnInit {
               this.courierFees[c.name] = c.fee || 50;
             }
           });
+          if (!this.activeSettlementCourier && this.couriers.length > 0) {
+            this.activeSettlementCourier = this.couriers[0].name;
+          }
           this.updateComparisonData();
           resolve();
         },

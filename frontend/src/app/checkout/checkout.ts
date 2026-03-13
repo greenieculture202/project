@@ -1,5 +1,5 @@
 // Forced rebuild - change v1
-import { Component, inject, OnInit, computed } from '@angular/core';
+import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../services/cart.service';
@@ -25,6 +25,10 @@ export class CheckoutComponent implements OnInit {
     reviewService = inject(ReviewService);
     userService = inject(UserService);
     router = inject(Router);
+
+    // New signals for delivery calculation
+    private couriersList = signal<any[]>([]);
+    selectedState = signal<string>('');
 
     showReviewDialog = false;
 
@@ -60,8 +64,27 @@ export class CheckoutComponent implements OnInit {
         }
         return processedItems;
     });
-    totalAmount = computed(() => {
+    itemsTotal = computed(() => {
         return this.items().reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+    });
+    
+    deliveryCharge = computed(() => {
+        const state = this.selectedState();
+        if (!state || this.couriersList().length === 0) return 0;
+        
+        // Find if any courier serves this state
+        const servingCouriers = this.couriersList().filter((c: any) => 
+            (c.states || []).map((s: string) => s.toLowerCase()).includes(state.toLowerCase())
+        );
+        
+        if (servingCouriers.length === 0) return 0;
+        
+        // Return minimum fee among serving couriers
+        return Math.min(...servingCouriers.map((c: any) => c.fee || 0));
+    });
+
+    totalAmount = computed(() => {
+        return this.itemsTotal() + this.deliveryCharge();
     });
     totalSavings = this.cartService.totalSavings;
 
@@ -161,26 +184,74 @@ export class CheckoutComponent implements OnInit {
     showInvoiceModal = false;
     placedOrder: any = null;
 
+    // UPI Flow State
+    tempOrderId = '';
+    showUPIDetailBox = false;
+    showUPIScanner = false;
+    showPaymentSuccessPopup = false;
+    isPaymentTimerActive = false;
+
     paymentReceived = false;
-    private _selectedPayment = 'upi';
+    private _selectedPayment = '';
     get selectedPayment() { return this._selectedPayment; }
     set selectedPayment(val: string) {
         this._selectedPayment = val;
-        if (val === 'upi' && this.currentStep === 3) {
-            this.simulateUPIScan();
+        if (val === 'upi') {
+            this.showUPIDetailBox = true;
+            this.showUPIScanner = false;
+            this.paymentReceived = false;
+            this.showPaymentSuccessPopup = false;
+            // Generate a provisional order ID for display
+            this.tempOrderId = 'T-ORD-' + Math.floor(1000 + Math.random() * 9000);
         } else {
+            this.showUPIDetailBox = false;
+            this.showUPIScanner = false;
             this.paymentReceived = false;
         }
     }
 
-    simulateUPIScan() {
+    isScanning = false;
+    isVerifying = false;
+
+    onUPIScanClick() {
+        console.log('[PAYMENT] User clicked Pay Now. Opening Scanner...');
+        this.showUPIScanner = true;
+        this.isScanning = true;
+        this.isVerifying = false;
         this.paymentReceived = false;
-        // Simulate a 3-second delay for the user to 'scan'
+        
+        // Step 1: Simulated "Waiting for Scan" (User pretends to scan)
+        // After 5 seconds, we assume scan is done, and start 1 min verification
         setTimeout(() => {
-            if (this.selectedPayment === 'upi' && this.currentStep === 3) {
-                this.paymentReceived = true;
+            if (this.showUPIScanner) {
+                console.log('[PAYMENT] Scan detected. Starting 1-min verification...');
+                this.isScanning = false;
+                this.isVerifying = true;
+                this.startVerificationTimer();
             }
-        }, 3000);
+        }, 5000); 
+    }
+
+    private startVerificationTimer() {
+        this.currentTimestamp = new Date();
+        // Step 2: Full 1 Minute (60,000ms) Verification
+        setTimeout(() => {
+            if (this.selectedPayment === 'upi' && this.showUPIScanner) {
+                console.log('[PAYMENT] 1-min verification complete.');
+                this.isVerifying = false;
+                this.paymentReceived = true;
+                this.showPaymentSuccessPopup = true;
+            }
+        }, 60000); // Back to 1 minute
+    }
+
+    onPaymentSuccessOk() {
+        this.showPaymentSuccessPopup = false;
+        this.onPayNow(); // Proceed to place order and show bill
+    }
+
+    simulateUPIScan() {
+        // Legacy method - replaced by onUPIScanClick logic
     }
     showStateDropdown = false;
     showCityDropdown = false;
@@ -268,6 +339,7 @@ export class CheckoutComponent implements OnInit {
     filteredCities: string[] = [];
 
     onStateInput() {
+        this.selectedState.set(this.stateName);
         this.showStateDropdown = true;
         this.showCityDropdown = false;
         if (!this.stateName) {
@@ -281,6 +353,7 @@ export class CheckoutComponent implements OnInit {
 
     selectState(state: string) {
         this.stateName = state;
+        this.selectedState.set(state);
         this.showStateDropdown = false;
     }
 
@@ -302,6 +375,7 @@ export class CheckoutComponent implements OnInit {
         // Auto-fill state
         if (this.cityToState[city]) {
             this.stateName = this.cityToState[city];
+            this.selectedState.set(this.stateName);
         }
     }
 
@@ -334,6 +408,12 @@ export class CheckoutComponent implements OnInit {
             }
         }
 
+        // Fetch Couriers for delivery calculation
+        this.userService.getPublicCouriers().subscribe({
+            next: (data) => this.couriersList.set(data),
+            error: (err) => console.error('Failed to load couriers', err)
+        });
+
         // 3. Fetch latest profile from database to fill empty fields
         if (this.authService.isLoggedIn()) {
             this.userService.getUserProfile().subscribe({
@@ -349,9 +429,15 @@ export class CheckoutComponent implements OnInit {
                     if (!this.contactEmail) this.contactEmail = profile.email || '';
                     if (!this.phone) this.phone = profile.phone || '';
                     if (!this.alternatePhone) this.alternatePhone = profile.alternatePhone || '';
+                    
+                    /* Disabled auto-fill for address fields to prevent overwriting user input
                     if (!this.address) this.address = profile.address || '';
                     if (!this.city) this.city = profile.city || '';
-                    if (!this.stateName) this.stateName = profile.state || '';
+                    if (!this.stateName) {
+                        this.stateName = profile.state || '';
+                        this.selectedState.set(this.stateName);
+                    }
+                    */
 
                     // Save the pre-filled state
                     this.saveCheckoutState();
@@ -399,12 +485,15 @@ export class CheckoutComponent implements OnInit {
                 this.address = state.address || '';
                 this.city = state.city || '';
                 this.stateName = state.stateName || '';
+                this.selectedState.set(this.stateName);
                 this.pincode = state.pincode || '';
                 this.currentStep = state.currentStep || 1;
-                this._selectedPayment = state.selectedPayment || 'upi';
+                this._selectedPayment = state.selectedPayment || '';
 
                 if (this.currentStep === 3 && this.selectedPayment === 'upi') {
-                    this.simulateUPIScan();
+                    // Reset UPI state on reload to avoid ghost timers
+                    this.showUPIDetailBox = true;
+                    this.showUPIScanner = false;
                 }
             } catch (e) {
                 console.error('Error loading checkout state', e);
@@ -479,9 +568,18 @@ export class CheckoutComponent implements OnInit {
                 isGift: item.isGift || false
             })),
             totalAmount: this.totalAmount(),
+            deliveryCharge: this.deliveryCharge(),
             paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI',
             appliedOfferCode: this.appliedOffer?.code || null,
-            offerBenefit: this.appliedOffer?.benefit || null
+            offerBenefit: this.appliedOffer?.benefit || null,
+            shippingDetails: {
+                fullName: `${this.firstName} ${this.lastName}`.trim(),
+                email: this.contactEmail,
+                address: this.address,
+                city: this.city,
+                state: this.stateName,
+                phone: this.phone
+            }
         };
 
         const saveOrder = () => {

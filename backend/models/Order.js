@@ -83,6 +83,14 @@ const orderSchema = new mongoose.Schema({
     courierSettled: {
         type: Boolean,
         default: false
+    },
+    shippingDetails: {
+        fullName: String,
+        email: String,
+        address: String,
+        city: String,
+        state: String,
+        phone: String
     }
 });
 

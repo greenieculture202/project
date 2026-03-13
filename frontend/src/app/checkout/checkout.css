@@ -1661,3 +1661,240 @@
     font-weight: 800;
     color: #111827;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ── NEW UPI PAYMENT FLOW & POPUP STYLING ──
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.upi-pre-pay-card {
+    background: white;
+    padding: 24px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    margin-top: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.upi-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.upi-info-row .label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.upi-info-row .value {
+    font-weight: 700;
+    color: #1e293b;
+    font-family: 'Outfit', sans-serif;
+}
+
+.upi-info-row .value.amount {
+    color: #10b981;
+    font-size: 1.2rem;
+}
+
+.pay-now-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.pay-now-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.secure-tag {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* Success Popup Card */
+.success-popup-card {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 30px;
+    padding: 40px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: popupPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.3);
+}
+
+@keyframes popupPop {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: #dcfce7;
+    color: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin: 0 auto 24px;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.15);
+}
+
+.success-popup-card h2 {
+    color: #064e3b;
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    font-family: 'Outfit', sans-serif;
+}
+
+.success-popup-card p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.payment-meta {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 30px;
+}
+
+.payment-meta span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.popup-ok-btn {
+    width: 100%;
+    padding: 16px;
+    background: #064e3b;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.popup-ok-btn:hover {
+    background: #052e16;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(6, 78, 59, 0.3);
+}
+
+.confetti-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #fbbf24 10%, transparent 11%), 
+                      radial-gradient(circle, #10b981 10%, transparent 11%),
+                      radial-gradient(circle, #3b82f6 10%, transparent 11%);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px, 5px 15px;
+    opacity: 0.1;
+    animation: confettiMoving 4s linear infinite;
+}
+
+@keyframes confettiMoving {
+    from { background-position: 0 0, 10px 10px, 5px 15px; }
+    to { background-position: 0 100px, 10px 110px, 5px 115px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ── SCANNER ANIMATIONS ──
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.qr-image {
+    position: relative;
+    overflow: hidden;
+    padding: 10px;
+    background: white;
+    border-radius: 12px;
+}
+
+.scan-bar {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #10b981;
+    box-shadow: 0 0 15px #10b981;
+    top: 0;
+    animation: scanAnimation 2s linear infinite;
+    z-index: 5;
+}
+
+@keyframes scanAnimation {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+}
+
+.loader-dot.pulse {
+    background: #fbbf24;
+    animation: pulseScale 1s ease infinite;
+}
+
+@keyframes pulseScale {
+    0% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.5); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.5; }
+}
+
+.loader-dot.verifying {
+    background: #10b981;
+}
+
+.verifying-text {
+    color: #059669 !important;
+    font-weight: 700 !important;
+}
+
+.helper-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 15px;
+    font-style: italic;
+}

@@ -844,10 +844,22 @@
 
         <!-- Settlements View -->
         <div class="settlements-view" *ngIf="activeMainTab === 'settlements'">
+            
+            <!-- Courier Selection Tabs -->
+            <div class="settlement-tabs" *ngIf="couriers.length > 0">
+                <button *ngFor="let c of couriers" 
+                        class="st-tab-btn" 
+                        [class.active]="activeSettlementCourier === c.name"
+                        (click)="activeSettlementCourier = c.name">
+                    <i class="fas {{ c.icon || 'fa-truck' }}"></i> {{ c.name }}
+                </button>
+            </div>
+
             <!-- ===== COURIER SETTLEMENT TRACKER ===== -->
-            <div class="settlement-section" *ngFor="let courier of couriers">
-                <div class="settlement-courier-header">
-                    <div class="settlement-courier-info">
+            <ng-container *ngFor="let courier of couriers">
+                <div class="settlement-section" *ngIf="activeSettlementCourier === courier.name">
+                    <div class="settlement-courier-header">
+                        <div class="settlement-courier-info">
                         <div class="settlement-courier-icon">
                             <i class="fas {{ courier.icon || 'fa-truck' }}"></i>
                         </div>
@@ -1009,6 +1021,7 @@
                     </div>
                 </div>
             </div>
+            </ng-container>
         </div>
 
         <div class="setting-view" *ngIf="activeMainTab === 'setting'">

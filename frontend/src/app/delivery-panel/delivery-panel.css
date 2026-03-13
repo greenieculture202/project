@@ -2717,67 +2717,162 @@
     margin-bottom: 1rem;
 }
 
-/* ===== Courier Settlement Tracker ===== */
+/* ===== Courier Settlement Tabs ===== */
+.settlement-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.settlement-tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.settlement-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.settlement-tabs::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
+
+.st-tab-btn {
+    padding: 12px 24px;
+    border-radius: 100px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.st-tab-btn i {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    transition: color 0.3s ease;
+}
+
+.st-tab-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
+}
+
+.st-tab-btn.active {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    border-color: #0f172a;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+    transform: translateY(-2px);
+}
+
+.st-tab-btn.active i {
+    color: #38bdf8;
+}
+
+/* ===== Courier Settlement Tracker Premium ===== */
 .settlement-section {
     background: white;
-    border-radius: 24px;
+    border-radius: 32px;
     padding: 0;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-    border: 1px solid rgba(226,232,240,0.8);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.04);
+    border: 1px solid #f1f5f9;
     overflow: hidden;
-    margin-top: 0.5rem;
-    animation: fadeInUp 0.5s ease both;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .settlement-courier-header {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 2.5rem 2.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.settlement-courier-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
 }
 
 .settlement-courier-info {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
+    z-index: 1;
 }
 
 .settlement-courier-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.1);
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-    color: #22c55e;
-    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 1.8rem;
+    color: #38bdf8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
 .settlement-courier-name {
     margin: 0;
     color: white;
-    font-size: 1.2rem;
-    font-weight: 850;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
 }
 
 .settlement-courier-fee {
-    margin: 3px 0 0 0;
-    color: rgba(255,255,255,0.6);
-    font-size: 0.82rem;
+    margin: 5px 0 0 0;
+    color: #94a3b8;
+    font-size: 0.9rem;
     font-weight: 600;
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
 .settlement-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0;
+    background: #f8fafc;
+    flex: 1;
 }
 
 .settlement-card {
-    padding: 1.75rem 2rem;
+    padding: 2.5rem;
+    background: white;
+    position: relative;
     border-right: 1px solid #f1f5f9;
 }
 
@@ -2788,145 +2883,163 @@
 .settlement-card-head {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 1.5rem;
+    gap: 16px;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed #e2e8f0;
 }
 
 .settlement-card-head h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.15rem;
     font-weight: 850;
     color: #0f172a;
+    letter-spacing: -0.01em;
 }
 
 .settlement-card-head p {
-    margin: 3px 0 0 0;
-    font-size: 0.78rem;
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
     color: #64748b;
     font-weight: 600;
 }
 
 .settlement-icon-badge {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.04);
 }
 
 .upi-badge {
     background: linear-gradient(135deg, #eff6ff, #dbeafe);
     color: #2563eb;
     border: 1px solid #bfdbfe;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
 }
 
 .cod-badge {
     background: linear-gradient(135deg, #fff7ed, #ffedd5);
     color: #ea580c;
     border: 1px solid #fed7aa;
+    box-shadow: 0 10px 20px rgba(234, 88, 12, 0.15);
 }
 
 .settlement-stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 20px;
+    border: 1px solid #f1f5f9;
 }
 
 .settlement-stat {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 .sstat-label {
     font-size: 0.72rem;
-    font-weight: 750;
-    color: #94a3b8;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sstat-value {
+    font-size: 1.75rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.settlement-orders-list {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settlement-list-head {
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.sstat-value {
-    font-size: 1.35rem;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-}
-
-/* Settlement Order Lists */
-.settlement-orders-list {
-    margin-top: 0.75rem;
-}
-
-.settlement-list-head {
-    font-size: 0.78rem;
-    font-weight: 800;
-    padding: 8px 12px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 0.5rem;
-}
-
 .pending-head {
-    background: #fef3c7;
-    color: #92400e;
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
 }
 
 .settled-head {
     background: #f0fdf4;
-    color: #166534;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
 }
 
 .settlement-order-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: #fafafa;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-    transition: all 0.2s ease;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.01);
 }
 
 .settlement-order-row:hover {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border-color: #cbd5e1;
+    z-index: 2;
+    position: relative;
 }
 
 .settled-row {
-    background: #f0fdf4;
-    border-color: #dcfce7;
-    opacity: 0.75;
+    background: #f8fafc;
+    border-color: #f1f5f9;
+    opacity: 0.85;
 }
 
 .settled-row:hover {
-    background: #ecfdf5;
+    background: #ffffff;
     opacity: 1;
+    border-color: #dcfce7;
 }
 
 .so-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     flex: 1;
 }
 
 .so-id {
     font-weight: 900;
     color: #0f172a;
-    font-size: 0.85rem;
-    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.95rem;
 }
 
 .so-customer {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #64748b;
     font-weight: 600;
 }
@@ -2934,99 +3047,104 @@
 .so-amount {
     font-weight: 900;
     color: #0f172a;
-    font-size: 1rem;
-    min-width: 80px;
+    font-size: 1.1rem;
+    min-width: 90px;
     text-align: center;
 }
 
 .so-amounts-dual {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    min-width: 80px;
+    align-items: flex-start;
+    min-width: 100px;
 }
 
 .so-amount-main {
     font-weight: 900;
     color: #0f172a;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .so-amount-sub {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     color: #94a3b8;
     font-weight: 600;
 }
 
-/* Settle Buttons */
 .settle-btn {
     border: none;
-    padding: 8px 18px;
-    border-radius: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
     font-weight: 800;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
-    transition: all 0.25s ease;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
 }
 
 .pay-btn {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
 }
 
 .pay-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37,99,235,0.35);
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    filter: brightness(1.1);
 }
 
 .collect-btn {
-    background: linear-gradient(135deg, #ea580c, #c2410c);
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(234,88,12,0.25);
+    box-shadow: 0 4px 15px rgba(234, 88, 12, 0.25);
 }
 
 .collect-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(234,88,12,0.35);
+    box-shadow: 0 10px 25px rgba(234, 88, 12, 0.4);
+    filter: brightness(1.1);
 }
 
 .undo-btn {
     background: #f1f5f9;
     color: #64748b;
-    box-shadow: none;
+    border: 1px solid #e2e8f0;
 }
 
 .undo-btn:hover {
     background: #e2e8f0;
-    color: #475569;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 
 .settlement-empty {
     text-align: center;
-    padding: 2rem;
+    padding: 3.5rem 2rem;
     color: #94a3b8;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    background: #f8fafc;
+    border-radius: 20px;
+    border: 1px dashed #e2e8f0;
+    margin-top: 1rem;
 }
 
 .settlement-empty i {
-    font-size: 1.5rem;
-    opacity: 0.5;
+    font-size: 2.5rem;
+    opacity: 0.3;
 }
 
 .settlement-empty span {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
 }
 
-/* Courier Sidebar Pending Badge */
 .courier-item-info {
     display: flex;
     flex-direction: column;
