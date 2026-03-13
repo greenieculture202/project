@@ -324,6 +324,7 @@ export class DeliveryPanelComponent implements OnInit {
       this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
         next: (orders) => {
           this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+          this.checkAutomaticDelivery();
           this.updateComparisonData();
           this.calculatePaymentSummary();
           resolve();
@@ -461,6 +462,7 @@ export class DeliveryPanelComponent implements OnInit {
       next: (orders) => {
         // Only show relevant delivery statuses
         this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+        this.checkAutomaticDelivery();
         this.updateComparisonData();
         this.calculatePaymentSummary();
         this.isLoading = false;
@@ -469,6 +471,38 @@ export class DeliveryPanelComponent implements OnInit {
         console.error('Error loading shipments:', err);
         this.isLoading = false;
       }
+    });
+  }
+
+  checkAutomaticDelivery() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let hasUpdates = false;
+    this.allOrders.forEach(order => {
+      if (order.status === 'Shipped' && order.expectedDeliveryDate) {
+        const expected = new Date(order.expectedDeliveryDate);
+        expected.setHours(0, 0, 0, 0);
+
+        if (today.getTime() >= expected.getTime()) {
+          order.status = 'Delivered'; // Update locally for immediate feedback
+          this.silentMarkAsDelivered(order._id);
+          hasUpdates = true;
+        }
+      }
+    });
+    
+    if (hasUpdates) {
+      this.updateComparisonData();
+      this.calculatePaymentSummary();
+      this.cdr.detectChanges();
+    }
+  }
+
+  silentMarkAsDelivered(orderId: string) {
+    const token = sessionStorage.getItem('auth_token');
+    this.http.put(`/api/admin/orders/${orderId}/status`, { status: 'Delivered' }, { headers: { 'x-auth-token': token || '' } }).subscribe({
+      error: (err) => console.error('Error updating status silently:', err)
     });
   }
 
@@ -592,12 +626,15 @@ export class DeliveryPanelComponent implements OnInit {
 
   getCount(status: string) {
     if (!this.selectedCourier) {
+      if (status === 'Total') return this.allOrders.length;
       return this.allOrders.filter(o => o.status === status).length;
     }
     const states = (this.courierStateMapping as any)[this.selectedCourier] || [];
     return this.allOrders.filter(o => {
       const orderState = this.extractState(o);
-      return o.status === status && (states.includes(orderState) || o.courierName === this.selectedCourier);
+      const isAssigned = states.includes(orderState) || o.courierName === this.selectedCourier;
+      if (status === 'Total') return isAssigned;
+      return o.status === status && isAssigned;
     }).length;
   }
 
@@ -649,30 +686,52 @@ export class DeliveryPanelComponent implements OnInit {
     });
   }
 
+  getCountdown(date: any): string {
+    if (!date) return 'Set Date';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expected = new Date(date);
+    expected.setHours(0, 0, 0, 0);
+
+    const diffTime = expected.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'Delivered';
+    return `${diffDays} days to go`;
+  }
+
   updateExpectedDate(orderId: string, event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.value) return;
 
     const token = sessionStorage.getItem('auth_token');
     const expectedDate = new Date(input.value);
+    const isoDate = expectedDate.toISOString();
 
-    // the backend route accepts expectedDeliveryDate now, we also need to keep the existing status
-    // To get the existing status:
     const order = this.allOrders.find(o => o.orderId === orderId);
     if (!order) return;
 
+    // IMMEDIATE (OPTIMISTIC) UI UPDATE
+    order.expectedDeliveryDate = isoDate;
+    this.checkAutomaticDelivery();
+    this.cdr.detectChanges();
+
     const payload = {
       status: order.status,
-      expectedDeliveryDate: expectedDate.toISOString()
+      expectedDeliveryDate: isoDate
     };
 
     this.http.put(`/api/admin/orders/${order._id || orderId}/status`, payload, { headers: { 'x-auth-token': token || '' } }).subscribe({
       next: (updatedOrder: any) => {
-        // Update local object immediately
-        order.expectedDeliveryDate = updatedOrder.expectedDeliveryDate || expectedDate.toISOString();
+        // Confirm with server data
+        order.expectedDeliveryDate = updatedOrder.expectedDeliveryDate || isoDate;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error updating expected date:', err)
+      error: (err) => {
+        console.error('Error updating expected date:', err);
+        // Sync with server on error
+        this.loadShipments();
+      }
     });
   }
 
@@ -943,8 +1002,8 @@ export class DeliveryPanelComponent implements OnInit {
   toggleCourierSettled(order: any) {
     const token = sessionStorage.getItem('auth_token');
     const newStatus = !order.courierSettled;
-    this.http.put(`/api/admin/orders/${order._id}/courier-settled`, 
-      { courierSettled: newStatus }, 
+    this.http.put(`/api/admin/orders/${order._id}/courier-settled`,
+      { courierSettled: newStatus },
       { headers: { 'x-auth-token': token || '' } }
     ).subscribe({
       next: (updated: any) => {

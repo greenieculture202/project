@@ -12,19 +12,16 @@
 
         <nav class="nav-menu">
             <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders', '')">
-                <i class="fas fa-chart-pie"></i> Reports & Dashboard
-            </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'customers'" (click)="setTab('customers')">
-                <i class="fas fa-boxes-stacked"></i> All Shipments
+                <i class="fas fa-chart-pie"></i> Reports &amp; Dashboard
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'payments'" (click)="setTab('payments')">
-                <i class="fas fa-indian-rupee-sign"></i> Payments
+                <i class="fas fa-indian-rupee-sign"></i> Payment
             </a>
-            <a class="nav-item" [class.active]="activeMainTab === 'settlements'" (click)="setTab('settlements')">
-                <i class="fas fa-hand-holding-dollar"></i> Settlements
+            <a class="nav-item" [class.active]="activeMainTab === 'customers'" (click)="setTab('customers')">
+                <i class="fas fa-users"></i> Customers
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'setting'" (click)="setTab('setting')">
-                <i class="fas fa-sliders"></i> Configurations
+                <i class="fas fa-cog"></i> Setting
             </a>
         </nav>
 
@@ -39,10 +36,7 @@
                     </div>
                     <div class="courier-item-info">
                         <span class="courier-name">{{ courier.name }}</span>
-                        <span class="courier-pending-badge"
-                            *ngIf="getSettlementForCourier(courier.name).totalPending > 0">
-                            ₹{{ getSettlementForCourier(courier.name).totalPending | number:'1.0-0' }} pending
-                        </span>
+
                     </div>
 
                     <i class="fas fa-lock lock-status locked" *ngIf="activeUnlockedCourier !== courier.name"></i>
@@ -88,8 +82,8 @@
                         <i class="fas fa-list-check"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="label">Order Queue</span>
-                        <span class="count">{{ getCount('Pending') }}</span>
+                        <span class="label">Total Orders</span>
+                        <span class="count">{{ getCount('Total') }}</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -415,7 +409,7 @@
                     <button class="filter-btn" [class.active]="filterStatus === 'All'"
                         (click)="setFilter('All')">All</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Pending'"
-                        (click)="setFilter('Pending')">Ready to Ship</button>
+                        (click)="setFilter('Pending')">Pending</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Shipped'"
                         (click)="setFilter('Shipped')">Out for
                         Delivery</button>
@@ -452,40 +446,51 @@
                             <tr *ngFor="let order of filteredOrdersV2">
                                 <td class="order-id-cell">#{{ order.orderId }}</td>
                                 <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest' }}</td>
-                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A'
-                                    }},
-                                    {{
-                                    order.userId?.city || '' }}</td>
+                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
+                                    {{ order.userId?.city || '' }}</td>
                                 <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
                                 <td>
-                                    <input #dateInput type="date"
-                                        [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
-                                        (change)="updateExpectedDate(order.orderId, $event)"
-                                        (click)="dateInput.showPicker()" [disabled]="order.status === 'Delivered'">
+                                    <div class="date-picker-wrapper" (click)="dateInput.showPicker()"
+                                        style="display: inline-flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s; font-weight: 700; color: #1e293b; font-size: 0.88rem; min-width: 130px;"
+                                        onmouseover="this.style.borderColor='#166534'; this.style.background='#f0fdf4';"
+                                        onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
+                                        <span>{{ order.expectedDeliveryDate ? (order.expectedDeliveryDate |
+                                            date:'dd-MM-yyyy') : 'Set Date' }}</span>
+                                        <i class="fas fa-calendar-days" style="color: #166534; font-size: 1rem;"></i>
+                                        <input #dateInput type="date"
+                                            [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
+                                            (change)="updateExpectedDate(order.orderId, $event)"
+                                            [disabled]="order.status === 'Delivered'"
+                                            style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : (order.status === 'Pending'
-                                        ? 'Ready' : order.status) }}
+                                    <span class="status-badge" [ngClass]="order.status === 'Shipped' && !order.expectedDeliveryDate ? 'pending' : getStatusClass(order.status)">
+                                        {{ (order.status === 'Shipped' && !order.expectedDeliveryDate) ? 'Pending' : (order.status === 'Shipped' ? 'Out for Delivery' : order.status) }}
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <div *ngIf="order.status !== 'Delivered'"
-                                        style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                        <div
-                                            style="font-size: 0.75rem; font-weight: 800; color: #166534; background: #f0fdf4; padding: 4px 8px; border-radius: 6px; display: inline-block;">
-                                            {{ getDaysRemaining(order.expectedDeliveryDate) }}
-                                        </div>
-                                        <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)"
-                                            style="background: #166534; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(22, 101, 52, 0.2);"
-                                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(22, 101, 52, 0.3)'"
-                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(22, 101, 52, 0.2)'">
-                                            <i class="fas fa-truck-fast"></i> Ship Now
-                                        </button>
+                                    <!-- Countdown for Shipped Orders -->
+                                    <div *ngIf="order.status === 'Shipped' && order.expectedDeliveryDate" 
+                                         style="font-weight: 800; color: #166534; font-size: 0.85rem; background: #f0fdf4; padding: 6px 12px; border-radius: 8px; border: 1px solid #bbf7d0; display: inline-block;">
+                                        <i class="fas fa-clock-rotate-left" style="margin-right: 5px;"></i>
+                                        {{ getCountdown(order.expectedDeliveryDate) }}
                                     </div>
-                                    <div class="delivered-check" *ngIf="order.status === 'Delivered'">
-                                        <i class="fas fa-check"></i>
+
+                                    <!-- Done Icon for Delivered Orders -->
+                                    <div *ngIf="order.status === 'Delivered'" 
+                                         style="color: #16a34a; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fas fa-circle-check"></i>
+                                        <span style="font-size: 0.85rem; font-weight: 800;">Done</span>
                                     </div>
+                                    
+                                    <!-- Action Button for Pending Orders -->
+                                    <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)"
+                                        style="background: #166534; color: white; border: none; padding: 6px 16px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(22, 101, 52, 0.2);"
+                                        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(22, 101, 52, 0.3)'"
+                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(22, 101, 52, 0.2)'">
+                                        View
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -499,10 +504,8 @@
 
                 <!-- Table Footer / Pagination -->
                 <div class="table-footer">
-                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length > 5 ? 5 :
-                        filteredOrdersV2.length
-                        }} of
-                        {{ filteredOrdersV2.length }} entries</span>
+                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length > 5 ? 5 : filteredOrdersV2.length
+                        }} of {{ filteredOrdersV2.length }} entries</span>
                     <div class="pagination">
                         <button class="page-btn active">1</button>
                         <button class="page-btn">2</button>
@@ -512,110 +515,6 @@
                 </div>
             </div>
 
-            <!-- Courier-Specific Settlement Tracker -->
-            <div class="settlement-section" *ngIf="selectedCourier" style="margin-top: 2rem;">
-                <div class="settlement-courier-header" style="border-radius: 20px 20px 0 0;">
-                    <div class="settlement-courier-info">
-                        <div class="settlement-courier-icon">
-                            <i class="fas fa-hand-holding-dollar"></i>
-                        </div>
-                        <div>
-                            <h3 class="settlement-courier-name">Settlement Tracking: {{ selectedCourier }}</h3>
-                            <p class="settlement-courier-fee">Real-time payment & collection status for this partner</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settlement-grid">
-                    <!-- UPI Settlement Card -->
-                    <div class="settlement-card upi-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge upi-badge">
-                                <i class="fas fa-arrow-right-to-bracket"></i>
-                            </div>
-                            <div>
-                                <h4>UPI Orders · Pay Charges</h4>
-                                <p>Delivery fee owed to courier</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Owed</span>
-                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(selectedCourier).upiTotalOwed | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Paid</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(selectedCourier).upiPaid | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).upiPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled UPI -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).upiUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Payment
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).upiUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amount">₹{{ courierFees[selectedCourier] || 0 }}</div>
-                                <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
-                                    Pay Now
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- COD Settlement Card -->
-                    <div class="settlement-card cod-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge cod-badge">
-                                <i class="fas fa-arrow-left-long"></i>
-                            </div>
-                            <div>
-                                <h4>COD Orders · Collect Funds</h4>
-                                <p>Funds to receive from courier</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row" style="grid-template-columns: repeat(2, 1fr);">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Expected</span>
-                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(selectedCourier).codAdminGets | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).codPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled COD -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).codUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Collection
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).codUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amounts-dual">
-                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[selectedCourier] || 0)) | number:'1.0-0' }}</span>
-                                </div>
-                                <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
-                                    Collect
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </ng-container>
 
 
@@ -690,7 +589,8 @@
                     </div>
                     <div class="stat-info">
                         <span class="label">Total Revenue</span>
-                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalRevenue | number:'1.0-0' }}</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalRevenue | number:'1.0-0'
+                            }}</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -720,13 +620,15 @@
                     </div>
                     <div class="stat-info">
                         <span class="label">Courier Charges</span>
-                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalCourierCharges | number:'1.0-0' }}</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalCourierCharges |
+                            number:'1.0-0' }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Courier Settlement Summary -->
-            <div class="stats-row" style="grid-template-columns: repeat(2, 1fr); margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="stats-row"
+                style="grid-template-columns: repeat(2, 1fr); margin-top: 1.5rem; margin-bottom: 1.5rem;">
                 <div class="stat-card" style="padding: 1.5rem;">
                     <div class="stat-info" style="width: 100%;">
                         <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
@@ -734,17 +636,22 @@
                                 <i class="fas fa-hand-holding-dollar"></i>
                             </div>
                             <div style="display: flex; flex-direction: column;">
-                                <span class="label" style="text-transform: uppercase;">Owed to Partners (Delivery Fees)</span>
-                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalOwedToCouriers | number:'1.0-0' }}</span>
+                                <span class="label" style="text-transform: uppercase;">Owed to Partners (Delivery
+                                    Fees)</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalOwedToCouriers |
+                                    number:'1.0-0' }}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
-                            <div>Paid: <span style="color: #16a34a;">₹{{ paymentStats.totalPaidToCouriers | number:'1.0-0' }}</span></div>
-                            <div>Pending: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingToCouriers | number:'1.0-0' }}</span></div>
+                        <div
+                            style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Paid: <span style="color: #16a34a;">₹{{ paymentStats.totalPaidToCouriers |
+                                    number:'1.0-0' }}</span></div>
+                            <div>Pending: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingToCouriers |
+                                    number:'1.0-0' }}</span></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="stat-card" style="padding: 1.5rem;">
                     <div class="stat-info" style="width: 100%;">
                         <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
@@ -753,11 +660,14 @@
                             </div>
                             <div style="display: flex; flex-direction: column;">
                                 <span class="label" style="text-transform: uppercase;">COD Collection Balance</span>
-                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalCollectedFromCouriers | number:'1.0-0' }}</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{
+                                    paymentStats.totalCollectedFromCouriers | number:'1.0-0' }}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
-                            <div>Pending Transfer: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingFromCouriers | number:'1.0-0' }}</span></div>
+                        <div
+                            style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Pending Transfer: <span style="color: #dc2626;">₹{{
+                                    paymentStats.totalPendingFromCouriers | number:'1.0-0' }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -807,11 +717,12 @@
                         <tbody>
                             <tr *ngFor="let order of paymentViewOrders">
                                 <td class="order-id-cell">#{{ order.orderId }}</td>
-                                <td class="customer-name-cell">{{ order.userId?.fullName || order.userName || 'Guest' }}</td>
+                                <td class="customer-name-cell">{{ order.userId?.fullName || order.userName || 'Guest' }}
+                                </td>
                                 <td>
-                                    <div [style.display]="'inline-flex'" [style.alignItems]="'center'" [style.gap]="'8px'"
-                                        [style.padding]="'6px 14px'" [style.borderRadius]="'10px'" [style.fontWeight]="'800'"
-                                        [style.fontSize]="'0.8rem'"
+                                    <div [style.display]="'inline-flex'" [style.alignItems]="'center'"
+                                        [style.gap]="'8px'" [style.padding]="'6px 14px'" [style.borderRadius]="'10px'"
+                                        [style.fontWeight]="'800'" [style.fontSize]="'0.8rem'"
                                         [style.background]="isPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
                                         [style.color]="isPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
                                         [style.border]="isPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
@@ -820,9 +731,11 @@
                                         {{ isPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
                                     </div>
                                 </td>
-                                <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                                <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount
+                                    | number:'1.0-0' }}</td>
                                 <td>
-                                    <span style="font-weight: 700; color: #166534; font-size: 0.85rem;">{{ order.courierName || getCourierForState(extractState(order)) || '—' }}</span>
+                                    <span style="font-weight: 700; color: #166534; font-size: 0.85rem;">{{
+                                        order.courierName || getCourierForState(extractState(order)) || '—' }}</span>
                                 </td>
                                 <td style="color: #ef4444; font-weight: 700;">₹{{ getFeeForOrder(order) }}</td>
                                 <td>
@@ -830,7 +743,8 @@
                                         {{ order.status }}
                                     </span>
                                 </td>
-                                <td class="date-cell" style="font-weight: 600; color: #64748b;">{{ order.orderDate | date:'mediumDate' }}</td>
+                                <td class="date-cell" style="font-weight: 600; color: #64748b;">{{ order.orderDate |
+                                    date:'mediumDate' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -887,27 +801,34 @@
                         <div class="settlement-stats-row">
                             <div class="settlement-stat">
                                 <span class="sstat-label">Total Owed</span>
-                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(courier.name).upiTotalOwed | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #2563eb;">₹{{
+                                    getCourierSettlement(courier.name).upiTotalOwed | number:'1.0-0' }}</span>
                             </div>
                             <div class="settlement-stat">
                                 <span class="sstat-label">Paid</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).upiPaid | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #16a34a;">₹{{
+                                    getCourierSettlement(courier.name).upiPaid | number:'1.0-0' }}</span>
                             </div>
                             <div class="settlement-stat">
                                 <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).upiPending | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{
+                                    getCourierSettlement(courier.name).upiPending | number:'1.0-0' }}</span>
                             </div>
                         </div>
 
                         <!-- Unsettled UPI Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiUnsettledOrders.length > 0">
+                        <div class="settlement-orders-list"
+                            *ngIf="getCourierSettlement(courier.name).upiUnsettledOrders.length > 0">
                             <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Payment ({{ getCourierSettlement(courier.name).upiUnsettledOrders.length }})
+                                <i class="fas fa-clock"></i> Pending Payment ({{
+                                getCourierSettlement(courier.name).upiUnsettledOrders.length }})
                             </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).upiUnsettledOrders">
+                            <div class="settlement-order-row"
+                                *ngFor="let order of getCourierSettlement(courier.name).upiUnsettledOrders">
                                 <div class="so-info">
                                     <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                        }}</span>
                                 </div>
                                 <div class="so-amount">₹{{ courierFees[courier.name] || 0 }}</div>
                                 <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
@@ -917,16 +838,21 @@
                         </div>
 
                         <!-- Settled UPI Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiSettledOrders.length > 0">
+                        <div class="settlement-orders-list"
+                            *ngIf="getCourierSettlement(courier.name).upiSettledOrders.length > 0">
                             <div class="settlement-list-head settled-head">
-                                <i class="fas fa-check-circle"></i> Paid ({{ getCourierSettlement(courier.name).upiSettledOrders.length }})
+                                <i class="fas fa-check-circle"></i> Paid ({{
+                                getCourierSettlement(courier.name).upiSettledOrders.length }})
                             </div>
-                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).upiSettledOrders">
+                            <div class="settlement-order-row settled-row"
+                                *ngFor="let order of getCourierSettlement(courier.name).upiSettledOrders">
                                 <div class="so-info">
                                     <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                        }}</span>
                                 </div>
-                                <div class="so-amount" style="color: #16a34a;">₹{{ courierFees[courier.name] || 0 }}</div>
+                                <div class="so-amount" style="color: #16a34a;">₹{{ courierFees[courier.name] || 0 }}
+                                </div>
                                 <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
                                     <i class="fas fa-rotate-left"></i> Undo
                                 </button>
@@ -954,41 +880,51 @@
                         <div class="settlement-stats-row">
                             <div class="settlement-stat">
                                 <span class="sstat-label">Total Collected</span>
-                                <span class="sstat-value" style="color: #ea580c;">₹{{ getCourierSettlement(courier.name).codTotalCollected | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #ea580c;">₹{{
+                                    getCourierSettlement(courier.name).codTotalCollected | number:'1.0-0' }}</span>
                             </div>
                             <div class="settlement-stat">
                                 <span class="sstat-label">Courier Keeps</span>
-                                <span class="sstat-value" style="color: #7c3aed;">₹{{ getCourierSettlement(courier.name).codCourierKeeps | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #7c3aed;">₹{{
+                                    getCourierSettlement(courier.name).codCourierKeeps | number:'1.0-0' }}</span>
                             </div>
                             <div class="settlement-stat">
                                 <span class="sstat-label">Admin Receives</span>
-                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(courier.name).codAdminGets | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #166534;">₹{{
+                                    getCourierSettlement(courier.name).codAdminGets | number:'1.0-0' }}</span>
                             </div>
                         </div>
 
                         <div class="settlement-stats-row" style="margin-top: -0.5rem;">
                             <div class="settlement-stat">
                                 <span class="sstat-label">Received</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).codReceived | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #16a34a;">₹{{
+                                    getCourierSettlement(courier.name).codReceived | number:'1.0-0' }}</span>
                             </div>
                             <div class="settlement-stat">
                                 <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).codPending | number:'1.0-0' }}</span>
+                                <span class="sstat-value" style="color: #dc2626;">₹{{
+                                    getCourierSettlement(courier.name).codPending | number:'1.0-0' }}</span>
                             </div>
                         </div>
 
                         <!-- Unsettled COD Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codUnsettledOrders.length > 0">
+                        <div class="settlement-orders-list"
+                            *ngIf="getCourierSettlement(courier.name).codUnsettledOrders.length > 0">
                             <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Collection ({{ getCourierSettlement(courier.name).codUnsettledOrders.length }})
+                                <i class="fas fa-clock"></i> Pending Collection ({{
+                                getCourierSettlement(courier.name).codUnsettledOrders.length }})
                             </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).codUnsettledOrders">
+                            <div class="settlement-order-row"
+                                *ngFor="let order of getCourierSettlement(courier.name).codUnsettledOrders">
                                 <div class="so-info">
                                     <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                        }}</span>
                                 </div>
                                 <div class="so-amounts-dual">
-                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</span>
+                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[courier.name] ||
+                                        0)) | number:'1.0-0' }}</span>
                                     <span class="so-amount-sub">of ₹{{ order.totalAmount | number:'1.0-0' }}</span>
                                 </div>
                                 <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
@@ -998,16 +934,21 @@
                         </div>
 
                         <!-- Settled COD Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codSettledOrders.length > 0">
+                        <div class="settlement-orders-list"
+                            *ngIf="getCourierSettlement(courier.name).codSettledOrders.length > 0">
                             <div class="settlement-list-head settled-head">
-                                <i class="fas fa-check-circle"></i> Collected ({{ getCourierSettlement(courier.name).codSettledOrders.length }})
+                                <i class="fas fa-check-circle"></i> Collected ({{
+                                getCourierSettlement(courier.name).codSettledOrders.length }})
                             </div>
-                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).codSettledOrders">
+                            <div class="settlement-order-row settled-row"
+                                *ngFor="let order of getCourierSettlement(courier.name).codSettledOrders">
                                 <div class="so-info">
                                     <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
+                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                        }}</span>
                                 </div>
-                                <div class="so-amount" style="color: #16a34a;">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</div>
+                                <div class="so-amount" style="color: #16a34a;">₹{{ (order.totalAmount -
+                                    (courierFees[courier.name] || 0)) | number:'1.0-0' }}</div>
                                 <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
                                     <i class="fas fa-rotate-left"></i> Undo
                                 </button>
