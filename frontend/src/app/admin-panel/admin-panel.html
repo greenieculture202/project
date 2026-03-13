@@ -699,6 +699,144 @@
 
         <!-- Payment Management Content -->
         <ng-container *ngIf="activeTab === 'payment'">
+
+            <style>
+                .admin-payments-view {
+                    padding: 20px 0;
+                    font-family: 'Outfit', sans-serif;
+                }
+                .payment-stats-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 25px !important;
+                    margin-bottom: 35px !important;
+                }
+                .payment-stat-card {
+                    background: white !important;
+                    padding: 28px 24px !important;
+                    border-radius: 24px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 20px !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+                    border: 1px solid #f1f5f9 !important;
+                    transition: all 0.3s ease !important;
+                }
+                .pstat-icon {
+                    width: 60px !important;
+                    height: 60px !important;
+                    border-radius: 18px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    font-size: 1.6rem !important;
+                }
+                .pstat-info {
+                    display: flex !important;
+                    flex-direction: column !important;
+                }
+                .pstat-label {
+                    font-size: 0.85rem !important;
+                    font-weight: 700 !important;
+                    color: #64748b !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.5px !important;
+                    margin-bottom: 5px !important;
+                }
+                .pstat-value {
+                    font-size: 1.8rem !important;
+                    font-weight: 800 !important;
+                    color: #1e293b !important;
+                }
+                .payment-analytics-row {
+                    display: grid !important;
+                    grid-template-columns: 1.2fr 1fr !important;
+                    gap: 25px !important;
+                    margin-bottom: 35px !important;
+                }
+                .payment-card-white {
+                    background: white !important;
+                    border-radius: 24px !important;
+                    padding: 30px !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+                    border: 1px solid #f1f5f9 !important;
+                }
+                .payment-card-header {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 15px !important;
+                    margin-bottom: 25px !important;
+                }
+                .payment-card-icon {
+                    width: 45px !important;
+                    height: 45px !important;
+                    border-radius: 12px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    font-size: 1.2rem !important;
+                }
+                .payment-card-title {
+                    font-size: 1.15rem !important;
+                    font-weight: 800 !important;
+                    color: #1e293b !important;
+                    margin: 0 !important;
+                }
+                .payment-donut-wrap {
+                    width: 160px !important;
+                    height: 160px !important;
+                    position: relative !important;
+                    margin: 0 auto !important;
+                }
+                .payment-donut-center {
+                    position: absolute !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    text-align: center !important;
+                }
+                .revenue-item {
+                    padding: 18px !important;
+                    border-radius: 15px !important;
+                    margin-bottom: 15px !important;
+                }
+                .revenue-progress-bg {
+                    height: 8px !important;
+                    background: rgba(0,0,0,0.05) !important;
+                    border-radius: 10px !important;
+                    overflow: hidden !important;
+                    margin-top: 10px !important;
+                }
+                .revenue-progress-fill {
+                    height: 100% !important;
+                    border-radius: 10px !important;
+                }
+                .payment-table-wrap {
+                    overflow-x: auto !important;
+                    margin-top: 20px !important;
+                }
+                .payment-records-table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                }
+                .payment-records-table th {
+                    text-align: left !important;
+                    padding: 12px !important;
+                    font-size: 0.75rem !important;
+                    color: #94a3b8 !important;
+                    text-transform: uppercase !important;
+                }
+                .payment-records-table td {
+                    padding: 15px 12px !important;
+                    border-bottom: 1px solid #f8fafc !important;
+                    font-size: 0.9rem !important;
+                }
+                @media (max-width: 1024px) {
+                    .payment-stats-grid { grid-template-columns: 1fr !important; }
+                    .payment-analytics-row { grid-template-columns: 1fr !important; }
+                }
+            </style>
+
             <header class="top-header">
                 <div class="welcome">
                     <h1>Payment Hub</h1>
