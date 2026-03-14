@@ -206,6 +206,12 @@ export class ProductDetailComponent implements OnInit {
             return;
         }
         if (this.product) {
+            // Check stock
+            if (this.product.stock !== undefined && this.product.stock <= 0) {
+                this.notificationService.show(`"${this.product.name}" is currently out of stock.`, 'Out of Stock', 'warning', 'standard');
+                return;
+            }
+
             const cat = this.product.category || '';
             const isWeightBased = cat.includes('Seeds') ||
                 cat.includes('Soil') ||
@@ -229,6 +235,12 @@ export class ProductDetailComponent implements OnInit {
             return;
         }
         if (this.product) {
+            // Check stock
+            if (this.product.stock !== undefined && this.product.stock <= 0) {
+                this.notificationService.show(`"${this.product.name}" is currently out of stock.`, 'Out of Stock', 'warning', 'standard');
+                return;
+            }
+
             const cat = this.product.category || '';
             const isWeightBased = cat.includes('Seeds') ||
                 cat.includes('Soil') ||

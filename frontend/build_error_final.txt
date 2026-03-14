@@ -1,0 +1,80 @@
+﻿[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+Application bundle generation failed. [11.531 seconds] - 2026-03-08T10:39:09.984Z
+
+node.exe : [1m[31m[31mX 
+[41;31m[[41;97mERROR[41;31m][0m [1mTS2367: This 
+comparison appears to be unintentional because the 
+types 'string' and '{ key: string; label: string; }' 
+have no overlap.[0m [1m[35m[plugin 
+angular-compiler][0m
+At C:\Users\tankn\AppData\Roaming\npm\ng.ps1:24 char:5
++     & "node$exe"  
+"$basedir/node_modules/@angular/cli/bin/ng.js" $arg ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([1m[31m 
+   [31mX...r-compiler][0m:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+    src/app/admin-panel/admin-panel.html:336:90:
+[37m      336 Γöé ...getCategoryList()" 
+[class.active]="[32mproductCategoryFilter === 
+cat[37m"
+          Γò╡                                       
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component 
+AdminPanelComponent.
+
+    src/app/admin-panel/admin-panel.ts:20:17:
+[37m      20 Γöé     templateUrl: 
+[32m'./admin-panel.html'[37m,
+         Γò╡                  
+[32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: 
+Type '{ key: string; label: string; }' is not 
+assignable to type 'string'.[0m [1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/admin-panel/admin-panel.html:337:41:
+[37m      337 Γöé ...                           
+(click)="[32mproductCategoryFilter = cat[37m">
+          Γò╡                                        
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component 
+AdminPanelComponent.
+
+    src/app/admin-panel/admin-panel.ts:20:17:
+[37m      20 Γöé     templateUrl: 
+[32m'./admin-panel.html'[37m,
+         Γò╡                  
+[32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: 
+Argument of type '{ key: string; label: string; }' is 
+not assignable to parameter of type 'string'.[0m 
+[1m[35m[plugin angular-compiler][0m
+
+    src/app/admin-panel/admin-panel.html:338:51:
+[37m      338 Γöé                                 
+{{getCategoryLabel([32mcat[37m)}}
+          Γò╡                                          
+          [32m~~~[0m
+
+  Error occurs in the template of component 
+AdminPanelComponent.
+
+    src/app/admin-panel/admin-panel.ts:20:17:
+[37m      20 Γöé     templateUrl: 
+[32m'./admin-panel.html'[37m,
+         Γò╡                  
+[32m~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

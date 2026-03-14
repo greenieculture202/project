@@ -48,3 +48,36 @@ img {
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* Force Admin Sidebar & Layout (Ultimate Backup) */
+.admin-container {
+    display: flex !important;
+    background: #f8fafc !important;
+}
+
+.sidebar {
+    width: 260px !important;
+    background: #1e293b !important;
+    color: white !important;
+    min-height: 100vh !important;
+}
+
+.sidebar a {
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+
+.sidebar a.active {
+    background: #4f46e5 !important;
+    color: white !important;
+}
+
+.main-content {
+    flex: 1 !important;
+    padding: 30px !important;
+    background: #f8fafc !important;
+}
+
+.admin-payments-view {
+    padding: 20px 0 !important;
+}

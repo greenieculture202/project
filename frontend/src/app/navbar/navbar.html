@@ -4,26 +4,38 @@
     <span>Greenie Culture</span>
   </div>
   <div class="search-container">
-    <div class="search-box">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search For Plants...">
+    <div class="search-box" [class.is-searching]="isLoading">
+      <i class="fas search-icon" [class.fa-magnifying-glass]="!isLoading" [class.fa-circle-notch]="isLoading"
+        [class.fa-spin]="isLoading"></i>
+      <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search For Plants..."
+        (keyup.escape)="clearSearch()">
+      <button class="clear-search-btn" *ngIf="searchTerm" (click)="clearSearch()" title="Clear search">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
 
     <!-- Search Results Dropdown -->
     <div class="search-results-dropdown" *ngIf="showResults">
-      <div class="search-result-item" *ngFor="let product of searchResults" (click)="selectProduct(product)">
-        <div class="product-thumb">
-          <img [src]="product.image" [alt]="product.name">
-        </div>
-        <div class="product-info">
-          <div class="product-name">{{ product.name }}</div>
-          <div class="product-category">{{ product.category }}</div>
-        </div>
-        <div class="product-price">₹{{ product.price }}</div>
+      <div class="searching-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Searching for premium plants...</p>
       </div>
-      <div class="no-results" *ngIf="searchResults.length === 0">
-        No plants found for "{{ searchTerm }}"
-      </div>
+
+      <ng-container *ngIf="!isLoading">
+        <div class="search-result-item" *ngFor="let product of searchResults" (click)="selectProduct(product)">
+          <div class="product-thumb">
+            <img [src]="product.image" [alt]="product.name">
+          </div>
+          <div class="product-info">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-category">{{ product.category }}</div>
+          </div>
+          <div class="product-price">₹{{ product.price }}</div>
+        </div>
+        <div class="no-results" *ngIf="searchResults.length === 0 && !isLoading">
+          No plants found for "{{ searchTerm }}"
+        </div>
+      </ng-container>
     </div>
   </div>
   <div class="nav-icons">

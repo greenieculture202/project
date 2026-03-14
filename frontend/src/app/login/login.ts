@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, NgZone } from '@angular/core';
+import { Component, signal, inject, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -33,6 +33,7 @@ export class LoginComponent implements OnInit {
     notificationService = inject(NotificationService);
     private ngZone = inject(NgZone);
     private http = inject(HttpClient);
+    private cdr = inject(ChangeDetectorRef);
 
     constructor(private fb: FormBuilder, private router: Router) {
         this.loginForm = this.fb.group({
@@ -71,12 +72,7 @@ export class LoginComponent implements OnInit {
                     this.isLoading = false;
                     this.otpEmail = res.email;
                     this.showOtpModal = true;
-
-                    if (res.devMode) {
-                        this.notificationService.show(res.message, 'Dev Mode Active', 'info');
-                    } else {
-                        this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
-                    }
+                    this.notificationService.show('Please check your Gmail for OTP!', 'OTP Sent', 'info');
                 },
                 error: (err: any) => {
                     this.isLoading = false;
@@ -129,44 +125,56 @@ export class LoginComponent implements OnInit {
             this.isLoading = true;
             this.loginError = '';
 
-            const rawEmail = this.loginForm.value.email;
+            const email = this.loginForm.value.email.trim();
             const password = this.loginForm.value.password;
 
-            // Admin Login Check — calls real backend to get a JWT
-            if (rawEmail === 'admin@greenie.com' && password === 'radheradhe') {
-                this.http.post<any>('/api/auth/admin-login', { email: rawEmail, password }).subscribe({
+            console.log('[Login] Attempting login for:', email);
+
+            // Admin Login Check — any email ending in @greenie.com is treated as admin attempt
+            if (email.toLowerCase().endsWith('@greenie.com')) {
+                console.log('[Login] Detected admin email, routing to admin-login');
+                this.http.post<any>(`${this.authService.apiUrl}/admin-login`, { email, password }).subscribe({
                     next: (res) => {
+                        console.log('[Login] Admin login successful:', res.user.fullName);
                         this.isLoading = false;
-                        // Store the real JWT so admin API calls work
                         sessionStorage.setItem('auth_token', res.token);
-                        this.authService.setAdmin(true);
-                        this.notificationService.show('Welcome Admin!', 'Admin Login Successful', 'success');
+                        sessionStorage.setItem('user_name', res.user.fullName);
+                        this.authService.setAdmin(true, res.user.fullName);
+                        this.notificationService.show(`Welcome ${res.user.fullName}!`, 'Admin Login Successful', 'success');
                         this.router.navigate(['/admin-dashboard']);
                     },
-                    error: () => {
+                    error: (err: any) => {
+                        console.error('[Login] Admin login error:', err);
                         this.isLoading = false;
-                        this.loginError = 'Admin login failed. Please try again.';
+                        const errorMsg = err.error?.message || 'Admin login failed. Please check credentials.';
+                        this.loginError = errorMsg;
+                        this.notificationService.show(errorMsg, 'Login Failed', 'error');
+                        this.cdr.detectChanges(); // Force UI update
                     }
                 });
                 return;
             }
 
-            const emailPrefix = rawEmail.split('@')[0]; // Strip domain if user typed it
+            const emailPrefix = email.split('@')[0]; // Strip domain if user typed it
+            const loginEmail = `${emailPrefix}@gmail.com`;
+            console.log('[Login] Routing to user-login with:', loginEmail);
 
             const loginPayload = {
-                ...this.loginForm.value,
-                email: `${emailPrefix}@gmail.com`
+                email: loginEmail,
+                password: password
             };
 
             this.authService.login(loginPayload)
                 .subscribe({
                     next: (res: any) => {
+                        console.log('[Login] User login successful');
                         this.isLoading = false;
                         this.notificationService.show('Welcome back to Greenie Culture!', 'Login Successful', 'success');
                         this.isLoggedInSuccess = true;
                         this.router.navigate(['/']);
                     },
                     error: (err: any) => {
+                        console.error('[Login] User login error:', err);
                         this.isLoading = false;
                         if (err.status === 404 || err.error?.message === 'User not found') {
                             this.notificationService.show(
@@ -183,11 +191,13 @@ export class LoginComponent implements OnInit {
                             // Auto-clear toast after 4s (matching CSS animation)
                             setTimeout(() => {
                                 if (this.loginError === errorMsg) this.loginError = '';
+                                this.cdr.detectChanges();
                             }, 4000);
 
                             this.notificationService.show(errorMsg, 'Login Failed', 'error');
                         }
                         this.isLoggedInSuccess = false;
+                        this.cdr.detectChanges();
                     }
                 });
         } else {

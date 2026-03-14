@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema({
         price: { type: String },
         originalPrice: { type: String }
     }],
-    stock: { type: Number, default: 0 }
+    stock: { type: Number, default: 25 }
 });
 
 // Create text index for searching

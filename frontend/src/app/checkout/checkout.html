@@ -216,11 +216,13 @@
                         <div class="billing-summary">
                             <div class="bill-row">
                                 <span>Subtotal</span>
-                                <span>₹{{ totalAmount() }}</span>
+                                <span>₹{{ itemsTotal() }}</span>
                             </div>
                             <div class="bill-row">
                                 <span>Delivery Charges</span>
-                                <span class="success-text">FREE</span>
+                                <span [class.success-text]="deliveryCharge() === 0">
+                                    {{ deliveryCharge() === 0 ? 'FREE' : '₹' + deliveryCharge() }}
+                                </span>
                             </div>
                             <div class="bill-row grand-total">
                                 <span>Amount Payable</span>
@@ -256,28 +258,47 @@
                             </div>
                         </div>
 
-                        <!-- QR Scanner Section -->
+                        <!-- QR Scanner Section (Updated Flow) -->
                         <div class="qr-scanner-container" *ngIf="selectedPayment === 'upi'">
-                            <div class="qr-card" *ngIf="!paymentReceived">
-                                <h3>Scan & Pay</h3>
-                                <div class="qr-image">
-                                    <img [src]="getQRCodeUrl()" alt="QR Code">
+                            
+                            <!-- Step A: Payment Info & Pay Now Button -->
+                            <div class="upi-pre-pay-card" *ngIf="!showUPIScanner">
+                                <div class="upi-info-row">
+                                    <span class="label">Temporary Order ID</span>
+                                    <span class="value">{{ tempOrderId }}</span>
                                 </div>
-                                <p>Open any UPI App to scan</p>
-                                <div class="simulated-payment-info">
-                                    <span class="loader-dot"></span>
-                                    <span>Waiting for payment...</span>
+                                <div class="upi-info-row">
+                                    <span class="label">Payment Amount</span>
+                                    <span class="value amount">₹{{ totalAmount() }}</span>
                                 </div>
+                                <button class="pay-now-btn" (click)="onUPIScanClick()">
+                                    <i class="fas fa-bolt"></i> Pay Now & Scan
+                                </button>
+                                <p class="secure-tag"><i class="fas fa-shield-check"></i> 100% Secure Transaction</p>
                             </div>
 
-                            <!-- Payment Success Message -->
-                            <div class="payment-success-msg" *ngIf="paymentReceived">
-                                <div class="success-icon-wrapper">
-                                    <i class="fas fa-check-circle"></i>
+                            <!-- Step B: Scanner (Multi-step Verification) -->
+                            <div class="qr-card" *ngIf="showUPIScanner && !paymentReceived">
+                                <h3>Scan & Pay</h3>
+                                <div class="qr-image" [class.scanning-effect]="isScanning">
+                                    <img [src]="getQRCodeUrl()" alt="QR Code">
+                                    <div class="scan-bar" *ngIf="isScanning"></div>
                                 </div>
-                                <h3>Payment Successfully!</h3>
-                                <p>Your payment has been verified. Please click <strong>Place Order</strong> below to
-                                    complete your checkout.</p>
+                                
+                                <div class="status-box">
+                                    <!-- Status 1: Waiting for user to scan -->
+                                    <div class="simulated-payment-info" *ngIf="isScanning">
+                                        <span class="loader-dot pulse"></span>
+                                        <span>Please scan from any UPI App...</span>
+                                    </div>
+                                    
+                                    <!-- Status 2: Scan detected, now verifying (1-min) -->
+                                    <div class="simulated-payment-info" *ngIf="isVerifying">
+                                        <span class="loader-dot verifying"></span>
+                                        <span class="verifying-text">Scan Detected! Verifying with Bank (1 min)...</span>
+                                    </div>
+                                </div>
+                                <p class="helper-text">Stay on this screen until verification is complete</p>
                             </div>
                         </div>
 
@@ -298,7 +319,7 @@
 
                     <div class="action-bar">
                         <button class="back-link" (click)="prevStep()">Review Order</button>
-                        <button class="primary-btn checkout-btn" [disabled]="isProcessing" (click)="onPayNow()">
+                        <button class="primary-btn checkout-btn" [disabled]="isProcessing || (selectedPayment === 'upi' && !paymentReceived)" (click)="onPayNow()">
                             <span *ngIf="!isProcessing">Place Order - ₹{{ totalAmount() }}</span>
                             <span *ngIf="isProcessing">Processing Payment...</span>
                         </button>
@@ -365,9 +386,12 @@
                         <div class="pill-icon"><i class="fas fa-user-tie"></i></div>
                         <div class="pill-content">
                             <label>DELIVER TO</label>
-                            <h4>{{ firstName }} {{ lastName }}</h4>
-                            <p class="pill-sub">{{ address }}</p>
-                            <p class="pill-sub">{{ city }}, {{ stateName }}</p>
+                            <h4>{{ placedOrder?.shippingDetails?.fullName || (firstName + ' ' + lastName) }}</h4>
+                            <p class="pill-sub">{{ placedOrder?.shippingDetails?.address || address }}</p>
+                            <p class="pill-sub">
+                                {{ placedOrder?.shippingDetails?.city || city }}, 
+                                {{ placedOrder?.shippingDetails?.state || stateName }}
+                            </p>
                         </div>
                     </div>
                     <div class="info-pill">
@@ -375,9 +399,13 @@
                         <div class="pill-content">
                             <label>PAYMENT METHOD</label>
                             <h4>{{ placedOrder?.paymentMethod }}</h4>
-                            <span class="status-indicator confirmed">
-                                <i class="fas fa-certificate"></i> VERIFIED SECURE
+                            <span class="status-indicator" [class.confirmed]="placedOrder?.paymentMethod === 'UPI' || placedOrder?.paymentMethod === 'Cash on Delivery'">
+                                <i class="fas" [class.fa-certificate]="placedOrder?.paymentMethod === 'Cash on Delivery'" [class.fa-check-circle]="placedOrder?.paymentMethod === 'UPI'"></i> 
+                                {{ placedOrder?.paymentMethod === 'UPI' ? 'PAYMENT VERIFIED' : 'VERIFIED SECURE' }}
                             </span>
+                            <p class="pill-sub" *ngIf="placedOrder?.paymentMethod === 'UPI'" style="font-size: 0.6rem; color: #10b981; font-weight: 700; margin-top: 4px;">
+                                TXN: {{ placedOrder?.orderId?.replace('#ORD-', 'TXN-') }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -422,11 +450,13 @@
                     <div class="summary-rows">
                         <div class="summary-row">
                             <span class="label">BASE AMOUNT</span>
-                            <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                            <span class="value">₹{{ placedOrder?.totalAmount - (placedOrder?.deliveryCharge || 0) }}</span>
                         </div>
                         <div class="summary-row">
                             <span class="label">SHIPPING CHARGES</span>
-                            <span class="value">₹0.00 (COMPLIMENTARY)</span>
+                            <span class="value" [class.success-text]="!placedOrder?.deliveryCharge">
+                                {{ placedOrder?.deliveryCharge ? '₹' + placedOrder.deliveryCharge : '₹0.00 (COMPLIMENTARY)' }}
+                            </span>
                         </div>
                         <div class="summary-divider"></div>
                         <div class="summary-row accent">
@@ -459,6 +489,25 @@
                 CONTINUE TO REVIEW <i class="fas fa-arrow-right"></i>
             </button>
         </div>
+    </div>
+</div>
+
+<!-- Payment Success Popup Modal (1-minute delayed) -->
+<div class="fixed-overlay" *ngIf="showPaymentSuccessPopup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);">
+    <div class="success-popup-card">
+        <div class="confetti-effect"></div>
+        <div class="success-icon">
+            <i class="fas fa-check-double"></i>
+        </div>
+        <h2>Online Payment Successful</h2>
+        <p>We have successfully verified your transaction of <strong>₹{{ totalAmount() }}</strong>.</p>
+        <div class="payment-meta">
+            <span>TXN ID: {{ (tempOrderId || 'TXN').replace('T-ORD', 'TXN') }}</span>
+            <span>Date: {{ currentTimestamp | date:'short' }}</span>
+        </div>
+        <button class="popup-ok-btn" (click)="onPaymentSuccessOk()">
+            OK - View Receipt
+        </button>
     </div>
 </div>
 

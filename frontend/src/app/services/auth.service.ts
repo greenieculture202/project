@@ -9,7 +9,7 @@ import { NotificationService } from './notification.service';
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = '/api/auth';
+    public apiUrl = '/api/auth';
 
     private isLoggedInSubject = new BehaviorSubject<boolean>(this.isLoggedIn());
     isLoggedIn$ = this.isLoggedInSubject.asObservable();
@@ -72,13 +72,13 @@ export class AuthService {
         );
     }
 
-    setAdmin(isAdmin: boolean) {
+    setAdmin(isAdmin: boolean, name: string = 'Admin') {
         if (isAdmin) {
             sessionStorage.setItem('is_admin', 'true');
-            sessionStorage.setItem('user_name', 'Admin');
+            sessionStorage.setItem('user_name', name);
             this.isLoggedInSubject.next(true);
             this.isAdminSubject.next(true);
-            this.currentUserSubject.next('Admin');
+            this.currentUserSubject.next(name);
         } else {
             sessionStorage.removeItem('is_admin');
             this.isAdminSubject.next(false);

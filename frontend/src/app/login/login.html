@@ -33,7 +33,8 @@
                         [class.field-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <i class="far fa-user"></i>
                         <input type="text" formControlName="email" placeholder="username">
-                        <span class="domain-suffix">@gmail.com</span>
+                        <span class="domain-suffix"
+                            [style.display]="loginForm.get('email')?.value?.includes('@') ? 'none' : 'inline'">@gmail.com</span>
                     </div>
                     <div class="error-tag" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <i class="fas fa-circle-exclamation"></i>

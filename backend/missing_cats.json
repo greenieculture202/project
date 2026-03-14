@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Areca Palm",
+    "category": "Bestsellers",
+    "tags": [
+      "Air Purifying",
+      "Modern Decor",
+      "Easy Care"
+    ]
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "category": "Bestsellers",
+    "tags": [
+      "Modern Decor",
+      "Air Purifying",
+      "Perfect Gift"
+    ]
+  },
+  {
+    "name": "Spider Plant",
+    "category": "Outdoor Plants",
+    "tags": [
+      "Easy Care",
+      "Air Purifying",
+      "Pet Friendly",
+      "G-INDOOR-6-SEC"
+    ]
+  }
+]

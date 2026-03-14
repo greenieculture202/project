@@ -19,6 +19,7 @@ export interface Product {
     tags?: string[];
     slug?: string;
     variants?: { name: string; price: string; originalPrice?: string; }[];
+    stock?: number;
 }
 
 @Injectable({

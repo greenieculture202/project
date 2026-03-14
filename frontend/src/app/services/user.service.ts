@@ -52,4 +52,12 @@ export class UserService {
     updateOrderStatus(orderId: string, status: string): Observable<any> {
         return this.http.put(`/api/admin/orders/${orderId}/status`, { status }, { headers: this.getHeaders() });
     }
+
+    blockUser(id: string, isBlocked: boolean): Observable<any> {
+        return this.http.put(`/api/admin/users/${id}/block`, { isBlocked }, { headers: this.getHeaders() });
+    }
+
+    getPublicCouriers(): Observable<any[]> {
+        return this.http.get<any[]>('/api/couriers/public');
+    }
 }
