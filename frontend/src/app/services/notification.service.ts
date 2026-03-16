@@ -10,14 +10,6 @@ export interface Notification {
     title: string;
     message: string;
     relatedInquiryId?: string;
-    subType?: string;
-    reminderId?: string;
-    product?: {
-      id?: string;
-      name?: string;
-      image?: string;
-      stock?: number;
-    };
     isRead: boolean;
     createdAt: Date;
 }
@@ -27,7 +19,7 @@ export interface NotificationState {
     title: string;
     message: string;
     type: 'success' | 'error' | 'info' | 'warning' | 'cart';
-    layout?: 'standard' | 'cart';
+    layout?: 'standard' | 'cart' | 'toast';
     confirmLabel?: string;
     redirectUrl?: string;
 }
@@ -88,12 +80,6 @@ export class NotificationService {
         return this.http.delete(this.apiUrl, { headers });
     }
 
-    performReminderAction(reminderId: string, action: 'continued' | 'stopped'): Observable<any> {
-        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
-        const headers = new HttpHeaders().set('x-auth-token', token || '');
-        return this.http.post(`/api/user/reminders/${reminderId}/action`, { action }, { headers });
-    }
-
     refresh() {
         this.getNotifications().subscribe(notifications => {
             this.notificationsSubject.next(notifications);
@@ -101,7 +87,7 @@ export class NotificationService {
     }
 
     // Toast/Modal Notification Methods (Original)
-    show(message: string, title: string = 'Notification', type: 'success' | 'error' | 'info' | 'warning' | 'cart' = 'info', layout: 'standard' | 'cart' = 'standard', redirectUrl?: string, confirmLabel: string = 'CONTINUE') {
+    show(message: string, title: string = 'Notification', type: 'success' | 'error' | 'info' | 'warning' | 'cart' = 'info', layout: 'standard' | 'cart' | 'toast' = 'standard', redirectUrl?: string, confirmLabel: string = 'CONTINUE') {
         this.stateSubject.next({
             isVisible: true,
             title,

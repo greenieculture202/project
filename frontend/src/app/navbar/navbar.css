@@ -522,21 +522,6 @@
   box-shadow: 0 4px 12px rgba(26, 93, 26, 0.15);
 }
 
-/* New: Tooltip/Badge for "Action Required" on bell */
-.notifications-wrapper.pulse-alert i {
-  animation: ring 2s ease infinite;
-}
-
-@keyframes ring {
-  0% { transform: rotate(0); }
-  5% { transform: rotate(15deg); }
-  10% { transform: rotate(-15deg); }
-  15% { transform: rotate(10deg); }
-  20% { transform: rotate(-10deg); }
-  25% { transform: rotate(0); }
-  100% { transform: rotate(0); }
-}
-
 /* Notification System Styles */
 .notifications-wrapper {
   position: relative;
@@ -695,90 +680,6 @@
   transition: all 0.3s ease;
 }
 
-.notification-icon.reminder-icon {
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #10b981;
-  animation: pulse-green 2s infinite;
-}
-
-@keyframes pulse-green {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-/* --- Premium Sequential Reminder Styles --- */
-
-/* Base Reminder Overrides */
-.notification-item[data-type="Reminder"] {
-  border-left: 5px solid transparent;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.notification-item[data-type="Reminder"]:hover {
-  transform: translateX(8px);
-}
-
-/* 1. Water Reminder - Deep Aqua */
-.notification-item[data-subtype="water"] {
-  border-left-color: #0ea5e9;
-  background: linear-gradient(to right, rgba(14, 165, 233, 0.08), transparent);
-}
-.notification-item[data-subtype="water"] .notification-icon {
-  background: #e0f2fe;
-  color: #0284c7;
-  border: 1px solid #bae6fd;
-}
-
-/* 2. Fertilizer Reminder - Organic Emerald/Gold */
-.notification-item[data-subtype="fertilizer"] {
-  border-left-color: #eab308;
-  background: linear-gradient(to right, rgba(234, 179, 8, 0.08), transparent);
-}
-.notification-item[data-subtype="fertilizer"] .notification-icon {
-  background: #fef9c3;
-  color: #a16207;
-  border: 1px solid #fef08a;
-}
-
-/* 3. Sunlight Check - Solar Amber */
-.notification-item[data-subtype="sunlight"] {
-  border-left-color: #f59e0b;
-  background: linear-gradient(to right, rgba(245, 158, 11, 0.08), transparent);
-}
-.notification-item[data-subtype="sunlight"] .notification-icon {
-  background: #ffedd5;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
-}
-
-/* 4. General Health Assessment - Vitality Teal */
-.notification-item[data-subtype="general"],
-.notification-item[data-subtype="health"] {
-  border-left-color: #10b981;
-  background: linear-gradient(to right, rgba(16, 185, 129, 0.08), transparent);
-}
-.notification-item[data-subtype="general"] .notification-icon,
-.notification-item[data-subtype="health"] .notification-icon {
-  background: #d1fae5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-
-/* Shared Unread Pulse for Reminders */
-.notification-item.unread[data-type="Reminder"] .unread-dot {
-  background: #10b981;
-  box-shadow: 0 0 15px #10b981;
-  animation: badgePop 1.5s infinite;
-}
-
-/* Notification Item Hover Icons */
-.notification-item[data-subtype="water"]:hover .notification-icon { background: #0284c7; color: white; }
-.notification-item[data-subtype="fertilizer"]:hover .notification-icon { background: #a16207; color: white; }
-.notification-item[data-subtype="sunlight"]:hover .notification-icon { background: #c2410c; color: white; }
-.notification-item[data-subtype="general"]:hover .notification-icon { background: #047857; color: white; }
-
 .notification-item:hover .notification-icon {
   transform: rotate(-10deg) scale(1.1);
   background: #2d6a4f;
@@ -869,52 +770,4 @@
   color: #cbd5e1;
   font-family: serif;
   opacity: 0.5;
-}
-
-/* Reminder Action Buttons */
-.reminder-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.action-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.action-btn.continue {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-}
-
-.action-btn.continue:hover {
-  background: #10b981;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.action-btn.stop {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-}
-
-.action-btn.stop:hover {
-  background: #ef4444;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }

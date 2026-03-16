@@ -3,6 +3,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, NgZone, HostListener } fr
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 import { UserService } from '../services/user.service';
 import { ProductService } from '../services/product.service';
 import { OfferService, Offer } from '../services/offer.service';
@@ -41,6 +42,7 @@ export class AdminPanelComponent implements OnInit {
     cdr = inject(ChangeDetectorRef);
     ngZone = inject(NgZone);
     http = inject(HttpClient);
+    notiService = inject(NotificationService);
 
     activeTab: string = 'dashboard';
     faqs: Faq[] = [];
@@ -196,6 +198,12 @@ export class AdminPanelComponent implements OnInit {
     associatedProducts: any[] = [];
     activeOfferCode: string = '';
     activeOfferBadge: string = '';
+
+    // Courier Messaging
+    showCourierReplyModal: boolean = false;
+    currentReplyCourierName: string = '';
+    courierReplyMessage: string = '';
+    inquiryActiveSubTab: 'customers' | 'couriers' = 'customers';
     showAddProductToOfferModal: boolean = false;
     addProductSearchTerm: string = '';
     allProductsList: any[] = [];
@@ -638,8 +646,9 @@ export class AdminPanelComponent implements OnInit {
     private destroy$ = new Subject<void>();
     backendResults: any[] = [];
     isSearching: boolean = false;
-    private notificationAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    private notificationAudio = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
     adminNotifications: any[] = [];
+    private isFirstNotiLoad: boolean = true;
 
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
@@ -710,11 +719,11 @@ export class AdminPanelComponent implements OnInit {
         this.loadOrders();
         this.loadAdminNotifications();
 
-        // Setup polling for orders and notifications
+        // Setup polling for orders and notifications (Faster updates)
         this.pollingInterval = setInterval(() => {
             this.loadOrders();
             this.loadAdminNotifications();
-        }, 30000);
+        }, 10000);
 
         // Initialize settings with current admin name
         const userName = this.authService.getCurrentUser();
@@ -814,7 +823,7 @@ export class AdminPanelComponent implements OnInit {
             },
             error: (err: any) => {
                 console.error('Error toggling user block status:', err);
-                alert('Failed to update user status');
+                this.notiService.show('Failed to update user status. Please check your connection.', 'Update Error', 'error');
             }
         });
     }
@@ -1029,7 +1038,14 @@ export class AdminPanelComponent implements OnInit {
     }
 
     playNotificationSound() {
-        this.notificationAudio.play().catch(e => console.log('Audio play failed:', e));
+        this.notificationAudio.play()
+            .then(() => {
+                console.log('✅ Notification sound played successfully');
+            })
+            .catch(e => {
+                console.warn('❌ Audio play failed (Browser policy):', e);
+                this.notiService.show('Please click anywhere on the page once to enable notification sounds.', 'Audio Blocked', 'info', 'toast');
+            });
     }
 
     triggerNewNotification() {
@@ -1044,8 +1060,18 @@ export class AdminPanelComponent implements OnInit {
         const headers = { 'x-auth-token': token || '' };
         this.http.get<any[]>('/api/admin/notifications', { headers }).subscribe({
             next: (data: any[]) => {
+                const currentUnreadCount = data.filter((n: any) => !n.isRead).length;
+                
+                // If we have more unread notifications than before, play sound (Skip first load)
+                if (!this.isFirstNotiLoad && currentUnreadCount > this.unreadNotificationsCount) {
+                    console.log('--- NEW NOTIFICATION DETECTED, PLAYING SOUND ---');
+                    this.playNotificationSound();
+                }
+
+                this.isFirstNotiLoad = false;
+                console.log(`[AdminNoti] Total: ${data.length}, Unread: ${currentUnreadCount}`);
                 this.adminNotifications = data;
-                this.unreadNotificationsCount = data.filter((n: any) => !n.isRead).length;
+                this.unreadNotificationsCount = currentUnreadCount;
                 this.hasNotifications = this.unreadNotificationsCount > 0;
                 this.cdr.detectChanges();
             },
@@ -1077,6 +1103,47 @@ export class AdminPanelComponent implements OnInit {
                 this.cdr.detectChanges();
             },
         });
+    }
+
+    openCourierReply(courierName: string, event: Event) {
+        event.stopPropagation();
+        this.currentReplyCourierName = courierName;
+        this.courierReplyMessage = '';
+        this.showCourierReplyModal = true;
+    }
+
+    sendCourierReply() {
+        if (!this.courierReplyMessage.trim()) return;
+
+        const payload = {
+            courierName: this.currentReplyCourierName,
+            title: 'Reply from Admin 📩',
+            message: this.courierReplyMessage
+        };
+
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+
+        this.http.post('/api/admin/notify-courier', payload, { headers }).subscribe({
+            next: (res: any) => {
+                this.notiService.show(`Reply sent to ${this.currentReplyCourierName}`, 'Message Sent', 'success', 'toast');
+                this.showCourierReplyModal = false;
+                this.loadAdminNotifications(); // Reload to show the sent message log
+            },
+            error: (err) => {
+                this.notiService.show('Failed to send reply. Please check your connection.', 'Error', 'error');
+            }
+        });
+    }
+
+    getCourierName(noti: any): string {
+        if (noti.courierName) return noti.courierName;
+        // Fallback for older messages: "Message from Blue Dart 📥"
+        if (noti.title && noti.title.toLowerCase().includes('from ')) {
+            const matches = noti.title.match(/from\s+(Blue Dart|Delhivery|DTDC|[a-zA-Z0-9]+)/i);
+            if (matches && matches[1]) return matches[1];
+        }
+        return '';
     }
 
     markOneAsRead(noti: any) {
@@ -2083,7 +2150,11 @@ export class AdminPanelComponent implements OnInit {
                     }
                     this.lastOrderCount = data.length;
 
-                    this.orders = data;
+                    // Filter out orders marked as "Guest Customer" or those missing registered user data
+                    this.orders = data.filter((order: any) => {
+                        const name = (order.userName || order.userId?.fullName || '').trim();
+                        return name !== 'Guest Customer' && order.userId;
+                    });
 
                     this.calculatePaymentSummary();
                     this.updateDashboardStats();
@@ -2599,7 +2670,7 @@ export class AdminPanelComponent implements OnInit {
             error: (err) => {
                 console.error('Reply error:', err);
                 this.isSubmitting = false;
-                alert('Failed to submit reply.');
+                this.notiService.show('Failed to submit your reply. Please try again.', 'Submission Error', 'error');
             }
         });
     }

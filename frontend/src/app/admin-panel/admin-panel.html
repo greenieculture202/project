@@ -60,7 +60,7 @@
             <a routerLink="/delivery-panel">
                 <i class="fas fa-truck"></i> Delivery Panel
             </a>
-            <a routerLink="/ai-analytics">
+            <a routerLink="/ai-analytics" target="_blank" rel="opener">
                 <i class="fas fa-robot"></i> AI Analytics
             </a>
             <a routerLink="/all-reviews">
@@ -125,13 +125,23 @@
                                             <img [src]="noti.product?.image || 'assets/placeholder-plant.png'"
                                                 alt="product" class="noti-prod-img">
                                         </div>
+                                        <!-- Icon for Admin Messages/Settlements -->
+                                        <div class="noti-icon-wrapper" *ngIf="noti.type === 'admin'" 
+                                             style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #eff6ff; border-radius: 12px; margin-right: 12px;">
+                                            <i class="fas fa-bell" style="font-size: 1.2rem; color: #3b82f6;"></i>
+                                        </div>
+
                                         <div class="noti-item-content">
                                             <div class="noti-item-title">
                                                 <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"
                                                     *ngIf="noti.type === 'LowStock'"></i>
+                                                <i class="fas fa-envelope-open-text" style="color: #6366f1;"
+                                                    *ngIf="noti.type === 'admin' && noti.title.includes('Message')"></i>
+                                                <i class="fas fa-wallet" style="color: #10b981;"
+                                                    *ngIf="noti.type === 'admin' && noti.title.includes('Settlement')"></i>
                                                 {{noti.title}}
                                             </div>
-                                            <div class="noti-item-msg">{{noti.message}}</div>
+                                            <div class="noti-item-msg" style="word-break: break-word;">{{noti.message}}</div>
 
                                             <div class="noti-item-footer" *ngIf="noti.product">
                                                 <div class="noti-price-tag" *ngIf="noti.product.price">
@@ -141,6 +151,11 @@
                                                     <i class="fas fa-cubes"></i>
                                                     Stock: {{noti.product.stock}}
                                                 </div>
+                                            </div>
+                                            <div class="noti-item-footer" *ngIf="noti.type === 'admin' && noti.courierName">
+                                                <button class="noti-reply-btn" (click)="openCourierReply(noti.courierName, $event)">
+                                                    <i class="fas fa-reply"></i> Reply to {{noti.courierName}}
+                                                </button>
                                             </div>
                                             <div class="noti-time-stamp">{{noti.createdAt | date:'shortTime'}}</div>
                                         </div>
@@ -200,7 +215,8 @@
                             <span>Order contribution by day of week</span>
                         </div>
                         <div class="header-options">
-                            <button class="btn-premium-export" (click)="downloadAnalyticsReport()" title="Download CSV Report">
+                            <button class="btn-premium-export" (click)="downloadAnalyticsReport()"
+                                title="Download CSV Report">
                                 <i class="fas fa-download"></i>
                                 Download
                             </button>
@@ -762,13 +778,14 @@
 
                         <div class="payment-chart-body">
                             <div class="payment-donut-wrap">
-                                <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#e2e8f0" stroke-width="20"></circle>
+                                <svg viewBox="0 0 100 100"
+                                    style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                    <circle cx="50" cy="50" r="30" fill="transparent" stroke="#e2e8f0"
+                                        stroke-width="20"></circle>
                                     <circle cx="50" cy="50" r="30" fill="transparent" stroke="#ea580c" stroke-width="20"
                                         pathLength="100"
                                         [attr.stroke-dasharray]="adminPaymentStats.codPercentage + ' ' + (100 - adminPaymentStats.codPercentage)"
-                                        stroke-dashoffset="0"
-                                        style="transition: all 0.8s ease;"></circle>
+                                        stroke-dashoffset="0" style="transition: all 0.8s ease;"></circle>
                                     <circle cx="50" cy="50" r="30" fill="transparent" stroke="#2563eb" stroke-width="20"
                                         pathLength="100"
                                         [attr.stroke-dasharray]="adminPaymentStats.onlinePercentage + ' ' + (100 - adminPaymentStats.onlinePercentage)"
@@ -786,14 +803,16 @@
                                     <div class="legend-dot" style="background: #ea580c;"></div>
                                     <div>
                                         <div class="legend-name">Cash on Delivery</div>
-                                        <div class="legend-meta">{{ adminPaymentStats.codCount }} orders · {{ adminPaymentStats.codPercentage }}%</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.codCount }} orders · {{
+                                            adminPaymentStats.codPercentage }}%</div>
                                     </div>
                                 </div>
                                 <div class="payment-legend-item">
                                     <div class="legend-dot" style="background: #2563eb;"></div>
                                     <div>
                                         <div class="legend-name">UPI / Online</div>
-                                        <div class="legend-meta">{{ adminPaymentStats.onlineCount }} orders · {{ adminPaymentStats.onlinePercentage }}%</div>
+                                        <div class="legend-meta">{{ adminPaymentStats.onlineCount }} orders · {{
+                                            adminPaymentStats.onlinePercentage }}%</div>
                                     </div>
                                 </div>
                             </div>
@@ -821,11 +840,14 @@
                                         <i class="fas fa-money-bill-wave" style="color: #ea580c;"></i>
                                         <span style="color: #92400e;">COD Revenue</span>
                                     </div>
-                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.codRevenue | number:'1.0-0' }}</span>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.codRevenue | number:'1.0-0'
+                                        }}</span>
                                 </div>
                                 <div class="revenue-progress-bg" style="background: #fde68a;">
-                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #f97316, #ea580c);"
-                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.codRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                    <div class="revenue-progress-fill"
+                                        style="background: linear-gradient(90deg, #f97316, #ea580c);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.codRevenue / adminPaymentStats.totalRevenue * 100) : 0">
+                                    </div>
                                 </div>
                             </div>
 
@@ -836,22 +858,27 @@
                                         <i class="fas fa-qrcode" style="color: #2563eb;"></i>
                                         <span style="color: #1e3a5f;">UPI / Online Revenue</span>
                                     </div>
-                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.onlineRevenue | number:'1.0-0' }}</span>
+                                    <span class="revenue-item-amount">₹{{ adminPaymentStats.onlineRevenue |
+                                        number:'1.0-0' }}</span>
                                 </div>
                                 <div class="revenue-progress-bg" style="background: #bfdbfe;">
-                                    <div class="revenue-progress-fill" style="background: linear-gradient(90deg, #3b82f6, #2563eb);"
-                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.onlineRevenue / adminPaymentStats.totalRevenue * 100) : 0"></div>
+                                    <div class="revenue-progress-fill"
+                                        style="background: linear-gradient(90deg, #3b82f6, #2563eb);"
+                                        [style.width.%]="adminPaymentStats.totalRevenue > 0 ? (adminPaymentStats.onlineRevenue / adminPaymentStats.totalRevenue * 100) : 0">
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Net Revenue -->
-                            <div class="revenue-item" style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0;">
+                            <div class="revenue-item"
+                                style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0;">
                                 <div class="revenue-item-header">
                                     <div class="revenue-item-label">
                                         <i class="fas fa-hand-holding-dollar" style="color: #16a34a;"></i>
                                         <span style="color: #14532d;">Net Revenue</span>
                                     </div>
-                                    <span class="revenue-item-amount" style="color: #16a34a;">₹{{ adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
+                                    <span class="revenue-item-amount" style="color: #16a34a;">₹{{
+                                        adminPaymentStats.totalRevenue | number:'1.0-0' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -890,13 +917,15 @@
                             <tbody>
                                 <tr *ngFor="let order of adminPaymentViewOrders">
                                     <td class="pay-order-id">#{{ order.orderId }}</td>
-                                    <td class="pay-customer">{{ order.userName || order.userId?.fullName || 'Guest' }}</td>
+                                    <td class="pay-customer">{{ order.userName || order.userId?.fullName || 'Guest' }}
+                                    </td>
                                     <td>
                                         <div class="pay-method-badge"
                                             [style.background]="isAdminPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
                                             [style.color]="isAdminPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
                                             [style.border]="isAdminPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
-                                            <i class="fas" [class.fa-money-bill-wave]="isAdminPaymentCOD(order.paymentMethod)"
+                                            <i class="fas"
+                                                [class.fa-money-bill-wave]="isAdminPaymentCOD(order.paymentMethod)"
                                                 [class.fa-qrcode]="!isAdminPaymentCOD(order.paymentMethod)"></i>
                                             {{ isAdminPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
                                         </div>
@@ -908,11 +937,11 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn-settlement-toggle" 
-                                            [class.settled]="order.courierSettled"
+                                        <button class="btn-settlement-toggle" [class.settled]="order.courierSettled"
                                             [class.pending]="!order.courierSettled"
                                             (click)="toggleCourierSettled(order)">
-                                            <i class="fas" [class.fa-check-circle]="order.courierSettled" [class.fa-clock]="!order.courierSettled"></i>
+                                            <i class="fas" [class.fa-check-circle]="order.courierSettled"
+                                                [class.fa-clock]="!order.courierSettled"></i>
                                             {{ order.courierSettled ? 'Settled' : 'Mark Settled' }}
                                         </button>
                                     </td>
@@ -1043,17 +1072,24 @@
                         <div class="financials-section">
                             <span class="amount-label">Amount</span>
                             <h3 class="total-amount">₹{{order.totalAmount | number}}</h3>
-                            <div class="pay-method-mini">{{order.paymentMethod === 'Cash on Delivery' ? 'COD' : 'Online'}}</div>
+                            <div class="pay-method-mini">{{order.paymentMethod === 'Cash on Delivery' ? 'COD' :
+                                'Online'}}</div>
                         </div>
 
-                        <!-- 5. Courier Name -->
-                        <div class="courier-column">
-                            <div class="courier-pill-linear" *ngIf="order.trackingNumber">
+                        <!-- 5. Courier Name & Timings -->
+                        <div class="courier-column" style="display: flex; flex-direction: column; gap: 4px; justify-content: center;">
+                            <div class="courier-pill-linear" *ngIf="order.courierName">
                                 <i class="fas fa-truck-fast"></i>
                                 <span>{{order.courierName}}</span>
                             </div>
-                            <div class="courier-empty" *ngIf="!order.trackingNumber">
+                            <div class="courier-empty" *ngIf="!order.courierName">
                                 <i class="far fa-clock"></i> Not Assigned
+                            </div>
+                            <div *ngIf="order.assignedAt" style="color: #64748b; font-size: 0.7rem;">
+                                <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> {{order.assignedAt | date:'MMM d, HH:mm'}}
+                            </div>
+                            <div *ngIf="order.status === 'Delivered' && order.deliveredAt" style="color: #10b981; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-check-double" style="margin-right: 4px;"></i> {{order.deliveredAt | date:'MMM d, HH:mm'}}
                             </div>
                         </div>
 
@@ -1543,20 +1579,29 @@
         <ng-container *ngIf="activeTab === 'inquiries'">
             <header class="top-header">
                 <div class="welcome">
-                    <h1><i class="fas fa-envelope" style="color: #6366f1; margin-right: 8px;"></i>Inquiries Management
+                    <h1><i class="fas fa-envelope" style="color: #6366f1; margin-right: 8px;"></i>Messaging Hub
                     </h1>
-                    <p>View and respond to user messages from the Contact Us page.</p>
+                    <p>Manage communications with customers and courier partners.</p>
                 </div>
-                <div class="header-actions">
-                    <button class="add-floating-btn" (click)="loadInquiries()">
-                        <i class="fas fa-sync"></i> Refresh
+                <div class="header-actions" style="display: flex; gap: 15px; align-items: center;">
+                    <div class="user-filters" style="margin: 0;">
+                        <button [class.active]="inquiryActiveSubTab === 'customers'" (click)="inquiryActiveSubTab = 'customers'">
+                            <i class="fas fa-user-tag"></i> Customers
+                        </button>
+                        <button [class.active]="inquiryActiveSubTab === 'couriers'" (click)="inquiryActiveSubTab = 'couriers'">
+                            <i class="fas fa-truck-fast"></i> Courier Channels
+                        </button>
+                    </div>
+                    <button class="add-floating-btn" (click)="loadInquiries(); loadAdminNotifications()">
+                        <i class="fas fa-sync"></i> Refresh All
                     </button>
                 </div>
             </header>
 
-            <div class="data-card orders-card">
+            <!-- CUSTOMER INQUIRIES VIEW -->
+            <div class="data-card orders-card" *ngIf="inquiryActiveSubTab === 'customers'">
                 <div class="card-header">
-                    <h3>Recent Messages</h3>
+                    <h3>Recent Customer Inquiries</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="modern-table">
@@ -1607,6 +1652,68 @@
                     </table>
                 </div>
             </div>
+
+            <!-- COURIER COMMUNICATIONS VIEW -->
+            <div class="data-card orders-card" *ngIf="inquiryActiveSubTab === 'couriers'">
+                <div class="card-header">
+                    <h3>Courier Partner Conversations</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Partner Name</th>
+                                <th>Last Message / Alert</th>
+                                <th>Date & Time</th>
+                                <th>Direction</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container *ngFor="let noti of adminNotifications">
+                                <tr *ngIf="noti.type === 'admin' || getCourierName(noti)">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 35px; height: 35px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #3b82f6;">
+                                                <i class="fas fa-truck"></i>
+                                            </div>
+                                            <span style="font-weight: 700; color: #1e293b;">{{ getCourierName(noti) || 'System Message' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; color: #475569;">
+                                            {{ noti.title }}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">{{ noti.message }}</div>
+                                    </td>
+                                    <td>{{ noti.createdAt | date:'medium' }}</td>
+                                    <td>
+                                        <span class="badge-status" 
+                                              [style.background]="noti.sender !== 'admin' ? '#ecfdf5' : '#fff7ed'"
+                                              [style.color]="noti.sender !== 'admin' ? '#065f46' : '#9a3412'"
+                                              style="font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: 700;">
+                                            {{ noti.sender !== 'admin' ? 'INBOUND' : 'OUTBOUND' }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button class="btn-details-v2" 
+                                                *ngIf="getCourierName(noti)"
+                                                (click)="openCourierReply(getCourierName(noti), $event)"
+                                                style="border-radius: 8px; padding: 8px 15px; font-size: 0.8rem;">
+                                            Reply
+                                        </button>
+                                    </td>
+                                </tr>
+                            </ng-container>
+                            <tr *ngIf="adminNotifications.length === 0">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                                    No recent courier communications found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </ng-container>
 
         <!-- Analytics Content -->
@@ -1617,7 +1724,7 @@
                     <p>Comprehensive breakdown of your store's performance metrics.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="add-floating-btn" routerLink="/ai-analytics">
+                    <button class="add-floating-btn" routerLink="/ai-analytics" target="_blank" rel="opener">
                         <i class="fas fa-robot"></i>
                         <span>AI Analytics</span>
                     </button>
@@ -2107,6 +2214,14 @@
                                 {{selectedOrder.courierName}} — <span
                                     style="font-family: 'Courier New', Courier, monospace; background: rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 4px;">{{selectedOrder.trackingNumber}}</span>
                             </p>
+                            <div style="margin-top: 5px; display: flex; gap: 12px; font-size: 0.8rem; color: #166534;">
+                                <span *ngIf="selectedOrder.assignedAt">
+                                    <i class="fas fa-calendar-check"></i> Assigned: {{selectedOrder.assignedAt | date:'MMM d, HH:mm'}}
+                                </span>
+                                <span *ngIf="selectedOrder.deliveredAt">
+                                    <i class="fas fa-check-double"></i> Delivered: {{selectedOrder.deliveredAt | date:'MMM d, HH:mm'}}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -2149,12 +2264,13 @@
     <!-- Invoice Modal -->
     <div class="modal-overlay" *ngIf="showInvoiceModal" (click)="closeInvoiceModal()">
         <div class="user-detail-modal invoice-modal" (click)="$event.stopPropagation()">
-            
+
             <!-- Unified Header for Actions -->
             <div class="invoice-actions-bar no-print">
                 <div class="title-group">
                     <h2>Manage Invoice</h2>
-                    <p style="margin:2px 0 0 0; color:#64748b; font-size: 0.8rem;">Ready for printing and documentation.</p>
+                    <p style="margin:2px 0 0 0; color:#64748b; font-size: 0.8rem;">Ready for printing and documentation.
+                    </p>
                 </div>
                 <div class="invoice-btn-group">
                     <button class="btn-download-luxe" (click)="downloadInvoice()" [disabled]="isDownloading">
@@ -2171,10 +2287,14 @@
                 <div class="invoice-watermark no-print">PAID</div>
 
                 <!-- Branding Header -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #15803d; padding-bottom: 25px; margin-bottom: 30px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #15803d; padding-bottom: 25px; margin-bottom: 30px;">
                     <div>
-                        <h1 style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px;">GREENIE CULTURE 🌿</h1>
-                        <p style="color: #64748b; margin: 8px 0 0 0; font-weight: 600;">The Premium Botanical Experience</p>
+                        <h1
+                            style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px;">
+                            GREENIE CULTURE 🌿</h1>
+                        <p style="color: #64748b; margin: 8px 0 0 0; font-weight: 600;">The Premium Botanical Experience
+                        </p>
                     </div>
                     <div style="text-align: right; color: #1e293b;">
                         <p style="margin: 0; font-weight: 700;">123 Botanical Avenue, Green City</p>
@@ -2186,36 +2306,50 @@
                 <!-- Info Grid -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
                     <div>
-                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Recipient Details:</h4>
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
-                            <strong style="font-size: 1.15rem; color: #0f172a; display: block; margin-bottom: 8px;">{{ selectedOrder.userId?.fullName || 'Guest User' }}</strong>
+                        <h4
+                            style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">
+                            Recipient Details:</h4>
+                        <div
+                            style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <strong style="font-size: 1.15rem; color: #0f172a; display: block; margin-bottom: 8px;">{{
+                                selectedOrder.userId?.fullName || 'Guest User' }}</strong>
                             <p style="margin: 0; color: #475569; line-height: 1.5; font-size: 0.95rem;">
                                 {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'N/A' }}<br>
-                                {{ selectedOrder.userId?.city }}{{ selectedOrder.userId?.city ? ',' : '' }} {{ selectedOrder.userId?.state }} 
+                                {{ selectedOrder.userId?.city }}{{ selectedOrder.userId?.city ? ',' : '' }} {{
+                                selectedOrder.userId?.state }}
                             </p>
                             <p style="margin: 10px 0 0 0; color: #1e293b; font-weight: 600; font-size: 0.9rem;">
-                                <i class="fas fa-phone" style="margin-right: 8px; color: #64748b;"></i>{{ selectedOrder.userId?.phone || 'N/A' }}
+                                <i class="fas fa-phone" style="margin-right: 8px; color: #64748b;"></i>{{
+                                selectedOrder.userId?.phone || 'N/A' }}
                             </p>
                         </div>
                     </div>
                     <div>
-                        <h4 style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">Order Metadata:</h4>
+                        <h4
+                            style="margin: 0 0 12px 0; color: #15803d; text-transform: uppercase; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;">
+                            Order Metadata:</h4>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
                                 <span style="color:#64748b; font-weight:600;">Reference ID</span>
                                 <strong style="color:#0f172a;">#{{ selectedOrder.orderId }}</strong>
                             </div>
-                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
                                 <span style="color:#64748b; font-weight:600;">Placed On</span>
-                                <strong style="color:#0f172a;">{{ selectedOrder.orderDate | date:'mediumDate' }}</strong>
+                                <strong style="color:#0f172a;">{{ selectedOrder.orderDate | date:'mediumDate'
+                                    }}</strong>
                             </div>
-                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                            <div
+                                style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
                                 <span style="color:#64748b; font-weight:600;">Payment Mode</span>
                                 <strong style="color:#15803d;">{{ selectedOrder.paymentMethod || 'Online' }}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between;">
                                 <span style="color:#64748b; font-weight:600;">Invoice Status</span>
-                                <span style="color: #16a34a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem;"><i class="fas fa-check-circle"></i> Authenticated</span>
+                                <span
+                                    style="color: #16a34a; font-weight: 800; text-transform: uppercase; font-size: 0.75rem;"><i
+                                        class="fas fa-check-circle"></i> Authenticated</span>
                             </div>
                         </div>
                     </div>
@@ -2234,15 +2368,18 @@
                     <tbody>
                         <tr *ngFor="let item of selectedOrder.items">
                             <td>
-                                <strong style="display:block; font-size: 1rem; color: #0f172a;">{{ $any(item).name }}</strong>
+                                <strong style="display:block; font-size: 1rem; color: #0f172a;">{{ $any(item).name
+                                    }}</strong>
                                 <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">
                                     <ng-container *ngIf="$any(item).category">{{ $any(item).category }}</ng-container>
-                                    <ng-container *ngIf="$any(item).planter"> | Planter: {{ $any(item).planter }}</ng-container>
+                                    <ng-container *ngIf="$any(item).planter"> | Planter: {{ $any(item).planter
+                                        }}</ng-container>
                                 </span>
                             </td>
                             <td style="text-align: center; font-weight: 700;">{{ $any(item).quantity }}</td>
                             <td style="text-align: right;">₹{{ $any(item).price | number }}</td>
-                            <td style="text-align: right; font-weight: 800; color: #0f172a;">₹{{ $any(item).quantity * $any(item).price | number }}</td>
+                            <td style="text-align: right; font-weight: 800; color: #0f172a;">₹{{ $any(item).quantity *
+                                $any(item).price | number }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2250,14 +2387,17 @@
                 <!-- Summary & Totals -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
                     <div style="color: #94a3b8; font-size: 0.8rem; max-width: 300px;">
-                        <p style="margin: 0; font-weight: 600; line-height: 1.4;">Greenie Culture ensures that all botanical items are quality-certified. For support: support@greenieculture.com</p>
+                        <p style="margin: 0; font-weight: 600; line-height: 1.4;">Greenie Culture ensures that all
+                            botanical items are quality-certified. For support: support@greenieculture.com</p>
                     </div>
                     <div style="width: 320px;">
-                        <div style="display:flex; justify-content:space-between; padding-bottom:10px; color:#64748b; font-weight:600;">
+                        <div
+                            style="display:flex; justify-content:space-between; padding-bottom:10px; color:#64748b; font-weight:600;">
                             <span>Retail Subtotal:</span>
                             <span>₹{{ selectedOrder.totalAmount | number }}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; color:#10b981; font-weight:700;">
+                        <div
+                            style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; color:#10b981; font-weight:700;">
                             <span>Shipping & Handling:</span>
                             <span>COMPLIMENTARY</span>
                         </div>
@@ -2269,9 +2409,11 @@
                 </div>
 
                 <!-- Bottom Footer -->
-                <div style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px dashed #cbd5e1; color: #94a3b8; font-size: 0.85rem;">
+                <div
+                    style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px dashed #cbd5e1; color: #94a3b8; font-size: 0.85rem;">
                     <p style="margin: 0 0 5px 0;">Thank you for choosing Greenie Culture for your green space.</p>
-                    <p style="margin: 0; font-weight: 700;">This is a digitally generated invoice and does not require a physical signature.</p>
+                    <p style="margin: 0; font-weight: 700;">This is a digitally generated invoice and does not require a
+                        physical signature.</p>
                 </div>
             </div>
         </div>
@@ -3152,13 +3294,14 @@
 
             <!-- Modal Body -->
             <div class="cv-body" style="padding: 24px !important;">
-                
+
                 <!-- 1 & 4: Visitors & Successful Orders -->
                 <div class="cv-stats-row" style="margin-bottom: 20px;">
                     <div class="cv-card" style="border-left: 5px solid #15803d !important;">
                         <span class="cv-label">1. Visitors to Purchase</span>
                         <div class="cv-val">{{ realConversion.convRate }}<span class="cv-perc">%</span></div>
-                        <small style="color: #64748b;">{{ realConversion.visitors }} Visitors → {{ realConversion.orders }} Orders</small>
+                        <small style="color: #64748b;">{{ realConversion.visitors }} Visitors → {{ realConversion.orders
+                            }} Orders</small>
                     </div>
                     <div class="cv-card" style="border-left: 5px solid #10b981 !important;">
                         <span class="cv-label">4. Successful Orders</span>
@@ -3168,20 +3311,28 @@
                 </div>
 
                 <!-- 2, 3, 7: Funnel & Abandonment -->
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
-                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.05em;">User Journey (Funnel)</h3>
-                    <div class="cv-stats-row" style="grid-template-columns: 1fr 1fr 1fr !important; gap: 12px !important;">
+                <div
+                    style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
+                    <h3
+                        style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.05em;">
+                        User Journey (Funnel)</h3>
+                    <div class="cv-stats-row"
+                        style="grid-template-columns: 1fr 1fr 1fr !important; gap: 12px !important;">
                         <div style="text-align: center;">
                             <span class="cv-label" style="font-size: 0.65rem !important;">2. Add to Cart</span>
-                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.cartRate }}%</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.cartRate
+                                }}%</div>
                         </div>
                         <div style="text-align: center;">
                             <span class="cv-label" style="font-size: 0.65rem !important;">3. Checkout Start</span>
-                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{ realConversion.checkoutRate }}%</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">{{
+                                realConversion.checkoutRate }}%</div>
                         </div>
                         <div style="text-align: center;">
-                            <span class="cv-label" style="font-size: 0.65rem !important; color: #ef4444;">7. Abandoned</span>
-                            <div style="font-size: 1.4rem; font-weight: 800; color: #ef4444;">{{ realConversion.abandonRate }}%</div>
+                            <span class="cv-label" style="font-size: 0.65rem !important; color: #ef4444;">7.
+                                Abandoned</span>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #ef4444;">{{
+                                realConversion.abandonRate }}%</div>
                         </div>
                     </div>
                 </div>
@@ -3190,35 +3341,88 @@
                 <div class="cv-stats-row" style="margin-bottom: 20px;">
                     <div class="cv-card" style="background: #f0fdf4 !important;">
                         <span class="cv-label">5. New Customer Conv.</span>
-                        <div class="cv-val" style="color: #166534 !important;">{{ realConversion.newCustRate }}<span class="cv-perc">%</span></div>
+                        <div class="cv-val" style="color: #166534 !important;">{{ realConversion.newCustRate }}<span
+                                class="cv-perc">%</span></div>
                         <small style="color: #166534; opacity: 0.8;">First time buyers</small>
                     </div>
                     <div class="cv-card" style="background: #eff6ff !important;">
                         <span class="cv-label">6. Repeat Cust. Rate</span>
-                        <div class="cv-val" style="color: #1e40af !important;">{{ realConversion.repeatRate }}<span class="cv-perc">%</span></div>
+                        <div class="cv-val" style="color: #1e40af !important;">{{ realConversion.repeatRate }}<span
+                                class="cv-perc">%</span></div>
                         <small style="color: #1e40af; opacity: 0.8;">Returning plant lovers</small>
                     </div>
                 </div>
 
                 <!-- 8: Top Converting Products -->
                 <div style="border-top: 2px solid #f1f5f9; padding-top: 15px;">
-                    <h3 style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 12px;">8. Top Converting Products</h3>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" *ngIf="realConversion.topProducts.length > 0; else noProducts">
-                        <div *ngFor="let p of realConversion.topProducts" style="background: white; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <h3
+                        style="font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 12px;">
+                        8. Top Converting Products</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;"
+                        *ngIf="realConversion.topProducts.length > 0; else noProducts">
+                        <div *ngFor="let p of realConversion.topProducts"
+                            style="background: white; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                             <i class="fas fa-leaf" style="color: #10b981; font-size: 0.9rem;"></i>
                             <span style="font-weight: 700; color: #0f172a;">{{ p.name }}</span>
                             <small style="color: #64748b; font-weight: 600;">({{ p.count }} sold)</small>
                         </div>
                     </div>
                     <ng-template #noProducts>
-                        <p style="color: #64748b; font-style: italic; font-size: 0.85rem;">No sales data available yet.</p>
+                        <p style="color: #64748b; font-style: italic; font-size: 0.85rem;">No sales data available yet.
+                        </p>
                     </ng-template>
                 </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="cv-footer" style="justify-content: center !important;">
-                <button (click)="closeConversionModal()" style="background: #111827; border: none; padding: 12px 40px; border-radius: 12px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">Close Analytics</button>
+                <button (click)="closeConversionModal()"
+                    style="background: #111827; border: none; padding: 12px 40px; border-radius: 12px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">Close
+                    Analytics</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courier Reply Modal (Premium) -->
+    <div class="modal-overlay" *ngIf="showCourierReplyModal" (click)="showCourierReplyModal = false">
+        <div class="user-detail-modal" (click)="$event.stopPropagation()" style="max-width: 500px;">
+            <div class="modal-header-premium" style="padding: 40px 30px 80px;">
+                <button class="close-modal" (click)="showCourierReplyModal = false">×</button>
+                <h2 style="font-size: 1.5rem;"><i class="fas fa-reply-all"></i> Reply to Courier</h2>
+                <p>Communicating with: <strong>{{ currentReplyCourierName }}</strong></p>
+            </div>
+
+            <div class="modal-body-premium" style="margin-top: -40px;">
+                <div class="profile-card-floating" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                    <div style="width: 100%;">
+                        <label style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.85rem;">YOUR MESSAGE</label>
+                        <textarea 
+                            [(ngModel)]="courierReplyMessage"
+                            placeholder="Type your reply to {{ currentReplyCourierName }} here..."
+                            style="width: 100%; min-height: 150px; border: 2px solid #f1f5f9; border-radius: 16px; padding: 15px; font-size: 0.95rem; resize: none; outline: none; transition: border-color 0.2s;"
+                        ></textarea>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span style="font-size: 0.75rem; color: #94a3b8;">Characters: {{ courierReplyMessage.length }}</span>
+                            <span style="font-size: 0.75rem; color: #4f46e5; font-weight: 700;">Admin Official Reply</span>
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; display: flex; gap: 10px; margin-top: 10px;">
+                        <button 
+                            (click)="sendCourierReply()"
+                            [disabled]="!courierReplyMessage.trim()"
+                            style="flex: 1; background: #4f46e5; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);"
+                        >
+                            <i class="fas fa-paper-plane"></i> SEND REPLY
+                        </button>
+                        <button 
+                            (click)="showCourierReplyModal = false"
+                            style="background: #f1f5f9; color: #64748b; border: none; padding: 14px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                        >
+                            CANCEL
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

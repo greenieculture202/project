@@ -1,580 +1,230 @@
-import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
-import { INDIA_STATE_PATHS } from './india-map-data';
-
-interface ChatMessage {
-  type: 'user' | 'ai';
-  text: string;
-  time: Date;
-}
-
-interface NeuralInsight {
-  id: string;
-  type: 'success' | 'warning' | 'info' | 'critical';
-  title: string;
-  content: string;
-  timestamp: string;
-  icon: string;
-}
 
 @Component({
   selector: 'app-ai-analytics-panel',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
-  templateUrl: './ai-analytics-panel.html',
-  styleUrl: './ai-analytics-panel.css'
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="dashboard-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-circle">
+            <i class="fas fa-robot"></i>
+          </div>
+          <span class="logo-text">AI Insights</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a class="nav-item active">
+            <i class="fas fa-chart-line"></i> Overview
+          </a>
+          <a class="nav-item">
+            <i class="fas fa-bolt"></i> Predictions
+          </a>
+          <a class="nav-item">
+            <i class="fas fa-file-contract"></i> Reports
+          </a>
+          <a class="nav-item">
+            <i class="fas fa-cog"></i> Settings
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <a class="back-link-btn" routerLink="/admin-dashboard" (click)="logNavigation()">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Admin Panel</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="content-header">
+          <div class="header-info">
+            <h1>AI Delivery Analytics</h1>
+            <p>Intelligence-driven optimization for your delivery network</p>
+          </div>
+          <div class="header-actions">
+            <span class="live-indicator">
+              <span class="dot"></span> Live Data
+            </span>
+          </div>
+        </header>
+
+        <div *ngIf="isLoading" class="loading-state">
+           <div class="spinner"></div>
+           <p>Analyzing delivery patterns & generating insights...</p>
+        </div>
+
+        <div *ngIf="!isLoading" class="dashboard-grid">
+          <!-- Main Stat Cards -->
+          <div class="stat-card primary">
+            <div class="stat-icon">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Total Orders</h3>
+              <p class="stat-value">{{ orders.length }}</p>
+              <span class="stat-trend up">↑ 8.4% <small>vs last month</small></span>
+            </div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Successfully Delivered</h3>
+              <p class="stat-value">{{ totalDelivered }}</p>
+              <span class="stat-trend up">↑ 12% <small>vs last month</small></span>
+            </div>
+          </div>
+
+          <div class="stat-card warning">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Avg. Delivery Time</h3>
+              <p class="stat-value">{{ avgDeliveryTime }}h</p>
+              <span class="stat-trend down">↓ 2h <small>optimization</small></span>
+            </div>
+          </div>
+
+          <!-- Courier Performance -->
+          <section class="card-large courier-performance">
+            <div class="card-header">
+              <h3><i class="fas fa-truck-fast"></i> Courier Partner Efficiency</h3>
+              <p>Performance based on total shipments handled</p>
+            </div>
+            <div class="performance-list">
+              <div *ngFor="let courier of courierUsage" class="courier-row">
+                <div class="courier-info">
+                  <span class="name">{{ courier.name }}</span>
+                  <span class="count">{{ courier.count }} orders</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" [style.width.%]="courier.percentage" [style.background]="getCourierColor(courier.percentage)"></div>
+                </div>
+                <span class="percentage">{{ courier.percentage }}%</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- AI Insights Section -->
+          <section class="card-large ai-insights">
+            <div class="card-header">
+              <h3><i class="fas fa-microchip"></i> AI Recommendations</h3>
+              <p>Smart optimizations based on current trends</p>
+            </div>
+            <div class="insights-grid">
+              <div class="insight-item recommendation" *ngIf="mostUsedCourier">
+                <div class="insight-icon"><i class="fas fa-thumbs-up"></i></div>
+                <div class="insight-text">
+                  <strong>Partner Scaling:</strong> {{ mostUsedCourier }} shows 98% reliability. Consider routing 15% more high-priority orders through them.
+                </div>
+              </div>
+              <div class="insight-item alert">
+                <div class="insight-icon"><i class="fas fa-location-dot"></i></div>
+                <div class="insight-text">
+                  <strong>Regional Surge:</strong> High demand detected in North India. Logistics efficiency could improve by 22% with a local hub.
+                </div>
+              </div>
+              <div class="insight-item prediction">
+                <div class="insight-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="insight-text">
+                  <strong>Festive Forecast:</strong> Predictive models suggest a 35% spike in orders next week. Ensure inventory levels are +40%.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  `,
+  styleUrls: ['./ai-analytics-panel.css']
 })
 export class AiAnalyticsPanelComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   public authService = inject(AuthService);
-  @ViewChild('chatScroll') private chatScrollContainer!: ElementRef;
 
-  activeTab = 'overview';
   isLoading = true;
-  
-  // Marketing & Growth
-  marketingContent = signal<string | null>(null);
-  isMarketingLoading = signal(false);
-  
-  // Operations Hub
-  aiTasks = signal<string[]>([]);
-  isTasksLoading = signal(false);
-  plantReminders = signal<any[]>([]);
-  groupedReminders = signal<{user: any, reminders: any[]}[]>([]);
-  selectedUserGroup = signal<{user: any, reminders: any[]} | null>(null);
-  showRemindersModal = signal(false);
-  isRemindersLoading = signal(false);
-
-  // Universal Search
-  searchQuery = '';
-  isSearchVisible = signal(false);
-  searchResults = signal<any[]>([]);
-
-  // Neural Insights
-  insightStream = signal<NeuralInsight[]>([]);
-  private insightInterval: any;
-  private possibleInsights: { type: 'success' | 'warning' | 'info' | 'critical', icon: string, title: string, content: string }[] = [
-    { type: 'success', icon: 'fa-rocket', title: 'Revenue Surge', content: 'Conversion rates up by 14.5% in the last 2 hours. Neural pulse suggests sustained growth.' },
-    { type: 'warning', icon: 'fa-bolt', title: 'Supply Strain', content: 'Indoor plants category stock dropping fast. AI recommends checking supplier bandwidth.' },
-    { type: 'info', icon: 'fa-microchip', title: 'Sentiment Peak', content: 'Customer sentiment analysis indicates 92% positive reception of recent offers.' },
-    { type: 'critical', icon: 'fa-triangle-exclamation', title: 'Drift Detected', content: 'Unusual delivery delays in North Zone. Rerouting algorithms active.' },
-    { type: 'info', icon: 'fa-brain', title: 'Predictive Edge', content: 'Tomorrow\'s order volume projected to be 2.4x higher based on cluster patterns.' }
-  ];
-
-  // Orders and core data
   orders: any[] = [];
   totalDelivered = 0;
   avgDeliveryTime = 0;
   courierUsage: any[] = [];
   mostUsedCourier = '';
-  stateWithHighestOrders = '';
-  totalRevenue = 0;
-  avgOrderValue = 0;
-  lowStockItems: any[] = [];
-  selectedProduct: any = null;
-  showStockModal = false;
-  
-  // Map data
-  stateOrderCounts: { [key: string]: number } = {};
-  statePaths = INDIA_STATE_PATHS;
-
-  // Selected state for interactive display
-  selectedState: { name: string, count: number } | null = null;
-
-  pinCities = [
-    { name: 'Mumbai', x: 145, y: 435, state: 'IN-MH' },
-    { name: 'Delhi', x: 255, y: 175, state: 'IN-DL' },
-    { name: 'Bangalore', x: 235, y: 575, state: 'IN-KA' },
-    { name: 'Chennai', x: 315, y: 605, state: 'IN-TN' },
-    { name: 'Hyderabad', x: 285, y: 445, state: 'IN-TS' },
-    { name: 'Kolkata', x: 465, y: 335, state: 'IN-WB' },
-    { name: 'Pune', x: 170, y: 455, state: 'IN-MH' },
-    { name: 'Jaipur', x: 200, y: 230, state: 'IN-RJ' }
-  ];
-
-  // Revenue projection
-  projectionLabels: string[] = [];
-  projectionValues: number[] = [];
-
-  // AI Chatbot
-  chatMessages: ChatMessage[] = [
-    { type: 'ai', text: 'Namaste! 🌿 I am your AI Analytics Assistant. Ask me about orders, revenue, delivery trends, or inventory!', time: new Date() }
-  ];
-  userMessage = '';
-  isChatLoading = signal(false);
 
   ngOnInit() {
     if (!this.authService.isAdmin()) {
+      console.warn('Unauthorized access to AI Analytics. Redirecting...');
       this.router.navigate(['/login']);
       return;
     }
     this.fetchData();
-    this.loadHistory();
-    this.startInsightEngine();
-    this.getAiTasks();
-    this.getPlantReminders();
-  }
-
-  loadHistory() {
-    const token = sessionStorage.getItem('auth_token');
-    if (!token) return;
-
-    this.http.get<any[]>('/api/admin/chat-history', {
-      headers: { 'x-auth-token': token }
-    }).subscribe({
-      next: (history) => {
-        if (history && history.length > 0) {
-          this.chatMessages = history.map(m => ({
-            type: m.role as 'user' | 'ai',
-            text: m.text,
-            time: new Date(m.timestamp)
-          }));
-          setTimeout(() => this.scrollToBottom(), 200);
-        }
-      },
-      error: (err) => console.error('Failed to load admin chat history', err)
-    });
-  }
-
-  private scrollToBottom(): void {
-    try {
-      if (this.chatScrollContainer) {
-        this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
-      }
-    } catch (err) { }
-  }
-
-  ngOnDestroy() {
-    if (this.insightInterval) {
-      clearInterval(this.insightInterval);
-    }
-  }
-
-  startInsightEngine() {
-    // Initial insights
-    this.generateInsight();
-    setTimeout(() => this.generateInsight(), 2000);
-    
-    // Regular updates
-    this.insightInterval = setInterval(() => {
-      this.generateInsight();
-    }, 12000);
-  }
-
-  generateInsight() {
-    const template = this.possibleInsights[Math.floor(Math.random() * this.possibleInsights.length)];
-    const newInsight: NeuralInsight = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...template,
-      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    };
-    
-    // Add to stream and keep last 5
-    const current = this.insightStream();
-    this.insightStream.set([newInsight, ...current].slice(0, 5));
-  }
-
-  getPageTitle(): string {
-    switch (this.activeTab) {
-      case 'overview': return 'AI Control Hub';
-      case 'sales': return 'Sales AI';
-      case 'inventory': return 'Inventory AI';
-      case 'customers': return 'Audience AI';
-      case 'chatbot': return 'AI Assistant';
-      case 'marketing': return 'Marketing AI ✨';
-      case 'tasks': return 'Operations Hub ✅';
-      default: return 'AI Analytics';
-    }
-  }
-
-  getPageSubtitle(): string {
-    switch (this.activeTab) {
-      case 'overview': return 'Holistic view of business performance';
-      case 'sales': return 'Predictive sales forecasting & revenue insights';
-      case 'inventory': return 'Real-time stock alerts & optimization';
-      case 'customers': return 'Audience behavior & regional analysis';
-      case 'chatbot': return 'Chat with Gemini AI for intelligent assistance';
-      case 'marketing': return 'AI-generated captions, emails, and promo strategies';
-      case 'tasks': return 'Dynamic AI-prioritized business operations';
-      default: return 'Detailed data visualization';
-    }
-  }
-
-  getStateColor(stateId: string): string {
-    const count = this.stateOrderCounts[stateId] || 0;
-    if (count === 0) return 'rgba(20, 184, 166, 0.1)'; // Very faded teal/green
-    if (count < 3) return 'rgba(16, 185, 129, 0.4)';  // Emerald
-    if (count < 8) return 'rgba(16, 185, 129, 0.6)';
-    if (count < 15) return 'rgba(5, 150, 105, 0.8)'; // Deep Emerald
-    return 'rgba(6, 95, 70, 1)'; // Darkest Forest
-  }
-
-  getStateOrderCount(stateId: string): number {
-    return this.stateOrderCounts[stateId] || 0;
-  }
-
-  getPinSize(stateId: string): number {
-    const count = this.stateOrderCounts[stateId] || 0;
-    return Math.max(5, Math.min(12, 5 + count));
-  }
-
-  getCourierColor(percent: number): string {
-    if (percent > 60) return 'linear-gradient(90deg, #10b981, #059669)'; // Emerald
-    if (percent > 30) return 'linear-gradient(90deg, #84cc16, #65a30d)'; // Lime
-    return 'linear-gradient(90deg, #f59e0b, #d97706)'; // Stay orange for warning
-  }
-
-  getProjectionBarHeight(index: number): number {
-    if (!this.projectionValues.length) return 0;
-    const max = Math.max(...this.projectionValues) || 1;
-    return Math.round((this.projectionValues[index] / max) * 100);
-  }
-
-  fetchData() {
-    const token = sessionStorage.getItem('auth_token');
-    const headers = { 'x-auth-token': token || '' };
-
-    this.http.get<any[]>('/api/admin/orders', { headers }).subscribe({
-      next: (data) => {
-        this.orders = data;
-        this.calculateAnalytics();
-        this.fetchProducts(headers);
-      },
-      error: () => { this.isLoading = false; }
-    });
-  }
-
-  onStateClick(state: any) {
-    const count = this.getStateOrderCount(state.id);
-    this.selectedState = {
-      name: state.name,
-      count: count
-    };
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      if (this.selectedState?.name === state.name) {
-        this.selectedState = null;
-      }
-    }, 5000);
-  }
-
-  fetchProducts(headers: any) {
-    this.http.get<any[]>('/api/products', { headers }).subscribe({
-      next: (products) => {
-        console.log('[AI-PANEL] Products fetched:', products.length);
-        
-        // Sort all products by stock ascending (lowest stock first)
-        const allSorted = [...products].sort((a, b) => {
-          const aStock = typeof a.stock === 'number' ? a.stock : 9999;
-          const bStock = typeof b.stock === 'number' ? b.stock : 9999;
-          return aStock - bStock;
-        });
-        
-        // Show top 10 lowest-stock items (always show data even if stock is high)
-        this.lowStockItems = allSorted.slice(0, 10);
-        
-        // Status badges
-        this.lowStockItems.forEach(item => {
-          const s = typeof item.stock === 'number' ? item.stock : 999;
-          if (s <= 10) item.status = 'CRITICAL';
-          else if (s <= 30) item.status = 'LOW';
-          else if (s <= 60) item.status = 'MODERATE';
-          else item.status = 'GOOD';
-        });
-        
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('[AI-PANEL] Products fetch failed:', err);
-        this.isLoading = false;
-      }
-    });
-  }
-
-  showStock(item: any) {
-    this.selectedProduct = item;
-    this.showStockModal = true;
-  }
-
-  closeStockModal() {
-    this.showStockModal = false;
-    this.selectedProduct = null;
-  }
-
-  calculateAnalytics() {
-    this.totalDelivered = this.orders.filter(o => o.status === 'Delivered').length;
-    this.totalRevenue = this.orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
-    this.avgOrderValue = this.orders.length > 0 ? Math.round(this.totalRevenue / this.orders.length) : 0;
-
-    // Generate projection data (Past 7 days)
-    const last7Days = Array.from({length: 7}, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (6 - i));
-        return d.toLocaleDateString('en-US', { weekday: 'short' });
-    });
-    this.projectionLabels = last7Days;
-    
-    // Simple projection logic: actual revenue spread over days + some random growth
-    const dailyBase = this.totalRevenue / 7;
-    this.projectionValues = last7Days.map((_, i) => Math.round((dailyBase || 1200) * (0.8 + Math.random() * 0.4 + (i * 0.1))));
-
-    // Courier usage
-    const courierCounts: { [k: string]: number } = {};
-    const withCourier = this.orders.filter(o => o.courierName);
-    withCourier.forEach(o => { courierCounts[o.courierName] = (courierCounts[o.courierName] || 0) + 1; });
-    const total = withCourier.length || 1;
-    this.courierUsage = Object.keys(courierCounts).map(name => ({
-      name,
-      count: courierCounts[name],
-      percentage: Math.round((courierCounts[name] / total) * 100)
-    })).sort((a, b) => b.count - a.count);
-    this.mostUsedCourier = this.courierUsage[0]?.name || 'Delhivery';
-
-    // State map data - Expanded and normalized
-    this.stateOrderCounts = {};
-    const stateMap: { [k: string]: string } = {
-      'Maharashtra': 'IN-MH', 'Delhi': 'IN-DL', 'Karnataka': 'IN-KA',
-      'Tamil Nadu': 'IN-TN', 'West Bengal': 'IN-WB', 'Rajasthan': 'IN-RJ',
-      'Uttar Pradesh': 'IN-UP', 'Gujarat': 'IN-GJ', 'Telangana': 'IN-TS',
-      'Andhra Pradesh': 'IN-AP', 'Kerala': 'IN-KL', 'Punjab': 'IN-PB',
-      'Madhya Pradesh': 'IN-MP', 'Bihar': 'IN-BR', 'Odisha': 'IN-OR',
-      'Haryana': 'IN-HR', 'Jharkhand': 'IN-JH', 'Chhattisgarh': 'IN-CT',
-      'Assam': 'IN-AS', 'Himachal Pradesh': 'IN-HP', 'Jammu and Kashmir': 'IN-JK',
-      'Uttarakhand': 'IN-UT', 'Goa': 'IN-GA', 'Tripura': 'IN-TR', 'Nagaland': 'IN-NL',
-      'Manipur': 'IN-MN', 'Arunachal Pradesh': 'IN-AR', 'Mizoram': 'IN-MZ',
-      'Sikkim': 'IN-SK', 'Meghalaya': 'IN-ML', 'Chandigarh': 'IN-CH',
-      'Puducherry': 'IN-PY', 'Dadra and Nagar Haveli': 'IN-DN', 'Daman and Diu': 'IN-DD'
-    };
-
-    const normalizedMap: { [k: string]: string } = {};
-    Object.keys(stateMap).forEach(k => normalizedMap[k.toLowerCase()] = stateMap[k]);
-
-    let maxCount = 0;
-    let maxState = '';
-
-    this.orders.forEach(o => {
-      // Robust state extraction: prioritize shippingDetails, then fallback to userId or root
-      const rawState = (o.shippingDetails?.state || o.userId?.state || o.state || '').trim();
-      if (!rawState) return;
-
-      let stateId: string = normalizedMap[rawState.toLowerCase()] || '';
-      
-      // If still no direct match, try fuzzy matching (e.g. "UTTAR PRADESH" -> "IN-UP")
-      if (!stateId) {
-        const fuzzyMatch = Object.keys(normalizedMap).find(k => k.includes(rawState.toLowerCase()));
-        stateId = fuzzyMatch ? normalizedMap[fuzzyMatch] : '';
-      }
-
-      // Fallback: Direct name match against path data
-      if (!stateId) {
-        const found = this.statePaths.find(p => p.name.toLowerCase().trim() === rawState.toLowerCase());
-        if (found) stateId = found.id;
-      }
-
-      if (stateId) {
-        this.stateOrderCounts[stateId] = (this.stateOrderCounts[stateId] || 0) + 1;
-        if (this.stateOrderCounts[stateId] > maxCount) {
-          maxCount = this.stateOrderCounts[stateId];
-          maxState = rawState;
-        }
-      }
-    });
-    this.stateWithHighestOrders = maxState;
-
-    // Revenue projection (last 7 days)
-    const now = new Date();
-    const days: { [k: string]: number } = {};
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = d.toLocaleDateString('en-IN', { weekday: 'short' });
-      days[key] = 0;
-    }
-    this.orders.forEach(o => {
-      const d = new Date(o.orderDate || o.createdAt);
-      const key = d.toLocaleDateString('en-IN', { weekday: 'short' });
-      if (days[key] !== undefined) days[key] += o.totalAmount || 0;
-    });
-    this.projectionLabels = Object.keys(days);
-    this.projectionValues = Object.values(days);
-
-    this.avgDeliveryTime = this.totalDelivered > 0 ? 48 + Math.floor(Math.random() * 24) : 0;
-  }
-
-  // Chatbot
-  sendMessage() {
-    if (!this.userMessage.trim()) return;
-    const query = this.userMessage.trim();
-    this.chatMessages.push({ type: 'user', text: query, time: new Date() });
-    this.userMessage = '';
-    this.isChatLoading.set(true);
-    this.generateAIResponse(query);
-    setTimeout(() => this.scrollToBottom(), 100);
-  }
-
-  generateAIResponse(query: string, retryCount = 0) {
-    const token = sessionStorage.getItem('auth_token');
-    const headers = { 'x-auth-token': token || '' };
-
-    this.http.post<any>('/api/admin/ai-assistant', {
-      message: query,
-      contextData: {
-        totalOrders: this.orders.length,
-        totalRevenue: this.totalRevenue,
-        delivered: this.totalDelivered,
-        topCourier: this.mostUsedCourier,
-        topState: this.stateWithHighestOrders,
-        lowStockCount: this.lowStockItems.filter(i => i.stock < 10).length
-      }
-    }, { headers }).subscribe({
-      next: (res) => {
-        this.chatMessages.push({ type: 'ai', text: res.text || 'Request processed!', time: new Date() });
-        this.isChatLoading.set(false);
-        setTimeout(() => this.scrollToBottom(), 100);
-      },
-      error: (err) => {
-        // If backend fails completely (not just AI fallback), show one final report
-        this.chatMessages.push({
-          type: 'ai',
-          text: `⚠️ **System Link Interrupted**\n\n- Total Orders: **${this.orders.length}**\n- Revenue: **₹${this.totalRevenue.toLocaleString()}**\n\nYour business data is still safe in the dashboard. Try refreshing the AI link soon.`,
-          time: new Date()
-        });
-        this.isChatLoading.set(false);
-      }
-    });
   }
 
   logNavigation() {
     console.log('Navigating back to Admin Dashboard...');
   }
 
-  // Growth Hub Methods
-  generateMarketing(type: string, prod: string, details: string) {
-    if (!prod || !details) return;
-    this.isMarketingLoading.set(true);
+  backToAdmin() {
+    console.log('Programmatic navigation triggered (fallback)');
+    this.router.navigate(['/admin-dashboard']);
+  }
+
+  getCourierColor(percent: number): string {
+    if (percent > 60) return 'linear-gradient(90deg, #22c55e, #16a34a)';
+    if (percent > 30) return 'linear-gradient(90deg, #3b82f6, #2563eb)';
+    return 'linear-gradient(90deg, #f59e0b, #d97706)';
+  }
+
+  fetchData() {
     const token = sessionStorage.getItem('auth_token');
-    this.http.post<any>('/api/admin/generate-marketing', { type, productName: prod, offerDetails: details }, {
-      headers: { 'x-auth-token': token || '' }
-    }).subscribe({
-      next: (res) => {
-        this.marketingContent.set(res.text);
-        this.isMarketingLoading.set(false);
+    this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
+      next: (data) => {
+        this.orders = data;
+        this.calculateAnalytics();
+        this.isLoading = false;
       },
-      error: () => this.isMarketingLoading.set(false)
-    });
-  }
-
-  getAiTasks() {
-    this.isTasksLoading.set(true);
-    const token = sessionStorage.getItem('auth_token');
-    this.http.get<any>('/api/admin/ai-tasks', {
-      headers: { 'x-auth-token': token || '' }
-    }).subscribe({
-      next: (res) => {
-        this.aiTasks.set(res.tasks);
-        this.isTasksLoading.set(false);
-      },
-      error: () => this.isTasksLoading.set(false)
-    });
-  }
-
-  completeTask(index: number) {
-    const currentTasks = this.aiTasks();
-    const updatedTasks = currentTasks.filter((_, i) => i !== index);
-    this.aiTasks.set(updatedTasks);
-  }
-
-  getPlantReminders() {
-    this.isRemindersLoading.set(true);
-    const token = sessionStorage.getItem('auth_token');
-    this.http.get<any[]>('/api/admin/plant-reminders', {
-      headers: { 'x-auth-token': token || '' }
-    }).subscribe({
-      next: (res) => {
-        this.plantReminders.set(res);
-        this.groupReminders(res);
-        this.isRemindersLoading.set(false);
-      },
-      error: () => this.isRemindersLoading.set(false)
-    });
-  }
-
-  groupReminders(reminders: any[]) {
-    const groups: { [key: string]: { user: any, reminders: any[] } } = {};
-    
-    reminders.forEach(rem => {
-      const userId = rem.userId?._id || 'anonymous';
-      if (!groups[userId]) {
-        groups[userId] = {
-          user: rem.userId || { fullName: 'Anonymous', email: 'N/A' },
-          reminders: []
-        };
+      error: (err: any) => {
+        console.error('Error fetching analytics data:', err);
+        this.isLoading = false;
       }
-      groups[userId].reminders.push(rem);
+    });
+  }
+
+  calculateAnalytics() {
+    const deliveredOrders = this.orders.filter(o => o.status === 'Delivered');
+    this.totalDelivered = deliveredOrders.length;
+
+    // Courier Usage
+    const courierCounts: { [key: string]: number } = {};
+    const withCourier = this.orders.filter(o => o.courierName);
+    withCourier.forEach(o => {
+      courierCounts[o.courierName] = (courierCounts[o.courierName] || 0) + 1;
     });
 
-    this.groupedReminders.set(Object.values(groups));
-  }
+    const totalWithCourier = withCourier.length || 1;
+    this.courierUsage = Object.keys(courierCounts).map(name => ({
+      name,
+      count: courierCounts[name],
+      percentage: Math.round((courierCounts[name] / totalWithCourier) * 100)
+    })).sort((a, b) => b.count - a.count);
 
-  openRemindersModal(group: any) {
-    this.selectedUserGroup.set(group);
-    this.showRemindersModal.set(true);
-  }
-
-  closeRemindersModal() {
-    this.showRemindersModal.set(false);
-    this.selectedUserGroup.set(null);
-  }
-
-  getReminderCounts(reminders: any[]) {
-    const sent = reminders.filter(r => r.notificationStatus === 'sent').length;
-    const pending = reminders.filter(r => r.notificationStatus === 'pending').length;
-    return { sent, pending };
-  }
-
-  // Search Logic
-  toggleSearch() {
-    this.isSearchVisible.set(!this.isSearchVisible());
-    if (this.isSearchVisible()) {
-      setTimeout(() => document.getElementById('search-input')?.focus(), 100);
+    if (this.courierUsage.length > 0) {
+      this.mostUsedCourier = this.courierUsage[0].name;
     }
-  }
 
-  onSearchChange() {
-    if (!this.searchQuery.trim()) {
-      this.searchResults.set([]);
-      return;
-    }
-    const q = this.searchQuery.toLowerCase();
-    
-    // Search in orders and insights
-    const results: any[] = [];
-    
-    // Search Orders (by ID or customer)
-    this.orders.forEach(o => {
-      if (o._id.toLowerCase().includes(q) || (o.userId?.fullName || '').toLowerCase().includes(q)) {
-        results.push({ type: 'order', title: `Order ${o._id.substr(-6)}`, sub: o.userId?.fullName, icon: 'fa-box', data: o });
-      }
-    });
-
-    // Search Insights
-    this.insightStream().forEach(i => {
-      if (i.title.toLowerCase().includes(q) || i.content.toLowerCase().includes(q)) {
-        results.push({ type: 'insight', title: i.title, sub: i.content, icon: i.icon, data: i });
-      }
-    });
-
-    this.searchResults.set(results.slice(0, 6));
-  }
-
-  copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text);
-    alert('AI Copy copied to clipboard! ✨');
+    // Avg Delivery Time (Mocking logic as actual shipped-to-delivered timestamps might not be tracked precisely in current schema)
+    // If we had timestamps for each status change, we would use those.
+    // For demo, we assume random yet plausible values around 48-72 hours.
+    this.avgDeliveryTime = this.totalDelivered > 0 ? (48 + Math.floor(Math.random() * 24)) : 0;
   }
 }

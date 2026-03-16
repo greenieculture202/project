@@ -1,21 +1,24 @@
+/* To learn more about this file see: https://angular.dev/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "isolatedModules": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "ES2022",
-    "module": "preserve",
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
+    "experimentalDecorators": true,
     "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    "resolveJsonModule": true,
+    "module": "ESNext",
     "lib": [
       "ES2022",
       "dom"
@@ -27,14 +30,5 @@
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  },
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+  }
 }

@@ -354,12 +354,11 @@ export class UserPanelComponent implements OnInit {
 
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
-
+                const imgProps = (pdf as any).getImageProperties(imgData);
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                // Standard A4 aspect ratio if image properties can't be fetched easily
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.addImage(canvas, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save(`Bill_${order.orderId}.pdf`);
 
                 // Clear selection

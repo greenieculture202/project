@@ -57,16 +57,9 @@
               <p>No new notifications</p>
             </div>
             <div class="notification-item" *ngFor="let n of notifications" [class.unread]="!n.isRead"
-              [hidden]="n.isRead" [attr.data-type]="n.type" [attr.data-subtype]="n.subType" (click)="markAsRead(n)">
-              <div class="notification-icon" [class.reminder-icon]="n.type === 'Reminder'">
-                <i class="fas" [ngClass]="{
-                  'fa-reply': n.type === 'Reply',
-                  'fa-droplet': n.subType === 'water',
-                  'fa-flask-vial': n.subType === 'fertilizer',
-                  'fa-sun': n.subType === 'sunlight',
-                  'fa-heart-pulse': n.subType === 'general' || n.subType === 'health',
-                  'fa-info-circle': !n.subType && n.type !== 'Reply'
-                }"></i>
+              (click)="markAsRead(n)">
+              <div class="notification-icon">
+                <i class="fas" [ngClass]="n.type === 'Reply' ? 'fa-reply' : 'fa-info-circle'"></i>
               </div>
               <div class="notification-content">
                 <div class="notification-title">{{ n.title }}</div>
@@ -84,16 +77,6 @@
                   <ng-template #plainMessage>
                     {{ n.message }}
                   </ng-template>
-
-                  <!-- Interactive Reminder Actions -->
-                  <div class="reminder-actions" *ngIf="n.type === 'Reminder' && n.reminderId" (click)="$event.stopPropagation()">
-                    <button class="action-btn continue" (click)="handleReminderAction(n, 'continued')">
-                      <i class="fas fa-play"></i> Continue
-                    </button>
-                    <button class="action-btn stop" (click)="handleReminderAction(n, 'stopped')">
-                      <i class="fas fa-stop"></i> Stop
-                    </button>
-                  </div>
                 </div>
                 <div class="notification-footer">
                   <span class="notification-time">

@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-delivery-panel',
@@ -19,6 +20,7 @@ export class DeliveryPanelComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private notiService = inject(NotificationService);
 
   allOrders: any[] = [];
   comparisonData: any[] = [];
@@ -28,6 +30,7 @@ export class DeliveryPanelComponent implements OnInit {
   selectedCourier: string = '';
   shipCourier: string = '';
   searchQuery: string = '';
+  activeCourierSubTab: number = 1; // 1: Orders Table, 2: Payment Summary, 3: Analytics
   isLoading: boolean = true;
   today: Date = new Date();
 
@@ -42,7 +45,7 @@ export class DeliveryPanelComponent implements OnInit {
 
   // Password Protection State
   private courierPasswords: { [key: string]: string } = {};
-  activeUnlockedCourier: string | null = sessionStorage.getItem('active_delivery_courier');
+  activeUnlockedCourier: string | null = null;
   showPasswordModal: boolean = false;
   showPasswordText: boolean = false;
   pendingCourier: string = '';
@@ -82,6 +85,19 @@ export class DeliveryPanelComponent implements OnInit {
   showTerritoryModal: boolean = false;
   selectedTerritoryView: any = null;
 
+  // Settlement & Communication State
+  activeSettlementCourier: string = '';
+  selectedOrderIds: string[] = [];
+  adminMessageText: string = '';
+  courierNotifications: any[] = [];
+  isSendingMsg: boolean = false;
+  settlementHistory: any[] = [];
+
+  // Settlement Confirm Modal
+  showSettlementConfirmModal: boolean = false;
+  pendingSettlementData: any = null;
+
+
   openTerritoryView(courier: any) {
     this.selectedTerritoryView = courier;
     this.showTerritoryModal = true;
@@ -118,6 +134,7 @@ export class DeliveryPanelComponent implements OnInit {
 
   get paymentFilteredOrders() {
     if (!this.selectedCourier) {
+      // Return ALL orders if on Payment tab but no courier selected 
       return this.allOrders;
     }
     const states = (this.courierStateMapping as any)[this.selectedCourier] || [];
@@ -156,6 +173,8 @@ export class DeliveryPanelComponent implements OnInit {
   }
 
   calculatePaymentSummary() {
+    // If a courier is selected, show stats only for that courier. 
+    // Otherwise show for all.
     const orders = this.selectedCourier ? this.paymentFilteredOrders : this.allOrders;
 
     let codCount = 0;
@@ -181,41 +200,61 @@ export class DeliveryPanelComponent implements OnInit {
     this.calculatePaymentStats();
   }
 
+  // Similar to Admin Panel: Consistent tab navigation
   setTab(tab: string, courier?: string, navigate: boolean = true) {
     this.activeMainTab = tab;
     this.selectedCourier = courier || '';
 
+    // If entering specific courier view, we close the dashboard chart view
     if (this.selectedCourier) {
       this.dashboardChartCourier = null;
     }
+    // Assuming resetPagination() is a new method to be added or is implicitly handled elsewhere.
+    // If it's not defined, this line will cause a compilation error.
+    // For now, keeping it as per instruction, but commenting out if it's not defined.
+    // this.resetPagination(); 
 
     if (navigate) {
       const queryParams: any = { tab: this.activeMainTab };
+      // Always include courier in queryParams, set to null to remove it if empty
       queryParams.courier = this.selectedCourier || null;
 
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams,
-        queryParamsHandling: 'merge'
+        queryParamsHandling: 'merge' // Keeping merge but null handles the removal
       });
     }
 
-    if (tab === 'dashboard' || tab === 'orders' || tab === 'customers' || tab === 'payments' || tab === 'settlements') {
+    if (tab === 'dashboard' || tab === 'orders' || tab === 'customers' || tab === 'payments' || tab === 'settlements' || tab === 'setting') {
       this.loadShipments();
+      if (tab === 'settlements' && this.activeSettlementCourier) {
+        this.loadSettlementHistory(this.activeSettlementCourier);
+      }
     } else {
       this.calculatePaymentSummary();
     }
   }
 
+  selectSettlementCourier(courierName: string) {
+    this.activeSettlementCourier = courierName;
+    this.loadSettlementHistory(courierName);
+  }
+
+  // Placeholder for resetPagination if it's intended to be added.
+  // If not, the call in setTab should be removed or the method defined.
   private resetPagination() {
+    // Implement pagination reset logic here if needed
     console.log('Pagination reset logic would go here.');
   }
 
   selectCourier(name: string) {
     if (this.activeUnlockedCourier === name) {
+      // Whenever a specific courier is selected, always shift view to their 'orders' (Dashboard) panel
       this.setTab('orders', name);
-      this.filterStatus = 'All';
-      this.searchQuery = '';
+      this.calculatePaymentSummary();
+      this.loadCourierNotifications(name);
+      this.loadSettlementHistory(name);
     } else {
       this.pendingCourier = name;
       this.showPasswordModal = true;
@@ -228,10 +267,11 @@ export class DeliveryPanelComponent implements OnInit {
     const correctPassword = this.courierPasswords[this.pendingCourier];
     if (this.enteredPassword === correctPassword) {
       this.activeUnlockedCourier = this.pendingCourier;
-      sessionStorage.setItem('active_delivery_courier', this.pendingCourier);
       this.showPasswordModal = false;
       this.showPasswordText = false;
       this.selectCourier(this.pendingCourier);
+      // Sync settlement tab
+      this.activeSettlementCourier = this.pendingCourier;
     } else {
       this.passwordError = 'Invalid password. Please try again.';
     }
@@ -252,23 +292,25 @@ export class DeliveryPanelComponent implements OnInit {
   get filteredOrdersV2() {
     let filtered = this.allOrders;
 
+    // Filter by Courier if on Orders tab
     if (this.selectedCourier) {
-      const selectedLower = this.selectedCourier.toLowerCase();
       filtered = filtered.filter(o => {
+        // Automatically check if the order matches the courier's assigned state 
+        // OR if it was manually assigned in the database
         const orderState = this.extractState(o);
         const states = (this.courierStateMapping as any)[this.selectedCourier] || [];
-        const stateMatch = states.some((s: string) => s.toLowerCase() === orderState.toLowerCase());
-        const nameMatch = o.courierName?.toLowerCase() === selectedLower;
-        return stateMatch || nameMatch;
+        return states.includes(orderState) || o.courierName === this.selectedCourier;
       });
     } else {
       filtered = [];
     }
 
+    // Filter by Status
     if (this.filterStatus !== 'All') {
       filtered = filtered.filter(o => o.status === this.filterStatus);
     }
 
+    // Filter by Search Query
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
       filtered = filtered.filter(o =>
@@ -277,11 +319,13 @@ export class DeliveryPanelComponent implements OnInit {
       );
     }
 
+    // Sort by Date (newest first)
     return filtered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
   }
 
   ngOnInit() {
     this.isLoading = true;
+    // 1. Parallelize initial data requests so UI populates as soon as ANY data is ready
     Promise.all([
       this.loadCouriers(),
       this.loadShipmentsPromise()
@@ -290,6 +334,7 @@ export class DeliveryPanelComponent implements OnInit {
       this.cdr.detectChanges();
     });
 
+    // 2. React to route changes separately
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'] || 'orders';
       const courier = params['courier'] || '';
@@ -303,6 +348,7 @@ export class DeliveryPanelComponent implements OnInit {
       this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
         next: (orders) => {
           this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+          this.checkAutomaticDelivery();
           this.updateComparisonData();
           this.calculatePaymentSummary();
           resolve();
@@ -331,6 +377,12 @@ export class DeliveryPanelComponent implements OnInit {
               this.courierFees[c.name] = c.fee || 50;
             }
           });
+          if (!this.activeSettlementCourier && this.couriers.length > 0) {
+            this.activeSettlementCourier = this.couriers[0].name;
+            if (this.activeMainTab === 'settlements') {
+              this.loadSettlementHistory(this.activeSettlementCourier);
+            }
+          }
           this.updateComparisonData();
           resolve();
         },
@@ -435,7 +487,9 @@ export class DeliveryPanelComponent implements OnInit {
     const token = sessionStorage.getItem('auth_token');
     this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
       next: (orders) => {
+        // Only show relevant delivery statuses
         this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+        this.checkAutomaticDelivery();
         this.updateComparisonData();
         this.calculatePaymentSummary();
         this.isLoading = false;
@@ -447,9 +501,44 @@ export class DeliveryPanelComponent implements OnInit {
     });
   }
 
+  checkAutomaticDelivery() {
+    // Note: Automatic delivery update is currently disabled to ensure database only reflects manual delivery confirmation.
+    /*
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let hasUpdates = false;
+    this.allOrders.forEach(order => {
+      if (order.status === 'Shipped' && order.expectedDeliveryDate) {
+        const expected = new Date(order.expectedDeliveryDate);
+        expected.setHours(0, 0, 0, 0);
+
+        if (today.getTime() >= expected.getTime()) {
+          order.status = 'Delivered'; // Update locally for immediate feedback
+          this.silentMarkAsDelivered(order._id);
+          hasUpdates = true;
+        }
+      }
+    });
+
+    if (hasUpdates) {
+      this.updateComparisonData();
+      this.calculatePaymentSummary();
+      this.cdr.detectChanges();
+    }
+    */
+  }
+
+  silentMarkAsDelivered(orderId: string) {
+    const token = sessionStorage.getItem('auth_token');
+    this.http.put(`/api/admin/orders/${orderId}/status`, { status: 'Delivered' }, { headers: { 'x-auth-token': token || '' } }).subscribe({
+      error: (err) => console.error('Error updating status silently:', err)
+    });
+  }
+
   toggleCourierChart(name: string) {
     if (this.dashboardChartCourier === name) {
-      this.dashboardChartCourier = null;
+      this.dashboardChartCourier = null; // Close if open
     } else {
       this.dashboardChartCourier = name;
       this.generateCourierChart(name);
@@ -460,9 +549,11 @@ export class DeliveryPanelComponent implements OnInit {
     if (!courierName) return;
 
     this.dashboardChartCourier = courierName;
+
     const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const counts: { [key: string]: number } = { 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0 };
 
+    // Get orders specific to this courier
     const states = (this.courierStateMapping as any)[courierName] || [];
     const courierOrders = this.allOrders.filter(o => {
       const orderState = this.extractState(o);
@@ -473,7 +564,9 @@ export class DeliveryPanelComponent implements OnInit {
       if (order.orderDate) {
         const date = new Date(order.orderDate);
         const dayName = daysShort[date.getDay()];
-        if (counts[dayName] !== undefined) counts[dayName]++;
+        if (counts[dayName] !== undefined) {
+          counts[dayName]++;
+        }
       }
     });
 
@@ -481,6 +574,8 @@ export class DeliveryPanelComponent implements OnInit {
     const totalTrendOrders = Object.values(counts).reduce((a, b) => a + b, 0);
     this.totalWeeklyOrders = totalTrendOrders;
 
+    // Colors matching Admin layout
+    // Colors matching Blue/Premium layout
     const dayColors = ['#3b82f6', '#0ea5e9', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e'];
 
     if (totalTrendOrders > 0) {
@@ -536,6 +631,7 @@ export class DeliveryPanelComponent implements OnInit {
       const isAssigned = states.includes(orderState) || o.courierName === this.dashboardChartCourier;
       return isAssigned && o.status === 'Delivered';
     });
+    // Return last 5 sorted by date
     return delivered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()).slice(0, 5);
   }
 
@@ -544,6 +640,7 @@ export class DeliveryPanelComponent implements OnInit {
   }
 
   extractState(order: any): string {
+    // Attempt to find state from user profile or shipping address string
     const address = (order.userId?.address || order.shippingAddress || '').toLowerCase();
     const city = (order.userId?.city || '').toLowerCase();
 
@@ -559,12 +656,15 @@ export class DeliveryPanelComponent implements OnInit {
 
   getCount(status: string) {
     if (!this.selectedCourier) {
+      if (status === 'Total') return this.allOrders.length;
       return this.allOrders.filter(o => o.status === status).length;
     }
     const states = (this.courierStateMapping as any)[this.selectedCourier] || [];
     return this.allOrders.filter(o => {
       const orderState = this.extractState(o);
-      return o.status === status && (states.includes(orderState) || o.courierName === this.selectedCourier);
+      const isAssigned = states.includes(orderState) || o.courierName === this.selectedCourier;
+      if (status === 'Total') return isAssigned;
+      return o.status === status && isAssigned;
     }).length;
   }
 
@@ -616,43 +716,71 @@ export class DeliveryPanelComponent implements OnInit {
     });
   }
 
+  getCountdown(date: any): string {
+    if (!date) return 'Set Date';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expected = new Date(date);
+    expected.setHours(0, 0, 0, 0);
+
+    const diffTime = expected.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'Delivered';
+    return `${diffDays} days to go`;
+  }
+
   updateExpectedDate(orderId: string, event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.value) return;
 
     const token = sessionStorage.getItem('auth_token');
     const expectedDate = new Date(input.value);
+    const isoDate = expectedDate.toISOString();
 
     const order = this.allOrders.find(o => o.orderId === orderId);
     if (!order) return;
 
+    // IMMEDIATE (OPTIMISTIC) UI UPDATE
+    order.expectedDeliveryDate = isoDate;
+    this.checkAutomaticDelivery();
+    this.cdr.detectChanges();
+
     const payload = {
       status: order.status,
-      expectedDeliveryDate: expectedDate.toISOString()
+      expectedDeliveryDate: isoDate
     };
 
     this.http.put(`/api/admin/orders/${order._id || orderId}/status`, payload, { headers: { 'x-auth-token': token || '' } }).subscribe({
       next: (updatedOrder: any) => {
-        order.expectedDeliveryDate = updatedOrder.expectedDeliveryDate || expectedDate.toISOString();
-        this.sendWhatsApp(order);
+        // Confirm with server data
+        order.expectedDeliveryDate = updatedOrder.expectedDeliveryDate || isoDate;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error updating expected date:', err)
+      error: (err) => {
+        console.error('Error updating expected date:', err);
+        // Sync with server on error
+        this.loadShipments();
+      }
     });
   }
 
   getDaysRemaining(expectedDate: any): string {
     if (!expectedDate) return 'Set Date';
+
+    // Support parsing strings like "10-03-2026" if needed, 
+    // although generally it should be ISO string from updateExpectedDate
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     let expected: Date;
     if (typeof expectedDate === 'string' && expectedDate.includes('-') && !expectedDate.includes('T')) {
+      // Handle "DD-MM-YYYY" if it exists in that format
       const parts = expectedDate.split('-');
       if (parts[0].length === 4) {
-        expected = new Date(expectedDate);
+        expected = new Date(expectedDate); // YYYY-MM-DD
       } else {
-        expected = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        expected = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // DD-MM-YYYY to YYYY-MM-DD
       }
     } else {
       expected = new Date(expectedDate);
@@ -680,6 +808,7 @@ export class DeliveryPanelComponent implements OnInit {
     this.trackingNumber = '';
     this.expectedDeliveryDate = '';
     this.showCourierMismatchError = false;
+    // Default to the courier associated with the order or the current dashboard view
     this.shipCourier = this.dashboardChartCourier || order.courierName || this.getCourierForState(this.extractState(order)) || '';
   }
 
@@ -694,13 +823,14 @@ export class DeliveryPanelComponent implements OnInit {
 
   dispatchOrder(orderId: string) {
     if (!this.shipCourier) {
-      alert('Please select a courier partner.');
+      this.notiService.show('Please select a courier partner for this shipment.', 'Action Required', 'warning');
       return;
     }
 
     const token = sessionStorage.getItem('auth_token');
     if (!token) return;
 
+    // VALIDATION: Check if courier matches state
     const orderState = this.extractState(this.selectedOrderForShip);
     const allowedStates = this.courierStateMapping[this.shipCourier] || [];
 
@@ -774,6 +904,7 @@ export class DeliveryPanelComponent implements OnInit {
     return `GC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   }
 
+  // Payment View Helpers
   isPaymentCOD(method: string): boolean {
     const m = (method || '').toUpperCase();
     return m === 'COD' || m === 'CASH ON DELIVERY';
@@ -811,15 +942,22 @@ export class DeliveryPanelComponent implements OnInit {
       if (this.isPaymentCOD(o.paymentMethod)) {
         codCount++;
         codRevenue += amount;
+
         const adminGets = amount - fee;
         totalCollectedFromCouriers += adminGets;
-        if (!o.courierSettled) totalPendingFromCouriers += adminGets;
+        if (!o.courierSettled) {
+          totalPendingFromCouriers += adminGets;
+        }
       } else {
         onlineCount++;
         onlineRevenue += amount;
+
         totalOwedToCouriers += fee;
-        if (o.courierSettled) totalPaidToCouriers += fee;
-        else totalPendingToCouriers += fee;
+        if (o.courierSettled) {
+          totalPaidToCouriers += fee;
+        } else {
+          totalPendingToCouriers += fee;
+        }
       }
     });
 
@@ -842,6 +980,7 @@ export class DeliveryPanelComponent implements OnInit {
     };
   }
 
+  // Courier Settlement Tracking
   getCourierSettlement(courierName: string) {
     const states = this.courierStateMapping[courierName] || [];
     const orders = this.allOrders.filter(o => {
@@ -850,34 +989,53 @@ export class DeliveryPanelComponent implements OnInit {
     });
     const fee = this.courierFees[courierName] || 0;
 
-    const upiOrders = orders.filter(o => !this.isPaymentCOD(o.paymentMethod));
+    // UPI Orders: Admin owes courier the delivery charges
+    const upiOrders = orders.filter(o => !this.isPaymentCOD(o.paymentMethod) && !o.adminSettled);
     const upiSettled = upiOrders.filter(o => o.courierSettled);
     const upiUnsettled = upiOrders.filter(o => !o.courierSettled);
     const upiTotalOwed = upiOrders.length * fee;
     const upiPaid = upiSettled.length * fee;
     const upiPending = upiUnsettled.length * fee;
 
-    const codOrders = orders.filter(o => this.isPaymentCOD(o.paymentMethod));
+    // COD Orders: Courier owes admin (totalAmount - delivery fee)
+    const codOrders = orders.filter(o => this.isPaymentCOD(o.paymentMethod) && !o.adminSettled);
     const codSettled = codOrders.filter(o => o.courierSettled);
     const codUnsettled = codOrders.filter(o => !o.courierSettled);
-    const codTotalCollected = codOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const codCourierKeeps = codOrders.length * fee;
-    const codAdminGets = codTotalCollected - codCourierKeeps;
-    const codReceived = codSettled.reduce((sum, o) => sum + ((o.totalAmount || 0) - fee), 0);
-    const codPending = codUnsettled.reduce((sum, o) => sum + ((o.totalAmount || 0) - fee), 0);
+    
+    // Calculate only for orders the courier HAS collected (courierSettled = true) but NOT YET transferred
+    const codTotalCollected = codSettled.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const codCourierKeeps = codSettled.length * fee;
+    const codPending = codTotalCollected - codCourierKeeps; // Total collected - delivery charges
+    const codAdminGets = codPending;
+    const codReceived = 0; // Legacy property, mostly 0 now because ledger tracks historically received payments.
 
     return {
-      courierName, fee,
-      upiOrders: upiOrders.length, upiTotalOwed, upiPaid, upiPending, upiSettledOrders: upiSettled, upiUnsettledOrders: upiUnsettled,
-      codOrders: codOrders.length, codTotalCollected, codCourierKeeps, codAdminGets, codReceived, codPending, codSettledOrders: codSettled, codUnsettledOrders: codUnsettled
+      courierName,
+      fee,
+      // UPI Settlement (Admin → Courier)
+      upiOrders: upiOrders.length,
+      upiTotalOwed,
+      upiPaid,
+      upiPending,
+      upiSettledOrders: upiSettled,
+      upiUnsettledOrders: upiUnsettled,
+      // COD Settlement (Courier → Admin)
+      codOrders: codOrders.length,
+      codTotalCollected,
+      codCourierKeeps,
+      codAdminGets,
+      codReceived,
+      codPending,
+      codSettledOrders: codSettled,
+      codUnsettledOrders: codUnsettled
     };
   }
 
   toggleCourierSettled(order: any) {
     const token = sessionStorage.getItem('auth_token');
     const newStatus = !order.courierSettled;
-    this.http.put(`/api/admin/orders/${order._id}/courier-settled`, 
-      { courierSettled: newStatus }, 
+    this.http.put(`/api/admin/orders/${order._id}/courier-settled`,
+      { courierSettled: newStatus },
       { headers: { 'x-auth-token': token || '' } }
     ).subscribe({
       next: (updated: any) => {
@@ -898,36 +1056,232 @@ export class DeliveryPanelComponent implements OnInit {
     };
   }
 
-  sendWhatsApp(order: any) {
-    const phone = order.userId?.phone || order.phone;
-    if (!phone) {
-      alert('Phone number not found for this customer!');
+  isOrderSelected(orderId: string): boolean {
+    return this.selectedOrderIds.includes(orderId);
+  }
+
+  toggleOrderSelection(order: any) {
+    const id = order._id;
+    const index = this.selectedOrderIds.indexOf(id);
+    if (index > -1) {
+      this.selectedOrderIds.splice(index, 1);
+    } else {
+      this.selectedOrderIds.push(id);
+    }
+  }
+
+  calculateSelectedTotal(): number {
+    let total = 0;
+    this.selectedOrderIds.forEach(id => {
+      const order = this.allOrders.find(o => o._id === id);
+      if (order) {
+        const fee = this.getFeeForOrder(order);
+        total += (order.totalAmount - fee);
+      }
+    });
+    return total;
+  }
+
+  transferToAdmin() {
+    if (this.selectedOrderIds.length === 0) return;
+
+    const total = this.calculateSelectedTotal();
+    const courierName = this.activeSettlementCourier;
+    
+    if (!confirm(`Are you sure you want to transfer ₹${total.toLocaleString()} to Admin for ${this.selectedOrderIds.length} orders?`)) {
       return;
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
-    const finalPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const token = sessionStorage.getItem('auth_token');
+    const payload = {
+      orderIds: this.selectedOrderIds,
+      courierName: courierName,
+      totalAmount: total
+    };
 
-    const userName = order.userId?.fullName || 'Customer';
-    const orderId = order.orderId;
-    const amount = order.totalAmount;
-    const pin = order.deliveryPin || 'N/A';
-    const date = this.getDaysRemaining(order.expectedDeliveryDate);
+    this.http.post('/api/orders/bulk-settle', payload, { headers: { 'x-auth-token': token || '' } }).subscribe({
+      next: (res: any) => {
+        alert(`Successfully transferred ₹${total.toLocaleString()} to Admin. Admin has been notified.`);
+        this.selectedOrderIds = []; // Clear selection
+        this.loadShipments(); // Refresh data
+      },
+      error: (err) => {
+        console.error('Settlement error:', err);
+        alert('Failed to complete settlement.');
+      }
+    });
+  }
 
-    const message = `Hello ${userName}! 🌿
+  transferAllPendingToAdmin(courierName: string) {
+    const s = this.getCourierSettlement(courierName);
+    const pendingOrders = s.codUnsettledOrders;
     
-This is your *Greenie Culture AI Assistant* with an update! 🟢
+    if (!pendingOrders || pendingOrders.length === 0) {
+      alert('No pending COD orders to transfer.');
+      return;
+    }
 
-Your order *#${orderId}* is confirmed for delivery!
+    const total = s.codPending;
+    if (!confirm(`Are you sure you want to transfer the total pending amount of ₹${total.toLocaleString()} to Admin? This will settle all ${pendingOrders.length} orders.`)) {
+      return;
+    }
 
-📦 *Delivery Info:*
-- Amount: ₹${amount}
-- Expected: ${date}
-- Secure OTP: *${pin}*
+    const orderIds = pendingOrders.map((o: any) => o._id);
+    const token = sessionStorage.getItem('auth_token');
+    
+    const payload = {
+      orderIds: orderIds,
+      courierName: courierName,
+      totalAmount: total
+    };
 
-Thank you for being part of our green community! 🌱`;
+    this.http.post('/api/orders/bulk-settle', payload, { headers: { 'x-auth-token': token || '' } }).subscribe({
+      next: (res: any) => {
+        this.notiService.show(`Successfully transferred ₹${total.toLocaleString()} to Admin. Account settled!`, 'Settlement Successful', 'success', 'toast');
+        this.loadShipments(); 
+      },
+      error: (err) => {
+        console.error('Bulk Settlement error:', err);
+        this.notiService.show('Failed to complete bulk transfer. Please verify connection.', 'Transfer Error', 'error');
+      }
+    });
+  }
 
-    const url = `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  sendAdminMessage(courierName: string, customMsg?: string) {
+    const messageText = customMsg || this.adminMessageText;
+    if (!messageText.trim()) return;
+
+    this.isSendingMsg = true;
+    const token = sessionStorage.getItem('auth_token');
+    const isAdmin = this.authService.isAdmin();
+    
+    const payload = {
+      courierName,
+      title: isAdmin ? 'Message from Admin 📩' : `Message from ${courierName} 📥`,
+      message: messageText,
+      forceCourierSide: true // Always treat as courier-side when sending from this panel
+    };
+
+    this.http.post('/api/admin/notify-courier', payload, {
+      headers: { 'x-auth-token': token || '' }
+    }).subscribe({
+      next: (res: any) => {
+        if (!customMsg) {
+          this.notiService.show(
+            isAdmin ? `Message successfully sent to ${courierName}` : 'Your message has been sent to the Admin',
+           'Message Sent',
+           'success',
+           'toast'
+          );
+          this.adminMessageText = '';
+        }
+        this.loadCourierNotifications(courierName);
+        this.isSendingMsg = false;
+      },
+      error: (err) => {
+        console.error('Error sending message:', err);
+        this.notiService.show('Failed to deliver message. Please try again.', 'Delivery Error', 'error');
+        this.isSendingMsg = false;
+      }
+    });
+  }
+
+  loadCourierNotifications(courierName: string) {
+    this.http.get<any[]>(`/api/courier/notifications/${courierName}`).subscribe({
+      next: (notis) => {
+        this.courierNotifications = notis;
+        this.cdr.detectChanges();
+        
+        // Auto-scroll to bottom of chat
+        setTimeout(() => {
+          const chatList = document.querySelector('.notifications-list');
+          if (chatList) {
+            chatList.scrollTop = chatList.scrollHeight;
+          }
+        }, 100);
+      },
+      error: (err) => console.error('Error loading notifications:', err)
+    });
+  }
+
+  clearChatHistory(courierName: string) {
+    if (!confirm('Are you sure you want to clear the entire chat history with the Admin?')) return;
+
+    const token = sessionStorage.getItem('auth_token');
+    this.http.delete(`/api/courier/notifications/${courierName}`, {
+      headers: { 'x-auth-token': token || '' }
+    }).subscribe({
+      next: () => {
+        this.notiService.show('Chat history cleared successfully', 'History Cleared', 'success', 'toast');
+        this.loadCourierNotifications(courierName);
+      },
+      error: (err) => {
+        console.error('Clear chat error:', err);
+        this.notiService.show('Failed to clear chat history.', 'Error', 'error');
+      }
+    });
+  }
+
+  transferCodToAdmin(courierName: string) {
+    const s = this.getCourierSettlement(courierName);
+    const amount = s.codPending;
+    const orderCount = s.codSettledOrders.length;
+
+    if (amount <= 0) {
+      this.notiService.show('No pending COD amount to transfer.', 'Info', 'info', 'toast');
+      return;
+    }
+
+    // Replace native confirm with custom premium modal
+    this.pendingSettlementData = {
+      courierName,
+      amount,
+      orderCount,
+      orderIds: s.codSettledOrders.map((o: any) => o._id)
+    };
+    this.showSettlementConfirmModal = true;
+  }
+
+  loadSettlementHistory(courierName: string) {
+    const token = sessionStorage.getItem('auth_token');
+    this.http.get<any[]>(`/api/admin/settlements/${courierName}`, {
+      headers: { 'x-auth-token': token || '' }
+    }).subscribe({
+      next: (history) => {
+        this.settlementHistory = history;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error loading settlement history:', err)
+    });
+  }
+
+  confirmSettlementTransfer() {
+    if (!this.pendingSettlementData) return;
+    
+    const { courierName, amount, orderIds, orderCount } = this.pendingSettlementData;
+    const token = sessionStorage.getItem('auth_token');
+    const payload = {
+      orderIds,
+      courierName,
+      totalAmount: amount
+    };
+
+    this.showSettlementConfirmModal = false;
+
+    this.http.post('/api/orders/bulk-settle', payload, {
+      headers: { 'x-auth-token': token || '' }
+    }).subscribe({
+      next: (res: any) => {
+        this.notiService.show(`Successfully transferred ₹${amount.toLocaleString()} to Admin.`, 'Funds Transferred', 'success', 'toast');
+        
+        // Auto-send chat message to Admin
+        const autoMsg = `Payment Completed: ₹${amount.toLocaleString()} has been transferred for ${orderCount} orders via COD settlement. ✅`;
+        this.sendAdminMessage(courierName, autoMsg);
+        
+        this.loadShipments();
+        this.loadSettlementHistory(courierName);
+      },
+      error: (err) => this.notiService.show('Settlement processing failed. Please try again.', 'Process Error', 'error')
+    });
   }
 }

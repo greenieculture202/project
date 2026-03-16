@@ -1,0 +1,52 @@
+[
+  {
+    "_id": "69b6b5e089e87a2a17be42e6",
+    "userId": "admin",
+    "type": "admin",
+    "title": "Message Sent to Delhivery 📤",
+    "message": "when\n",
+    "isRead": true,
+    "createdAt": "2026-03-15T13:36:32.563Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b6b59a89e87a2a17be42c5",
+    "userId": "admin",
+    "type": "admin",
+    "title": "Message Sent to Blue Dart 📤",
+    "message": "when ",
+    "isRead": true,
+    "createdAt": "2026-03-15T13:35:22.842Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b6b1554ef9e22236b43834",
+    "userId": "admin",
+    "type": "admin",
+    "title": "Message Sent to Blue Dart 📤",
+    "message": "?",
+    "isRead": true,
+    "createdAt": "2026-03-15T13:17:09.482Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b6b10a4ef9e22236b43810",
+    "userId": "admin",
+    "type": "admin",
+    "title": "Message Sent to Blue Dart 📤",
+    "message": "when?",
+    "isRead": true,
+    "createdAt": "2026-03-15T13:15:54.209Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b6ae49efca536a8e4f74f6",
+    "userId": "admin",
+    "type": "admin",
+    "title": "Message Sent to Blue Dart 📤",
+    "message": "3 days",
+    "isRead": true,
+    "createdAt": "2026-03-15T13:04:09.547Z",
+    "__v": 0
+  }
+]

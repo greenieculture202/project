@@ -12,7 +12,7 @@
 
         <nav class="nav-menu">
             <a class="nav-item" [class.active]="activeMainTab === 'orders'" (click)="setTab('orders', '')">
-                <i class="fas fa-chart-pie"></i> Reports & Dashboard
+                <i class="fas fa-chart-pie"></i> Reports &amp; Dashboard
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'customers'" (click)="setTab('customers')">
                 <i class="fas fa-boxes-stacked"></i> All Shipments
@@ -21,7 +21,7 @@
                 <i class="fas fa-indian-rupee-sign"></i> Payments
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'settlements'" (click)="setTab('settlements')">
-                <i class="fas fa-hand-holding-dollar"></i> Settlements
+                <i class="fas fa-handshake-angle"></i> Settlements
             </a>
             <a class="nav-item" [class.active]="activeMainTab === 'setting'" (click)="setTab('setting')">
                 <i class="fas fa-sliders"></i> Configurations
@@ -39,10 +39,7 @@
                     </div>
                     <div class="courier-item-info">
                         <span class="courier-name">{{ courier.name }}</span>
-                        <span class="courier-pending-badge"
-                            *ngIf="getSettlementForCourier(courier.name).totalPending > 0">
-                            ₹{{ getSettlementForCourier(courier.name).totalPending | number:'1.0-0' }} pending
-                        </span>
+
                     </div>
 
                     <i class="fas fa-lock lock-status locked" *ngIf="activeUnlockedCourier !== courier.name"></i>
@@ -88,8 +85,8 @@
                         <i class="fas fa-list-check"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="label">Order Queue</span>
-                        <span class="count">{{ getCount('Pending') }}</span>
+                        <span class="label">Total Orders</span>
+                        <span class="count">{{ getCount('Total') }}</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -415,13 +412,14 @@
                     <button class="filter-btn" [class.active]="filterStatus === 'All'"
                         (click)="setFilter('All')">All</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Pending'"
-                        (click)="setFilter('Pending')">Ready to Ship</button>
+                        (click)="setFilter('Pending')">Pending</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Shipped'"
                         (click)="setFilter('Shipped')">Out for
                         Delivery</button>
                     <button class="filter-btn" [class.active]="filterStatus === 'Delivered'"
                         (click)="setFilter('Delivered')">Delivered</button>
                 </div>
+
 
                 <div style="display: flex; align-items: center; gap: 1.5rem;">
                     <input type="text" class="search-field" placeholder="Search orders..." [(ngModel)]="searchQuery">
@@ -432,10 +430,11 @@
             <!-- Table Container -->
             <div class="table-card" *ngIf="selectedCourier">
                 <div class="table-header">
-                    <h3>Delivery Orders</h3>
+                    <h3>Courier Analytics & Shipments</h3>
                 </div>
 
-                <div style="flex: 1; overflow-x: auto;">
+                <!-- Sub-Tab 1: Order Table -->
+                <div style="flex: 1; overflow-x: auto;" *ngIf="activeCourierSubTab === 1">
                     <table class="delivery-table">
                         <thead>
                             <tr>
@@ -450,44 +449,50 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let order of filteredOrdersV2">
-                                <td class="order-id-cell">{{ order.orderId }}</td>
+                                <td class="order-id-cell">#{{ order.orderId }}</td>
                                 <td class="customer-name-cell">{{ order.userId?.fullName || 'Guest' }}</td>
-                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A'
-                                    }},
-                                    {{
-                                    order.userId?.city || '' }}</td>
+                                <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
+                                    {{ order.userId?.city || '' }}</td>
                                 <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
                                 <td>
-                                    <input #dateInput type="date"
-                                        [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
-                                        (change)="updateExpectedDate(order.orderId, $event)"
-                                        (click)="dateInput.showPicker()" [disabled]="order.status === 'Delivered'">
+                                    <div class="date-picker-wrapper" (click)="dateInput.showPicker()"
+                                        style="display: inline-flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s; font-weight: 700; color: #1e293b; font-size: 0.88rem; min-width: 130px;"
+                                        onmouseover="this.style.borderColor='#166534'; this.style.background='#f0fdf4';"
+                                        onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
+                                        <span>{{ order.expectedDeliveryDate ? (order.expectedDeliveryDate |
+                                            date:'dd-MM-yyyy') : 'Set Date' }}</span>
+                                        <i class="fas fa-calendar-days" style="color: #166534; font-size: 1rem;"></i>
+                                        <input #dateInput type="date"
+                                            [ngModel]="order.expectedDeliveryDate | date:'yyyy-MM-dd'"
+                                            (change)="updateExpectedDate(order.orderId, $event)"
+                                            [disabled]="order.status === 'Delivered'"
+                                            style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="status-badge" [ngClass]="getStatusClass(order.status)">
-                                        {{ order.status === 'Shipped' ? 'Out for Delivery' : (order.status === 'Pending'
-                                        ? 'Ready' : order.status) }}
+                                    <span class="status-badge"
+                                        [ngClass]="order.status === 'Shipped' && !order.expectedDeliveryDate ? 'pending' : getStatusClass(order.status)">
+                                        {{ (order.status === 'Shipped' && !order.expectedDeliveryDate) ? 'Pending' :
+                                        (order.status === 'Shipped' ? 'Out for Delivery' : order.status) }}
                                     </span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <div class="action-stack">
-                                        <div class="days-indicator" [ngClass]="{'soon': getDaysRemaining(order.expectedDeliveryDate) === 'Tomorrow' || getDaysRemaining(order.expectedDeliveryDate) === 'Today'}">
-                                            {{ getDaysRemaining(order.expectedDeliveryDate) }}
-                                        </div>
-                                        
-                                        <div class="btn-group-mini">
-                                            <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)" class="btn-action-mini ship" title="Dispatch Order">
-                                                <i class="fas fa-truck-fast"></i> Ship
-                                            </button>
-                                            
-                                            <button (click)="sendWhatsApp(order)" class="btn-action-mini whatsapp" title="Notify Customer via WhatsApp">
-                                                <i class="fab fa-whatsapp"></i> Notify
-                                            </button>
-                                        </div>
+                                    <div *ngIf="order.status === 'Shipped' && order.expectedDeliveryDate"
+                                        style="font-weight: 800; color: #166534; font-size: 0.85rem; background: #f0fdf4; padding: 6px 12px; border-radius: 8px; border: 1px solid #bbf7d0; display: inline-block;">
+                                        <i class="fas fa-clock-rotate-left" style="margin-right: 5px;"></i>
+                                        {{ getCountdown(order.expectedDeliveryDate) }}
                                     </div>
-                                    <div class="delivered-check" *ngIf="order.status === 'Delivered'">
-                                        <i class="fas fa-check"></i>
+                                    <div *ngIf="order.status === 'Delivered'"
+                                        style="color: #16a34a; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fas fa-circle-check"></i>
+                                        <span style="font-size: 0.85rem; font-weight: 800;">Done</span>
                                     </div>
+                                    <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)"
+                                        style="background: #166534; color: white; border: none; padding: 6px 16px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(22, 101, 52, 0.2);"
+                                        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(22, 101, 52, 0.3)'"
+                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(22, 101, 52, 0.2)'">
+                                        View
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -497,127 +502,160 @@
                         <i class="fas fa-box-open"></i>
                         <p>No delivery orders matching your criteria.</p>
                     </div>
+
                 </div>
 
-                <!-- Table Footer / Pagination -->
-                <div class="table-footer">
-                    <span class="entry-info">Showing 1 to {{ filteredOrdersV2.length > 5 ? 5 :
-                        filteredOrdersV2.length
-                        }} of
-                        {{ filteredOrdersV2.length }} entries</span>
+                <!-- Sub-Tab 2: Payment Breakdown (COD vs Online) -->
+                <div class="payment-summary-view" *ngIf="activeCourierSubTab === 2">
+                    <div class="summary-header">
+                        <div class="stat-icon" style="background: #1e293b; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="summary-title">
+                            <h3>Financial Breakdown: {{ selectedCourier }}</h3>
+                            <p>Revenue distribution and delivery charges owed to admin</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <!-- Online Orders Breakdown -->
+                        <div class="payment-logic-card online-logic">
+                            <div class="logic-badge"><i class="fas fa-globe"></i></div>
+                            <div class="logic-info">
+                                <h4>Online Settlements</h4>
+                                <p>Pre-paid orders requiring admin to pay courier charges</p>
+                            </div>
+                            <div class="logic-stats">
+                                <span class="ls-val">{{ getCourierSettlement(selectedCourier).upiOrders }}</span>
+                                <span class="ls-lbl">Orders</span>
+                            </div>
+                            <div class="logic-footer">
+                                <div class="lf-item">
+                                    <span class="lf-label">Total Volume</span>
+                                    <span class="lf-val">₹{{ getCourierSettlement(selectedCourier).upiOrders * 1000 | number:'1.0-0' }}+</span>
+                                </div>
+                                <div class="lf-item">
+                                    <span class="lf-label">Admin Owes You</span>
+                                    <span class="lf-val" style="color: #3b82f6;">₹{{ getCourierSettlement(selectedCourier).upiTotalOwed | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COD Orders Breakdown -->
+                        <div class="payment-logic-card cod-logic">
+                            <div class="logic-badge"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <div class="logic-info">
+                                <h4>COD Collections</h4>
+                                <p>Cash collected by courier to be transferred to admin</p>
+                            </div>
+                            <div class="logic-stats">
+                                <span class="ls-val">{{ getCourierSettlement(selectedCourier).codOrders }}</span>
+                                <span class="ls-lbl">Orders</span>
+                            </div>
+                            <div class="logic-footer">
+                                <div class="lf-item">
+                                    <span class="lf-label">Total Collected</span>
+                                    <span class="lf-val">₹{{ getCourierSettlement(selectedCourier).codTotalCollected | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="lf-item">
+                                    <span class="lf-label">Owe to Admin</span>
+                                    <span class="lf-val" style="color: #ea580c;">₹{{ getCourierSettlement(selectedCourier).codAdminGets | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Sub-Tab 3: Settlement & Admin Communication -->
+                <div class="payment-summary-view" *ngIf="activeCourierSubTab === 3" style="padding: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <!-- COD Settlement Action -->
+                        <div class="settlement-action-card">
+                            <div class="action-header">
+                                <div class="action-icon" style="background: #fff1f2; color: #e11d48;">
+                                    <i class="fas fa-hand-holding-dollar"></i>
+                                </div>
+                                <div class="action-info">
+                                    <h4>Settle COD Collection</h4>
+                                    <p>Transfer collected cash to Admin after fee deduction</p>
+                                </div>
+                            </div>
+
+                            <div class="settlement-breakdown">
+                                <div class="bn-row">
+                                    <span>Total COD Pending:</span>
+                                    <span class="val">₹{{ getCourierSettlement(selectedCourier).codTotalCollected | number:'1.0-2' }}</span>
+                                </div>
+                                <div class="bn-row">
+                                    <span>Delivery Fee Deduction:</span>
+                                    <span class="val text-danger">-₹{{ getCourierSettlement(selectedCourier).codCourierKeeps | number:'1.0-2' }}</span>
+                                </div>
+                                <div class="bn-divider"></div>
+                                <div class="bn-row total">
+                                    <span>Payable to Admin:</span>
+                                    <span class="val text-success">₹{{ getCourierSettlement(selectedCourier).codPending | number:'1.0-2' }}</span>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary-transfer" (click)="transferCodToAdmin(selectedCourier)" 
+                                    [disabled]="getCourierSettlement(selectedCourier).codPending <= 0">
+                                <i class="fas fa-paper-plane"></i> Transfer to Admin
+                            </button>
+                        </div>
+
+                        <!-- Admin Communication Hub -->
+                        <div class="communication-card">
+                            <div class="comm-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-weight: 800; color: #0f172a;">
+                                    <i class="fas fa-comments" style="color: #6366f1; margin-right: 8px;"></i> Communication Hub
+                                </h4>
+                                <button class="clear-chat-btn" (click)="clearChatHistory(selectedCourier)" title="Clear Chat History">
+                                    <i class="fas fa-trash-alt"></i> Clear Chat
+                                </button>
+                            </div>
+
+                            <div class="notifications-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem; padding-right: 10px; display: flex; flex-direction: column; gap: 10px;">
+                                <div *ngIf="courierNotifications.length === 0" class="no-notis">
+                                    <i class="fas fa-comment-slash"></i>
+                                    <p>Start a conversation with the Admin</p>
+                                </div>
+                                <div *ngFor="let n of courierNotifications" 
+                                     class="chat-bubble-item" 
+                                     [class.sent-by-me]="n.sender === selectedCourier"
+                                     [class.sent-by-admin]="n.sender === 'admin'">
+                                    <div class="bubble-header">
+                                        <span class="role-tag">{{ n.sender === 'admin' ? 'Admin' : 'You' }}</span>
+                                        <span class="bubble-time">{{ n.createdAt | date:'shortTime' }}</span>
+                                    </div>
+                                    <p class="bubble-text">{{ n.message }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Admin/Courier Message Input -->
+                            <div class="admin-reply-box">
+                                <textarea [(ngModel)]="adminMessageText" 
+                                          [placeholder]="authService.isAdmin() ? 'Type message to courier...' : 'Type message to Admin...'"></textarea>
+                                <button (click)="sendAdminMessage(selectedCourier)" [disabled]="isSendingMsg || !adminMessageText">
+                                    {{ isSendingMsg ? 'Sending...' : 'Send Message' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shared Footer Switcher (using pagination style) -->
+                <div class="table-footer" style="padding: 1.25rem 1.75rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                    <span class="entry-info" *ngIf="activeCourierSubTab === 1">Showing records 1 to {{ filteredOrdersV2.length }}</span>
+                    <span class="entry-info" *ngIf="activeCourierSubTab !== 1">Company Performance Breakdown</span>
                     <div class="pagination">
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn">2</button>
-                        <button class="page-btn">3</button>
-                        <button class="page-btn">...</button>
+                        <button class="page-btn" [class.active]="activeCourierSubTab === 1" (click)="activeCourierSubTab = 1">1</button>
+                        <button class="page-btn" [class.active]="activeCourierSubTab === 2" (click)="activeCourierSubTab = 2">2</button>
+                        <button class="page-btn" [class.active]="activeCourierSubTab === 3" (click)="activeCourierSubTab = 3; loadCourierNotifications(selectedCourier)">3</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Courier-Specific Settlement Tracker -->
-            <div class="settlement-section" *ngIf="selectedCourier" style="margin-top: 2rem;">
-                <div class="settlement-courier-header" style="border-radius: 20px 20px 0 0;">
-                    <div class="settlement-courier-info">
-                        <div class="settlement-courier-icon">
-                            <i class="fas fa-hand-holding-dollar"></i>
-                        </div>
-                        <div>
-                            <h3 class="settlement-courier-name">Settlement Tracking: {{ selectedCourier }}</h3>
-                            <p class="settlement-courier-fee">Real-time payment & collection status for this partner</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settlement-grid">
-                    <!-- UPI Settlement Card -->
-                    <div class="settlement-card upi-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge upi-badge">
-                                <i class="fas fa-arrow-right-to-bracket"></i>
-                            </div>
-                            <div>
-                                <h4>UPI Orders · Pay Charges</h4>
-                                <p>Delivery fee owed to courier</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Owed</span>
-                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(selectedCourier).upiTotalOwed | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Paid</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(selectedCourier).upiPaid | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).upiPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled UPI -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).upiUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Payment
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).upiUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amount">₹{{ courierFees[selectedCourier] || 0 }}</div>
-                                <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
-                                    Pay Now
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- COD Settlement Card -->
-                    <div class="settlement-card cod-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge cod-badge">
-                                <i class="fas fa-arrow-left-long"></i>
-                            </div>
-                            <div>
-                                <h4>COD Orders · Collect Funds</h4>
-                                <p>Funds to receive from courier</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row" style="grid-template-columns: repeat(2, 1fr);">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Expected</span>
-                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(selectedCourier).codAdminGets | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(selectedCourier).codPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled COD -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(selectedCourier).codUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Collection
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(selectedCourier).codUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amounts-dual">
-                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[selectedCourier] || 0)) | number:'1.0-0' }}</span>
-                                </div>
-                                <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
-                                    Collect
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </ng-container>
 
 
@@ -661,11 +699,11 @@
                                         <span class="status-badge" [ngClass]="getStatusClass(order.status)">
                                             {{ order.status }}
                                         </span>
-                                        <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)" class="btn-action-mini ship">
-                                            <i class="fas fa-truck-fast"></i> Ship
-                                        </button>
-                                        <button (click)="sendWhatsApp(order)" class="btn-action-mini whatsapp">
-                                            <i class="fab fa-whatsapp"></i> Notify
+                                        <button *ngIf="order.status === 'Pending'" (click)="openShipModal(order)"
+                                            style="background: #166534; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(22, 101, 52, 0.2);"
+                                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(22, 101, 52, 0.3)'"
+                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(22, 101, 52, 0.2)'">
+                                            <i class="fas fa-truck-fast"></i> Ship Now
                                         </button>
                                     </div>
                                 </td>
@@ -692,7 +730,8 @@
                     </div>
                     <div class="stat-info">
                         <span class="label">Total Revenue</span>
-                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalRevenue | number:'1.0-0' }}</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalRevenue | number:'1.0-0'
+                            }}</span>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -722,13 +761,15 @@
                     </div>
                     <div class="stat-info">
                         <span class="label">Courier Charges</span>
-                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalCourierCharges | number:'1.0-0' }}</span>
+                        <span class="count" style="font-size: 1.6rem;">₹{{ paymentStats.totalCourierCharges |
+                            number:'1.0-0' }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Courier Settlement Summary -->
-            <div class="stats-row" style="grid-template-columns: repeat(2, 1fr); margin-top: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="stats-row"
+                style="grid-template-columns: repeat(2, 1fr); margin-top: 1.5rem; margin-bottom: 1.5rem;">
                 <div class="stat-card" style="padding: 1.5rem;">
                     <div class="stat-info" style="width: 100%;">
                         <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
@@ -736,17 +777,22 @@
                                 <i class="fas fa-hand-holding-dollar"></i>
                             </div>
                             <div style="display: flex; flex-direction: column;">
-                                <span class="label" style="text-transform: uppercase;">Owed to Partners (Delivery Fees)</span>
-                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalOwedToCouriers | number:'1.0-0' }}</span>
+                                <span class="label" style="text-transform: uppercase;">Owed to Partners (Delivery
+                                    Fees)</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalOwedToCouriers |
+                                    number:'1.0-0' }}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
-                            <div>Paid: <span style="color: #16a34a;">₹{{ paymentStats.totalPaidToCouriers | number:'1.0-0' }}</span></div>
-                            <div>Pending: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingToCouriers | number:'1.0-0' }}</span></div>
+                        <div
+                            style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Paid: <span style="color: #16a34a;">₹{{ paymentStats.totalPaidToCouriers |
+                                    number:'1.0-0' }}</span></div>
+                            <div>Pending: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingToCouriers |
+                                    number:'1.0-0' }}</span></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="stat-card" style="padding: 1.5rem;">
                     <div class="stat-info" style="width: 100%;">
                         <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1rem;">
@@ -755,11 +801,14 @@
                             </div>
                             <div style="display: flex; flex-direction: column;">
                                 <span class="label" style="text-transform: uppercase;">COD Collection Balance</span>
-                                <span class="count" style="font-size: 1.75rem;">₹{{ paymentStats.totalCollectedFromCouriers | number:'1.0-0' }}</span>
+                                <span class="count" style="font-size: 1.75rem;">₹{{
+                                    paymentStats.totalCollectedFromCouriers | number:'1.0-0' }}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
-                            <div>Pending Transfer: <span style="color: #dc2626;">₹{{ paymentStats.totalPendingFromCouriers | number:'1.0-0' }}</span></div>
+                        <div
+                            style="display: flex; gap: 1.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0; font-weight: 600; font-size: 0.95rem; color: #64748b;">
+                            <div>Pending Transfer: <span style="color: #dc2626;">₹{{
+                                    paymentStats.totalPendingFromCouriers | number:'1.0-0' }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -809,11 +858,12 @@
                         <tbody>
                             <tr *ngFor="let order of paymentViewOrders">
                                 <td class="order-id-cell">#{{ order.orderId }}</td>
-                                <td class="customer-name-cell">{{ order.userId?.fullName || order.userName || 'Guest' }}</td>
+                                <td class="customer-name-cell">{{ order.userId?.fullName || order.userName || 'Guest' }}
+                                </td>
                                 <td>
-                                    <div [style.display]="'inline-flex'" [style.alignItems]="'center'" [style.gap]="'8px'"
-                                        [style.padding]="'6px 14px'" [style.borderRadius]="'10px'" [style.fontWeight]="'800'"
-                                        [style.fontSize]="'0.8rem'"
+                                    <div [style.display]="'inline-flex'" [style.alignItems]="'center'"
+                                        [style.gap]="'8px'" [style.padding]="'6px 14px'" [style.borderRadius]="'10px'"
+                                        [style.fontWeight]="'800'" [style.fontSize]="'0.8rem'"
                                         [style.background]="isPaymentCOD(order.paymentMethod) ? '#fff7ed' : '#eff6ff'"
                                         [style.color]="isPaymentCOD(order.paymentMethod) ? '#ea580c' : '#2563eb'"
                                         [style.border]="isPaymentCOD(order.paymentMethod) ? '1px solid #fed7aa' : '1px solid #bfdbfe'">
@@ -822,9 +872,11 @@
                                         {{ isPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
                                     </div>
                                 </td>
-                                <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                                <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount
+                                    | number:'1.0-0' }}</td>
                                 <td>
-                                    <span style="font-weight: 700; color: #166534; font-size: 0.85rem;">{{ order.courierName || getCourierForState(extractState(order)) || '—' }}</span>
+                                    <span style="font-weight: 700; color: #166534; font-size: 0.85rem;">{{
+                                        order.courierName || getCourierForState(extractState(order)) || '—' }}</span>
                                 </td>
                                 <td style="color: #ef4444; font-weight: 700;">₹{{ getFeeForOrder(order) }}</td>
                                 <td>
@@ -832,7 +884,8 @@
                                         {{ order.status }}
                                     </span>
                                 </td>
-                                <td class="date-cell" style="font-weight: 600; color: #64748b;">{{ order.orderDate | date:'mediumDate' }}</td>
+                                <td class="date-cell" style="font-weight: 600; color: #64748b;">{{ order.orderDate |
+                                    date:'mediumDate' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -846,171 +899,274 @@
 
         <!-- Settlements View -->
         <div class="settlements-view" *ngIf="activeMainTab === 'settlements'">
-            <!-- ===== COURIER SETTLEMENT TRACKER ===== -->
-            <div class="settlement-section" *ngFor="let courier of couriers">
-                <div class="settlement-courier-header">
-                    <div class="settlement-courier-info">
-                        <div class="settlement-courier-icon">
-                            <i class="fas {{ courier.icon || 'fa-truck' }}"></i>
-                        </div>
-                        <div>
-                            <h3 class="settlement-courier-name">{{ courier.name }}</h3>
-                            <p class="settlement-courier-fee">₹{{ courierFees[courier.name] || 0 }} per delivery</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="settlement-grid">
-
-                    <!-- UPI Settlement Card (Admin → Courier: Pay delivery charges) -->
-                    <div class="settlement-card upi-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge upi-badge">
-                                <i class="fas fa-arrow-right-to-bracket"></i>
-                            </div>
-                            <div>
-                                <h4>UPI Orders · Pay to Courier</h4>
-                                <p>Delivery charges owed to {{ courier.name }}</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Owed</span>
-                                <span class="sstat-value" style="color: #2563eb;">₹{{ getCourierSettlement(courier.name).upiTotalOwed | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Paid</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).upiPaid | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).upiPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled UPI Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Payment ({{ getCourierSettlement(courier.name).upiUnsettledOrders.length }})
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).upiUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amount">₹{{ courierFees[courier.name] || 0 }}</div>
-                                <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
-                                    <i class="fas fa-paper-plane"></i> Pay Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Settled UPI Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).upiSettledOrders.length > 0">
-                            <div class="settlement-list-head settled-head">
-                                <i class="fas fa-check-circle"></i> Paid ({{ getCourierSettlement(courier.name).upiSettledOrders.length }})
-                            </div>
-                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).upiSettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amount" style="color: #16a34a;">₹{{ courierFees[courier.name] || 0 }}</div>
-                                <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
-                                    <i class="fas fa-rotate-left"></i> Undo
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).upiOrders === 0">
-                            <i class="fas fa-inbox"></i>
-                            <span>No UPI orders for this courier</span>
-                        </div>
-                    </div>
-
-                    <!-- COD Settlement Card (Courier → Admin: Collect order payments) -->
-                    <div class="settlement-card cod-card">
-                        <div class="settlement-card-head">
-                            <div class="settlement-icon-badge cod-badge">
-                                <i class="fas fa-arrow-left-long"></i>
-                            </div>
-                            <div>
-                                <h4>COD Orders · Collect from Courier</h4>
-                                <p>Payment {{ courier.name }} owes (after deducting delivery fee)</p>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Total Collected</span>
-                                <span class="sstat-value" style="color: #ea580c;">₹{{ getCourierSettlement(courier.name).codTotalCollected | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Courier Keeps</span>
-                                <span class="sstat-value" style="color: #7c3aed;">₹{{ getCourierSettlement(courier.name).codCourierKeeps | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Admin Receives</span>
-                                <span class="sstat-value" style="color: #166534;">₹{{ getCourierSettlement(courier.name).codAdminGets | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <div class="settlement-stats-row" style="margin-top: -0.5rem;">
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Received</span>
-                                <span class="sstat-value" style="color: #16a34a;">₹{{ getCourierSettlement(courier.name).codReceived | number:'1.0-0' }}</span>
-                            </div>
-                            <div class="settlement-stat">
-                                <span class="sstat-label">Pending</span>
-                                <span class="sstat-value" style="color: #dc2626;">₹{{ getCourierSettlement(courier.name).codPending | number:'1.0-0' }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Unsettled COD Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codUnsettledOrders.length > 0">
-                            <div class="settlement-list-head pending-head">
-                                <i class="fas fa-clock"></i> Pending Collection ({{ getCourierSettlement(courier.name).codUnsettledOrders.length }})
-                            </div>
-                            <div class="settlement-order-row" *ngFor="let order of getCourierSettlement(courier.name).codUnsettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amounts-dual">
-                                    <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</span>
-                                    <span class="so-amount-sub">of ₹{{ order.totalAmount | number:'1.0-0' }}</span>
-                                </div>
-                                <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
-                                    <i class="fas fa-hand-holding-dollar"></i> Collect
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Settled COD Orders -->
-                        <div class="settlement-orders-list" *ngIf="getCourierSettlement(courier.name).codSettledOrders.length > 0">
-                            <div class="settlement-list-head settled-head">
-                                <i class="fas fa-check-circle"></i> Collected ({{ getCourierSettlement(courier.name).codSettledOrders.length }})
-                            </div>
-                            <div class="settlement-order-row settled-row" *ngFor="let order of getCourierSettlement(courier.name).codSettledOrders">
-                                <div class="so-info">
-                                    <span class="so-id">#{{ order.orderId }}</span>
-                                    <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest' }}</span>
-                                </div>
-                                <div class="so-amount" style="color: #16a34a;">₹{{ (order.totalAmount - (courierFees[courier.name] || 0)) | number:'1.0-0' }}</div>
-                                <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
-                                    <i class="fas fa-rotate-left"></i> Undo
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).codOrders === 0">
-                            <i class="fas fa-inbox"></i>
-                            <span>No COD orders for this courier</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Courier Selection Tabs -->
+            <div class="settlement-tabs" *ngIf="couriers.length > 0">
+                <button *ngFor="let c of couriers" class="st-tab-btn"
+                    [class.active]="activeSettlementCourier === c.name" (click)="selectSettlementCourier(c.name)">
+                    <i class="fas {{ c.icon || 'fa-truck' }}"></i> {{ c.name }}
+                </button>
             </div>
+
+            <!-- ===== COURIER SETTLEMENT TRACKER ===== -->
+            <ng-container *ngFor="let courier of couriers">
+                <div class="settlement-section" *ngIf="activeSettlementCourier === courier.name">
+                    <div class="settlement-courier-header">
+                        <div class="settlement-courier-info">
+                            <div class="settlement-courier-icon">
+                                <i class="fas {{ courier.icon || 'fa-truck' }}"></i>
+                            </div>
+                            <div>
+                                <h3 class="settlement-courier-name">{{ courier.name }}</h3>
+                                <p class="settlement-courier-fee">₹{{ courierFees[courier.name] || 0 }} per delivery</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settlement-grid">
+
+                        <!-- UPI Settlement Card (Admin → Courier: Pay delivery charges) -->
+                        <div class="settlement-card upi-card">
+                            <div class="settlement-card-head">
+                                <div class="settlement-icon-badge upi-badge">
+                                    <i class="fas fa-arrow-right-to-bracket"></i>
+                                </div>
+                                <div>
+                                    <h4>UPI Orders · Pay to Courier</h4>
+                                    <p>Delivery charges owed to {{ courier.name }}</p>
+                                </div>
+                            </div>
+
+                            <div class="settlement-stats-row">
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Total Owed</span>
+                                    <span class="sstat-value" style="color: #2563eb;">₹{{
+                                        getCourierSettlement(courier.name).upiTotalOwed | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Paid</span>
+                                    <span class="sstat-value" style="color: #16a34a;">₹{{
+                                        getCourierSettlement(courier.name).upiPaid | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Pending</span>
+                                    <span class="sstat-value" style="color: #dc2626;">₹{{
+                                        getCourierSettlement(courier.name).upiPending | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Unsettled UPI Orders -->
+                            <div class="settlement-orders-list"
+                                *ngIf="getCourierSettlement(courier.name).upiUnsettledOrders.length > 0">
+                                <div class="settlement-list-head pending-head">
+                                    <i class="fas fa-clock"></i> Pending Payment ({{
+                                    getCourierSettlement(courier.name).upiUnsettledOrders.length }})
+                                </div>
+                                <div class="settlement-order-row"
+                                    *ngFor="let order of getCourierSettlement(courier.name).upiUnsettledOrders">
+                                    <div class="so-info">
+                                        <span class="so-id">#{{ order.orderId }}</span>
+                                        <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                            }}</span>
+                                    </div>
+                                    <div class="so-amount">₹{{ courierFees[courier.name] || 0 }}</div>
+                                    <button class="settle-btn pay-btn" (click)="toggleCourierSettled(order)">
+                                        <i class="fas fa-paper-plane"></i> Pay Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Settled UPI Orders -->
+                            <div class="settlement-orders-list"
+                                *ngIf="getCourierSettlement(courier.name).upiSettledOrders.length > 0">
+                                <div class="settlement-list-head settled-head">
+                                    <i class="fas fa-check-circle"></i> Paid ({{
+                                    getCourierSettlement(courier.name).upiSettledOrders.length }})
+                                </div>
+                                <div class="settlement-order-row settled-row"
+                                    *ngFor="let order of getCourierSettlement(courier.name).upiSettledOrders">
+                                    <div class="so-info">
+                                        <span class="so-id">#{{ order.orderId }}</span>
+                                        <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                            }}</span>
+                                    </div>
+                                    <div class="so-amount" style="color: #16a34a;">₹{{ courierFees[courier.name] || 0 }}
+                                    </div>
+                                    <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
+                                        <i class="fas fa-rotate-left"></i> Undo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).upiOrders === 0">
+                                <i class="fas fa-inbox"></i>
+                                <span>No UPI orders for this courier</span>
+                            </div>
+                        </div>
+
+                        <!-- COD Settlement Card (Courier → Admin: Collect order payments) -->
+                        <div class="settlement-card cod-card">
+                            <div class="settlement-card-head">
+                                <div class="settlement-icon-badge cod-badge">
+                                    <i class="fas fa-arrow-left-long"></i>
+                                </div>
+                                <div>
+                                    <h4>COD Orders · Collect from Courier</h4>
+                                    <p>Payment {{ courier.name }} owes (after deducting delivery fee)</p>
+                                </div>
+                            </div>
+
+                            <div class="settlement-stats-row">
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Total Collected</span>
+                                    <span class="sstat-value" style="color: #ea580c;">₹{{
+                                        getCourierSettlement(courier.name).codTotalCollected | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Courier Keeps</span>
+                                    <span class="sstat-value" style="color: #7c3aed;">₹{{
+                                        getCourierSettlement(courier.name).codCourierKeeps | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Admin Receives</span>
+                                    <span class="sstat-value" style="color: #166534;">₹{{
+                                        getCourierSettlement(courier.name).codAdminGets | number:'1.0-0' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="settlement-stats-row" style="margin-top: -0.5rem; align-items: flex-end;">
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Received</span>
+                                    <span class="sstat-value" style="color: #16a34a;">₹{{
+                                        getCourierSettlement(courier.name).codReceived | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="settlement-stat">
+                                    <span class="sstat-label">Pending</span>
+                                    <span class="sstat-value" style="color: #dc2626;">₹{{
+                                        getCourierSettlement(courier.name).codPending | number:'1.0-0' }}</span>
+                                </div>
+
+                            </div>
+
+                            <!-- Unsettled COD Orders -->
+                            <div class="settlement-orders-list"
+                                *ngIf="getCourierSettlement(courier.name).codUnsettledOrders.length > 0">
+                                <div class="settlement-list-head pending-head">
+                                    <i class="fas fa-clock"></i> Pending Collection ({{
+                                    getCourierSettlement(courier.name).codUnsettledOrders.length }})
+                                </div>
+                                <div class="settlement-order-row"
+                                    *ngFor="let order of getCourierSettlement(courier.name).codUnsettledOrders">
+                                    <div class="so-info">
+                                        <span class="so-id">#{{ order.orderId }}</span>
+                                        <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                            }}</span>
+                                    </div>
+                                    <div class="so-amounts-dual">
+                                        <span class="so-amount-main">₹{{ (order.totalAmount - (courierFees[courier.name]
+                                            ||
+                                            0)) | number:'1.0-0' }}</span>
+                                        <span class="so-amount-sub">of ₹{{ order.totalAmount | number:'1.0-0' }}</span>
+                                    </div>
+                                    <button class="settle-btn collect-btn" (click)="toggleCourierSettled(order)">
+                                        <i class="fas fa-hand-holding-dollar"></i> Collect
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Settled COD Orders -->
+                            <div class="settlement-orders-list"
+                                *ngIf="getCourierSettlement(courier.name).codSettledOrders.length > 0">
+                                <div class="settlement-list-head settled-head">
+                                    <i class="fas fa-check-circle"></i> Collected ({{
+                                    getCourierSettlement(courier.name).codSettledOrders.length }})
+                                </div>
+                                <div class="settlement-order-row settled-row"
+                                    *ngFor="let order of getCourierSettlement(courier.name).codSettledOrders">
+                                    <div class="so-info">
+                                        <span class="so-id">#{{ order.orderId }}</span>
+                                        <span class="so-customer">{{ order.userId?.fullName || order.userName || 'Guest'
+                                            }}</span>
+                                    </div>
+                                    <div class="so-amount" style="color: #16a34a;">₹{{ (order.totalAmount -
+                                        (courierFees[courier.name] || 0)) | number:'1.0-0' }}</div>
+                                    <button class="settle-btn undo-btn" (click)="toggleCourierSettled(order)">
+                                        <i class="fas fa-rotate-left"></i> Undo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="settlement-empty" *ngIf="getCourierSettlement(courier.name).codOrders === 0">
+                                <i class="fas fa-inbox"></i>
+                                <span>No COD orders for this courier</span>
+                            </div>
+                        </div>
+
+                        <!-- Settlement History Ledger (Persistence Connection) -->
+                        <div class="settlement-history-card" style="margin-top: 2rem;">
+                            <div class="ledger-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <div class="ledger-title" style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; border: 1px solid #e2e8f0;">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; font-weight: 850; color: #0f172a; font-size: 1.1rem; letter-spacing: -0.02em;">Transaction History Ledger</h4>
+                                        <p style="margin: 2px 0 0 0; font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Full record of past financial settlements</p>
+                                    </div>
+                                </div>
+                                <span class="ledger-count" style="background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 850; border: 1px solid #dbeafe;">{{ settlementHistory.length }} Records Found</span>
+                            </div>
+
+                            <div class="ledger-table-wrapper" style="margin-top: 1.5rem; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+                                <table class="ledger-table" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="background: #f8fafc; border-bottom: 2px solid #f1f5f9;">
+                                        <tr>
+                                            <th style="padding: 16px; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.05em;">Settlement Date</th>
+                                            <th style="padding: 16px; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.05em;">Orders Involved</th>
+                                            <th style="padding: 16px; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.05em;">Verification Status</th>
+                                            <th style="padding: 16px; text-align: right; font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.05em;">Final Amount Paid</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="background: white;">
+                                        <tr *ngFor="let record of settlementHistory" style="border-bottom: 1px solid #f8fafc; transition: background 0.2s; cursor: default;">
+                                            <td style="padding: 16px;">
+                                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                                    <span style="font-weight: 800; color: #1e293b; font-size: 0.95rem;">{{ record.createdAt | date:'mediumDate' }}</span>
+                                                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700;">at {{ record.createdAt | date:'shortTime' }}</span>
+                                                </div>
+                                            </td>
+                                            <td style="padding: 16px;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <span style="background: #fff7ed; color: #c2410c; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; border: 1px solid #ffedd5;">{{ record.orderCount }} Shipments</span>
+                                                </div>
+                                            </td>
+                                            <td style="padding: 16px;">
+                                                <span style="color: #059669; font-weight: 850; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; background: #ecfdf5; padding: 6px 12px; border-radius: 50px; width: fit-content; border: 1px solid #d1fae5;">
+                                                    <i class="fas fa-certificate" style="font-size: 0.7rem;"></i> FULLY VERIFIED
+                                                </span>
+                                            </td>
+                                            <td style="padding: 16px; text-align: right;">
+                                                <span style="font-size: 1.15rem; font-weight: 950; color: #0f172a; font-family: 'Outfit', sans-serif;">₹{{ record.amount | number:'1.0-0' }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr *ngIf="settlementHistory.length === 0">
+                                            <td colspan="4" style="padding: 60px 40px; text-align: center; background: #fff;">
+                                                <div style="max-width: 300px; margin: 0 auto;">
+                                                    <div style="width: 64px; height: 64px; background: #f8fafc; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; margin: 0 auto 20px; border: 1px dashed #e2e8f0;">
+                                                        <i class="fas fa-file-invoice-dollar" style="font-size: 2rem;"></i>
+                                                    </div>
+                                                    <h5 style="margin: 0; font-weight: 800; color: #475569; font-size: 1rem;">No Transaction Records</h5>
+                                                    <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: #94a3b8; font-weight: 600; line-height: 1.5;">When you fulfill and settle COD collections, they will be archived here in this permanent ledger.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
         </div>
 
         <div class="setting-view" *ngIf="activeMainTab === 'setting'">
@@ -1305,87 +1461,27 @@
 
     <!-- Shipping / Dispatch Modal -->
     <div class="modal-overlay" *ngIf="showShipModal" (click)="closeShipModal()" style="z-index: 10001;">
-        <div class="ship-modal-content" (click)="$event.stopPropagation()">
+        <div class="user-detail-modal ship-modal-content" (click)="$event.stopPropagation()"
+            style="max-width: 550px; border-radius: 30px; overflow: hidden;">
 
-            <div class="ship-modal-header" style="
-                background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
-                padding: 2rem 2rem 2.2rem;
-                position: relative;
-                overflow: hidden;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            ">
-                <!-- Decorative background orb -->
-                <div style="
-                    position: absolute; top: -60px; left: -60px;
-                    width: 220px; height: 220px; border-radius: 50%;
-                    background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
-                    pointer-events: none;
-                "></div>
-                <div style="
-                    position: absolute; bottom: -40px; right: -30px;
-                    width: 160px; height: 160px; border-radius: 50%;
-                    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
-                    pointer-events: none;
-                "></div>
-
-                <!-- Left: icon + text -->
-                <div style="display: flex; align-items: center; gap: 18px; position: relative; z-index: 2;">
-                    <!-- Truck icon box with glow -->
-                    <div style="
-                        background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.15));
-                        width: 64px; height: 64px; border-radius: 20px;
-                        display: flex; align-items: center; justify-content: center;
-                        font-size: 1.75rem;
-                        border: 1px solid rgba(59,130,246,0.3);
-                        box-shadow: 0 0 25px rgba(59,130,246,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
-                    ">
-                        <i class="fas fa-truck-fast" style="color: #93c5fd;"></i>
+            <div class="modal-header ship-modal-header"
+                style="padding: 2rem; color: white; position: relative; border-bottom: none;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div
+                        style="background: rgba(255,255,255,0.2); width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.3);">
+                        <i class="fas fa-shipping-fast"></i>
                     </div>
-
-                    <!-- Text -->
                     <div>
-                        <div style="
-                            font-size: 0.7rem; font-weight: 800; letter-spacing: 0.2em;
-                            text-transform: uppercase; color: #60a5fa; margin-bottom: 4px;
-                        ">DISPATCH CENTER</div>
-                        <h2 style="
-                            margin: 0; font-size: 1.7rem; font-weight: 900;
-                            color: #ffffff; letter-spacing: -0.02em; line-height: 1.1;
-                        ">Ship Order</h2>
-                        <p style="
-                            margin: 5px 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.55);
-                            font-weight: 500;
-                        ">Tracking for &nbsp;<span style="
-                            color: #93c5fd; font-weight: 800;
-                            background: rgba(59,130,246,0.15);
-                            padding: 2px 10px; border-radius: 20px;
-                            border: 1px solid rgba(59,130,246,0.25);
-                            font-size: 0.8rem;
-                        ">{{selectedOrderForShip?.orderId}}</span></p>
+                        <h2 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: white;">Ship Order</h2>
+                        <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 0.9rem;">Assign courier and generate
+                            tracking for #{{selectedOrderForShip?.orderId}}</p>
                     </div>
                 </div>
-
-                <!-- Close button -->
-                <button class="close-modal" (click)="closeShipModal()" style="
-                    position: static;
-                    background: rgba(255,255,255,0.08) !important;
-                    border: 1px solid rgba(255,255,255,0.12) !important;
-                    color: rgba(255,255,255,0.6) !important;
-                    width: 36px !important; height: 36px !important;
-                    border-radius: 10px !important;
-                    box-shadow: none !important;
-                    font-size: 0.85rem;
-                    z-index: 2;
-                    transition: all 0.25s ease;
-                " onmouseover="this.style.background='rgba(239,68,68,0.9)';this.style.color='white';this.style.borderColor='transparent';"
-                    onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)';this.style.borderColor='rgba(255,255,255,0.12)';">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="close-modal" (click)="closeShipModal()"
+                    style="color: white; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; opacity: 1;">&times;</button>
             </div>
 
-            <div class="modal-body" style="padding: 2.5rem 2.5rem 1.5rem; background: #ffffff;">
+            <div class="modal-body" style="padding: 2.5rem; background: #fffefc;">
                 <div class="dispatch-controls" [class.shake-error]="isShaking">
 
                     <!-- Territory Mismatch Warning -->
@@ -1408,13 +1504,14 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
 
                         <!-- Courier Partner Selection -->
                         <div class="input-stack">
-                            <label><i class="fas fa-building" style="margin-right: 8px; color: #64748b;"></i> Logistics
-                                Partner</label>
-                            <select [(ngModel)]="shipCourier">
+                            <label style="color: #92400e;"><i class="fas fa-building-flag"
+                                    style="margin-right: 6px;"></i>
+                                Logistics Partner</label>
+                            <select [(ngModel)]="shipCourier" style="background: #fffbeb; border: 1px solid #fde68a;">
                                 <option value="" disabled>Select a Partner</option>
                                 <option *ngFor="let c of couriers" [value]="c.name">{{c.name}} ({{c.fee |
                                     currency:'INR'}}/order)</option>
@@ -1423,16 +1520,18 @@
 
                         <!-- Tracking Number -->
                         <div class="input-stack">
-                            <label><i class="fas fa-hashtag" style="margin-right: 8px; color: #64748b;"></i> Tracking
-                                Number</label>
-                            <div style="display: flex; gap: 12px;">
+                            <label style="color: #92400e;"><i class="fas fa-hashtag" style="margin-right: 6px;"></i>
+                                Tracking Number</label>
+                            <div style="display: flex; gap: 10px;">
                                 <input type="text" [(ngModel)]="trackingNumber"
-                                    placeholder="System will generate if empty">
-                                <button class="btn-generate" (click)="generateTrackingNumber(selectedOrderForShip?._id)"
+                                    placeholder="System will generate if empty"
+                                    style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <button (click)="generateTrackingNumber(selectedOrderForShip?._id)"
                                     [disabled]="isTrackingDisabled(selectedOrderForShip?._id)"
+                                    style="padding: 0 15px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; cursor: pointer; transition: all 0.2s;"
+                                    [style.color]="isTrackingDisabled(selectedOrderForShip?._id) ? '#94a3b8' : '#d97706'"
                                     [title]="isTrackingDisabled(selectedOrderForShip?._id) ? 'Limit Reached' : 'Auto Generate'">
-                                    <i class="fas"
-                                        [class.fa-wand-magic-sparkles]="!isTrackingDisabled(selectedOrderForShip?._id)"
+                                    <i class="fas" [class.fa-magic]="!isTrackingDisabled(selectedOrderForShip?._id)"
                                         [class.fa-lock]="isTrackingDisabled(selectedOrderForShip?._id)"></i>
                                 </button>
                             </div>
@@ -1440,19 +1539,64 @@
 
                         <!-- Expected Delivery -->
                         <div class="input-stack">
-                            <label><i class="fas fa-calendar-day" style="margin-right: 8px; color: #64748b;"></i>
+                            <label style="color: #92400e;"><i class="fas fa-calendar-alt"
+                                    style="margin-right: 6px;"></i>
                                 Estimated Delivery Date</label>
-                            <input type="date" [(ngModel)]="expectedDeliveryDate">
+                            <input type="date" [(ngModel)]="expectedDeliveryDate"
+                                style="background: #f8fafc; border: 1px solid #e2e8f0;">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer" style="padding: 2rem 2.5rem; border-top: 1px solid #f1f5f9; background: #ffffff;">
-                <button class="btn-ship-confirm" (click)="dispatchOrder(selectedOrderForShip?._id)"
-                    style="padding: 14px 28px; border-radius: 14px; font-weight: 800; color: white; width: 100%; border: none; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-paper-plane" style="margin-right: 10px;"></i> Confirm & Dispatch
+            <div class="modal-footer" style="padding: 2rem; border-top: 1px solid #f1f5f9; gap: 15px;">
+                <button class="btn-cancel" (click)="closeShipModal()"
+                    style="padding: 14px 28px; border-radius: 12px; font-weight: 700; flex: 1;">Cancel</button>
+                <button class="btn-verify btn-ship-confirm" (click)="dispatchOrder(selectedOrderForShip?._id)"
+                    style="padding: 14px 28px; border-radius: 12px; font-weight: 800; color: white; flex: 2; border: none; font-size: 1rem; cursor: pointer;">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Confirm & Dispatch
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settlement Confirmation Modal (Custom Premium Replacement for confirm) -->
+    <div class="modal-overlay" *ngIf="showSettlementConfirmModal" (click)="showSettlementConfirmModal = false">
+        <div class="premium-settle-modal" (click)="$event.stopPropagation()">
+            <div class="settle-header">
+                <div class="settle-icon-box">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3>Finalize Settlement</h3>
+                <p>Verify the collection details before transferring funds to Admin.</p>
+            </div>
+
+            <div class="settle-summary-card" *ngIf="pendingSettlementData">
+                <div class="summary-line">
+                    <span class="label">Total Collected</span>
+                    <span class="value">₹{{ (pendingSettlementData.amount + (pendingSettlementData.orderCount * getCourierSettlement(pendingSettlementData.courierName).fee)) | number:'1.0-2' }}</span>
+                </div>
+                <div class="summary-line fee">
+                    <span class="label">Less Delivery Charges ({{pendingSettlementData.orderCount}} orders)</span>
+                    <span class="value">- ₹{{ (pendingSettlementData.orderCount * getCourierSettlement(pendingSettlementData.courierName).fee) | number:'1.0-2' }}</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-line total" style="background: #f0fdf4; margin: 10px -15px; padding: 12px 15px; border-radius: 12px;">
+                    <span class="label" style="color: #166534; font-weight: 800;">Payable to Admin</span>
+                    <span class="value" style="color: #166534; font-size: 1.4rem; font-weight: 900;">₹{{ pendingSettlementData.amount | number:'1.0-2' }}</span>
+                </div>
+            </div>
+
+            <div class="settle-actions">
+                <button class="btn-cancel" (click)="showSettlementConfirmModal = false" style="flex: 1; padding: 15px; border-radius: 15px;">Cancel</button>
+                <button class="btn-confirm-transfer" (click)="confirmSettlementTransfer()" 
+                        style="flex: 2; padding: 15px; border-radius: 15px; background: #6366f1; color: white; font-weight: 800; border: none; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);">
+                    <i class="fas fa-check-circle"></i> Confirm Transfer
+                </button>
+            </div>
+            
+            <div class="settle-security-tag" style="text-align: center; margin-top: 20px; font-size: 0.75rem; color: #94a3b8; font-weight: 700;">
+                <i class="fas fa-shield-halved" style="color: #10b981; margin-right: 5px;"></i> SECURE PROFESSIONAL SETTLEMENT SYSTEM
             </div>
         </div>
     </div>

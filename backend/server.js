@@ -3,28 +3,27 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('--- BACKEND STARTUP ---');
+console.log('Working Directory:', process.cwd());
+console.log('__dirname:', __dirname);
+console.log('--- ---');
 
 const User = require('./models/User');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Offer = require('./models/Offer');
+const offerProductsRouter = require('./routes/offerProducts');
 const Placement = require('./models/Placement');
+const Review = require('./models/Review');
 const Faq = require('./models/Faq');
 const AboutSection = require('./models/AboutSection');
 const Inquiry = require('./models/Inquiry');
 const Notification = require('./models/Notification');
-const Courier = require('./models/Courier');
-const ChatMessage = require('./models/ChatMessage');
-const AdminChatMessage = require('./models/AdminChatMessage');
-const Review = require('./models/Review');
-const { seedPlacements, seedFaqs, seedCouriers, seedReviews, seedPlantReminders } = require('./seed_functions');
+const Settlement = require('./models/Settlement');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const cron = require('node-cron');
-const PlantReminder = require('./models/PlantReminder');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +35,7 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID.trim());
 const otpStore = new Map();
 
 const fs = require('fs');
+// path already imported at top
 const debugLog = (msg) => {
     const logPath = path.join(__dirname, 'debug_otp.log');
     const timestamp = new Date().toISOString();
@@ -57,7 +57,12 @@ const transporter = nodemailer.createTransport({
 // Helper: Send Order Confirmation Email
 const sendOrderConfirmationEmail = async (user, order) => {
     try {
-        const itemsHtml = order.items.map(item => `
+        if (!user || !user.email) {
+            console.error('[EMAIL-ERROR] No recipient email provided');
+            return;
+        }
+
+        const itemsHtml = (order.items || []).map(item => `
             <tr>
                 <td style="padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;">
                     <img src="${item.image}" alt="${item.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">
@@ -74,25 +79,19 @@ const sendOrderConfirmationEmail = async (user, order) => {
             subject: `Hooray! Your order ${order.orderId} is confirmed 🌿`,
             html: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f3; border-radius: 16px; overflow: hidden;">
-                    <!-- Header -->
                     <div style="background: linear-gradient(135deg, #2d8c6f, #1a5d1a); padding: 40px 20px; text-align: center; color: white;">
                         <h1 style="margin: 0; font-size: 32px; letter-spacing: -0.5px;">Greenie Culture</h1>
                         <p style="margin: 10px 0 0; opacity: 0.9; font-size: 16px;">🌱 Your Green Journey Just Got Better!</p>
                     </div>
-
-                    <!-- Content -->
                     <div style="padding: 30px;">
                         <h2 style="color: #1a5d1a; margin-top: 0;">Order Confirmed!</h2>
-                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${user.fullName.split(' ')[0]},</p>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${user.fullName ? user.fullName.split(' ')[0] : 'Gardener'},</p>
                         <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">We've received your order <strong>${order.orderId}</strong>. Our team is already busy picking out the healthiest plants for you!</p>
-
-                        <!-- Order Details Box -->
                         <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin: 25px 0;">
                             <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">
                                 <span style="color: #6b7280; font-size: 14px;">ORDER ID: <strong>${order.orderId}</strong></span>
-                                <span style="color: #6b7280; font-size: 14px;">DATE: <strong>${new Date().toLocaleDateString()}</strong></span>
+                                <span style="color: #6b7280; font-size: 14px;">DATE: <strong>${new Date(order.orderDate).toLocaleDateString()}</strong></span>
                             </div>
-
                             <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr>
@@ -101,41 +100,26 @@ const sendOrderConfirmationEmail = async (user, order) => {
                                         <th style="text-align: right; padding: 10px 0; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Price</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${itemsHtml}
-                                </tbody>
+                                <tbody>${itemsHtml}</tbody>
                             </table>
-
                             <div style="margin-top: 20px; text-align: right;">
                                 <p style="margin: 5px 0; color: #6b7280;">Payment Method: <strong>${order.paymentMethod}</strong></p>
                                 <p style="margin: 10px 0; color: #1a5d1a; font-size: 20px; font-weight: 800;">Total: ₹${order.totalAmount}</p>
                             </div>
                         </div>
-
-                        <!-- Thank You Note -->
                         <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #f3f4f6;">
                             <p style="font-size: 18px; color: #2d8c6f; font-weight: 700; margin-bottom: 5px;">Thank you for buying!</p>
                             <p style="color: #6b7280; font-size: 14px;">We'll notify you as soon as your plants leave our greenhouse.</p>
-                            
-                            <div style="margin-top: 25px;">
-                                <a href="http://localhost:4200/my-account/orders" style="background-color: #2d8c6f; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-block;">Track My Order</a>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-                        <p>Need help? Contact us at support@greenieculture.com</p>
-                        <p>&copy; 2026 Greenie Culture. All rights reserved.</p>
                     </div>
                 </div>
             `
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL] Order invoice sent to ${user.email} for ${order.orderId}`);
+        console.log(`[EMAIL] Order confirmation sent to ${user.email} for ${order.orderId}`);
     } catch (err) {
-        console.error('[EMAIL-ERROR] Failed to send invoice:', err.message);
+        console.error('[EMAIL-ERROR] Failed to send confirmation:', err.message);
     }
 };
 
@@ -143,7 +127,10 @@ const sendOrderConfirmationEmail = async (user, order) => {
 const sendOrderStatusEmail = async (order) => {
     try {
         const userEmail = order.userId?.email;
-        if (!userEmail) return;
+        if (!userEmail) {
+            console.error('[EMAIL-ERROR] User email not available for order:', order.orderId);
+            return;
+        }
 
         let statusText = '';
         let statusMessage = '';
@@ -156,38 +143,68 @@ const sendOrderStatusEmail = async (order) => {
         } else if (order.status === 'Shipped') {
             statusText = 'Order on the move! 🚚';
             statusMessage = `Your package has been handed over to <strong>${order.courierName}</strong>.`;
-            const deliveryDate = order.expectedDeliveryDate ? new Date(order.expectedDeliveryDate).toLocaleDateString() : 'Soon';
-            
+
+            const deliveryDate = order.expectedDeliveryDate ?
+                new Date(order.expectedDeliveryDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) :
+                'Coming Soon';
+
             trackingSection = `
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
-                    <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 700;">TRACKING ID: ${order.trackingNumber}</p>
+                    <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 700;">TRACKING ID</p>
+                    <p style="margin: 5px 0 0; color: #14532d; font-size: 24px; font-weight: 800; font-family: monospace;">${order.trackingNumber}</p>
                     <p style="margin: 10px 0 0; color: #166534; font-size: 14px;"><strong>Expected Delivery:</strong> ${deliveryDate}</p>
-                </div>`;
-            
+                </div>
+            `;
+
             pinSection = `
                 <div style="background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;">
-                    <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 700;">DELIVERY VERIFICATION PIN: ${order.deliveryPin}</p>
-                </div>`;
+                    <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 700;">DELIVERY VERIFICATION PIN</p>
+                    <p style="margin: 5px 0 0; color: #b45309; font-size: 28px; font-weight: 900; letter-spacing: 4px;">${order.deliveryPin}</p>
+                    <p style="margin: 5px 0 0; color: #92400e; font-size: 11px;">Please share this PIN only with the delivery partner.</p>
+                </div>
+            `;
         } else if (order.status === 'Delivered') {
             statusText = 'Delivered & Green! 🎁';
-            statusMessage = 'Your plants have reached their new home!';
+            statusMessage = 'Your plants have reached their new home. We hope they bring you joy!';
+        } else {
+            return;
         }
 
         const mailOptions = {
-            from: `"Greenie Culture" <${process.env.GMAIL_USER}>`,
+            from: `"Greenie Culture" <${process.env.GMAIL_USER || 'greenieculture202@gmail.com'}>`,
             to: userEmail,
-            subject: `Order Update: ${order.orderId} - ${order.status}`,
-            html: `<div style="text-align: center;"><h2>${statusText}</h2><p>${statusMessage}</p>${trackingSection}${pinSection}</div>`
+            subject: `Update for Order ${order.orderId}: ${order.status} 🌿`,
+            html: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f3; border-radius: 16px; overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #2d8c6f, #1a5d1a); padding: 30px 20px; text-align: center; color: white;">
+                        <h1 style="margin: 0; font-size: 28px;">Greenie Culture</h1>
+                    </div>
+                    <div style="padding: 30px; text-align: center;">
+                        <h2 style="color: #1a5d1a; margin-top: 0;">${statusText}</h2>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Hi ${order.userId?.fullName ? order.userId.fullName.split(' ')[0] : 'Gardener'},</p>
+                        <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">${statusMessage}</p>
+                        
+                        ${trackingSection}
+                        ${pinSection}
+
+                        <p style="color: #6b7280; font-size: 14px; margin-top: 25px;">You can track the live status on our website under "My Orders".</p>
+                    </div>
+                    <div style="background-color: #f3f4f6; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+                        <p>&copy; 2026 Greenie Culture. All rights reserved.</p>
+                    </div>
+                </div>
+            `
         };
 
         await transporter.sendMail(mailOptions);
+        console.log(`[EMAIL] Status update email sent to ${userEmail} for ${order.orderId} (${order.status})`);
     } catch (err) {
-        console.error('[EMAIL-ERROR]', err.message);
+        console.error('[EMAIL-ERROR] Failed to send status update:', err.message);
     }
 };
 
 // Auth Middleware
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
     const token = req.header('x-auth-token');
     if (!token) {
         return res.status(401).json({ message: 'No token, authorization denied' });
@@ -196,6 +213,15 @@ const auth = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded.user;
+
+        // Ensure user is not blocked (Skip for special admin bypass)
+        if (req.user.id && req.user.id !== 'admin-special-id') {
+            const activeUser = await User.findById(req.user.id).select('isBlocked').lean();
+            if (activeUser && activeUser.isBlocked) {
+                return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+            }
+        }
+
         next();
     } catch (err) {
         res.status(401).json({ message: 'Token is not valid' });
@@ -206,6 +232,7 @@ const auth = (req, res, next) => {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use('/api/admin/offers', offerProductsRouter);
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -213,46 +240,37 @@ app.use((req, res, next) => {
     next();
 });
 
-// MongoDB Connection (with graceful fallback so server can still start)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mejor';
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
 console.log('Attempting to connect to MongoDB...');
 console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
 
-let hasDbConnection = false;
-
-async function bootstrapServer() {
-    try {
-        await mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 15000,
-            connectTimeoutMS: 15000
-        });
-
-        hasDbConnection = true;
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 15000, // 15 seconds timeout
+    connectTimeoutMS: 15000
+})
+    .then(async () => {
         console.log('✅ MongoDB connected successfully');
         console.log('📊 Active Database:', mongoose.connection.name);
 
+        // Run seeds only after connection is established
         console.log('🔄 Starting data seeding...');
         try {
-            // Use locally defined seeds or imported ones
-            if (typeof seedPlacements === 'function') await seedPlacements();
-            if (typeof seedFaqs === 'function') await seedFaqs();
-            if (typeof seedCouriers === 'function') await seedCouriers();
-            if (typeof seedReviews === 'function') await seedReviews();
-            if (typeof seedPlantReminders === 'function') await seedPlantReminders();
+            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers()]);
             console.log('✅ Seeding completed');
         } catch (seedErr) {
             console.error('⚠️ Seeding internal error:', seedErr.message);
         }
-    } catch (err) {
-        console.error('❌ MongoDB connection error:', err);
-    } finally {
+
+        // Start listening only after DB is ready (or skip if port already in use)
         app.listen(PORT, '127.0.0.1', () => {
             console.log(`🚀 Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
         });
-    }
-}
-
-bootstrapServer();
+    })
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err);
+        console.log('💡 TIP: Check if your IP is whitelisted in MongoDB Atlas and if your connection string is correct.');
+    });
 
 // Helper: Send SMS/WhatsApp Notification (Placeholder)
 const sendSMSWhatsAppNotification = async (order) => {
@@ -269,6 +287,7 @@ const sendSMSWhatsAppNotification = async (order) => {
         const deliveryDate = order.expectedDeliveryDate || 'Soon';
         const status = order.status;
 
+        // --- MESSAGE TEMPLATE ---
         const message = `🌿 Greenie Culture: Order ${orderId} Update! 
 Status: ${status}
 Tracking ID: ${trackingId}
@@ -278,6 +297,17 @@ Track here: http://localhost:3000/my-account/orders`;
 
         console.log(`[SMS-MOCK] Sending to ${phone}:`);
         console.log(`----------------------------------\n${message}\n----------------------------------`);
+
+        /* 
+        NOTE: To make this work for REAL, you need an API key from a provider:
+        1. Fast2SMS (Cheap and popular in India)
+        2. Twilio (Global, premium)
+        3. Gupshup (WhatsApp API Specialists)
+
+        SMS services usually charge ~20-30 paise per transactional SMS.
+        WhatsApp API usually charges ~50 paise per message.
+        */
+
     } catch (err) {
         console.error('[SMS-ERROR] Failed to prepare notification:', err.message);
     }
@@ -286,41 +316,127 @@ Track here: http://localhost:3000/my-account/orders`;
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
     const { email, password } = req.body;
+
     try {
-        if (email === 'admin@greenie.com' && password === 'radheradhe') {
+        console.log(`[ADMIN-LOGIN] Request received for: ${email}`);
+        // Try to find admin in DB
+        const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' }).lean();
+        if (user) {
+            if (user.isBlocked) {
+                return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Invalid admin credentials' });
+            }
             const token = jwt.sign(
-                { user: { id: 'admin-special-id', isAdmin: true, fullName: 'Super Admin', role: 'admin' } },
+                { user: { id: user._id, isAdmin: true, email: user.email, fullName: user.fullName } },
                 JWT_SECRET,
                 { expiresIn: '8h' }
             );
-            return res.json({ 
-                token, 
-                isAdmin: true, 
-                user: { _id: 'admin-special-id', fullName: 'Super Admin', email, role: 'admin' } 
-            });
+            return res.json({ token, isAdmin: true, user: { _id: user._id, email: user.email, fullName: user.fullName, role: 'admin' } });
         }
-        
-        // Also check DB for other admins
-        const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' });
-        if (user) {
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (isMatch) {
-                const token = jwt.sign(
-                    { user: { id: user._id, isAdmin: true, fullName: user.fullName, role: 'admin' } },
-                    JWT_SECRET,
-                    { expiresIn: '8h' }
-                );
-                return res.json({ 
-                    token, 
-                    isAdmin: true, 
-                    user: { _id: user._id, fullName: user.fullName, email: user.email, role: 'admin' } 
-                });
-            }
+
+        // Fallback to hardcoded admin
+        if (email === 'admin@greenie.com' && password === 'radheradhe') {
+            // Create a special admin JWT (using a fixed admin ID)
+            const token = jwt.sign(
+                { user: { id: 'admin-special-id', isAdmin: true, email, fullName: 'Super Admin' } },
+                JWT_SECRET,
+                { expiresIn: '8h' }
+            );
+            return res.json({ token, isAdmin: true, user: { _id: 'admin-special-id', email, fullName: 'Super Admin', role: 'admin' } });
         }
 
         return res.status(401).json({ message: 'Invalid admin credentials' });
     } catch (err) {
         console.error('Admin login error:', err);
+        return res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin Add (requires current admin password verification)
+app.post('/api/auth/admin-register', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Only admins can register new admins' });
+        }
+        const { fullName, email, password, currentAdminPassword } = req.body;
+
+        // ── Verify current admin's password ─────────────────────────────
+        if (!currentAdminPassword) {
+            return res.status(400).json({ message: 'Your current password is required for authorization.' });
+        }
+
+        // Super-admin (hardcoded) verification
+        if (req.user.id === 'admin-special-id') {
+            const SUPER_ADMIN_PASSWORD = 'radheradhe';
+            if (currentAdminPassword !== SUPER_ADMIN_PASSWORD) {
+                return res.status(401).json({ message: 'Incorrect admin password. Authorization failed.' });
+            }
+        } else {
+            // DB admin password verification
+            const adminUser = await User.findById(req.user.id);
+            if (!adminUser) return res.status(404).json({ message: 'Admin not found' });
+            const isMatch = await bcrypt.compare(currentAdminPassword, adminUser.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Incorrect admin password. Authorization failed.' });
+            }
+        }
+
+        // ── Register new admin ───────────────────────────────────────────
+        let user = await User.findOne({ email: email.toLowerCase() });
+        if (user) {
+            return res.status(400).json({ message: 'Admin with this email already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        user = new User({
+            fullName,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: 'admin'
+        });
+        await user.save();
+        res.status(201).json({ message: `Admin "${fullName}" registered successfully!` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin Update (Change password or name)
+app.put('/api/auth/admin-update', auth, async (req, res) => {
+    try {
+        const { fullName, oldPassword, newPassword } = req.body;
+        // Super admin cannot change credentials via UI since they are hardcoded
+        if (req.user.id === 'admin-special-id') {
+            return res.status(400).json({ message: 'Super admin credentials cannot be changed through this interface. Add a database admin first and login with that.' });
+        }
+
+        let user = await User.findById(req.user.id);
+        if (!user || user.role !== 'admin') {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        if (newPassword && oldPassword) {
+            const isMatch = await bcrypt.compare(oldPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Incorrect old password' });
+            }
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+        }
+
+        if (fullName) {
+            user.fullName = fullName;
+        }
+
+        await user.save();
+        res.json({ message: 'Admin updated successfully', user: { _id: user._id, email: user.email, fullName: user.fullName, role: 'admin' } });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -370,6 +486,10 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        if (user.isBlocked) {
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+        }
+
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -387,11 +507,58 @@ app.post('/api/auth/login', async (req, res) => {
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic, role: user.role } });
         });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
+    }
+});
+
+app.post('/api/auth/google-login', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: GOOGLE_CLIENT_ID
+        });
+
+        const { email, name, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email: email.toLowerCase() }).lean();
+
+        if (user && user.isBlocked) {
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+        }
+
+        if (!user) {
+            const newUser = new User({
+                fullName: name,
+                email: email.toLowerCase(),
+                password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10),
+                phone: 'Not provided',
+                address: 'Not provided',
+                profilePic: picture,
+                method: 'Google'
+            });
+            user = await newUser.save();
+        }
+
+        const payload = {
+            user: {
+                id: user._id,
+                email: user.email,
+                fullName: user.fullName
+            }
+        };
+
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
+            if (err) throw err;
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+        });
+    } catch (err) {
+        console.error('[GOOGLE-LOGIN] Error:', err.message);
+        res.status(401).json({ message: 'Google verification failed', details: err.message });
     }
 });
 
@@ -496,6 +663,10 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
 
         let user = await User.findOne({ email: email.toLowerCase() }).lean();
 
+        if (user && user.isBlocked) {
+            return res.status(403).json({ message: 'Something went wrong. Please try again.' });
+        }
+
         if (!user) {
             const newUser = new User({
                 fullName: name,
@@ -530,8 +701,11 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
 // Cart Routes
 app.get('/api/cart', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
         const user = await User.findById(req.user.id).select('cart').lean();
-        res.json(user.cart || []);
+        res.json(user?.cart || []);
     } catch (err) {
         console.error('[CART] Fetch error:', err.message);
         res.status(500).send('Server error');
@@ -558,6 +732,40 @@ app.get('/', (req, res) => {
     res.send('Greenie Culture Backend is running');
 });
 
+// API Routes for Reviews
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+        res.json(reviews);
+    } catch (err) {
+        console.error('[ReviewsAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error fetching reviews' });
+    }
+});
+
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { userName, rating, description, date } = req.body;
+
+        if (!rating || !description) {
+            return res.status(400).json({ message: 'Rating and description are required' });
+        }
+
+        const newReview = new Review({
+            userName: userName || 'Guest User',
+            rating: Number(rating),
+            description,
+            date: date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        });
+
+        const savedReview = await newReview.save();
+        res.status(201).json(savedReview);
+    } catch (err) {
+        console.error('[ReviewsAPI] Save error:', err.message);
+        res.status(500).json({ message: 'Server error saving review' });
+    }
+});
+
 // API Routes for Products
 app.get('/api/products', async (req, res) => {
     try {
@@ -567,6 +775,44 @@ app.get('/api/products', async (req, res) => {
         let query = {};
         if (category) {
             let decodedCategory = decodeURIComponent(category).trim();
+
+            // --- SPECIAL CASE: Dynamic Bestsellers based on Orders ---
+            if (decodedCategory === 'Bestsellers') {
+                const limitNum = parseInt(limit) || 20;
+                const topSelling = await Order.aggregate([
+                    { $unwind: "$items" },
+                    {
+                        $group: {
+                            _id: "$items.name",
+                            totalSold: { $sum: "$items.quantity" }
+                        }
+                    },
+                    { $sort: { totalSold: -1 } },
+                    { $limit: limitNum }
+                ]);
+
+                let sortedProducts = [];
+                if (topSelling.length > 0) {
+                    const productNames = topSelling.map(s => s._id);
+                    const products = await Product.find({ name: { $in: productNames } }).lean();
+                    sortedProducts = topSelling
+                        .map(s => products.find(p => p.name === s._id))
+                        .filter(p => !!p);
+                }
+
+                // Pad with static Bestsellers if not enough order data
+                if (sortedProducts.length < limitNum) {
+                    const existingIds = sortedProducts.map(p => p._id);
+                    const padding = await Product.find({
+                        category: 'Bestsellers',
+                        _id: { $nin: existingIds }
+                    }).limit(limitNum - sortedProducts.length).lean();
+                    sortedProducts = [...sortedProducts, ...padding];
+                }
+
+                console.log(`[ProductsAPI] Returning ${sortedProducts.length} Bestsellers`);
+                return res.json(sortedProducts);
+            }
 
             // Broaden search for main categories
             let usePartial = false;
@@ -594,13 +840,17 @@ app.get('/api/products', async (req, res) => {
                 // For specific sub-categories, be more precise but still allow tag matches
                 query = {
                     $or: [
+                        { category: decodedCategory },
+                        { tags: decodedCategory },
                         { category: { $regex: regex } },
                         { tags: { $regex: regex } },
-                        { category: { $regex: new RegExp(`.*${decodedCategory.replace(/[-\s]+/g, '.*')}.*`, 'i') } }
+                        { category: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } },
+                        { tags: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } }
                     ]
                 };
             }
             console.log(`[ProductsAPI] Querying for: "${decodedCategory}" (Partial: ${usePartial})`);
+            console.log(`[ProductsAPI] DB Query Object: ${JSON.stringify(query)}`);
         }
 
         let productsQuery = Product.find(query).lean();
@@ -613,7 +863,7 @@ app.get('/api/products', async (req, res) => {
         }
 
         const products = await productsQuery;
-        console.log(`[ProductsAPI] Found ${products.length} products for "${category}"`);
+        console.log(`[ProductsAPI] Found ${products.length} products for "${category || 'all'}"`);
         res.json(products);
     } catch (err) {
         console.error('[ProductsAPI] Error:', err.message);
@@ -626,19 +876,42 @@ app.get('/api/products/search', async (req, res) => {
         const { q } = req.query;
         if (!q || q.length < 2) return res.json([]);
 
-        console.log(`[Backend Search] Processing query: "${q}"`);
-        const searchTerms = q.split(' ').filter(term => term.length > 0);
-        const regexes = searchTerms.map(term => new RegExp(term, 'i'));
+        console.log(`\n🔍 [ADMIN SEARCH] Query: "${q}"`);
+        console.log(`🕐 Time: ${new Date().toISOString()}`);
 
-        // Search in name, category, or tags
-        const products = await Product.find({
-            $or: [
-                { name: { $regex: new RegExp(q, 'i') } },
-                { category: { $regex: new RegExp(q, 'i') } },
-                { tags: { $regex: new RegExp(q, 'i') } },
-                ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
-            ]
-        }).limit(10).select('name category price image slug').lean();
+        // Use text search for performance if possible, with regex fallback
+        // Text search is generally faster and handles weights
+        const products = await Product.find(
+            { $text: { $search: q } },
+            { score: { $meta: "textScore" } }
+        )
+            .sort({ score: { $meta: "textScore" } })
+            .limit(50)
+            .select('name category price originalPrice discount image slug tags')
+            .lean();
+
+        // If text search yields few results, fallback to regex for partial matches
+        if (products.length < 5) {
+            const searchTerms = q.split(' ').filter(term => term.length > 0);
+            const regexes = searchTerms.map(term => new RegExp(term, 'i'));
+
+            const regexProducts = await Product.find({
+                $or: [
+                    { name: { $regex: new RegExp(q, 'i') } },
+                    { category: { $regex: new RegExp(q, 'i') } },
+                    { tags: { $regex: new RegExp(q, 'i') } },
+                    ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
+                ]
+            })
+                .limit(50)
+                .select('name category price originalPrice discount image slug tags')
+                .lean();
+
+            // Merge and de-duplicate
+            const combined = [...products, ...regexProducts];
+            const unique = Array.from(new Map(combined.map(p => [p._id.toString(), p])).values());
+            return res.json(unique.slice(0, 50));
+        }
 
         res.json(products);
     } catch (err) {
@@ -670,6 +943,35 @@ app.get('/api/products/map', async (req, res) => {
             acc[product.category].push(product);
             return acc;
         }, {});
+
+        // Inject Dynamic Bestsellers into the map
+        const topSelling = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.name",
+                    totalSold: { $sum: "$items.quantity" }
+                }
+            },
+            { $sort: { totalSold: -1 } },
+            { $limit: 20 }
+        ]);
+
+        let bestSellers = [];
+        if (topSelling.length > 0) {
+            bestSellers = topSelling
+                .map(s => products.find(p => p.name === s._id))
+                .filter(p => !!p);
+        }
+
+        // Pad with static Bestsellers up to 20
+        if (bestSellers.length < 20) {
+            const existingIds = new Set(bestSellers.map(p => p._id.toString()));
+            const staticBS = products.filter(p => p.category === 'Bestsellers' && !existingIds.has(p._id.toString()));
+            bestSellers = [...bestSellers, ...staticBS.slice(0, 20 - bestSellers.length)];
+        }
+        productMap['Bestsellers'] = bestSellers;
+
         res.json(productMap);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -758,6 +1060,9 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
 // User Orders API - GET all orders for current user
 app.get('/api/user/orders', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
         const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
         res.json(orders);
     } catch (err) {
@@ -768,7 +1073,10 @@ app.get('/api/user/orders', auth, async (req, res) => {
 // User Orders API - POST place new order
 app.post('/api/user/orders', auth, async (req, res) => {
     try {
-        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit } = req.body;
+        if (req.user.id === 'admin-special-id') {
+            return res.status(403).json({ message: 'Admin cannot place regular orders' });
+        }
+        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit, shippingDetails } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Order must have at least one item' });
@@ -779,17 +1087,61 @@ app.post('/api/user/orders', auth, async (req, res) => {
             userName: req.user.fullName || 'User',
             items: items,
             totalAmount: totalAmount,
+            deliveryCharge: req.body.deliveryCharge || 0,
             paymentMethod: paymentMethod || 'UPI',
-            status: 'Processing',
+            status: 'Pending',
             transactionId: transactionId || '',
             paymentScreenshot: paymentScreenshot || '',
             paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending',
             appliedOfferCode: appliedOfferCode || null,
-            offerBenefit: offerBenefit || null
+            offerBenefit: offerBenefit || null,
+            shippingDetails: shippingDetails || null
         });
 
         const savedOrder = await newOrder.save();
         console.log(`[OrdersAPI] New order placed: ${savedOrder.orderId} for user ${req.user.id}`);
+
+        // Deduct stock for each item in the order
+        for (const item of items) {
+            if (item.productId) {
+                try {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        const reduceBy = Number(item.quantity) || 1;
+                        let currentStock = product.stock !== undefined ? product.stock : 25;
+                        currentStock = Math.max(0, currentStock - reduceBy); // Prevent negative stock
+                        product.stock = currentStock;
+                        await product.save();
+                        console.log(`[OrdersAPI] Reduced stock for product ${product.name} to ${product.stock}`);
+
+                        // --- LOW STOCK NOTIFICATION STRATEGY ---
+                        if (currentStock <= 5) {
+                            try {
+                                const newNoti = new Notification({
+                                    type: 'LowStock',
+                                    title: 'Low Stock Alert 📉',
+                                    message: `Stock for ${product.name} has fallen to ${currentStock}. Time to restock!`,
+                                    product: {
+                                        id: product._id,
+                                        name: product.name,
+                                        image: product.image,
+                                        price: product.price,
+                                        stock: currentStock
+                                    }
+                                });
+                                await newNoti.save();
+                                console.log(`[OrdersAPI] Generated Low Stock Notification for: ${product.name}`);
+                            } catch (notiErr) {
+                                console.error('[OrdersAPI] Failed to generate low stock notification:', notiErr.message);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    // Log error but don't fail the order if stock update fails
+                    console.error(`[OrdersAPI] Error updating stock for product ${item.productId}:`, err.message);
+                }
+            }
+        }
 
         // Asynchronously send the invoice email
         sendOrderConfirmationEmail(req.user, savedOrder);
@@ -798,661 +1150,6 @@ app.post('/api/user/orders', auth, async (req, res) => {
     } catch (err) {
         console.error('[OrdersAPI] Error placing order:', err.message);
         res.status(500).json({ message: 'Failed to place order' });
-    }
-});
-
-// --- AI ASSISTANT (PLANT EXPERT) ---
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AI_KEY_PLACEHOLDER');
-
-app.post('/api/ai-assistant', async (req, res) => {
-    let userId; // Declare outside try block to ensure availability in catch block
-    try {
-        const { message, image } = req.body;
-        userId = req.body.userId;
-
-        // Try to get userId from token if not in body
-        const token = req.header('x-auth-token');
-        if (!userId && token) {
-            try {
-                const decoded = jwt.verify(token, JWT_SECRET);
-                userId = decoded.user.id;
-                console.log(`[AI-ASSISTANT] Derived userId from token: ${userId}`);
-            } catch (err) { /* ignore invalid token for this public endpoint */ }
-        }
-
-        console.log(`[AI-ASSISTANT] Request Body:`, JSON.stringify({ message: message?.substring(0, 20), userId }));
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-        // Save user message if userId is provided
-        if (userId) {
-            try {
-                console.log(`[CHAT-SAVE] Attempting to save message for user: ${userId}`);
-                const userMsg = new ChatMessage({
-                    userId,
-                    role: 'user',
-                    text: message,
-                    image: image || null
-                });
-                await userMsg.save();
-                console.log('[CHAT-SAVE] User message saved.');
-            } catch (saveErr) {
-                console.error('[CHAT-SAVE-ERROR] User message:', saveErr.message);
-            }
-        }
-
-        let promptText = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice.
-        
-        CRITICAL INSTRUCTION: Your response MUST be a valid JSON object with the following fields:
-        1. "text": Your diagnostic advice in Markdown format. Keep it concise, friendly, and use Hinglish icons/emojis.
-        2. "recommendations": An array of 2-3 specific keywords from OUR store to search for products.
-        3. "remindable": A boolean (true or false). Set to true only if the user's issue requires a 3-day follow-up reminder.
-        4. "plantName": The common name of the plant identified (e.g., "Money Plant", "Tulsi", "Peace Lily"). If not identified, use "Plant".
-           
-        AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]
-        EXAMPLES of products we have: ["Money Plant", "Peace Lily", "Snake Plant", "Aloe Vera", "Tulsi Plant", "Organic Fertilizer", "Vermicompost", "Potting Mix", "Watering Can", "Pruning Shears"].
-        Please recommend something relevant to the problem. 
-           
-        INTERACTIVE FLOW:
-        - If the user says "my plant is dying" or "condition critical" but doesn't mention WHICH plant it is, your "text" should politely ask: "Oh no! I'm here to help. Par pehle mujhe bataiye, aapke paas kaunsa plant hai? (Which plant do you have?)" and keep "recommendations" as ["Indoor Plants", "Gardening"].
-        - If the user specifies the plant (e.g., "Tulsi"), provide specific care for that plant and include the exact plant name (e.g. "Tulsi Plant") in the "recommendations" array so I can show it from the store.
-
-        User Question: "${message}"`;
-
-        let result;
-        if (image) {
-            const base64Data = image.split(',')[1] || image;
-            const imageData = { inlineData: { data: base64Data, mimeType: "image/jpeg" } };
-            result = await model.generateContent([promptText, imageData]);
-        } else {
-            result = await model.generateContent(promptText);
-        }
-
-        const response = await result.response;
-        let aiFullText = response.text();
-        console.log(`[AI-RAW-RESPONSE]`, aiFullText);
-        let aiText = aiFullText;
-        let recommendations = [];
-        let remindable = false;
-        let identifiedPlantName = 'Plant';
-
-        try {
-            // Robust JSON extraction: Find the first { and last }
-            const startIdx = aiFullText.indexOf('{');
-            const endIdx = aiFullText.lastIndexOf('}');
-            
-            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-                const jsonStr = aiFullText.substring(startIdx, endIdx + 1);
-                const parsed = JSON.parse(jsonStr);
-                aiText = parsed.text || aiFullText;
-                recommendations = parsed.recommendations || [];
-                remindable = parsed.remindable || false;
-                identifiedPlantName = parsed.plantName || 'Plant';
-                console.log(`[AI-PARSE-SUCCESS] Recs:`, recommendations, 'Remindable:', remindable, 'Plant:', identifiedPlantName);
-            } else {
-                console.warn('[AI-PARSE-FAILED] No JSON block found in response');
-            }
-        } catch (e) {
-            console.error('[AI-JSON-ERROR]', e.message);
-            // Fallback: If it's not JSON, try to extract it from code blocks anyway
-            const match = aiFullText.match(/```json\s*([\s\S]*?)\s*```/);
-            if (match) {
-                try {
-                    const parsed = JSON.parse(match[1]);
-                    aiText = parsed.text || aiText;
-                    recommendations = parsed.recommendations || recommendations;
-                    remindable = parsed.remindable || remindable;
-                    identifiedPlantName = parsed.plantName || identifiedPlantName;
-                } catch (innerE) { /* give up */ }
-            }
-        }
-
-        // Save AI response if userId is provided
-        if (userId) {
-            try {
-                const aiMsg = new ChatMessage({
-                    userId,
-                    role: 'ai',
-                    text: aiText,
-                    recommendations: recommendations,
-                    plantName: identifiedPlantName
-                });
-                await aiMsg.save();
-            } catch (saveErr) {
-                console.error('[CHAT-SAVE-ERROR] AI message:', saveErr.message);
-            }
-        }
-
-        res.json({ text: aiText, recommendations, remindable, plantName: identifiedPlantName });
-    } catch (err) {
-        console.error('[AI-ASSISTANT] Error:', err.message);
-        
-        // Smart keyword extraction from user's message for fallback recommendations
-        const msgLower = (req.body?.message || '').toLowerCase();
-        let fallbackRecs = ['Indoor Plants', 'Gardening'];
-        
-        // Detect specific plant names mentioned
-        if (msgLower.includes('tulsi')) fallbackRecs = ['Tulsi Plant', ...fallbackRecs];
-        if (msgLower.includes('money plant')) fallbackRecs = ['Money Plant', ...fallbackRecs];
-        if (msgLower.includes('snake plant')) fallbackRecs = ['Snake Plant', ...fallbackRecs];
-        if (msgLower.includes('peace lily')) fallbackRecs = ['Peace Lily', ...fallbackRecs];
-        if (msgLower.includes('aloe')) fallbackRecs = ['Aloe Vera', ...fallbackRecs];
-
-        if (msgLower.includes('fungal') || msgLower.includes('fungus') || msgLower.includes('rot') || msgLower.includes('disease')) {
-            fallbackRecs = ['Fertilizers & Nutrients', 'Soil & Growing Media', ...fallbackRecs];
-        } else if (msgLower.includes('water') || msgLower.includes('pani') || msgLower.includes('dry') || msgLower.includes('thirsty')) {
-            fallbackRecs = ['Accessories', ...fallbackRecs];
-        } else if (msgLower.includes('yellow') || msgLower.includes('brown') || msgLower.includes('leaf') || msgLower.includes('patta')) {
-            fallbackRecs = ['Fertilizers & Nutrients', ...fallbackRecs];
-        }
-        
-        // Ensure unique and max 4
-        fallbackRecs = [...new Set(fallbackRecs)].slice(0, 4);
-
-        // EXTRA: Extract plantName for frontend header fallback
-        let fallbackPlantName = 'Plant';
-        if (msgLower.includes('tulsi')) fallbackPlantName = 'Tulsi';
-        else if (msgLower.includes('money plant')) fallbackPlantName = 'Money Plant';
-        else if (msgLower.includes('snake plant')) fallbackPlantName = 'Snake Plant';
-        else if (msgLower.includes('peace lily')) fallbackPlantName = 'Peace Lily';
-        else if (msgLower.includes('aloe')) fallbackPlantName = 'Aloe Vera';
-        
-        const isRateLimit = err.message?.includes('429') || err.message?.includes('quota');
-        
-        // Professional fallback message that doesn't sound like an error
-        let userText = "🌿 **Plant Expert AI Diagnostic Mode**\n\n";
-
-        // Detect if specific plants are in recommendations (exclude general categories)
-        const categories = ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"];
-        const specificPlants = fallbackRecs.filter(r => !categories.includes(r));
-        const hasSpecificPlant = specificPlants.length > 0;
-
-        // Interactive Fallback: If "critical/dying" and No specific plant name detected
-        const criticalKeywords = ['critical', 'dying', 'mar raha', 'problem', 'help', 'sookh', 'kharab', 'yellow', 'keeda', 'pests'];
-        const isCritical = criticalKeywords.some(key => msgLower.includes(key));
-
-        if (isCritical && !hasSpecificPlant) {
-            userText += "Main aapki help zaroor karunga. Par meri diagnostics shuru karne ke liye, mujhe ye batayein: **Aapke paas kaunsa plant hai?** (Which plant do you have?) \n\nTaaki main uske care instructions aur remedies dhoondh sakun. 🌱✨";
-        } else {
-            userText += "Aapke sawaal ke liye yahan kuch basic care tips hain:\n";
-            userText += "- **Hydration**: Check karein ki mitti (soil) upar se 1-2 inch dry hai ya nahi. 💧\n";
-            userText += "- **Light**: Zyadatar plants ko filtered sunlight pasand hoti hai. 🌞\n";
-            userText += "- **Nutrition**: Agar patte yellow ho rahe hain, toh **Fertilizer** ki kami ho sakti hai. 🌿\n\n";
-            userText += "Neeche diye gaye products aapke kaam aa sakte hain. Main background mein research kar raha hoon, thodi der mein mujhse aur detailed poochhein! 😉";
-        }
-        
-        // Save AI response even if it's a fallback
-        if (userId) {
-            try {
-                const aiMsg = new ChatMessage({
-                    userId,
-                    role: 'ai',
-                    text: userText,
-                    recommendations: fallbackRecs,
-                    plantName: fallbackPlantName
-                });
-                await aiMsg.save();
-                console.log(`[CHAT-SAVE] Fallback AI message saved for user: ${userId} with plant: ${fallbackPlantName}`);
-            } catch (saveErr) {
-                console.error('[CHAT-SAVE-ERROR] AI Fallback:', saveErr.message);
-            }
-        }
-        
-        // Return 200 but flag as diagnostic/fallback so frontend knows
-        res.json({
-            text: userText,
-            recommendations: fallbackRecs,
-            status: 'diagnostic',
-            remindable: true,
-            plantName: fallbackPlantName
-        });
-    }
-});
-
-// Create a 4-Part Plant Care Reminder Sequence
-app.post('/api/admin/reminders', auth, async (req, res) => {
-    try {
-        const { plantName, problemType } = req.body;
-        
-        const sequence = [
-            { type: 'water', delayDays: 3, label: 'Water Reminder' },
-            { type: 'fertilizer', delayDays: 6, label: 'Fertilizer Reminder' },
-            { type: 'sunlight', delayDays: 9, label: 'Sunlight Check' },
-            { type: 'general', delayDays: 12, label: 'General Health Assessment' }
-        ];
-
-        const sequenceId = new mongoose.Types.ObjectId().toString();
-        const createdReminders = [];
-
-        for (const item of sequence) {
-            const reminderDate = new Date();
-            reminderDate.setDate(reminderDate.getDate() + item.delayDays);
-
-            const reminder = new PlantReminder({
-                userId: req.user.id,
-                plantName,
-                problemType: `${problemType} (${item.label})`,
-                reminderType: item.type, 
-                reminderDate,
-                sequenceId
-            });
-
-            await reminder.save();
-            createdReminders.push(reminder);
-        }
-
-        res.json({ 
-            message: 'Sequenced reminders scheduled successfully (4 parts)', 
-            reminders: createdReminders 
-        });
-    } catch (err) {
-        console.error('[REMINDER-ERROR]', err.message);
-        res.status(500).json({ message: 'Failed to set reminders' });
-    }
-});
-
-// Scheduler for Plant Care Reminders (Runs Every Minute for Testing)
-cron.schedule('* * * * *', async () => {
-    console.log('[SCHEDULER] Checking for plant care reminders...');
-    try {
-        const now = new Date();
-        const pendingReminders = await PlantReminder.find({
-            reminderDate: { $lte: now },
-            notificationStatus: 'pending'
-        });
-
-        for (const reminder of pendingReminders) {
-            // Check if ANY previous reminder in this sequence was STOPPED
-            const isStopped = await PlantReminder.findOne({
-                sequenceId: reminder.sequenceId,
-                userAction: 'stopped'
-            });
-
-            if (isStopped) {
-                reminder.notificationStatus = 'dismissed';
-                await reminder.save();
-                console.log(`[SCHEDULER] Skipping stopped sequence ${reminder.sequenceId} for ${reminder.plantName}`);
-                continue;
-            }
-
-            // Create a notification for the user
-            const notification = new Notification({
-                userId: reminder.userId,
-                type: 'Reminder',
-                subType: reminder.reminderType,
-                reminderId: reminder._id,
-                title: `🌿 Plant Care: ${reminder.plantName}`,
-                message: `Hello! It's time to check your ${reminder.plantName}. Is it ready for some ${reminder.reminderType}?`,
-                product: { name: reminder.plantName } 
-            });
-
-            await notification.save();
-            
-            // Mark reminder as sent
-            reminder.notificationStatus = 'sent';
-            await reminder.save();
-            console.log(`[SCHEDULER] Sent reminder for ${reminder.plantName} to user ${reminder.userId}`);
-        }
-    } catch (err) {
-        console.error('[SCHEDULER-ERROR]', err.message);
-    }
-});
-
-// USER: Action on Reminder (Continue/Stop)
-app.post('/api/user/reminders/:id/action', auth, async (req, res) => {
-    try {
-        const { action } = req.body; // 'continued' or 'stopped'
-        const reminderId = req.params.id;
-
-        const reminder = await PlantReminder.findById(reminderId);
-        if (!reminder) return res.status(404).json({ message: 'Reminder not found' });
-
-        reminder.userAction = action;
-        await reminder.save();
-
-        // [NEW] Also update notifications to mark them as read/handled
-        // This ensures they disappear from the navbar immediately after refresh
-        const updateQuery = { userId: req.user.id, type: 'Reminder' };
-        if (action === 'stopped') {
-            // For 'stopped', clear ALL notifications for THIS sequence
-            updateQuery.reminderId = { $in: await PlantReminder.find({ sequenceId: reminder.sequenceId }).distinct('_id') };
-        } else {
-            // For 'continued', clear notifications for THIS specific reminder
-            updateQuery.reminderId = reminderId;
-        }
-        
-        await mongoose.model('Notification').updateMany(
-            updateQuery,
-            { isRead: true }
-        );
-
-        if (action === 'stopped') {
-            // Mark all future reminders in this sequence as dismissed
-            await PlantReminder.updateMany(
-                { sequenceId: reminder.sequenceId, notificationStatus: 'pending' },
-                { notificationStatus: 'dismissed', userAction: 'stopped' }
-            );
-        }
-
-        res.json({ message: `Reminder sequence ${action} successfully` });
-    } catch (err) {
-        console.error('[REMINDER-ACTION-ERROR]', err.message);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// GET Chat History for logged-in user
-app.get('/api/chat-history', auth, async (req, res) => {
-    try {
-        const messages = await ChatMessage.find({ userId: req.user.id })
-            .sort({ timestamp: 1 })
-            .limit(50)
-            .lean();
-        res.json(messages);
-    } catch (err) {
-        console.error('[CHAT-HISTORY-ERROR]', err.message);
-        res.status(500).json({ message: 'Failed to fetch chat history' });
-    }
-});
-
-// --- ADMIN MASTER AI ASSISTANT ---
-app.post('/api/admin/ai-assistant', auth, async (req, res) => {
-    console.log('[MASTER-AI] Request received from:', req.user?.id || 'Unknown');
-    try {
-        const { message, contextData } = req.body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-        console.log('[MASTER-AI] Fetching systemic context...');
-        // Fetch systemic data for context
-        const [recentOrders, recentInquiries, lowStockProducts] = await Promise.all([
-            Order.find({}).sort({ orderDate: -1 }).limit(10).populate('userId', 'fullName').lean(),
-            Inquiry.find({}).sort({ createdAt: -1 }).limit(5).lean(),
-            Product.find({ stock: { $lte: 30 } }).sort({ stock: 1 }).limit(15).lean()
-        ]);
-        console.log('[MASTER-AI] Context fetched. Orders:', recentOrders.length, 'Stock items:', lowStockProducts.length);
-
-        const orderCtx = recentOrders.map(o => `#${o.orderId}: ${o.userId?.fullName || 'Guest'} - ₹${o.totalAmount} (${o.status})`).join('\n');
-        const inquiryCtx = recentInquiries.map(i => `${i.name}: ${i.subject} - ${i.status}`).join('\n');
-        const stockCtx = lowStockProducts.map(p => `${p.name}: ${p.stock} units left`).join('\n');
-
-        let promptText = `You are "Greenie Culture Master Intelligence". You have a birds-eye view of all business operations. 
-        
-        CURRENT SYSTEM SNAPSHOT (Real-time DB Data):
-        
-        Recent Orders:
-        ${orderCtx || 'No recent orders.'}
-        
-        Recent User Inquiries:
-        ${inquiryCtx || 'No recent inquiries.'}
-        
-        Inventory Alerts (Low Stock):
-        ${stockCtx || 'All products well stocked.'}
-        
-        Live Dashboard Stats:
-        - Total Orders: ${contextData?.totalOrders || 'Loading...'}
-        - Total Revenue: ₹${contextData?.totalRevenue || 0}
-        - Top State: ${contextData?.topState || 'Unknown'}
-        - Low Stock Count: ${contextData?.lowStockCount || 0}
-        
-        User Query: "${message}"
-        
-        INSTRUCTIONS:
-        1. Act as a Chief Operating Officer (COO). Analyze the snapshot to answer the user's specific query.
-        2. If they ask about "stock", "orders", or "money", use the exact numbers from the snapshots above.
-        3. Keep it professional, data-driven, and use high-end business English mixed with helpful Hinglish.
-        4. Format with bold headers, bullet points, and clean Markdown.
-        5. Proactively mention if something looks critical (like low stock count > 5).`;
-
-        const result = await model.generateContent(promptText);
-        const response = await result.response;
-        const aiText = response.text();
-
-        // Save History (User & AI)
-        try {
-            const userMsg = new AdminChatMessage({ adminId: req.user.id, role: 'user', text: message });
-            const aiMsg = new AdminChatMessage({ adminId: req.user.id, role: 'ai', text: aiText });
-            await Promise.all([userMsg.save(), aiMsg.save()]);
-            console.log('[MASTER-AI] Conversation saved to history.');
-        } catch (saveErr) {
-            console.error('[MASTER-AI-SAVE-ERROR]', saveErr.message);
-        }
-
-        res.json({ text: aiText });
-
-    } catch (err) {
-        console.error('[MASTER-AI] Error:', err.message);
-        
-        // Dynamic Fallback: Compiled directly from DB context based on keywords
-        const { message, contextData } = req.body;
-        const msgLow = (message || '').toLowerCase();
-        
-        let dynamicSection = '';
-        if (msgLow.includes('stock') || msgLow.includes('maal') || msgLow.includes('inventory')) {
-            dynamicSection = `⚠️ **Inventory Update**: ${contextData?.lowStockCount || 0} items are currently below the safety threshold. Re-stocking is recommended for high-movers.`;
-        } else if (msgLow.includes('revenue') || msgLow.includes('paisa') || msgLow.includes('money') || msgLow.includes('sales')) {
-            dynamicSection = `💰 **Financial Snapshot**: Total revenue stands at **₹${contextData?.totalRevenue || 0}** across **${contextData?.totalOrders || 0} orders**. Sales velocity is stable.`;
-        } else if (msgLow.includes('order') || msgLow.includes('deliver') || msgLow.includes('status')) {
-            dynamicSection = `📦 **Logistics Brief**: We've processed **${contextData?.totalOrders || 0} total orders**. Most recent activity is centered in **${contextData?.topState || 'Gujarat'}**.`;
-        } else {
-            dynamicSection = `📊 **General Brief**: Today we have **${contextData?.totalOrders || 0} total orders** and **${contextData?.totalRevenue || 0} total revenue**. Business health is currently optimal.`;
-        }
-
-        const fallbackText = `🏛️ **Greenie Master Intelligence Brief (Live DB Sync)**
-
-Yahan aapke sawaal ke liye real-time data analysis hai:
-
-${dynamicSection}
-
-> *Note: AI complex reasoning is on a 60-second cooldown (Rate Limit), but your live database data above is 100% accurate. Try deep-analysis again in 1 minute!*`;
-
-        // Save Fallback History
-        try {
-            const userMsg = new AdminChatMessage({ adminId: req.user.id, role: 'user', text: message });
-            const aiMsg = new AdminChatMessage({ adminId: req.user.id, role: 'ai', text: fallbackText, isFallback: true });
-            await Promise.all([userMsg.save(), aiMsg.save()]);
-            console.log('[MASTER-AI] Fallback conversation saved.');
-        } catch (saveErr) {
-            console.error('[MASTER-AI-SAVE-ERROR-FALLBACK]', saveErr.message);
-        }
-
-        res.json({ text: fallbackText, isFallback: true });
-    }
-});
-
-// GET Admin Chat History
-app.get('/api/admin/chat-history', auth, async (req, res) => {
-    try {
-        const history = await AdminChatMessage.find({ adminId: req.user.id }).sort({ timestamp: 1 }).limit(50).lean();
-        res.json(history);
-    } catch (err) {
-        console.error('[ADMIN-CHAT-HISTORY-ERROR]', err.message);
-        res.status(500).json({ message: 'Failed to fetch admin history' });
-    }
-});
-
-/**
- * NEW: Admin Growth Hub - Marketing Assistant
- */
-app.post('/api/admin/generate-marketing', auth, async (req, res) => {
-    try {
-        const { type, productName, offerDetails, tone = 'professional' } = req.body;
-        
-        let prompt = "";
-        if (type === 'social') {
-            prompt = `Create a viral, attractive Instagram caption for a plant product named "${productName}". 
-                     Details: ${offerDetails}. Tone: ${tone}. Include emojis and relevant hashtags. 
-                     Format the output cleanly in plain text.`;
-        } else if (type === 'email') {
-            prompt = `Write a professional email draft for newsletter subscribers about "${productName}". 
-                     Subject line included. Tone: Catchy and green-focused. Details: ${offerDetails}.`;
-        } else if (type === 'promo') {
-            prompt = `Suggest 3 unique, catchy promo code names and a 1-sentence description for each for a sale on "${productName}".`;
-        }
-
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        res.json({ text: response.text() });
-    } catch (err) {
-        console.error('[MarketingAPI] Error:', err.message);
-        res.status(500).json({ message: 'Failed to generate marketing content' });
-    }
-});
-
-// --- REVIEWS API ---
-
-// Public: Get all reviews
-app.get('/api/reviews', async (req, res) => {
-    try {
-        const reviews = await Review.find().sort({ createdAt: -1 }).lean();
-        res.json(reviews);
-    } catch (err) {
-        console.error('[ReviewsAPI] Fetch error:', err.message);
-        res.status(500).json({ message: 'Server error fetching reviews' });
-    }
-});
-
-// User: Add a review
-app.post('/api/reviews', async (req, res) => {
-    try {
-        const { userName, rating, description, date } = req.body;
-        if (!userName || !rating || !description) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        const newReview = new Review({
-            userName,
-            rating: Number(rating),
-            description,
-            date: date || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-        });
-
-        await newReview.save();
-        res.status(201).json(newReview);
-    } catch (err) {
-        console.error('[ReviewsAPI] Save error:', err.message);
-        res.status(500).json({ message: 'Server error saving review' });
-    }
-});
-
-// Admin: Delete a review
-app.delete('/api/admin/reviews/:id', auth, async (req, res) => {
-    try {
-        const deletedReview = await Review.findByIdAndDelete(req.params.id);
-        if (!deletedReview) return res.status(404).json({ message: 'Review not found' });
-        res.json({ message: 'Review deleted successfully' });
-    } catch (err) {
-        console.error('[AdminAPI] Review delete error:', err.message);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-/**
- * NEW: Admin AI Task Hub (Operations) with Caching
- */
-let aiTasksCache = { data: null, timestamp: 0 };
-app.get('/api/admin/ai-tasks', auth, async (req, res) => {
-    try {
-        // Cache for 10 minutes to save Gemini quota
-        const CACHE_DURATION = 10 * 60 * 1000; 
-        if (aiTasksCache.data && (Date.now() - aiTasksCache.timestamp < CACHE_DURATION)) {
-            return res.json({ tasks: aiTasksCache.data });
-        }
-
-        // Fetch snapshot of business health
-        const [lowStock, pendingOrders, totalProducts, activeReminders] = await Promise.all([
-            Product.find({ stock: { $lt: 10 } }).limit(5).lean(),
-            Order.find({ status: { $in: ['Processing', 'Ordered'] } }).limit(5).lean(),
-            Product.countDocuments(),
-            PlantReminder.countDocuments({ notificationStatus: 'pending' })
-        ]);
-
-        const stockMentions = lowStock.map(p => p.name).join(', ');
-        const orderMentions = pendingOrders.length;
-        const reminderCount = activeReminders;
-
-        const prompt = `You are a Business Operations Consultant for 'Greenie Culture', an online plant store.
-        Current Store Health Snapshot:
-        - Low stock items: ${stockMentions || 'None'}
-        - Pending/Processing orders: ${orderMentions}
-        - Total products in catalog: ${totalProducts}
-        - Pending plant care reminders: ${reminderCount}
-        
-        Generate exactly 3 concise, high-priority operational tasks for the admin.
-        If there are low stock items, prioritize restocking them.
-        If there are pending orders, prioritize fulfillment.
-        If the store is healthy (no low stock or pending orders), suggest growth tasks like '🌿 Update blog with seasonal care tips' or '📈 Review top-selling products this week'.
-        
-        Format Requirement: Return ONLY 3 lines. Each line MUST start with a relevant emoji. No other text.
-        Example:
-        📦 Restock Money Plant.
-        🚚 Ship 5 pending orders.
-        ✨ Create a new promo for succulents.`;
-
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        
-        // Split text into array of lines and clean up
-        let tasks = response.text()
-            .split('\n')
-            .map(t => t.replace(/^\d+\.\s*/, '').trim()) // Remove leading numbers if AI adds them
-            .filter(t => t.length > 5)
-            .slice(0, 3);
-            
-        // Final fallback if AI fails or returns empty
-        if (!tasks || tasks.length === 0) {
-            tasks = [
-                "🌿 Check daily plant health reports",
-                "📈 Analyze latest sales trends",
-                "📦 Audit inventory levels"
-            ];
-        }
-        
-        // Update cache
-        aiTasksCache = { data: tasks, timestamp: Date.now() };
-        
-        res.json({ tasks });
-    } catch (err) {
-        console.error('[AI-TASKS-ERROR]', err.message);
-        res.json({ tasks: [
-            "🌿 Daily store audit",
-            "📦 Review stock levels",
-            "📊 Check recent orders"
-        ] });
-    }
-});
-
-// Admin: Get all plant reminders (for Operations Hub)
-app.get('/api/admin/plant-reminders', auth, async (req, res) => {
-    try {
-        const reminders = await PlantReminder.find({})
-            .populate('userId', 'fullName email phone') 
-            .sort({ reminderDate: 1 })
-            .lean();
-        res.json(reminders);
-    } catch (err) {
-        console.error('[AdminRemindersAPI] Fetch error:', err.message);
-        res.status(500).json({ message: 'Server error fetching plant reminders' });
-    }
-});
-
-/**
- * NEW: Customer Inquiry Smart-Draft
- */
-app.post('/api/admin/ai-inquiry-draft', auth, async (req, res) => {
-    try {
-        const { inquiryText, userName } = req.body;
-        const prompt = `A customer named ${userName} sent this message: "${inquiryText}".
-                       Write a professional, polite, and helpful draft reply as 'Greenie Culture Support'.
-                       Keep it short (max 3 sentences).`;
-
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        res.json({ draft: response.text() });
-    } catch (err) {
-        console.error('[INQUIRY-DRAFT-ERROR]', err.message);
-        res.status(500).json({ message: 'Failed to generate draft' });
     }
 });
 
@@ -1471,20 +1168,96 @@ app.get('/api/admin/orders', auth, async (req, res) => {
     }
 });
 
+app.get('/api/admin/payment-summary', auth, async (req, res) => {
+    try {
+        // Fetch ALL orders to match the record count in the transaction table
+        const rawOrders = await Order.find({}).populate('userId', 'fullName').lean();
+
+        // Filter out "Guest Customer" and missing user data to match frontend table logic
+        const orders = rawOrders.filter(o => {
+            const name = (o.userName || o.userId?.fullName || '').trim();
+            return name !== 'Guest Customer' && o.userId;
+        });
+
+        let cod = 0;
+        let online = 0;
+        let totalRevenue = 0;
+
+        orders.forEach(o => {
+            const method = (o.paymentMethod || '').toUpperCase();
+
+            // Counts should include all records (including cancelled) to match the table
+            if (method.includes('CASH') || method.includes('COD')) {
+                cod++;
+            } else {
+                online++;
+            }
+
+            // ONLY include successful/shipped orders in the revenue total
+            if (o.status !== 'Cancelled') {
+                totalRevenue += (o.totalAmount || 0);
+            }
+        });
+
+        const totalOrders = cod + online;
+        res.json({
+            total: totalOrders,
+            cod,
+            online,
+            codPercentage: totalOrders > 0 ? Math.round((cod / totalOrders) * 100) : 0,
+            onlinePercentage: totalOrders > 0 ? Math.round((online / totalOrders) * 100) : 0,
+            totalRevenue
+        });
+    } catch (err) {
+        console.error('[AdminPaymentAPI] Error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
-        const { status } = req.body;
-        if (!['Processing', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status update' });
+        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
+        const updateData = { status };
+        
+        // Find existing order first to check previous states
+        const existingOrder = await Order.findById(req.params.id);
+        if(!existingOrder) return res.status(404).json({ message: 'Order not found' });
+
+        if (courierName) {
+            updateData.courierName = courierName;
+            if (!existingOrder.assignedAt || courierName !== existingOrder.courierName) {
+                updateData.assignedAt = new Date();
+            }
         }
+        if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
+
+        // Automatically set to Shipped ONLY if tracking is being added for the first time 
+        // AND the current incoming status isn't already Delivered/Cancelled.
+        if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled' && existingOrder.status === 'Pending') {
+            updateData.status = 'Shipped';
+        }
+
+        // Record delivered timestamp if newly marked as delivered
+        if (updateData.status === 'Delivered' && existingOrder.status !== 'Delivered') {
+            updateData.deliveredAt = new Date();
+        }
+
         const order = await Order.findByIdAndUpdate(
             req.params.id,
-            { status },
+            { $set: updateData },
             { new: true }
         ).populate('userId', 'fullName email phone alternatePhone address city state');
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
         }
+
+        // Asynchronously send status update email
+        sendOrderStatusEmail(order);
+
+        // Asynchronously send SMS/WhatsApp (Mock for now)
+        sendSMSWhatsAppNotification(order);
+
         res.json(order);
     } catch (err) {
         console.error('[AdminOrdersAPI] Update error:', err.message);
@@ -1514,11 +1287,40 @@ app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
     }
 });
 
+// Toggle courier settlement status
+app.put('/api/admin/orders/:id/courier-settled', auth, async (req, res) => {
+    try {
+        const { courierSettled } = req.body;
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { courierSettled: !!courierSettled },
+            { new: true }
+        ).populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        console.log(`[AdminOrdersAPI] Courier settlement for Order ${order.orderId}: ${courierSettled ? 'Settled' : 'Unsettled'}`);
+        res.json(order);
+    } catch (err) {
+        console.error('[AdminOrdersAPI] Courier settlement error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // User Profile API
 app.get('/api/user/profile', auth, async (req, res) => {
     try {
         console.log(`[ProfileAPI] Loading profile for ID: ${req.user.id}`);
+        if (req.user.id === 'admin-special-id') {
+            return res.json({
+                _id: 'admin-special-id',
+                fullName: 'System Admin',
+                email: 'admin@greenie.com',
+                role: 'admin',
+                profilePic: 'https://cdn-icons-png.flaticon.com/512/6024/6024190.png'
+            });
+        }
         const user = await User.findById(req.user.id).select('-password').lean();
         if (!user) {
             console.log(`[ProfileAPI] User not found: ${req.user.id}`);
@@ -1546,6 +1348,14 @@ app.put('/api/user/profile', auth, async (req, res) => {
         if (city !== undefined) updateData.city = city;
         if (state !== undefined) updateData.state = state;
 
+        if (req.user.id === 'admin-special-id') {
+            return res.json({
+                _id: 'admin-special-id',
+                fullName: fullName || 'System Admin',
+                email: 'admin@greenie.com',
+                role: 'admin'
+            });
+        }
         const updatedUser = await User.findByIdAndUpdate(
             req.user.id,
             { $set: updateData },
@@ -1564,6 +1374,8 @@ app.put('/api/user/profile', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
+
+// ADMIN API - Notifications (Consolidated below)
 
 // ADMIN API - Offers
 app.get('/api/admin/offers', auth, async (req, res) => {
@@ -1797,82 +1609,6 @@ app.get('/api/offers', async (req, res) => {
     }
 });
 
-
-app.get('/api/admin/payment-summary', auth, async (req, res) => {
-    try {
-        const orders = await Order.find({}).populate('userId', 'fullName').lean();
-
-        let cod = 0, online = 0, totalRevenue = 0;
-        orders.forEach(o => {
-            const method = (o.paymentMethod || '').toUpperCase();
-            if (method.includes('CASH') || method.includes('COD')) cod++;
-            else online++;
-            if (o.status !== 'Cancelled') totalRevenue += (o.totalAmount || 0);
-        });
-
-        const totalOrders = cod + online;
-        res.json({
-            total: totalOrders,
-            cod,
-            online,
-            codPercentage: totalOrders > 0 ? Math.round((cod / totalOrders) * 100) : 0,
-            onlinePercentage: totalOrders > 0 ? Math.round((online / totalOrders) * 100) : 0,
-            totalRevenue
-        });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
-    try {
-        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
-        const updateData = { status };
-        if (courierName) updateData.courierName = courierName;
-        if (trackingNumber) updateData.trackingNumber = trackingNumber;
-        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
-
-        if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled') {
-            updateData.status = 'Shipped';
-        }
-
-        const order = await Order.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true })
-            .populate('userId', 'fullName email phone alternatePhone address city state');
-        
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-
-        sendOrderStatusEmail(order);
-        sendSMSWhatsAppNotification(order);
-        res.json(order);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
-    try {
-        const { paymentStatus } = req.body;
-        const order = await Order.findByIdAndUpdate(req.params.id, { paymentStatus }, { new: true })
-            .populate('userId', 'fullName email phone alternatePhone address city state');
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        res.json(order);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-app.put('/api/admin/orders/:id/courier-settled', auth, async (req, res) => {
-    try {
-        const { courierSettled } = req.body;
-        const order = await Order.findByIdAndUpdate(req.params.id, { courierSettled: !!courierSettled }, { new: true })
-            .populate('userId', 'fullName email phone alternatePhone address city state');
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        res.json(order);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
 // ADMIN API - Get all users
 app.get('/api/admin/users', auth, async (req, res) => {
     try {
@@ -1929,10 +1665,30 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// ADMIN API - Block/Unblock user
+app.put('/api/admin/users/:id/block', auth, async (req, res) => {
+    try {
+        const { isBlocked } = req.body;
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isBlocked },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        console.log(`[AdminAPI] User ${user.fullName} ${isBlocked ? 'blocked' : 'unblocked'}`);
+        res.json(user);
+    } catch (err) {
+        console.error('[AdminAPI] User block error:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
 // ADMIN API - Update product
 app.put('/api/admin/products/:id', auth, async (req, res) => {
     try {
-        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
+        const { name, price, originalPrice, discount, category, image, images, description, tags, stock } = req.body;
 
         const updateData = {
             name,
@@ -1940,6 +1696,7 @@ app.put('/api/admin/products/:id', auth, async (req, res) => {
             originalPrice,
             discount,
             category,
+            stock: stock !== undefined ? Number(stock) : 25,
             image,
             images,
             description,
@@ -1967,10 +1724,15 @@ app.put('/api/admin/products/:id', auth, async (req, res) => {
 // ADMIN API - Delete product
 app.delete('/api/admin/products/:id', auth, async (req, res) => {
     try {
+        console.log(`\n🗑️  [ADMIN DELETE] Attempting to delete product with ID: ${req.params.id}`);
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+
         if (!deletedProduct) {
+            console.log(`❌ [ADMIN DELETE] Product not found for ID: ${req.params.id}`);
             return res.status(404).json({ message: 'Product not found' });
         }
+
+        console.log(`✅ [ADMIN DELETE] Successfully deleted product: ${deletedProduct.name}`);
         console.log('[AdminAPI] Product deleted:', deletedProduct.name);
         res.json({ message: 'Product deleted successfully' });
     } catch (err) {
@@ -1982,7 +1744,7 @@ app.delete('/api/admin/products/:id', auth, async (req, res) => {
 // ADMIN API - Add new product
 app.post('/api/admin/products', auth, async (req, res) => {
     try {
-        const { name, price, originalPrice, discount, category, image, images, description, tags } = req.body;
+        const { name, price, originalPrice, discount, category, image, images, description, tags, stock } = req.body;
 
         if (!name || !price || !category || !image) {
             return res.status(400).json({ message: 'Name, price, category, and image are required.' });
@@ -2005,7 +1767,8 @@ app.post('/api/admin/products', auth, async (req, res) => {
             image,
             images: Array.isArray(images) ? images : [],
             description: description || '',
-            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : [])
+            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : []),
+            stock: stock !== undefined ? Number(stock) : 25
         });
 
         const savedProduct = await newProduct.save();
@@ -2030,7 +1793,172 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// Seed default placements if none exist
+const seedPlacements = async () => {
+    try {
+        const count = await Placement.countDocuments();
+        if (count < 6) {
+            // If we have fewer than 6, let's reset to ensure user gets all original 6
+            if (count > 0) {
+                await Placement.deleteMany({});
+                console.log('[SEED] Clearing old placements for fresh full seed...');
+            }
+
+            const defaultPlacements = [
+                {
+                    name: 'SmartLeaf Indoors',
+                    description: 'The living room is the heart of your home. Adding plants here creates a welcoming atmosphere and naturally purifies the air.',
+                    image: '/images/smartleaf_indoors.jpg',
+                    videoUrl: '/videos/living-room.mp4',
+                    features: ['Air Purifying', 'Low Maintenance', 'Stunning Decor'],
+                    badge: 'LIVING SPACES',
+                    categoryRoute: '/products/indoor-plants'
+                },
+                {
+                    name: 'EcoScape Outdoors',
+                    description: 'Transform your garden or balcony with plants that thrive under the open sky and enhance your outdoor living.',
+                    image: '/images/outdoor_vibe_new.jpg',
+                    videoUrl: '/videos/outdoor.mp4',
+                    features: ['Weather Resistant', 'Sun Loving', 'Natural Growth'],
+                    badge: 'OUTDOOR LIVING',
+                    categoryRoute: '/products/outdoor-plants'
+                },
+                {
+                    name: 'Gardening',
+                    description: 'Start your own green journey. Our gardening kits and plants are perfect for both beginners and experts.',
+                    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
+                    videoUrl: '/videos/gardening.mp4',
+                    features: ['Beginner Friendly', 'Complete Kits', 'Sustainable'],
+                    badge: 'START GROWING',
+                    categoryRoute: '/products/gardening'
+                },
+                {
+                    name: 'EcoHaven Rooftop',
+                    description: 'Elevate your urban living with a sustainable rooftop garden that brings nature closer to the sky.',
+                    image: '/images/rooftop_garden.jpg',
+                    videoUrl: '/videos/ecohaven.mp4',
+                    features: ['Sustainable Living', 'Urban Oasis', 'Low Carbon Footprint'],
+                    badge: 'ECO FRIENDLY',
+                    categoryRoute: '/products/outdoor-plants'
+                },
+                {
+                    name: 'miniheaven balcony',
+                    description: 'Create your own mini heaven in your balcony with our curated collection of outdoor plants that flourish in open spaces.',
+                    image: '/images/miniheaven_balcony.jpg',
+                    videoUrl: '/videos/home_balcony.mp4',
+                    features: ['Sun Loving', 'Urban Oasis', 'Low Maintenance'],
+                    badge: 'BALCONY GARDEN',
+                    categoryRoute: '/products/flowering-plants'
+                },
+                {
+                    name: 'kitchen',
+                    description: 'Fresh herbs and air-purifying plants make your kitchen a more vibrant and healthy place to cook and gather.',
+                    image: '/images/kitchen_image.jpg',
+                    videoUrl: '/videos/kitchen.mp4',
+                    features: ['Culinary Herbs', 'Air Purifying', 'Compact Size'],
+                    badge: 'FRESH COOKING',
+                    categoryRoute: '/products/indoor-plants'
+                }
+            ];
+            await Placement.insertMany(defaultPlacements);
+            console.log('[SEED] Default placements seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding placements:', err.message);
+    }
+};
+
+const seedFaqs = async () => {
+    try {
+        const count = await Faq.countDocuments();
+        if (count === 0) {
+            const defaultFaqs = [
+                {
+                    category: 'Orders',
+                    question: 'How do I track my order?',
+                    answer: 'Once your order is shipped, you will receive a tracking link via email and SMS. You can also track it from your User Dashboard under "My Orders".',
+                    order: 1
+                },
+                {
+                    category: 'Payment',
+                    question: 'What payment methods do you accept?',
+                    answer: 'We accept UPI (Google Pay, PhonePe, Paytm) and Cash on Delivery. All transactions are 100% secure.',
+                    order: 2
+                },
+                {
+                    category: 'Delivery',
+                    question: 'How long does delivery take?',
+                    answer: 'We deliver within 3–7 business days depending on your location. Metro cities usually receive orders within 2–3 days.',
+                    order: 3
+                },
+                {
+                    category: 'Plants',
+                    question: 'Are the plants safe for pets?',
+                    answer: 'Some plants are pet-friendly and some are not. Check the individual product page for a "Pet Safe" badge. Commonly safe plants include Spider Plant, Boston Fern, and Areca Palm.',
+                    order: 4
+                },
+                {
+                    category: 'Returns',
+                    question: 'What is your return policy?',
+                    answer: 'We have a 7-day return/replacement policy. If the plant arrives damaged or dead, simply send us a photo within 7 days and we will send a free replacement.',
+                    order: 5
+                }
+            ];
+            await Faq.insertMany(defaultFaqs);
+            console.log('[SEED] Default FAQs seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding FAQs:', err.message);
+    }
+};
+
 // --- Courier Management Routes ---
+const Courier = require('./models/Courier');
+
+// Seed default couriers if none exist
+const seedCouriers = async () => {
+    try {
+        const count = await Courier.countDocuments();
+        if (count === 0) {
+            const defaultCouriers = [
+                {
+                    name: 'Blue Dart',
+                    password: 'bluedart@greenie',
+                    fee: 60,
+                    states: ['Maharashtra', 'Gujarat', 'Goa', 'Rajasthan', 'Madhya Pradesh', 'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu'],
+                    icon: 'fa-bolt',
+                    email: 'support@bluedart.com',
+                    phone: '18602331234',
+                    certificate: ''
+                },
+                {
+                    name: 'Delhivery',
+                    password: 'delhivery@greenie',
+                    fee: 45,
+                    states: ['Delhi', 'Uttar Pradesh', 'Haryana', 'Punjab', 'Himachal Pradesh', 'Uttarakhand', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Bihar', 'Jharkhand'],
+                    icon: 'fa-paper-plane',
+                    email: 'customer.support@delhivery.com',
+                    phone: '1246719500',
+                    certificate: ''
+                },
+                {
+                    name: 'DTDC',
+                    password: 'dtdc@greenie',
+                    fee: 50,
+                    states: ['Karnataka', 'Kerala', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana', 'West Bengal', 'Odisha', 'Assam', 'Arunachal Pradesh', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Puducherry', 'Andaman and Nicobar Islands', 'Lakshadweep'],
+                    icon: 'fa-truck',
+                    email: 'customersupport@dtdc.com',
+                    phone: '7305081234',
+                    certificate: ''
+                }
+            ];
+            await Courier.insertMany(defaultCouriers);
+            console.log('[SEED] Default couriers seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding couriers:', err.message);
+    }
+};
 
 // ADMIN: Get all Couriers
 app.get('/api/admin/couriers', auth, async (req, res) => {
@@ -2045,6 +1973,7 @@ app.get('/api/admin/couriers', auth, async (req, res) => {
 // PUBLIC: Get Courier fees and availability
 app.get('/api/couriers/public', async (req, res) => {
     try {
+        // Only returning fields necessary for delivery calculation
         const couriers = await Courier.find({}, 'name states fee');
         res.json(couriers);
     } catch (err) {
@@ -2088,7 +2017,6 @@ app.delete('/api/admin/couriers/:id', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error: ' + err.message });
     }
 });
-
 
 // --- Inquiry & Notification System Routes ---
 
@@ -2184,6 +2112,9 @@ app.put('/api/user/notifications/:id/read', auth, async (req, res) => {
 // USER: Delete all notifications
 app.delete('/api/user/notifications', auth, async (req, res) => {
     try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json({ message: 'Notifications cleared (Admin)' });
+        }
         await Notification.deleteMany({ userId: req.user.id });
         res.json({ message: 'All notifications cleared' });
     } catch (err) {
@@ -2193,4 +2124,188 @@ app.delete('/api/user/notifications', auth, async (req, res) => {
 
 // --- End of Inquiry & Notification System ---
 
-// --- End of Inquiry & Notification System ---
+// COURIER: Bulk Settle Orders & Notify Admin
+app.post('/api/orders/bulk-settle', auth, async (req, res) => {
+    try {
+        const { orderIds, courierName, totalAmount } = req.body;
+
+        if (!orderIds || !Array.isArray(orderIds)) {
+            return res.status(400).json({ message: 'Invalid order IDs' });
+        }
+
+        // 1. Update orders to fully settled with admin
+        await Order.updateMany(
+            { _id: { $in: orderIds } },
+            { $set: { adminSettled: true } }
+        );
+
+        // 2. Create Settlement History Record
+        const settlementRecord = new Settlement({
+            courierName,
+            amount: totalAmount,
+            orderCount: orderIds.length,
+            orderIds,
+            status: 'Settled'
+        });
+        await settlementRecord.save();
+
+        // 3. Create admin notification
+        const adminNotification = new Notification({
+            userId: 'admin',
+            type: 'admin',
+            title: 'New Courier Settlement 💰',
+            message: `Courier partner "${courierName}" has transferred ₹${Number(totalAmount).toLocaleString('en-IN')} for ${orderIds.length} order(s).`,
+            isRead: false,
+            sender: courierName
+        });
+
+        await adminNotification.save();
+
+        console.log(`[SETTLEMENT] Courier ${courierName} settled ${orderIds.length} orders. Total: ₹${totalAmount}`);
+        res.json({ message: 'Settlement completed and records updated', count: orderIds.length });
+    } catch (err) {
+        console.error('[BULK-SETTLE-ERROR]', err.message);
+        res.status(500).json({ message: 'Server error during settlement: ' + err.message });
+    }
+});
+
+// GET: Settlement History for a courier
+app.get('/api/admin/settlements/:courierName', auth, async (req, res) => {
+    try {
+        const history = await Settlement.find({ courierName: req.params.courierName })
+            .sort({ createdAt: -1 });
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ADMIN: Get Admin Notifications (settlements, inquiries, etc.)
+app.get('/api/admin/notifications', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied - Admins only' });
+        }
+        // Fetch ALL admin-relevant notifications (Settlements, Low Stock, Messages, etc.)
+        const notifications = await Notification.find({ 
+            $or: [
+                { userId: 'admin' },
+                { type: 'admin' },
+                { type: 'LowStock' },
+                { type: 'NewOrder' },
+                { type: 'Reply' }
+            ] 
+        }).sort({ createdAt: -1 }).limit(100);
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN/COURIER: Communication Hub Messaging
+app.post('/api/admin/notify-courier', auth, async (req, res) => {
+    try {
+        const { courierName, title, message, forceCourierSide } = req.body;
+        if (!courierName || !title || !message) {
+            return res.status(400).json({ message: 'Missing fields' });
+        }
+
+        const isAdmin = (req.user.isAdmin || req.user.id === 'admin-special-id') && !forceCourierSide;
+
+        if (isAdmin) {
+            // ADMIN SENDS MESSAGE TO COURIER
+            const courierNoti = new Notification({
+                userId: courierName,   // Recipient
+                sender: 'admin',      // Sender
+                type: 'admin-msg',
+                title: 'Message from Admin 📩',
+                message: message,
+                isRead: false
+            });
+            await courierNoti.save();
+            res.json({ message: 'Message sent to ' + courierName });
+        } else {
+            // COURIER SENDS MESSAGE TO ADMIN
+            const adminNoti = new Notification({
+                userId: 'admin',      // Recipient
+                sender: courierName,  // Sender
+                type: 'admin',
+                courierName: courierName, // Useful for filtering in Admin Hub
+                title: `Message from ${courierName} 📥`,
+                message: message,
+                isRead: false
+            });
+            await adminNoti.save();
+            res.json({ message: 'Message sent to Admin' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// COURIER: Get chat history (Ascending for chat flow)
+app.get('/api/courier/notifications/:courierName', async (req, res) => {
+    try {
+        const { courierName } = req.params;
+        const notifications = await Notification.find({ 
+            $or: [
+                { userId: courierName }, // Received by courier
+                { sender: courierName }  // Sent by courier
+            ]
+        }).sort({ createdAt: 1 }).limit(50); // Ascending order (Oldest to Newest)
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// COURIER: Clear chat history
+app.delete('/api/courier/notifications/:courierName', auth, async (req, res) => {
+    try {
+        const { courierName } = req.params;
+        await Notification.deleteMany({
+            $or: [
+                { userId: courierName },
+                { sender: courierName }
+            ]
+        });
+        res.json({ message: 'Chat history cleared' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+// ADMIN: Mark admin notification as read
+app.put('/api/admin/notifications/:id/read', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.json({ message: 'Notification marked as read' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Mark ALL admin notifications as read
+app.put('/api/admin/notifications/read', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        await Notification.updateMany({ 
+            $or: [
+                { userId: 'admin' },
+                { type: 'admin' },
+                { type: 'LowStock' },
+                { type: 'NewOrder' },
+                { type: 'Reply' }
+            ] 
+        }, { $set: { isRead: true } });
+        res.json({ message: 'All admin notifications marked as read' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// Server startup is now handled inside the MongoDB connection block (line 182-205)

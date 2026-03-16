@@ -43,6 +43,14 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    assignedAt: {
+        type: Date,
+        default: null
+    },
+    deliveredAt: {
+        type: Date,
+        default: null
+    },
     trackingNumber: {
         type: String,
         default: ''
@@ -81,6 +89,10 @@ const orderSchema = new mongoose.Schema({
         default: ''
     },
     courierSettled: {
+        type: Boolean,
+        default: false
+    },
+    adminSettled: {
         type: Boolean,
         default: false
     },

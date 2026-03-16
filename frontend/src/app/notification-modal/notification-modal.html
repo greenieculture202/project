@@ -34,14 +34,17 @@
 </div>
 
 <!-- Premium Oasis Toast (Floating Message) -->
-<div class="oasis-toast-wrapper" *ngIf="state.isVisible && state.layout === 'cart'" [ngClass]="state.type">
+<div class="oasis-toast-wrapper" *ngIf="state.isVisible && (state.layout === 'cart' || state.layout === 'toast')" [ngClass]="state.type">
     <div class="oasis-toast-card">
         <div class="toast-shimmer"></div>
         <div class="toast-glass-effect"></div>
 
         <div class="toast-content-box">
             <div class="toast-status-badge">
-                <i class="fas fa-shopping-bag"></i>
+                <i class="fas fa-check-circle" *ngIf="state.type === 'success' && state.layout !== 'cart'"></i>
+                <i class="fas fa-shopping-bag" *ngIf="state.layout === 'cart'"></i>
+                <i class="fas fa-info-circle" *ngIf="state.type === 'info' && state.layout !== 'cart'"></i>
+                <i class="fas fa-exclamation-circle" *ngIf="state.type === 'error'"></i>
                 <div class="ripple-ring"></div>
             </div>
 
@@ -53,7 +56,7 @@
                     </button>
                 </div>
                 <p class="toast-summary">{{ state.message }}</p>
-                <div class="toast-btn-group">
+                <div class="toast-btn-group" *ngIf="state.layout === 'cart'">
                     <button class="view-cart-action" (click)="onViewCart()">
                         VIEW CART <i class="fas fa-arrow-right"></i>
                     </button>
