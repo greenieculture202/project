@@ -10,6 +10,14 @@ export interface Notification {
     title: string;
     message: string;
     relatedInquiryId?: string;
+    subType?: string;
+    reminderId?: string;
+    product?: {
+      id?: string;
+      name?: string;
+      image?: string;
+      stock?: number;
+    };
     isRead: boolean;
     createdAt: Date;
 }
@@ -78,6 +86,12 @@ export class NotificationService {
         const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
         const headers = new HttpHeaders().set('x-auth-token', token || '');
         return this.http.delete(this.apiUrl, { headers });
+    }
+
+    performReminderAction(reminderId: string, action: 'continued' | 'stopped'): Observable<any> {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = new HttpHeaders().set('x-auth-token', token || '');
+        return this.http.post(`/api/user/reminders/${reminderId}/action`, { action }, { headers });
     }
 
     refresh() {

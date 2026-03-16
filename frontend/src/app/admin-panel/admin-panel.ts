@@ -2083,11 +2083,7 @@ export class AdminPanelComponent implements OnInit {
                     }
                     this.lastOrderCount = data.length;
 
-                    // Filter out orders marked as "Guest Customer" or those missing registered user data
-                    this.orders = data.filter((order: any) => {
-                        const name = (order.userName || order.userId?.fullName || '').trim();
-                        return name !== 'Guest Customer' && order.userId;
-                    });
+                    this.orders = data;
 
                     this.calculatePaymentSummary();
                     this.updateDashboardStats();

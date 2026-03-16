@@ -45,40 +45,32 @@
           <!-- Render HTML for AI, plain text for User -->
           <div *ngIf="msg.type === 'ai'" [innerHTML]="msg.safeText"></div>
           <p *ngIf="msg.type === 'user'">{{ msg.text }}</p>
-          
-          <span class="time">{{ msg.time | date:'shortTime' }}</span>
-        </div>
-      </div>
-      <div *ngIf="isTyping()" class="typing-indicator">
-        <span></span><span></span><span></span>
-      </div>
 
-      <!-- Quick Shortcuts -->
-      <div class="chat-shortcuts" *ngIf="messages.length < 5">
-        <button class="shortcut-btn" (click)="sendShortcut('Is my plant dying?')">Is my plant dying? 🥀</button>
-        <button class="shortcut-btn" (click)="sendShortcut('Pani ki kami (Watering help)')">Watering help 💧</button>
-        <button class="shortcut-btn" (click)="sendShortcut('Fertilizer tips')">Fertilizer tips 🧪</button>
-        <button class="shortcut-btn" (click)="sendShortcut('Yellowing leaves')">Yellow leaves? 🍂</button>
-      </div>
-    </div>
-
-    <!-- History Drawer Overlay -->
-    <div class="history-drawer" [class.open]="showHistory()">
-      <div class="drawer-header">
-        <h5><i class="fas fa-history"></i> Chat History</h5>
-        <button class="close-drawer" (click)="toggleHistory()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="history-list">
-        <div *ngIf="messages.length === 0" class="no-history">No history found.</div>
-        <div *ngFor="let msg of messages" class="history-item" [class.user]="msg.type === 'user'">
-          <div class="item-meta">
-            <span class="sender">{{ msg.type === 'user' ? 'You' : 'AI Assistant' }}</span>
-            <span class="time">{{ msg.time | date:'MMM d, h:mm a' }}</span>
+          <!-- Recommended Products -->
+          <div *ngIf="msg.type === 'ai' && msg.recommendedProducts && msg.recommendedProducts.length > 0" class="recommendations">
+            <p class="rec-title"><i class="fas fa-shopping-cart"></i> Suggested for your <strong class="highlight-plant">{{ msg.plantName || 'Plant' }}</strong>:</p>
+            <div class="product-cards-scroll">
+              <div *ngFor="let prod of msg.recommendedProducts" class="prod-mini-card">
+                <img [src]="prod.image" alt="Product">
+                <div class="prod-info">
+                  <span class="prod-name">{{ prod.name }}</span>
+                  <span class="prod-price">₹{{ prod.price }}</span>
+                </div>
+                <button (click)="goToProduct(prod)" class="view-prod-btn">View Details</button>
+              </div>
+            </div>
           </div>
-          <div class="item-text">{{ msg.text }}</div>
-        </div>
-      </div>
-    </div>
+
+          <!-- Set Reminder Button -->
+          <div *ngIf="msg.type === 'ai' && msg.remindable" class="reminder-prompt">
+            <button class="set-reminder-btn ripple" (click)="confirmReminder()">
+              <i class="fas fa-bell"></i> Set Care Reminder
+            </button>
+          </div>
+
+        </div> <!-- end message-bubble -->
+      </div> <!-- end message-row -->
+    </div> <!-- end messages-container -->
 
     <!-- Input Area -->
     <div class="chat-footer">

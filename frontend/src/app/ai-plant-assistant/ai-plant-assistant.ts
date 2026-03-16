@@ -1,8 +1,15 @@
 import { Component, ElementRef, ViewChild, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { AiService } from '../services/ai.service';
+import { Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { AuthService } from '../services/auth.service';
+import { ProductService, Product } from '../services/product.service';
+import { Router, RouterModule } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 interface Message {
   type: 'user' | 'ai';
@@ -10,12 +17,15 @@ interface Message {
   image?: string;
   time: Date;
   safeText?: SafeHtml;
+  recommendedProducts?: any[];
+  remindable?: boolean;
+  plantName?: string;
 }
 
 @Component({
   selector: 'app-ai-plant-assistant',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './ai-plant-assistant.html',
   styleUrl: './ai-plant-assistant.css'
 })
@@ -25,6 +35,10 @@ export class AiPlantAssistantComponent {
 
   private sanitizer = inject(DomSanitizer);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private productService = inject(ProductService);
+  private router = inject(Router);
+  private aiService = inject(AiService);
 
   isOpen = signal(false);
   isTyping = signal(false);
@@ -32,18 +46,82 @@ export class AiPlantAssistantComponent {
   userMessage = '';
   selectedImage: string | null = null;
   selectedFile: File | null = null;
+  showReminderModal = signal(false);
+  activePlantName = '';
+  activeProblemType = '';
 
   messages: Message[] = [];
+  private destroy$ = new Subject<void>();
 
   private readonly STORAGE_KEY = 'ai_plant_chat_history';
 
   ngOnInit() {
-    this.loadHistory();
+    this.aiService.chatTrigger$.pipe(takeUntil(this.destroy$)).subscribe(trigger => {
+      this.isOpen.set(true);
+      this.userMessage = trigger.query;
+      if (trigger.autoSend) {
+        this.sendMessage();
+      }
+    });
+
+    this.authService.isLoggedIn$.subscribe(loggedIn => {
+      this.loadHistory();
+    });
   }
 
   loadHistory() {
+    if (this.authService.isLoggedIn()) {
+      const token = this.authService.getToken();
+      this.http.get<any[]>('/api/chat-history', {
+        headers: { 'x-auth-token': token || '' }
+      }).subscribe({
+        next: (history) => {
+          if (history && history.length > 0) {
+            this.messages = history.map(m => {
+              const msg: Message = {
+                type: m.role as 'user' | 'ai',
+                text: m.text,
+                image: m.image,
+                time: new Date(m.timestamp || m.time),
+                safeText: m.role === 'ai' ? this.formatMessage(m.text) : undefined,
+                recommendedProducts: [],
+                plantName: m.plantName
+              };
+
+              // Restore recommendations from history
+              if (m.role === 'ai' && m.recommendations && m.recommendations.length > 0) {
+                const searchRequests = m.recommendations.map((term: string) => 
+                  this.productService.searchProducts(term).pipe(catchError(() => of([])))
+                );
+
+                forkJoin(searchRequests).subscribe((results: any) => {
+                  const allProducts = results.flat() as Product[];
+                  const uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+                  msg.recommendedProducts = uniqueProducts.slice(0, 3);
+                });
+              }
+
+              return msg;
+            });
+            localStorage.removeItem(this.STORAGE_KEY);
+          } else {
+            this.setDefaultMessage();
+          }
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (err) => {
+          console.error('Failed to load backend chat history', err);
+          this.loadLocalHistory();
+        }
+      });
+    } else {
+      this.loadLocalHistory();
+    }
+  }
+
+  private loadLocalHistory() {
     const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (saved) {
+    if (saved && !this.authService.isLoggedIn()) {
       try {
         const parsed = JSON.parse(saved);
         this.messages = parsed.map((m: any) => ({
@@ -52,7 +130,6 @@ export class AiPlantAssistantComponent {
           safeText: m.type === 'ai' ? this.formatMessage(m.text) : undefined
         }));
       } catch (e) {
-        console.error('Failed to parse chat history', e);
         this.setDefaultMessage();
       }
     } else {
@@ -149,28 +226,85 @@ export class AiPlantAssistantComponent {
   }
 
   generateAIResponse(query: string, image?: string | null) {
-    this.http.post<any>('/api/ai-assistant', { message: query, image: image })
+    const body: any = { message: query, image: image };
+    const userId = this.authService.currentUserId;
+    if (userId) body.userId = userId;
+
+    const headers: any = {};
+    const token = this.authService.getToken();
+    if (token) headers['x-auth-token'] = token;
+
+    this.http.post<any>('/api/ai-assistant', body, { headers })
       .subscribe({
         next: (res) => {
-          this.messages.push({
+          const aiMsg: Message = {
             type: 'ai',
             text: res.text,
             time: new Date(),
-            safeText: this.formatMessage(res.text)
-          });
+            safeText: this.formatMessage(res.text),
+            recommendedProducts: [],
+            remindable: res.remindable,
+            plantName: res.plantName
+          };
+          this.messages.push(aiMsg);
+
+          // Update active context for potential reminder
+          if (res.remindable) {
+            // Simple extraction of plant name from AI text if possible, or use fallback
+            this.activePlantName = this.extractPlantName(res.text);
+            this.activeProblemType = query;
+          }
+
+          // Fetch recommended products if any
+          if (res.recommendations && res.recommendations.length > 0) {
+            const searchRequests = res.recommendations.map((term: string) => 
+              this.productService.searchProducts(term).pipe(catchError(() => of([])))
+            );
+
+            forkJoin(searchRequests).subscribe((results: any) => {
+              // Flatten and take a few unique products
+              const allProducts = results.flat() as Product[];
+              const uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+              aiMsg.recommendedProducts = uniqueProducts.slice(0, 3);
+              this.scrollToBottom();
+            });
+          }
+
           this.saveHistory();
           this.isTyping.set(false);
           this.scrollToBottom();
         },
         error: (err) => {
           console.error('[AI-ERROR]', err);
-          const errorMsg = "I'm sorry, I'm having trouble connecting to my plant brain right now. " + (err.error?.message || "Please check if the backend is running and the Gemini API key is configured.");
-          this.messages.push({
+          
+          // The backend now sends recommendations even on error
+          const errBody = err.error || {};
+          const errorText = errBody.text || "Main background mein research kar raha hoon. Thodi der mein mujhse aur detailed poochhein! 😉";
+          
+          const aiMsg: Message = {
             type: 'ai',
-            text: errorMsg,
+            text: errorText,
             time: new Date(),
-            safeText: this.formatMessage(errorMsg)
-          });
+            safeText: this.formatMessage(errorText),
+            recommendedProducts: [],
+            plantName: errBody.plantName
+          };
+          this.messages.push(aiMsg);
+
+          // Use fallback recommendations from error body
+          const fallbackRecs: string[] = errBody.recommendations || [];
+          if (fallbackRecs.length > 0) {
+            const searchRequests = fallbackRecs.map((term: string) =>
+              this.productService.searchProducts(term).pipe(catchError(() => of([])))
+            );
+            forkJoin(searchRequests).subscribe((results: any) => {
+              const allProducts = results.flat() as Product[];
+              const uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+              aiMsg.recommendedProducts = uniqueProducts.slice(0, 3);
+              this.scrollToBottom();
+            });
+          }
+          
           this.isTyping.set(false);
           this.scrollToBottom();
         }
@@ -193,9 +327,59 @@ export class AiPlantAssistantComponent {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
+  goToProduct(prod: Product) {
+    const slug = prod.slug || prod.name;
+    this.isOpen.set(false); // Close chat on click
+    this.router.navigate(['/product', slug]);
+  }
+
   private scrollToBottom(): void {
     try {
       this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
     } catch(err) { }
+  }
+
+  // Reminder Logic
+  openReminderModal() {
+    this.showReminderModal.set(true);
+  }
+
+  closeReminderModal() {
+    this.showReminderModal.set(false);
+  }
+
+  confirmReminder() {
+    const token = this.authService.getToken();
+    if (!token) {
+      alert('Please login to set a reminder!');
+      return;
+    }
+
+    const body = {
+      plantName: this.activePlantName || 'My Plant',
+      problemType: this.activeProblemType || 'Care Follow-up'
+    };
+
+    this.http.post<any>('/api/admin/reminders', body, {
+      headers: { 'x-auth-token': token }
+    }).subscribe({
+      next: (res) => {
+        alert("Shabash! Humne aapke liye 4 unique reminders set kar diye hain (Water, Fertilizer, Sunlight, Health). Pehla reminder 1 min mein aayega! 🌿✨");
+        this.closeReminderModal();
+      },
+      error: () => alert('Failed to set reminders. Please try again later.')
+    });
+  }
+
+  private extractPlantName(text: string): string {
+    // Basic extraction - look for bolded items or specific plant keywords
+    const matches = text.match(/\*\*(.*?)\*\*/);
+    if (matches && matches[1]) return matches[1];
+    return 'Your Plant';
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

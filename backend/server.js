@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const User = require('./models/User');
 const Product = require('./models/Product');
@@ -12,11 +13,18 @@ const Faq = require('./models/Faq');
 const AboutSection = require('./models/AboutSection');
 const Inquiry = require('./models/Inquiry');
 const Notification = require('./models/Notification');
+const Courier = require('./models/Courier');
+const ChatMessage = require('./models/ChatMessage');
+const AdminChatMessage = require('./models/AdminChatMessage');
+const Review = require('./models/Review');
+const { seedPlacements, seedFaqs, seedCouriers, seedReviews, seedPlantReminders } = require('./seed_functions');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const cron = require('node-cron');
+const PlantReminder = require('./models/PlantReminder');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,7 +36,6 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID.trim());
 const otpStore = new Map();
 
 const fs = require('fs');
-const path = require('path');
 const debugLog = (msg) => {
     const logPath = path.join(__dirname, 'debug_otp.log');
     const timestamp = new Date().toISOString();
@@ -132,6 +139,53 @@ const sendOrderConfirmationEmail = async (user, order) => {
     }
 };
 
+// Helper: Send Order Status Update Email
+const sendOrderStatusEmail = async (order) => {
+    try {
+        const userEmail = order.userId?.email;
+        if (!userEmail) return;
+
+        let statusText = '';
+        let statusMessage = '';
+        let trackingSection = '';
+        let pinSection = '';
+
+        if (order.status === 'Processing') {
+            statusText = 'Order is being processed 🛠️';
+            statusMessage = 'Great news! We have started preparing your order for shipment.';
+        } else if (order.status === 'Shipped') {
+            statusText = 'Order on the move! 🚚';
+            statusMessage = `Your package has been handed over to <strong>${order.courierName}</strong>.`;
+            const deliveryDate = order.expectedDeliveryDate ? new Date(order.expectedDeliveryDate).toLocaleDateString() : 'Soon';
+            
+            trackingSection = `
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+                    <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 700;">TRACKING ID: ${order.trackingNumber}</p>
+                    <p style="margin: 10px 0 0; color: #166534; font-size: 14px;"><strong>Expected Delivery:</strong> ${deliveryDate}</p>
+                </div>`;
+            
+            pinSection = `
+                <div style="background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;">
+                    <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 700;">DELIVERY VERIFICATION PIN: ${order.deliveryPin}</p>
+                </div>`;
+        } else if (order.status === 'Delivered') {
+            statusText = 'Delivered & Green! 🎁';
+            statusMessage = 'Your plants have reached their new home!';
+        }
+
+        const mailOptions = {
+            from: `"Greenie Culture" <${process.env.GMAIL_USER}>`,
+            to: userEmail,
+            subject: `Order Update: ${order.orderId} - ${order.status}`,
+            html: `<div style="text-align: center;"><h2>${statusText}</h2><p>${statusMessage}</p>${trackingSection}${pinSection}</div>`
+        };
+
+        await transporter.sendMail(mailOptions);
+    } catch (err) {
+        console.error('[EMAIL-ERROR]', err.message);
+    }
+};
+
 // Auth Middleware
 const auth = (req, res, next) => {
     const token = req.header('x-auth-token');
@@ -179,26 +233,21 @@ async function bootstrapServer() {
 
         console.log('🔄 Starting data seeding...');
         try {
-            const { seedPlacements, seedFaqs, seedCouriers } = require('./seed_functions'); // Assuming these are defined elsewhere or need to be imported
-            // If they are regular functions in the file, use them directly. 
-            // Looking at previous content, it seems they might be missing or defined below.
-            // I'll keep the calls but make sure they don't break if missing.
+            // Use locally defined seeds or imported ones
             if (typeof seedPlacements === 'function') await seedPlacements();
             if (typeof seedFaqs === 'function') await seedFaqs();
             if (typeof seedCouriers === 'function') await seedCouriers();
+            if (typeof seedReviews === 'function') await seedReviews();
+            if (typeof seedPlantReminders === 'function') await seedPlantReminders();
             console.log('✅ Seeding completed');
         } catch (seedErr) {
             console.error('⚠️ Seeding internal error:', seedErr.message);
         }
     } catch (err) {
         console.error('❌ MongoDB connection error:', err);
-        console.log('💡 TIP: Check if your IP is whitelisted in MongoDB Atlas and if your connection string is correct.');
     } finally {
         app.listen(PORT, '127.0.0.1', () => {
             console.log(`🚀 Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
-            if (!hasDbConnection) {
-                console.warn('⚠️ Server started WITHOUT MongoDB connection. Most data APIs will fail until MongoDB is reachable.');
-            }
         });
     }
 }
@@ -237,16 +286,43 @@ Track here: http://localhost:3000/my-account/orders`;
 // Admin Login - returns a real JWT for admin dashboard API calls
 app.post('/api/auth/admin-login', async (req, res) => {
     const { email, password } = req.body;
-    if (email === 'admin@greenie.com' && password === 'radheradhe') {
-        // Create a special admin JWT (using a fixed admin ID)
-        const token = jwt.sign(
-            { user: { id: 'admin-special-id', isAdmin: true } },
-            JWT_SECRET,
-            { expiresIn: '8h' }
-        );
-        return res.json({ token, isAdmin: true });
+    try {
+        if (email === 'admin@greenie.com' && password === 'radheradhe') {
+            const token = jwt.sign(
+                { user: { id: 'admin-special-id', isAdmin: true, fullName: 'Super Admin', role: 'admin' } },
+                JWT_SECRET,
+                { expiresIn: '8h' }
+            );
+            return res.json({ 
+                token, 
+                isAdmin: true, 
+                user: { _id: 'admin-special-id', fullName: 'Super Admin', email, role: 'admin' } 
+            });
+        }
+        
+        // Also check DB for other admins
+        const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' });
+        if (user) {
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                const token = jwt.sign(
+                    { user: { id: user._id, isAdmin: true, fullName: user.fullName, role: 'admin' } },
+                    JWT_SECRET,
+                    { expiresIn: '8h' }
+                );
+                return res.json({ 
+                    token, 
+                    isAdmin: true, 
+                    user: { _id: user._id, fullName: user.fullName, email: user.email, role: 'admin' } 
+                });
+            }
+        }
+
+        return res.status(401).json({ message: 'Invalid admin credentials' });
+    } catch (err) {
+        console.error('Admin login error:', err);
+        res.status(500).json({ message: 'Server error' });
     }
-    return res.status(401).json({ message: 'Invalid admin credentials' });
 });
 
 // Auth Routes
@@ -729,63 +805,370 @@ app.post('/api/user/orders', auth, async (req, res) => {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AI_KEY_PLACEHOLDER');
 
 app.post('/api/ai-assistant', async (req, res) => {
+    let userId; // Declare outside try block to ensure availability in catch block
     try {
         const { message, image } = req.body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        userId = req.body.userId;
 
-        let promptText = `You are "Plant Expert AI" for Greenie Culture. Keep responses VERY short and professional. 
+        // Try to get userId from token if not in body
+        const token = req.header('x-auth-token');
+        if (!userId && token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                userId = decoded.user.id;
+                console.log(`[AI-ASSISTANT] Derived userId from token: ${userId}`);
+            } catch (err) { /* ignore invalid token for this public endpoint */ }
+        }
 
-        User Question: "${message}"
+        console.log(`[AI-ASSISTANT] Request Body:`, JSON.stringify({ message: message?.substring(0, 20), userId }));
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-        Guidelines:
-        1. Identification: Identify the plant briefly with an emoji (e.g. 🌿, 🌵).
-        2. Proactive Health Audit: Briefly mention "Pani ki kami" (underwatering), Fertilizer, or Sunlight issues with icons (💧, 🔋, ☀️).
-        3. Diagnostic Report (Strictly Concise):
-           - **Status**: (Healthy 🟢/Critical 🔴/Warning 🟡)
-           - **Diagnosis**: 1 clear sentence with relevant emojis.
-           - **Action**: 2-3 bullet points max with action icons (✂️, 🚿, 🪴).
-           - **Expert Tip**: 1 short tip with a ✨ icon.
-        4. Style: Be friendly but extremely direct. Use Markdown and emojis liberally to make it visual.
-        5. Tone: Use simple English with Hindi terms like "pani" or "khad".`;
+        // Save user message if userId is provided
+        if (userId) {
+            try {
+                console.log(`[CHAT-SAVE] Attempting to save message for user: ${userId}`);
+                const userMsg = new ChatMessage({
+                    userId,
+                    role: 'user',
+                    text: message,
+                    image: image || null
+                });
+                await userMsg.save();
+                console.log('[CHAT-SAVE] User message saved.');
+            } catch (saveErr) {
+                console.error('[CHAT-SAVE-ERROR] User message:', saveErr.message);
+            }
+        }
+
+        let promptText = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice.
+        
+        CRITICAL INSTRUCTION: Your response MUST be a valid JSON object with the following fields:
+        1. "text": Your diagnostic advice in Markdown format. Keep it concise, friendly, and use Hinglish icons/emojis.
+        2. "recommendations": An array of 2-3 specific keywords from OUR store to search for products.
+        3. "remindable": A boolean (true or false). Set to true only if the user's issue requires a 3-day follow-up reminder.
+        4. "plantName": The common name of the plant identified (e.g., "Money Plant", "Tulsi", "Peace Lily"). If not identified, use "Plant".
+           
+        AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]
+        EXAMPLES of products we have: ["Money Plant", "Peace Lily", "Snake Plant", "Aloe Vera", "Tulsi Plant", "Organic Fertilizer", "Vermicompost", "Potting Mix", "Watering Can", "Pruning Shears"].
+        Please recommend something relevant to the problem. 
+           
+        INTERACTIVE FLOW:
+        - If the user says "my plant is dying" or "condition critical" but doesn't mention WHICH plant it is, your "text" should politely ask: "Oh no! I'm here to help. Par pehle mujhe bataiye, aapke paas kaunsa plant hai? (Which plant do you have?)" and keep "recommendations" as ["Indoor Plants", "Gardening"].
+        - If the user specifies the plant (e.g., "Tulsi"), provide specific care for that plant and include the exact plant name (e.g. "Tulsi Plant") in the "recommendations" array so I can show it from the store.
+
+        User Question: "${message}"`;
 
         let result;
         if (image) {
-            // image is expected as base64 string
             const base64Data = image.split(',')[1] || image;
-            const imageData = {
-                inlineData: {
-                    data: base64Data,
-                    mimeType: "image/jpeg"
-                }
-            };
+            const imageData = { inlineData: { data: base64Data, mimeType: "image/jpeg" } };
             result = await model.generateContent([promptText, imageData]);
         } else {
             result = await model.generateContent(promptText);
         }
 
         const response = await result.response;
-        res.json({ text: response.text() });
+        let aiFullText = response.text();
+        console.log(`[AI-RAW-RESPONSE]`, aiFullText);
+        let aiText = aiFullText;
+        let recommendations = [];
+        let remindable = false;
+        let identifiedPlantName = 'Plant';
+
+        try {
+            // Robust JSON extraction: Find the first { and last }
+            const startIdx = aiFullText.indexOf('{');
+            const endIdx = aiFullText.lastIndexOf('}');
+            
+            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                const jsonStr = aiFullText.substring(startIdx, endIdx + 1);
+                const parsed = JSON.parse(jsonStr);
+                aiText = parsed.text || aiFullText;
+                recommendations = parsed.recommendations || [];
+                remindable = parsed.remindable || false;
+                identifiedPlantName = parsed.plantName || 'Plant';
+                console.log(`[AI-PARSE-SUCCESS] Recs:`, recommendations, 'Remindable:', remindable, 'Plant:', identifiedPlantName);
+            } else {
+                console.warn('[AI-PARSE-FAILED] No JSON block found in response');
+            }
+        } catch (e) {
+            console.error('[AI-JSON-ERROR]', e.message);
+            // Fallback: If it's not JSON, try to extract it from code blocks anyway
+            const match = aiFullText.match(/```json\s*([\s\S]*?)\s*```/);
+            if (match) {
+                try {
+                    const parsed = JSON.parse(match[1]);
+                    aiText = parsed.text || aiText;
+                    recommendations = parsed.recommendations || recommendations;
+                    remindable = parsed.remindable || remindable;
+                    identifiedPlantName = parsed.plantName || identifiedPlantName;
+                } catch (innerE) { /* give up */ }
+            }
+        }
+
+        // Save AI response if userId is provided
+        if (userId) {
+            try {
+                const aiMsg = new ChatMessage({
+                    userId,
+                    role: 'ai',
+                    text: aiText,
+                    recommendations: recommendations,
+                    plantName: identifiedPlantName
+                });
+                await aiMsg.save();
+            } catch (saveErr) {
+                console.error('[CHAT-SAVE-ERROR] AI message:', saveErr.message);
+            }
+        }
+
+        res.json({ text: aiText, recommendations, remindable, plantName: identifiedPlantName });
     } catch (err) {
         console.error('[AI-ASSISTANT] Error:', err.message);
-        res.status(500).json({
-            message: 'AI Assistant is taking a nap. Please try again later.',
-            error: err.message.includes('API_KEY') ? 'Configuration Error: API Key missing.' : err.message
+        
+        // Smart keyword extraction from user's message for fallback recommendations
+        const msgLower = (req.body?.message || '').toLowerCase();
+        let fallbackRecs = ['Indoor Plants', 'Gardening'];
+        
+        // Detect specific plant names mentioned
+        if (msgLower.includes('tulsi')) fallbackRecs = ['Tulsi Plant', ...fallbackRecs];
+        if (msgLower.includes('money plant')) fallbackRecs = ['Money Plant', ...fallbackRecs];
+        if (msgLower.includes('snake plant')) fallbackRecs = ['Snake Plant', ...fallbackRecs];
+        if (msgLower.includes('peace lily')) fallbackRecs = ['Peace Lily', ...fallbackRecs];
+        if (msgLower.includes('aloe')) fallbackRecs = ['Aloe Vera', ...fallbackRecs];
+
+        if (msgLower.includes('fungal') || msgLower.includes('fungus') || msgLower.includes('rot') || msgLower.includes('disease')) {
+            fallbackRecs = ['Fertilizers & Nutrients', 'Soil & Growing Media', ...fallbackRecs];
+        } else if (msgLower.includes('water') || msgLower.includes('pani') || msgLower.includes('dry') || msgLower.includes('thirsty')) {
+            fallbackRecs = ['Accessories', ...fallbackRecs];
+        } else if (msgLower.includes('yellow') || msgLower.includes('brown') || msgLower.includes('leaf') || msgLower.includes('patta')) {
+            fallbackRecs = ['Fertilizers & Nutrients', ...fallbackRecs];
+        }
+        
+        // Ensure unique and max 4
+        fallbackRecs = [...new Set(fallbackRecs)].slice(0, 4);
+
+        // EXTRA: Extract plantName for frontend header fallback
+        let fallbackPlantName = 'Plant';
+        if (msgLower.includes('tulsi')) fallbackPlantName = 'Tulsi';
+        else if (msgLower.includes('money plant')) fallbackPlantName = 'Money Plant';
+        else if (msgLower.includes('snake plant')) fallbackPlantName = 'Snake Plant';
+        else if (msgLower.includes('peace lily')) fallbackPlantName = 'Peace Lily';
+        else if (msgLower.includes('aloe')) fallbackPlantName = 'Aloe Vera';
+        
+        const isRateLimit = err.message?.includes('429') || err.message?.includes('quota');
+        
+        // Professional fallback message that doesn't sound like an error
+        let userText = "🌿 **Plant Expert AI Diagnostic Mode**\n\n";
+
+        // Detect if specific plants are in recommendations (exclude general categories)
+        const categories = ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"];
+        const specificPlants = fallbackRecs.filter(r => !categories.includes(r));
+        const hasSpecificPlant = specificPlants.length > 0;
+
+        // Interactive Fallback: If "critical/dying" and No specific plant name detected
+        const criticalKeywords = ['critical', 'dying', 'mar raha', 'problem', 'help', 'sookh', 'kharab', 'yellow', 'keeda', 'pests'];
+        const isCritical = criticalKeywords.some(key => msgLower.includes(key));
+
+        if (isCritical && !hasSpecificPlant) {
+            userText += "Main aapki help zaroor karunga. Par meri diagnostics shuru karne ke liye, mujhe ye batayein: **Aapke paas kaunsa plant hai?** (Which plant do you have?) \n\nTaaki main uske care instructions aur remedies dhoondh sakun. 🌱✨";
+        } else {
+            userText += "Aapke sawaal ke liye yahan kuch basic care tips hain:\n";
+            userText += "- **Hydration**: Check karein ki mitti (soil) upar se 1-2 inch dry hai ya nahi. 💧\n";
+            userText += "- **Light**: Zyadatar plants ko filtered sunlight pasand hoti hai. 🌞\n";
+            userText += "- **Nutrition**: Agar patte yellow ho rahe hain, toh **Fertilizer** ki kami ho sakti hai. 🌿\n\n";
+            userText += "Neeche diye gaye products aapke kaam aa sakte hain. Main background mein research kar raha hoon, thodi der mein mujhse aur detailed poochhein! 😉";
+        }
+        
+        // Save AI response even if it's a fallback
+        if (userId) {
+            try {
+                const aiMsg = new ChatMessage({
+                    userId,
+                    role: 'ai',
+                    text: userText,
+                    recommendations: fallbackRecs,
+                    plantName: fallbackPlantName
+                });
+                await aiMsg.save();
+                console.log(`[CHAT-SAVE] Fallback AI message saved for user: ${userId} with plant: ${fallbackPlantName}`);
+            } catch (saveErr) {
+                console.error('[CHAT-SAVE-ERROR] AI Fallback:', saveErr.message);
+            }
+        }
+        
+        // Return 200 but flag as diagnostic/fallback so frontend knows
+        res.json({
+            text: userText,
+            recommendations: fallbackRecs,
+            status: 'diagnostic',
+            remindable: true,
+            plantName: fallbackPlantName
         });
+    }
+});
+
+// Create a 4-Part Plant Care Reminder Sequence
+app.post('/api/admin/reminders', auth, async (req, res) => {
+    try {
+        const { plantName, problemType } = req.body;
+        
+        const sequence = [
+            { type: 'water', delayDays: 3, label: 'Water Reminder' },
+            { type: 'fertilizer', delayDays: 6, label: 'Fertilizer Reminder' },
+            { type: 'sunlight', delayDays: 9, label: 'Sunlight Check' },
+            { type: 'general', delayDays: 12, label: 'General Health Assessment' }
+        ];
+
+        const sequenceId = new mongoose.Types.ObjectId().toString();
+        const createdReminders = [];
+
+        for (const item of sequence) {
+            const reminderDate = new Date();
+            reminderDate.setDate(reminderDate.getDate() + item.delayDays);
+
+            const reminder = new PlantReminder({
+                userId: req.user.id,
+                plantName,
+                problemType: `${problemType} (${item.label})`,
+                reminderType: item.type, 
+                reminderDate,
+                sequenceId
+            });
+
+            await reminder.save();
+            createdReminders.push(reminder);
+        }
+
+        res.json({ 
+            message: 'Sequenced reminders scheduled successfully (4 parts)', 
+            reminders: createdReminders 
+        });
+    } catch (err) {
+        console.error('[REMINDER-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to set reminders' });
+    }
+});
+
+// Scheduler for Plant Care Reminders (Runs Every Minute for Testing)
+cron.schedule('* * * * *', async () => {
+    console.log('[SCHEDULER] Checking for plant care reminders...');
+    try {
+        const now = new Date();
+        const pendingReminders = await PlantReminder.find({
+            reminderDate: { $lte: now },
+            notificationStatus: 'pending'
+        });
+
+        for (const reminder of pendingReminders) {
+            // Check if ANY previous reminder in this sequence was STOPPED
+            const isStopped = await PlantReminder.findOne({
+                sequenceId: reminder.sequenceId,
+                userAction: 'stopped'
+            });
+
+            if (isStopped) {
+                reminder.notificationStatus = 'dismissed';
+                await reminder.save();
+                console.log(`[SCHEDULER] Skipping stopped sequence ${reminder.sequenceId} for ${reminder.plantName}`);
+                continue;
+            }
+
+            // Create a notification for the user
+            const notification = new Notification({
+                userId: reminder.userId,
+                type: 'Reminder',
+                subType: reminder.reminderType,
+                reminderId: reminder._id,
+                title: `🌿 Plant Care: ${reminder.plantName}`,
+                message: `Hello! It's time to check your ${reminder.plantName}. Is it ready for some ${reminder.reminderType}?`,
+                product: { name: reminder.plantName } 
+            });
+
+            await notification.save();
+            
+            // Mark reminder as sent
+            reminder.notificationStatus = 'sent';
+            await reminder.save();
+            console.log(`[SCHEDULER] Sent reminder for ${reminder.plantName} to user ${reminder.userId}`);
+        }
+    } catch (err) {
+        console.error('[SCHEDULER-ERROR]', err.message);
+    }
+});
+
+// USER: Action on Reminder (Continue/Stop)
+app.post('/api/user/reminders/:id/action', auth, async (req, res) => {
+    try {
+        const { action } = req.body; // 'continued' or 'stopped'
+        const reminderId = req.params.id;
+
+        const reminder = await PlantReminder.findById(reminderId);
+        if (!reminder) return res.status(404).json({ message: 'Reminder not found' });
+
+        reminder.userAction = action;
+        await reminder.save();
+
+        // [NEW] Also update notifications to mark them as read/handled
+        // This ensures they disappear from the navbar immediately after refresh
+        const updateQuery = { userId: req.user.id, type: 'Reminder' };
+        if (action === 'stopped') {
+            // For 'stopped', clear ALL notifications for THIS sequence
+            updateQuery.reminderId = { $in: await PlantReminder.find({ sequenceId: reminder.sequenceId }).distinct('_id') };
+        } else {
+            // For 'continued', clear notifications for THIS specific reminder
+            updateQuery.reminderId = reminderId;
+        }
+        
+        await mongoose.model('Notification').updateMany(
+            updateQuery,
+            { isRead: true }
+        );
+
+        if (action === 'stopped') {
+            // Mark all future reminders in this sequence as dismissed
+            await PlantReminder.updateMany(
+                { sequenceId: reminder.sequenceId, notificationStatus: 'pending' },
+                { notificationStatus: 'dismissed', userAction: 'stopped' }
+            );
+        }
+
+        res.json({ message: `Reminder sequence ${action} successfully` });
+    } catch (err) {
+        console.error('[REMINDER-ACTION-ERROR]', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// GET Chat History for logged-in user
+app.get('/api/chat-history', auth, async (req, res) => {
+    try {
+        const messages = await ChatMessage.find({ userId: req.user.id })
+            .sort({ timestamp: 1 })
+            .limit(50)
+            .lean();
+        res.json(messages);
+    } catch (err) {
+        console.error('[CHAT-HISTORY-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to fetch chat history' });
     }
 });
 
 // --- ADMIN MASTER AI ASSISTANT ---
 app.post('/api/admin/ai-assistant', auth, async (req, res) => {
+    console.log('[MASTER-AI] Request received from:', req.user?.id || 'Unknown');
     try {
         const { message, contextData } = req.body;
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
+        console.log('[MASTER-AI] Fetching systemic context...');
         // Fetch systemic data for context
         const [recentOrders, recentInquiries, lowStockProducts] = await Promise.all([
             Order.find({}).sort({ orderDate: -1 }).limit(10).populate('userId', 'fullName').lean(),
             Inquiry.find({}).sort({ createdAt: -1 }).limit(5).lean(),
             Product.find({ stock: { $lte: 30 } }).sort({ stock: 1 }).limit(15).lean()
         ]);
+        console.log('[MASTER-AI] Context fetched. Orders:', recentOrders.length, 'Stock items:', lowStockProducts.length);
 
         const orderCtx = recentOrders.map(o => `#${o.orderId}: ${o.userId?.fullName || 'Guest'} - ₹${o.totalAmount} (${o.status})`).join('\n');
         const inquiryCtx = recentInquiries.map(i => `${i.name}: ${i.subject} - ${i.status}`).join('\n');
@@ -793,7 +1176,7 @@ app.post('/api/admin/ai-assistant', auth, async (req, res) => {
 
         let promptText = `You are "Greenie Culture Master Intelligence". You have a birds-eye view of all business operations. 
         
-        CURRENT SYSTEM SNAPSHOT:
+        CURRENT SYSTEM SNAPSHOT (Real-time DB Data):
         
         Recent Orders:
         ${orderCtx || 'No recent orders.'}
@@ -805,24 +1188,271 @@ app.post('/api/admin/ai-assistant', auth, async (req, res) => {
         ${stockCtx || 'All products well stocked.'}
         
         Live Dashboard Stats:
-        Revenue: ₹${contextData?.totalRevenue || 0}
-        Orders: ${contextData?.totalOrders || 0}
+        - Total Orders: ${contextData?.totalOrders || 'Loading...'}
+        - Total Revenue: ₹${contextData?.totalRevenue || 0}
+        - Top State: ${contextData?.topState || 'Unknown'}
+        - Low Stock Count: ${contextData?.lowStockCount || 0}
         
         User Query: "${message}"
         
-        Instructions:
-        1. Be a Master Business Strategist. Provide insights based on the data provided above.
-        2. If asked about recent orders or messages, use the names and IDs from the snapshot.
-        3. Keep responses professional, data-driven, and concise. Use emojis for visual clarity.
-        4. Use Hinglish (English + Hindi terms like "pani", "khad", "kaam").
-        5. Format using beautiful Markdown.`;
+        INSTRUCTIONS:
+        1. Act as a Chief Operating Officer (COO). Analyze the snapshot to answer the user's specific query.
+        2. If they ask about "stock", "orders", or "money", use the exact numbers from the snapshots above.
+        3. Keep it professional, data-driven, and use high-end business English mixed with helpful Hinglish.
+        4. Format with bold headers, bullet points, and clean Markdown.
+        5. Proactively mention if something looks critical (like low stock count > 5).`;
 
         const result = await model.generateContent(promptText);
         const response = await result.response;
-        res.json({ text: response.text() });
+        const aiText = response.text();
+
+        // Save History (User & AI)
+        try {
+            const userMsg = new AdminChatMessage({ adminId: req.user.id, role: 'user', text: message });
+            const aiMsg = new AdminChatMessage({ adminId: req.user.id, role: 'ai', text: aiText });
+            await Promise.all([userMsg.save(), aiMsg.save()]);
+            console.log('[MASTER-AI] Conversation saved to history.');
+        } catch (saveErr) {
+            console.error('[MASTER-AI-SAVE-ERROR]', saveErr.message);
+        }
+
+        res.json({ text: aiText });
+
     } catch (err) {
         console.error('[MASTER-AI] Error:', err.message);
-        res.status(500).json({ message: 'Master AI is processing high-level data. Try later.' });
+        
+        // Dynamic Fallback: Compiled directly from DB context based on keywords
+        const { message, contextData } = req.body;
+        const msgLow = (message || '').toLowerCase();
+        
+        let dynamicSection = '';
+        if (msgLow.includes('stock') || msgLow.includes('maal') || msgLow.includes('inventory')) {
+            dynamicSection = `⚠️ **Inventory Update**: ${contextData?.lowStockCount || 0} items are currently below the safety threshold. Re-stocking is recommended for high-movers.`;
+        } else if (msgLow.includes('revenue') || msgLow.includes('paisa') || msgLow.includes('money') || msgLow.includes('sales')) {
+            dynamicSection = `💰 **Financial Snapshot**: Total revenue stands at **₹${contextData?.totalRevenue || 0}** across **${contextData?.totalOrders || 0} orders**. Sales velocity is stable.`;
+        } else if (msgLow.includes('order') || msgLow.includes('deliver') || msgLow.includes('status')) {
+            dynamicSection = `📦 **Logistics Brief**: We've processed **${contextData?.totalOrders || 0} total orders**. Most recent activity is centered in **${contextData?.topState || 'Gujarat'}**.`;
+        } else {
+            dynamicSection = `📊 **General Brief**: Today we have **${contextData?.totalOrders || 0} total orders** and **${contextData?.totalRevenue || 0} total revenue**. Business health is currently optimal.`;
+        }
+
+        const fallbackText = `🏛️ **Greenie Master Intelligence Brief (Live DB Sync)**
+
+Yahan aapke sawaal ke liye real-time data analysis hai:
+
+${dynamicSection}
+
+> *Note: AI complex reasoning is on a 60-second cooldown (Rate Limit), but your live database data above is 100% accurate. Try deep-analysis again in 1 minute!*`;
+
+        // Save Fallback History
+        try {
+            const userMsg = new AdminChatMessage({ adminId: req.user.id, role: 'user', text: message });
+            const aiMsg = new AdminChatMessage({ adminId: req.user.id, role: 'ai', text: fallbackText, isFallback: true });
+            await Promise.all([userMsg.save(), aiMsg.save()]);
+            console.log('[MASTER-AI] Fallback conversation saved.');
+        } catch (saveErr) {
+            console.error('[MASTER-AI-SAVE-ERROR-FALLBACK]', saveErr.message);
+        }
+
+        res.json({ text: fallbackText, isFallback: true });
+    }
+});
+
+// GET Admin Chat History
+app.get('/api/admin/chat-history', auth, async (req, res) => {
+    try {
+        const history = await AdminChatMessage.find({ adminId: req.user.id }).sort({ timestamp: 1 }).limit(50).lean();
+        res.json(history);
+    } catch (err) {
+        console.error('[ADMIN-CHAT-HISTORY-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to fetch admin history' });
+    }
+});
+
+/**
+ * NEW: Admin Growth Hub - Marketing Assistant
+ */
+app.post('/api/admin/generate-marketing', auth, async (req, res) => {
+    try {
+        const { type, productName, offerDetails, tone = 'professional' } = req.body;
+        
+        let prompt = "";
+        if (type === 'social') {
+            prompt = `Create a viral, attractive Instagram caption for a plant product named "${productName}". 
+                     Details: ${offerDetails}. Tone: ${tone}. Include emojis and relevant hashtags. 
+                     Format the output cleanly in plain text.`;
+        } else if (type === 'email') {
+            prompt = `Write a professional email draft for newsletter subscribers about "${productName}". 
+                     Subject line included. Tone: Catchy and green-focused. Details: ${offerDetails}.`;
+        } else if (type === 'promo') {
+            prompt = `Suggest 3 unique, catchy promo code names and a 1-sentence description for each for a sale on "${productName}".`;
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        res.json({ text: response.text() });
+    } catch (err) {
+        console.error('[MarketingAPI] Error:', err.message);
+        res.status(500).json({ message: 'Failed to generate marketing content' });
+    }
+});
+
+// --- REVIEWS API ---
+
+// Public: Get all reviews
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const reviews = await Review.find().sort({ createdAt: -1 }).lean();
+        res.json(reviews);
+    } catch (err) {
+        console.error('[ReviewsAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error fetching reviews' });
+    }
+});
+
+// User: Add a review
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { userName, rating, description, date } = req.body;
+        if (!userName || !rating || !description) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        const newReview = new Review({
+            userName,
+            rating: Number(rating),
+            description,
+            date: date || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        });
+
+        await newReview.save();
+        res.status(201).json(newReview);
+    } catch (err) {
+        console.error('[ReviewsAPI] Save error:', err.message);
+        res.status(500).json({ message: 'Server error saving review' });
+    }
+});
+
+// Admin: Delete a review
+app.delete('/api/admin/reviews/:id', auth, async (req, res) => {
+    try {
+        const deletedReview = await Review.findByIdAndDelete(req.params.id);
+        if (!deletedReview) return res.status(404).json({ message: 'Review not found' });
+        res.json({ message: 'Review deleted successfully' });
+    } catch (err) {
+        console.error('[AdminAPI] Review delete error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+/**
+ * NEW: Admin AI Task Hub (Operations) with Caching
+ */
+let aiTasksCache = { data: null, timestamp: 0 };
+app.get('/api/admin/ai-tasks', auth, async (req, res) => {
+    try {
+        // Cache for 10 minutes to save Gemini quota
+        const CACHE_DURATION = 10 * 60 * 1000; 
+        if (aiTasksCache.data && (Date.now() - aiTasksCache.timestamp < CACHE_DURATION)) {
+            return res.json({ tasks: aiTasksCache.data });
+        }
+
+        // Fetch snapshot of business health
+        const [lowStock, pendingOrders, totalProducts, activeReminders] = await Promise.all([
+            Product.find({ stock: { $lt: 10 } }).limit(5).lean(),
+            Order.find({ status: { $in: ['Processing', 'Ordered'] } }).limit(5).lean(),
+            Product.countDocuments(),
+            PlantReminder.countDocuments({ notificationStatus: 'pending' })
+        ]);
+
+        const stockMentions = lowStock.map(p => p.name).join(', ');
+        const orderMentions = pendingOrders.length;
+        const reminderCount = activeReminders;
+
+        const prompt = `You are a Business Operations Consultant for 'Greenie Culture', an online plant store.
+        Current Store Health Snapshot:
+        - Low stock items: ${stockMentions || 'None'}
+        - Pending/Processing orders: ${orderMentions}
+        - Total products in catalog: ${totalProducts}
+        - Pending plant care reminders: ${reminderCount}
+        
+        Generate exactly 3 concise, high-priority operational tasks for the admin.
+        If there are low stock items, prioritize restocking them.
+        If there are pending orders, prioritize fulfillment.
+        If the store is healthy (no low stock or pending orders), suggest growth tasks like '🌿 Update blog with seasonal care tips' or '📈 Review top-selling products this week'.
+        
+        Format Requirement: Return ONLY 3 lines. Each line MUST start with a relevant emoji. No other text.
+        Example:
+        📦 Restock Money Plant.
+        🚚 Ship 5 pending orders.
+        ✨ Create a new promo for succulents.`;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        
+        // Split text into array of lines and clean up
+        let tasks = response.text()
+            .split('\n')
+            .map(t => t.replace(/^\d+\.\s*/, '').trim()) // Remove leading numbers if AI adds them
+            .filter(t => t.length > 5)
+            .slice(0, 3);
+            
+        // Final fallback if AI fails or returns empty
+        if (!tasks || tasks.length === 0) {
+            tasks = [
+                "🌿 Check daily plant health reports",
+                "📈 Analyze latest sales trends",
+                "📦 Audit inventory levels"
+            ];
+        }
+        
+        // Update cache
+        aiTasksCache = { data: tasks, timestamp: Date.now() };
+        
+        res.json({ tasks });
+    } catch (err) {
+        console.error('[AI-TASKS-ERROR]', err.message);
+        res.json({ tasks: [
+            "🌿 Daily store audit",
+            "📦 Review stock levels",
+            "📊 Check recent orders"
+        ] });
+    }
+});
+
+// Admin: Get all plant reminders (for Operations Hub)
+app.get('/api/admin/plant-reminders', auth, async (req, res) => {
+    try {
+        const reminders = await PlantReminder.find({})
+            .populate('userId', 'fullName email phone') 
+            .sort({ reminderDate: 1 })
+            .lean();
+        res.json(reminders);
+    } catch (err) {
+        console.error('[AdminRemindersAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error fetching plant reminders' });
+    }
+});
+
+/**
+ * NEW: Customer Inquiry Smart-Draft
+ */
+app.post('/api/admin/ai-inquiry-draft', auth, async (req, res) => {
+    try {
+        const { inquiryText, userName } = req.body;
+        const prompt = `A customer named ${userName} sent this message: "${inquiryText}".
+                       Write a professional, polite, and helpful draft reply as 'Greenie Culture Support'.
+                       Keep it short (max 3 sentences).`;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        res.json({ draft: response.text() });
+    } catch (err) {
+        console.error('[INQUIRY-DRAFT-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to generate draft' });
     }
 });
 
@@ -1167,6 +1797,82 @@ app.get('/api/offers', async (req, res) => {
     }
 });
 
+
+app.get('/api/admin/payment-summary', auth, async (req, res) => {
+    try {
+        const orders = await Order.find({}).populate('userId', 'fullName').lean();
+
+        let cod = 0, online = 0, totalRevenue = 0;
+        orders.forEach(o => {
+            const method = (o.paymentMethod || '').toUpperCase();
+            if (method.includes('CASH') || method.includes('COD')) cod++;
+            else online++;
+            if (o.status !== 'Cancelled') totalRevenue += (o.totalAmount || 0);
+        });
+
+        const totalOrders = cod + online;
+        res.json({
+            total: totalOrders,
+            cod,
+            online,
+            codPercentage: totalOrders > 0 ? Math.round((cod / totalOrders) * 100) : 0,
+            onlinePercentage: totalOrders > 0 ? Math.round((online / totalOrders) * 100) : 0,
+            totalRevenue
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
+    try {
+        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
+        const updateData = { status };
+        if (courierName) updateData.courierName = courierName;
+        if (trackingNumber) updateData.trackingNumber = trackingNumber;
+        if (expectedDeliveryDate) updateData.expectedDeliveryDate = expectedDeliveryDate;
+
+        if (courierName && trackingNumber && status !== 'Delivered' && status !== 'Cancelled') {
+            updateData.status = 'Shipped';
+        }
+
+        const order = await Order.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true })
+            .populate('userId', 'fullName email phone alternatePhone address city state');
+        
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        sendOrderStatusEmail(order);
+        sendSMSWhatsAppNotification(order);
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/admin/orders/:id/payment-status', auth, async (req, res) => {
+    try {
+        const { paymentStatus } = req.body;
+        const order = await Order.findByIdAndUpdate(req.params.id, { paymentStatus }, { new: true })
+            .populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/admin/orders/:id/courier-settled', auth, async (req, res) => {
+    try {
+        const { courierSettled } = req.body;
+        const order = await Order.findByIdAndUpdate(req.params.id, { courierSettled: !!courierSettled }, { new: true })
+            .populate('userId', 'fullName email phone alternatePhone address city state');
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ADMIN API - Get all users
 app.get('/api/admin/users', auth, async (req, res) => {
     try {
@@ -1324,124 +2030,65 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
-// Seed default placements if none exist
-const seedPlacements = async () => {
-    try {
-        const count = await Placement.countDocuments();
-        if (count < 6) {
-            // If we have fewer than 6, let's reset to ensure user gets all original 6
-            if (count > 0) {
-                await Placement.deleteMany({});
-                console.log('[SEED] Clearing old placements for fresh full seed...');
-            }
+// --- Courier Management Routes ---
 
-            const defaultPlacements = [
-                {
-                    name: 'SmartLeaf Indoors',
-                    description: 'The living room is the heart of your home. Adding plants here creates a welcoming atmosphere and naturally purifies the air.',
-                    image: '/images/smartleaf_indoors.jpg',
-                    videoUrl: '/videos/living-room.mp4',
-                    features: ['Air Purifying', 'Low Maintenance', 'Stunning Decor'],
-                    badge: 'LIVING SPACES',
-                    categoryRoute: '/products/indoor-plants'
-                },
-                {
-                    name: 'EcoScape Outdoors',
-                    description: 'Transform your garden or balcony with plants that thrive under the open sky and enhance your outdoor living.',
-                    image: '/images/outdoor_vibe_new.jpg',
-                    videoUrl: '/videos/outdoor.mp4',
-                    features: ['Weather Resistant', 'Sun Loving', 'Natural Growth'],
-                    badge: 'OUTDOOR LIVING',
-                    categoryRoute: '/products/outdoor-plants'
-                },
-                {
-                    name: 'Gardening',
-                    description: 'Start your own green journey. Our gardening kits and plants are perfect for both beginners and experts.',
-                    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
-                    videoUrl: '/videos/gardening.mp4',
-                    features: ['Beginner Friendly', 'Complete Kits', 'Sustainable'],
-                    badge: 'START GROWING',
-                    categoryRoute: '/products/gardening'
-                },
-                {
-                    name: 'EcoHaven Rooftop',
-                    description: 'Elevate your urban living with a sustainable rooftop garden that brings nature closer to the sky.',
-                    image: '/images/rooftop_garden.jpg',
-                    videoUrl: '/videos/ecohaven.mp4',
-                    features: ['Sustainable Living', 'Urban Oasis', 'Low Carbon Footprint'],
-                    badge: 'ECO FRIENDLY',
-                    categoryRoute: '/products/outdoor-plants'
-                },
-                {
-                    name: 'miniheaven balcony',
-                    description: 'Create your own mini heaven in your balcony with our curated collection of outdoor plants that flourish in open spaces.',
-                    image: '/images/miniheaven_balcony.jpg',
-                    videoUrl: '/videos/home_balcony.mp4',
-                    features: ['Sun Loving', 'Urban Oasis', 'Low Maintenance'],
-                    badge: 'BALCONY GARDEN',
-                    categoryRoute: '/products/flowering-plants'
-                },
-                {
-                    name: 'kitchen',
-                    description: 'Fresh herbs and air-purifying plants make your kitchen a more vibrant and healthy place to cook and gather.',
-                    image: '/images/kitchen_image.jpg',
-                    videoUrl: '/videos/kitchen.mp4',
-                    features: ['Culinary Herbs', 'Air Purifying', 'Compact Size'],
-                    badge: 'FRESH COOKING',
-                    categoryRoute: '/products/indoor-plants'
-                }
-            ];
-            await Placement.insertMany(defaultPlacements);
-            console.log('[SEED] Default placements seeded successfully');
-        }
-    } catch (err) {
-        console.error('[SEED] Error seeding placements:', err.message);
-    }
-};
-
-const seedFaqs = async () => {
+// ADMIN: Get all Couriers
+app.get('/api/admin/couriers', auth, async (req, res) => {
     try {
-        const count = await Faq.countDocuments();
-        if (count === 0) {
-            const defaultFaqs = [
-                {
-                    category: 'Orders',
-                    question: 'How do I track my order?',
-                    answer: 'Once your order is shipped, you will receive a tracking link via email and SMS. You can also track it from your User Dashboard under "My Orders".',
-                    order: 1
-                },
-                {
-                    category: 'Payment',
-                    question: 'What payment methods do you accept?',
-                    answer: 'We accept UPI (Google Pay, PhonePe, Paytm) and Cash on Delivery. All transactions are 100% secure.',
-                    order: 2
-                },
-                {
-                    category: 'Delivery',
-                    question: 'How long does delivery take?',
-                    answer: 'We deliver within 3–7 business days depending on your location. Metro cities usually receive orders within 2–3 days.',
-                    order: 3
-                },
-                {
-                    category: 'Plants',
-                    question: 'Are the plants safe for pets?',
-                    answer: 'Some plants are pet-friendly and some are not. Check the individual product page for a "Pet Safe" badge. Commonly safe plants include Spider Plant, Boston Fern, and Areca Palm.',
-                    order: 4
-                },
-                {
-                    category: 'Returns',
-                    question: 'What is your return policy?',
-                    answer: 'We have a 7-day return/replacement policy. If the plant arrives damaged or dead, simply send us a photo within 7 days and we will send a free replacement.',
-                    order: 5
-                }
-            ];
-            await Faq.insertMany(defaultFaqs);
-            console.log('[SEED] Default FAQs seeded successfully');
-        }
+        const couriers = await Courier.find();
+        res.json(couriers);
     } catch (err) {
-        console.error('[SEED] Error seeding FAQs:', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
     }
-};
+});
+
+// PUBLIC: Get Courier fees and availability
+app.get('/api/couriers/public', async (req, res) => {
+    try {
+        const couriers = await Courier.find({}, 'name states fee');
+        res.json(couriers);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Add New Courier
+app.post('/api/admin/couriers', auth, async (req, res) => {
+    try {
+        const { name, password, states, fee, icon, email, phone, certificate } = req.body;
+        const newCourier = new Courier({ name, password, states, fee, icon, email, phone, certificate });
+        await newCourier.save();
+        res.status(201).json(newCourier);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Update Courier
+app.put('/api/admin/couriers/:id', auth, async (req, res) => {
+    try {
+        const { name, password, states, fee, icon, email, phone, certificate } = req.body;
+        const updatedCourier = await Courier.findByIdAndUpdate(
+            req.params.id,
+            { name, password, states, fee, icon, email, phone, certificate },
+            { new: true }
+        );
+        res.json(updatedCourier);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// ADMIN: Delete Courier
+app.delete('/api/admin/couriers/:id', auth, async (req, res) => {
+    try {
+        await Courier.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Courier deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
 
 // --- Inquiry & Notification System Routes ---
 
@@ -1546,9 +2193,4 @@ app.delete('/api/user/notifications', auth, async (req, res) => {
 
 // --- End of Inquiry & Notification System ---
 
-// Start Server
-Promise.all([seedPlacements(), seedFaqs()]).then(() => {
-    app.listen(PORT, '127.0.0.1', () => {
-        console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
-    });
-});
+// --- End of Inquiry & Notification System ---

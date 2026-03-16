@@ -1,0 +1,50 @@
+﻿            });
+            await newNotification.save();
+            console.log(`[NOTIFICATION] Created for user ${inquiry.userId}`);
+        }
+
+        res.json({ message: 'Reply submitted and user notified', inquiry });
+    } catch (err) {
+        console.error('[REPLY-ERROR]', err.message);
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Get Notifications
+app.get('/api/user/notifications', auth, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: req.user.id }).sort({ createdAt: -1 });
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Mark Notification as Read
+app.put('/api/user/notifications/:id/read', auth, async (req, res) => {
+    try {
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.json({ message: 'Notification marked as read' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// USER: Delete all notifications
+app.delete('/api/user/notifications', auth, async (req, res) => {
+    try {
+        await Notification.deleteMany({ userId: req.user.id });
+        res.json({ message: 'All notifications cleared' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+// --- End of Inquiry & Notification System ---
+
+// Start Server
+Promise.all([seedPlacements(), seedFaqs()]).then(() => {
+    app.listen(PORT, '127.0.0.1', () => {
+        console.log(`Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
+    });
+});

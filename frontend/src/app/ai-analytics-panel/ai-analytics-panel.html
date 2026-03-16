@@ -24,6 +24,12 @@
       <a class="nav-item" [class.active]="activeTab === 'chatbot'" (click)="activeTab = 'chatbot'">
         <i class="fas fa-comment-dots"></i> AI Assistant
       </a>
+      <a class="nav-item" [class.active]="activeTab === 'marketing'" (click)="activeTab = 'marketing'">
+        <i class="fas fa-wand-magic-sparkles"></i> Marketing AI
+      </a>
+      <a class="nav-item" [class.active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
+        <i class="fas fa-list-check"></i> Operations Hub
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -38,13 +44,28 @@
   <main class="main-content">
     <header class="content-header prism-header">
       <div class="header-info">
-        <h1>{{ getPageTitle() }}</h1>
+        <div class="header-title-row">
+          <h1>{{ getPageTitle() }}</h1>
+          <div class="performance-pulse">
+            <svg class="pulse-svg" viewBox="0 0 100 20">
+              <path class="pulse-line" d="M0,10 L20,10 L25,5 L35,15 L40,10 L60,10 L65,0 L75,20 L80,10 L100,10" fill="none" stroke="currentColor" stroke-width="2"></path>
+            </svg>
+            <span class="pulse-val">98.2%</span>
+          </div>
+        </div>
         <p>{{ getPageSubtitle() }}</p>
       </div>
       <div class="header-actions">
+        <div class="neural-node-status">
+          <span class="status-lbl">NEURAL CORE</span>
+          <span class="status-val active">STABLE</span>
+        </div>
         <span class="live-indicator neural-glow">
           <span class="dot pulse"></span> AI Engine Online
         </span>
+        <button class="header-tool-btn search-trigger" (click)="toggleSearch()">
+          <i class="fas fa-search"></i>
+        </button>
       </div>
     </header>
 
@@ -101,19 +122,31 @@
             </div>
           </div>
 
-          <div class="glass-card hud-item">
-            <div class="card-header">
-              <h4><i class="fas fa-microchip"></i> System Intelligence</h4>
+          <div class="glass-card hud-item neural-stream-box">
+            <div class="card-header stream-header">
+              <h4><i class="fas fa-brain"></i> Neural Insight Stream</h4>
+              <span class="stream-badge">LIVE_INTEL</span>
             </div>
-            <div class="insight-list">
-              <div class="insight-item recommendation">
-                <i class="fas fa-bolt text-info"></i>
-                <p><strong>Efficiency Meta:</strong> Overall logistics speed has increased by 14% since {{ mostUsedCourier || 'last' }} optimization.</p>
+            <div class="insight-stream custom-scrollbar">
+              <div *ngFor="let insight of insightStream()" class="stream-item" [ngClass]="insight.type">
+                <div class="stream-left">
+                  <div class="stream-icon-wrap">
+                    <i class="fas {{ insight.icon }}"></i>
+                  </div>
+                  <div class="stream-time">{{ insight.timestamp }}</div>
+                </div>
+                <div class="stream-right">
+                  <div class="stream-title">{{ insight.title }}</div>
+                  <div class="stream-content">{{ insight.content }}</div>
+                </div>
               </div>
-              <div class="insight-item alert">
-                <i class="fas fa-triangle-exclamation text-warning"></i>
-                <p><strong>Risk Alert:</strong> High delivery concentration in {{ stateWithHighestOrders || 'some regions' }} may cause delays next cycle.</p>
+              <div *ngIf="insightStream().length === 0" class="stream-empty">
+                Initializing neural connection...
               </div>
+            </div>
+            <div class="stream-footer">
+              <div class="scanning-line"></div>
+              <span>COGNITIVE_ARRAY_ACTIVE_v2.0</span>
             </div>
           </div>
         </div>
@@ -165,25 +198,26 @@
             <h4><i class="fas fa-boxes-stacked"></i> Low Stock Alert — Click for AI Insights</h4>
           </div>
           <div class="inventory-grid">
-            <div *ngFor="let item of lowStockItems" class="inventory-card clickable" (click)="showStock(item)" [class.critical]="item.stock === 0">
-              <img [src]="item.image" [alt]="item.name" class="inv-thumb">
+            <div *ngFor="let item of lowStockItems" class="inventory-card clickable" (click)="showStock(item)" [class.critical]="item.stock <= 5">
+              <img [src]="item.image || 'assets/placeholder-plant.png'" [alt]="item.name" class="inv-thumb">
               <div class="inv-info">
                 <span class="inv-name">{{ item.name }}</span>
-                <span class="inv-stock" [class.zero]="item.stock === 0">
-                  <i class="fas fa-cube"></i> {{ item.stock === 0 ? 'Out of Stock' : item.stock + ' units left' }}
+                <span class="inv-stock" [class.low]="item.stock <= 15">
+                  <i class="fas fa-cube"></i> {{ (item.stock === 0 || item.stock === null) ? 'Out of Stock' : item.stock + ' units left' }}
                 </span>
               </div>
               <span class="stock-badge" [ngClass]="{
-                'danger': item.stock <= 15,
-                'warn': item.stock > 15 && item.stock <= 30,
-                'good': item.stock > 30
+                'danger-glow': item.status === 'CRITICAL',
+                'warn-glow': item.status === 'LOW',
+                'moderate-glow': item.status === 'MODERATE',
+                'good-glow': item.status === 'GOOD'
               }">
-                {{ item.stock <= 15 ? 'CRITICAL' : (item.stock <= 30 ? 'LOW' : 'GOOD') }}
+                {{ item.status }}
               </span>
             </div>
             <div *ngIf="lowStockItems.length === 0" class="no-data-large">
-              <i class="fas fa-check-circle"></i>
-              <p>All items are well-stocked!</p>
+              <i class="fas fa-hourglass-start animate-spin"></i>
+              <p>Analyzing inventory levels...</p>
             </div>
           </div>
         </div>
@@ -222,7 +256,7 @@
                         [attr.r]="getPinSize(pin.state)"
                         class="pin-ring"
                         fill="none"
-                        stroke="rgba(99,102,241,0.4)"
+                        stroke="rgba(16, 185, 129, 0.4)"
                         stroke-width="1.5">
                       </circle>
                       <circle
@@ -309,6 +343,196 @@
         </div>
       </div>
 
+      <!-- ==================== TAB: MARKETING AI ==================== -->
+      <div *ngIf="!isLoading && activeTab === 'marketing'" class="tab-content animate-fade marketing-tab">
+        <div class="content-row">
+          <div class="glass-card hud-item marketing-input-card">
+            <div class="card-header">
+              <h4><i class="fas fa-bullhorn"></i> Campaign Generator</h4>
+            </div>
+            <div class="marketing-controls">
+              <div class="input-group">
+                <label>Product Name</label>
+                <input type="text" #prodName placeholder="e.g. Money Plant">
+              </div>
+              <div class="input-group">
+                <label>Offer Details</label>
+                <textarea #offerDetails placeholder="e.g. 20% Off for New Year, Limited Stock"></textarea>
+              </div>
+              <div class="action-grid-mini">
+                <button (click)="generateMarketing('social', prodName.value, offerDetails.value)" 
+                        [disabled]="isMarketingLoading()" class="tool-btn emerald">
+                  <i class="fab fa-instagram"></i> Instagram Caption
+                </button>
+                <button (click)="generateMarketing('email', prodName.value, offerDetails.value)" 
+                        [disabled]="isMarketingLoading()" class="tool-btn lime">
+                  <i class="fas fa-envelope"></i> Email Draft
+                </button>
+                <button (click)="generateMarketing('promo', prodName.value, offerDetails.value)" 
+                        [disabled]="isMarketingLoading()" class="tool-btn glow">
+                  <i class="fas fa-tags"></i> Promo Codes
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card hud-item marketing-result-card">
+            <div class="card-header">
+              <h4><i class="fas fa-microchip"></i> AI Output</h4>
+            </div>
+            <div class="ai-copy-output custom-scrollbar" *ngIf="marketingContent(); else noMarketing">
+              <div class="copy-display">
+                {{ marketingContent() }}
+              </div>
+              <button class="copy-btn-mini" (click)="copyToClipboard(marketingContent()!)">
+                <i class="fas fa-copy"></i> Copy Copy
+              </button>
+            </div>
+            <ng-template #noMarketing>
+              <div class="no-data-large mini">
+                <i class="fas fa-wand-sparkles"></i>
+                <p>AI is ready to write your next viral post.</p>
+              </div>
+            </ng-template>
+            <div *ngIf="isMarketingLoading()" class="ai-writing-overlay">
+              <div class="neural-loader"></div>
+              <span>Gemini is composing...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB: OPERATIONS HUB ==================== -->
+      <div *ngIf="!isLoading && activeTab === 'tasks'" class="tab-content animate-fade tasks-tab">
+        <div class="glass-card hud-item full-width">
+          <div class="card-header">
+            <h4><i class="fas fa-bolt-lightning"></i> AI-Prioritized Operations</h4>
+            <button class="refresh-tasks-btn" (click)="getAiTasks()" [disabled]="isTasksLoading()">
+              <i class="fas fa-rotate" [class.fa-spin]="isTasksLoading()"></i>
+            </button>
+          </div>
+          <div class="tasks-grid">
+            <div *ngFor="let task of aiTasks(); let i = index" class="task-card animate-slide-up">
+              <div class="task-glow"></div>
+              <div class="task-content">{{ task }}</div>
+              <div class="task-actions">
+                <button class="task-done-btn" (click)="completeTask(i)"><i class="fas fa-check"></i></button>
+              </div>
+            </div>
+            <div *ngIf="aiTasks().length === 0 && !isTasksLoading()" class="no-data-large">
+              <i class="fas fa-clipboard-check"></i>
+              <p>Everything is optimized. AI sees no urgent tasks.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Plant Care Reminders Dedicated Section -->
+        <div class="glass-card hud-item full-width mt-20">
+          <div class="card-header">
+            <h4><i class="fas fa-leaf"></i> Scheduled Plant Care Reminders</h4>
+            <button class="refresh-tasks-btn" (click)="getPlantReminders()" [disabled]="isRemindersLoading()">
+              <i class="fas fa-rotate" [class.fa-spin]="isRemindersLoading()"></i>
+            </button>
+          </div>
+          
+          <div class="reminders-table-wrap custom-scrollbar">
+            <table class="neural-table" *ngIf="groupedReminders().length > 0; else noReminders">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Total Reminders</th>
+                  <th>Sent / Pending</th>
+                  <th>Last Activity</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let group of groupedReminders()" class="user-row-hover">
+                  <td>
+                    <div class="user-cell">
+                      <strong>{{ group.user?.fullName || 'Anonymous' }}</strong>
+                      <span>{{ group.user?.email }}</span>
+                    </div>
+                  </td>
+                  <td><span class="count-badge">{{ group.reminders.length }} Reminders</span></td>
+                  <td>
+                    <div class="progress-mini">
+                      <span class="p-sent">{{ getReminderCounts(group.reminders).sent }} Sent</span>
+                      <span class="p-sep">/</span>
+                      <span class="p-pending">{{ getReminderCounts(group.reminders).pending }} Pending</span>
+                    </div>
+                  </td>
+                  <td>{{ group.reminders[0]?.reminderDate | date:'shortDate' }}</td>
+                  <td>
+                    <button class="view-more-pill" (click)="openRemindersModal(group)">
+                      View More <i class="fas fa-arrow-right"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <ng-template #noReminders>
+              <div class="no-data-large" *ngIf="!isRemindersLoading()">
+                <i class="fas fa-calendar-check"></i>
+                <p>No plant care reminders scheduled at the moment.</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- REMINDERS MODAL -->
+    <div class="modal-overlay animate-fade" *ngIf="showRemindersModal()" (click)="closeRemindersModal()">
+      <div class="glass-modal reminders-modal animate-scale-up" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fas fa-leaf"></i> {{ selectedUserGroup()?.user?.fullName }}'s Reminders</h3>
+          <button class="close-btn" (click)="closeRemindersModal()">&times;</button>
+        </div>
+        <div class="modal-body custom-scrollbar">
+          <div class="nested-reminders-wrap">
+            <table class="nested-table">
+              <thead>
+                <tr>
+                  <th>Plant</th>
+                  <th>Problem</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let rem of selectedUserGroup()?.reminders">
+                  <td><span class="plant-name-badge">{{ rem.plantName }}</span></td>
+                  <td><span class="problem-text">{{ rem.problemType }}</span></td>
+                  <td>
+                    <span class="care-type" [attr.data-type]="rem.reminderType">
+                      <i class="fas" [ngClass]="{
+                        'fa-droplet': rem.reminderType === 'water',
+                        'fa-seedling': rem.reminderType === 'fertilizer',
+                        'fa-sun': rem.reminderType === 'sunlight',
+                        'fa-hand-holding-heart': rem.reminderType === 'general'
+                      }"></i>
+                      {{ rem.reminderType }}
+                    </span>
+                  </td>
+                  <td>{{ rem.reminderDate | date:'mediumDate' }}</td>
+                  <td>
+                    <span class="status-pill" [attr.data-status]="rem.notificationStatus">
+                      {{ rem.notificationStatus }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" (click)="closeRemindersModal()">Done</button>
+        </div>
+      </div>
     </div>
 
     <!-- Stock Detail Modal -->
@@ -329,9 +553,9 @@
           
           <div class="stock-stats-grid">
             <div class="stock-stat-box">
-              <span class="label">Current Levels</span>
-              <div class="stock-value" [class.low]="selectedProduct.stock < 10">
-                {{ selectedProduct.stock }} <span>Units</span>
+              <span class="label">Inventory Status</span>
+              <div class="stock-value" [class.low]="selectedProduct.stock < 15" [class.high]="selectedProduct.stock >= 50">
+                {{ selectedProduct.stock }} <span>In Stock</span>
               </div>
             </div>
             <div class="stock-stat-box">
@@ -354,4 +578,44 @@
       </div>
     </div>
   </main>
+
+  <!-- Universal Search Overlay -->
+  <div class="search-overlay" *ngIf="isSearchVisible()" (click)="toggleSearch()">
+    <div class="search-modal glass-modal animate-pop" (click)="$event.stopPropagation()">
+      <div class="search-input-wrap">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          id="search-input"
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search orders, customers, or insights..."
+          autoFocus>
+        <span class="esc-hint">ESC to close</span>
+      </div>
+      
+      <div class="search-results custom-scrollbar" *ngIf="searchResults().length > 0; else noResults">
+        <div *ngFor="let res of searchResults()" class="result-item clickable" (click)="toggleSearch()">
+          <div class="res-icon" [ngClass]="res.type">
+            <i class="fas" [ngClass]="res.icon"></i>
+          </div>
+          <div class="res-info">
+            <div class="res-title">{{ res.title }}</div>
+            <div class="res-sub">{{ res.sub }}</div>
+          </div>
+          <i class="fas fa-chevron-right res-arrow"></i>
+        </div>
+      </div>
+      <ng-template #noResults>
+        <div class="search-empty" *ngIf="searchQuery">
+          <i class="fas fa-magnifying-glass-chart"></i>
+          <p>Neo-search found no relevant patterns for "{{ searchQuery }}"</p>
+        </div>
+        <div class="search-empty" *ngIf="!searchQuery">
+          <i class="fas fa-bolt"></i>
+          <p>Start typing to search the neural database...</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
 </div>
