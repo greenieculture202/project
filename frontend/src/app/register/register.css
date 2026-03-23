@@ -333,6 +333,27 @@
     height: 40px;
 }
 
+.crystal-select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #07241f;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.select-arrow {
+    margin-right: 0 !important;
+    margin-left: 12px;
+    font-size: 12px !important;
+    opacity: 0.5 !important;
+}
+
 .eye-btn {
     background: transparent;
     border: none;

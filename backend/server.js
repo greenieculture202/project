@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const cron = require('node-cron');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 console.log('--- BACKEND STARTUP ---');
 console.log('Working Directory:', process.cwd());
@@ -20,10 +21,15 @@ const AboutSection = require('./models/AboutSection');
 const Inquiry = require('./models/Inquiry');
 const Notification = require('./models/Notification');
 const Settlement = require('./models/Settlement');
+const PlantReminder = require('./models/PlantReminder');
+const AdminChatMessage = require('./models/AdminChatMessage');
+const ChatMessage = require('./models/ChatMessage');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +42,39 @@ const otpStore = new Map();
 
 const fs = require('fs');
 // path already imported at top
+
+const INDIAN_STATE_CODE_MAP = {
+    'MAHARASHTRA': 'MH',
+    'GUJARAT': 'GJ',
+    'JHARKHAND': 'JH',
+    'PUNJAB': 'PB',
+    'UTTAR PRADESH': 'UP',
+    'DELHI': 'DL',
+    'RAJASTHAN': 'RJ',
+    'HARYANA': 'HR',
+    'KARNATAKA': 'KA',
+    'TAMIL NADU': 'TN',
+    'WEST BENGAL': 'WB',
+    'TELANGANA': 'TG',
+    'MADHYA PRADESH': 'MP',
+    'KERALA': 'KL',
+    'BIHAR': 'BR',
+    'ASSAM': 'AS',
+    'ODISHA': 'OD',
+    'CHHATTISGARH': 'CT',
+    'UTTARAKHAND': 'UK',
+    'HIMACHAL PRADESH': 'HP',
+    'GOA': 'GA',
+    'MANIPUR': 'MN',
+    'MEGHALAYA': 'ML',
+    'MIZORAM': 'MZ',
+    'NAGALAND': 'NL',
+    'TRIPURA': 'TR',
+    'ANDHRA PRADESH': 'AP',
+    'SIKKIM': 'SK',
+    'ARUNACHAL PRADESH': 'AR'
+};
+
 const debugLog = (msg) => {
     const logPath = path.join(__dirname, 'debug_otp.log');
     const timestamp = new Date().toISOString();
@@ -234,9 +273,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/admin/offers', offerProductsRouter);
 
-// Request logging middleware
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    const logStr = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
+    fs.appendFileSync(path.join(__dirname, 'request_logs.txt'), logStr);
     next();
 });
 
@@ -445,7 +484,7 @@ app.put('/api/auth/admin-update', auth, async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
     try {
         console.log('[AUTH] Registration attempt:', req.body);
-        const { fullName, email, password, phone, address } = req.body;
+        const { fullName, email, password, phone, address, state } = req.body;
 
         // Check if user already exists
         let user = await User.findOne({ email });
@@ -463,7 +502,8 @@ app.post('/api/auth/register', async (req, res) => {
             email,
             password: hashedPassword,
             phone,
-            address
+            address,
+            state
         });
 
         const savedUser = await user.save();
@@ -473,6 +513,65 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (err) {
         console.error('[AUTH] Registration error:', err.message);
         res.status(500).send('Server error');
+    }
+});
+
+// Admin Regional Analytics
+app.get('/api/admin/regional-analytics', auth, async (req, res) => {
+    try {
+        const orders = await Order.find({ status: { $ne: 'Cancelled' } }).lean();
+        const stats = {};
+
+        orders.forEach(order => {
+            const state = order.shippingDetails?.state || order.state;
+            if (!state) return;
+            const sKey = state.trim().toUpperCase();
+
+            if (!stats[sKey]) {
+                stats[sKey] = {
+                    orderCount: 0,
+                    totalRevenue: 0,
+                    products: {},
+                    prices: []
+                };
+            }
+
+            stats[sKey].orderCount++;
+            stats[sKey].totalRevenue += order.totalAmount;
+            stats[sKey].prices.push(order.totalAmount);
+
+            (order.items || []).forEach(item => {
+                if (item.name) {
+                    stats[sKey].products[item.name] = (stats[sKey].products[item.name] || 0) + (item.quantity || 1);
+                }
+            });
+        });
+
+        const finalized = {};
+        Object.keys(stats).forEach(s => {
+            const stateData = stats[s];
+            const sortedProducts = Object.entries(stateData.products)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(p => ({ name: p[0], count: p[1] }));
+
+            const prices = stateData.prices.sort((a, b) => a - b);
+            
+            finalized[s] = {
+                state: s,
+                topProducts: sortedProducts,
+                priceRange: {
+                    low: prices[0] || 0,
+                    high: prices[prices.length - 1] || 0
+                },
+                avgOrderValue: Math.round(stateData.totalRevenue / stateData.orderCount)
+            };
+        });
+
+        res.json(finalized);
+    } catch (err) {
+        console.error('[AdminAPI] Regional Analytics error:', err.message);
+        res.status(500).json({ message: 'Analytics error: ' + err.message });
     }
 });
 
@@ -501,13 +600,15 @@ app.post('/api/auth/login', async (req, res) => {
             user: {
                 id: user._id, // User lean() makes it _id instead of id in some contexts, but let's be safe
                 email: user.email,
-                fullName: user.fullName
+                fullName: user.fullName,
+                state: user.state, // Added state to JWT payload
+                isRegionalFavorite: user.isRegionalFavorite // Added isRegionalFavorite to JWT payload
             }
         };
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic, role: user.role } });
+            res.json({ token, user: { _id: user._id, email: user.email, fullName: user.fullName, profilePic: user.profilePic, role: user.role, state: user.state, isRegionalFavorite: user.isRegionalFavorite } });
         });
     } catch (err) {
         console.error(err.message);
@@ -554,7 +655,7 @@ app.post('/api/auth/google-login', async (req, res) => {
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic, state: user.state } });
         });
     } catch (err) {
         console.error('[GOOGLE-LOGIN] Error:', err.message);
@@ -690,7 +791,7 @@ app.post('/api/auth/google-login/verify-otp', async (req, res) => {
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic } });
+            res.json({ token, user: { email: user.email, fullName: user.fullName, profilePic: user.profilePic, state: user.state } });
         });
 
     } catch (err) {
@@ -724,6 +825,265 @@ app.post('/api/cart', auth, async (req, res) => {
     } catch (err) {
         console.error('[CART] Save error:', err.message);
         res.status(500).send('Server error');
+    }
+});
+
+// --- UNIFIED AI HANDLER (Failover Strategy) ---
+const callGemini = async (systemPrompt, userPrompt, image, apiKey) => {
+    const model = genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        systemInstruction: systemPrompt 
+    });
+    let result;
+    if (image) {
+        const base64Data = image.split(',')[1] || image;
+        const imageData = { inlineData: { data: base64Data, mimeType: "image/jpeg" } };
+        result = await model.generateContent([userPrompt, imageData]);
+    } else {
+        result = await model.generateContent(userPrompt);
+    }
+    const response = await result.response;
+    return { text: response.text() };
+};
+
+const callGroq = async (systemPrompt, userPrompt, image, apiKey) => {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'llama-3.1-70b-versatile',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ]
+        })
+    });
+    if (!response.ok) throw new Error(`Groq Error: ${response.statusText}`);
+    const data = await response.json();
+    return { text: data.choices[0].message.content };
+};
+
+const callCerebras = async (systemPrompt, userPrompt, image, apiKey) => {
+    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'llama3.1-70b',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ]
+        })
+    });
+    if (!response.ok) throw new Error(`Cerebras Error: ${response.statusText}`);
+    const data = await response.json();
+    return { text: data.choices[0].message.content };
+};
+
+const callMistral = async (systemPrompt, userPrompt, image, apiKey) => {
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'mistral-small-latest',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ]
+        })
+    });
+    if (!response.ok) throw new Error(`Mistral Error: ${response.statusText}`);
+    const data = await response.json();
+    return { text: data.choices[0].message.content };
+};
+
+const callHuggingFace = async (systemPrompt, userPrompt, image, apiKey) => {
+    const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+    const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ inputs: fullPrompt })
+    });
+    if (!response.ok) throw new Error(`Hugging Face Error: ${response.statusText}`);
+    const data = await response.json();
+    const text = Array.isArray(data) ? (data[0].generated_text || data[0].text) : (data.generated_text || JSON.stringify(data));
+    return { text: text.replace(fullPrompt, '').trim() }; 
+};
+
+const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
+    const providers = [
+        { name: 'Gemini', key: process.env.GEMINI_API_KEY, func: callGemini },
+        { name: 'Groq', key: process.env.GROQ_API_KEY, func: callGroq },
+        { name: 'Cerebras', key: process.env.CEREBRAS_API_KEY, func: callCerebras },
+        { name: 'Mistral', key: process.env.MISTRAL_API_KEY, func: callMistral },
+        { name: 'Hugging Face', key: process.env.HUGGINGFACE_API_KEY, func: callHuggingFace }
+    ];
+
+    let lastError = null;
+    for (const provider of providers) {
+        if (!provider.key || provider.key.includes('PLACEHOLDER') || provider.key === '') {
+            continue;
+        }
+
+        try {
+            console.log(`[AI-FAILOVER] Trying ${provider.name}...`);
+            const result = await provider.func(systemPrompt, userPrompt, image, provider.key);
+            if (result && result.text) return { ...result, provider: provider.name };
+        } catch (err) {
+            console.error(`[AI-FAILOVER] ${provider.name} failed:`, err.message);
+            lastError = err;
+        }
+    }
+    throw lastError || new Error("All AI providers failed. Check your API keys.");
+};
+
+// API Routes for AI Assistant
+app.post('/api/ai-assistant', async (req, res) => {
+    let userId; 
+    try {
+        const { message, image } = req.body;
+        userId = req.body.userId;
+
+        const token = req.header('x-auth-token');
+        if (!userId && token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                userId = decoded.user.id;
+            } catch (err) { /* ignore invalid token */ }
+        }
+
+        let historyText = '';
+        if (userId) {
+            try {
+                const history = await ChatMessage.find({ userId })
+                    .sort({ timestamp: -1 })
+                    .limit(6)
+                    .lean();
+                
+                if (history && history.length > 0) {
+                    historyText = "\nRecent Conversation History:\n" + 
+                        history.reverse().map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n') + "\n";
+                }
+
+                // Save user message
+                const userMsg = new ChatMessage({
+                    userId,
+                    role: 'user',
+                    text: message,
+                    image: image || null
+                });
+                await userMsg.save();
+            } catch (saveErr) {
+                console.error('[CHAT-SAVE-ERROR]', saveErr.message);
+            }
+        }
+
+        const systemPrompt = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice.
+        CRITICAL INSTRUCTION: Analyze the user's message language. Your response "text" field MUST be in the SAME language and SCRIPT as the user's question.
+        - If user asks in Gujarati script, answer in Gujarati script. 
+        - If user asks in Roman/Hinglish (e.g. "mara plant ma..."), answer in Gujarati/Hindi using Roman script.
+        
+        STRICT INTERACTIVE FLOW:
+        1. IF THE USER'S CURRENT QUESTION (User Current Question) DOES NOT EXPLICITLY MENTION A SPECIFIC PLANT OR PRODUCT NAME (e.g., just says "leaves are yellow" or "my plant is dying"), 
+           your response text MUST ONLY be a polite question asking for the name (e.g., "Aapke paas kaunsa plant hai jiske baare mein aap pooch rahe hain?"). 
+           DO NOT guess the plant from history or context if not mentioned in the CURRENT question.
+           In this case: set "recommendations" to [], "remindable" to false, and "plantName" to "Plant".
+        
+        2. ONLY IF THE SUBJECT IS EXPLICITLY MENTIONED IN THE CURRENT MESSAGE:
+           - Provide the specific advice.
+           - Set "plantName" correctly.
+           - Put that name as the FIRST item in "recommendations".
+           
+        Your response MUST be a valid JSON object with the following fields:
+        { "text": "Advice or Question", "recommendations": ["Keyword1", "Keyword2"], "remindable": true/false, "plantName": "Specific Name or Plant" }
+        
+        AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]`;
+
+        const userPrompt = `${historyText}\nUser Current Question: "${message}"`;
+
+        const result = await callUnifiedAI(systemPrompt, userPrompt, image);
+        let aiFullText = result.text;
+        console.log(`[AI-SUCCESS] Response from ${result.provider}`);
+        let aiText = aiFullText;
+        let recommendations = [];
+        let remindable = false;
+        let identifiedPlantName = 'Plant';
+
+        try {
+            const startIdx = aiFullText.indexOf('{');
+            const endIdx = aiFullText.lastIndexOf('}');
+            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                const jsonStr = aiFullText.substring(startIdx, endIdx + 1);
+                const parsed = JSON.parse(jsonStr);
+                aiText = parsed.text || aiFullText;
+                recommendations = parsed.recommendations || [];
+                remindable = parsed.remindable || false;
+                identifiedPlantName = parsed.plantName || 'Plant';
+            }
+        } catch (e) {
+            const match = aiFullText.match(/```json\s*([\s\S]*?)\s*```/);
+            if (match) {
+                try {
+                    const parsed = JSON.parse(match[1]);
+                    aiText = parsed.text || aiText;
+                    recommendations = parsed.recommendations || recommendations;
+                    remindable = parsed.remindable || remindable;
+                    identifiedPlantName = parsed.plantName || identifiedPlantName;
+                } catch (innerE) { }
+            }
+        }
+
+        if (userId) {
+            try {
+                const aiMsg = new ChatMessage({
+                    userId,
+                    role: 'ai',
+                    text: aiText,
+                    recommendations: recommendations,
+                    plantName: identifiedPlantName
+                });
+                await aiMsg.save();
+            } catch (saveErr) {
+                console.error('[CHAT-SAVE-ERROR]', saveErr.message);
+            }
+        }
+
+        res.json({ text: aiText, recommendations, remindable, plantName: identifiedPlantName });
+    } catch (err) {
+        console.error('[AI-ASSISTANT-ERROR]', err.message);
+        
+        let errorText = "Lagta hai main abhi thoda vyast hoon ya API limit khatam ho gayi hai. Please thodi der mein phir se try karein! 🌱";
+        
+        if (err.message.includes('429') || err.message.includes('Resource has been exhausted')) {
+            errorText = "Aapki free AI limit aaj ke liye khatam ho gayi hai (Daily Quota Reached). 🛑 Please kal try karein ya naya API key use karein. (Your free AI limit is reached. Please try again tomorrow! or use a new key) 🌱";
+        } else if (err.message.includes('API_KEY_INVALID')) {
+            errorText = "Aapka API Key invalid hai. Please backend .env mein sahi key check karein. 🔑";
+        }
+
+        const msgLower = (req.body?.message || '').toLowerCase();
+        let fallbackRecs = ['Indoor Plants', 'Gardening'];
+        if (msgLower.includes('tulsi')) fallbackRecs = ['Tulsi Plant', ...fallbackRecs];
+        if (msgLower.includes('money plant')) fallbackRecs = ['Money Plant', ...fallbackRecs];
+        
+        res.json({
+            text: errorText,
+            recommendations: fallbackRecs.slice(0, 3),
+            status: 'diagnostic',
+            remindable: true,
+            plantName: 'Plant'
+        });
     }
 });
 
@@ -769,50 +1129,12 @@ app.post('/api/reviews', async (req, res) => {
 // API Routes for Products
 app.get('/api/products', async (req, res) => {
     try {
-        const { category, limit } = req.query;
-        console.log(`[ProductsAPI] Query: "${category}" | Limit: ${limit}`);
+        const { category, limit, state } = req.query;
+        console.log(`[ProductsAPI] Query: "${category}" | Limit: ${limit} | State: ${state}`);
 
         let query = {};
-        if (category) {
+        if (category && category !== 'Bestsellers') {
             let decodedCategory = decodeURIComponent(category).trim();
-
-            // --- SPECIAL CASE: Dynamic Bestsellers based on Orders ---
-            if (decodedCategory === 'Bestsellers') {
-                const limitNum = parseInt(limit) || 20;
-                const topSelling = await Order.aggregate([
-                    { $unwind: "$items" },
-                    {
-                        $group: {
-                            _id: "$items.name",
-                            totalSold: { $sum: "$items.quantity" }
-                        }
-                    },
-                    { $sort: { totalSold: -1 } },
-                    { $limit: limitNum }
-                ]);
-
-                let sortedProducts = [];
-                if (topSelling.length > 0) {
-                    const productNames = topSelling.map(s => s._id);
-                    const products = await Product.find({ name: { $in: productNames } }).lean();
-                    sortedProducts = topSelling
-                        .map(s => products.find(p => p.name === s._id))
-                        .filter(p => !!p);
-                }
-
-                // Pad with static Bestsellers if not enough order data
-                if (sortedProducts.length < limitNum) {
-                    const existingIds = sortedProducts.map(p => p._id);
-                    const padding = await Product.find({
-                        category: 'Bestsellers',
-                        _id: { $nin: existingIds }
-                    }).limit(limitNum - sortedProducts.length).lean();
-                    sortedProducts = [...sortedProducts, ...padding];
-                }
-
-                console.log(`[ProductsAPI] Returning ${sortedProducts.length} Bestsellers`);
-                return res.json(sortedProducts);
-            }
 
             // Broaden search for main categories
             let usePartial = false;
@@ -829,7 +1151,6 @@ app.get('/api/products', async (req, res) => {
             const partialRegex = new RegExp(partialPattern, 'i');
 
             if (usePartial) {
-                // If it's a major category, pull EVERYTHING that matches the term anywhere
                 query = {
                     $or: [
                         { category: { $regex: partialRegex } },
@@ -837,7 +1158,6 @@ app.get('/api/products', async (req, res) => {
                     ]
                 };
             } else {
-                // For specific sub-categories, be more precise but still allow tag matches
                 query = {
                     $or: [
                         { category: decodedCategory },
@@ -849,20 +1169,120 @@ app.get('/api/products', async (req, res) => {
                     ]
                 };
             }
-            console.log(`[ProductsAPI] Querying for: "${decodedCategory}" (Partial: ${usePartial})`);
-            console.log(`[ProductsAPI] DB Query Object: ${JSON.stringify(query)}`);
         }
 
-        let productsQuery = Product.find(query).lean();
+        let products = [];
+        if (category === 'Bestsellers') {
+            const limitNum = parseInt(limit) || 20;
+            const topSelling = await Order.aggregate([
+                { $unwind: "$items" },
+                {
+                    $group: {
+                        _id: "$items.name",
+                        totalSold: { $sum: "$items.quantity" }
+                    }
+                },
+                { $sort: { totalSold: -1 } },
+                { $limit: limitNum }
+            ]);
 
-        if (limit) {
-            const limitNum = parseInt(limit);
-            if (!isNaN(limitNum)) {
-                productsQuery = productsQuery.limit(limitNum);
+            if (topSelling.length > 0) {
+                const productNames = topSelling.map(s => s._id);
+                const dbProducts = await Product.find({ name: { $in: productNames } }).lean();
+                products = topSelling
+                    .map(s => dbProducts.find(p => p.name === s._id))
+                    .filter(p => !!p);
+            }
+
+            // Pad with static Bestsellers if not enough order data
+            if (products.length < limitNum) {
+                const existingNames = products.map(p => p.name);
+                const padding = await Product.find({
+                    category: 'Bestsellers',
+                    name: { $nin: existingNames }
+                }).limit(limitNum - products.length).lean();
+                products = [...products, ...padding];
+            }
+            console.log(`[ProductsAPI] Dynamic Bestsellers matched ${products.length} products`);
+        } else {
+            let productsQuery = Product.find(query).lean();
+            if (limit) {
+                const limitNum = parseInt(limit);
+                if (!isNaN(limitNum)) {
+                    productsQuery = productsQuery.limit(limitNum);
+                }
+            }
+            products = await productsQuery;
+        }
+
+        // --- REGIONAL SORTING ENGINE ---
+        if (state && products.length > 0) {
+            const rawState = state.trim().toUpperCase();
+            const searchStates = [rawState];
+            
+            // If full name provided, find code; if code provided, find full name
+            if (INDIAN_STATE_CODE_MAP[rawState]) {
+                searchStates.push(INDIAN_STATE_CODE_MAP[rawState]);
+            } else {
+                // Reverse lookup
+                const fullName = Object.keys(INDIAN_STATE_CODE_MAP)
+                    .find(key => INDIAN_STATE_CODE_MAP[key] === rawState);
+                if (fullName) searchStates.push(fullName);
+            }
+
+            // Also add lowercase versions just in case
+            const allSearchStates = [...new Set([...searchStates, ...searchStates.map(s => s.toLowerCase())])];
+
+            try {
+                // 1. Get regional popularity data - Using JS-side filtering like Admin Analytics for robustness
+                const allOrders = await Order.find({ 
+                    status: { $ne: 'Cancelled' }
+                }).limit(500).lean();
+
+                const filteredOrders = allOrders.filter(o => {
+                    const s = (o.shippingDetails?.state || o.state || '').trim().toUpperCase();
+                    return searchStates.some(match => s === match);
+                });
+
+                const popularityMap = {};
+                filteredOrders.forEach(o => {
+                    (o.items || []).forEach(item => {
+                        if (item.name) {
+                            const n = item.name.trim().toLowerCase();
+                            popularityMap[n] = (popularityMap[n] || 0) + (item.quantity || 1);
+                        }
+                    });
+                });
+
+                // 2. Sort and Mark
+                products.sort((a, b) => {
+                    const scoreA = popularityMap[a.name?.trim().toLowerCase()] || 0;
+                    const scoreB = popularityMap[b.name?.trim().toLowerCase()] || 0;
+                    return scoreB - scoreA;
+                });
+                
+                // Mark top regional favorites
+                let markedCount = 0;
+                products.forEach((p) => {
+                    const productScore = popularityMap[p.name?.trim().toLowerCase()] || 0;
+                    if (productScore > 0 && markedCount < 3) {
+                        p.isRegionalFavorite = true;
+                        markedCount++;
+                    } else {
+                        p.isRegionalFavorite = false;
+                    }
+                });
+
+                // Debug log to file
+                require('fs').appendFileSync('popular_plants_debug.log', 
+                    `[${new Date().toISOString()}] State: ${rawState} | Matches: ${searchStates.join(',')} | Total Orders: ${allOrders.length} | Filtered: ${filteredOrders.length} | PopularityMap: ${JSON.stringify(popularityMap)}\n`
+                );
+
+            } catch (regErr) {
+                console.error('[RegionalEngine] Error:', regErr.message);
             }
         }
 
-        const products = await productsQuery;
         console.log(`[ProductsAPI] Found ${products.length} products for "${category || 'all'}"`);
         res.json(products);
     } catch (err) {
@@ -1076,7 +1496,7 @@ app.post('/api/user/orders', auth, async (req, res) => {
         if (req.user.id === 'admin-special-id') {
             return res.status(403).json({ message: 'Admin cannot place regular orders' });
         }
-        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit, shippingDetails } = req.body;
+        const { items, totalAmount, paymentMethod, transactionId, paymentScreenshot, appliedOfferCode, offerBenefit, shippingDetails, deliveryType } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Order must have at least one item' });
@@ -1095,7 +1515,8 @@ app.post('/api/user/orders', auth, async (req, res) => {
             paymentStatus: (paymentMethod === 'Cash on Delivery') ? 'Received' : 'Pending',
             appliedOfferCode: appliedOfferCode || null,
             offerBenefit: offerBenefit || null,
-            shippingDetails: shippingDetails || null
+            shippingDetails: shippingDetails || null,
+            deliveryType: deliveryType || 'Standard Delivery (7 Days)'
         });
 
         const savedOrder = await newOrder.save();
@@ -2308,4 +2729,262 @@ app.put('/api/admin/notifications/read', auth, async (req, res) => {
     }
 });
 
+/**
+ * NEW: Admin Growth Hub - Marketing Assistant (Restored)
+ */
+app.post('/api/admin/generate-marketing', auth, async (req, res) => {
+    console.log(`[MarketingAPI] POST received for ${req.body.type} - product: ${req.body.productName}`);
+    const { type, productName, offerDetails, tone = 'professional' } = req.body;
+    try {
+        let prompt = "";
+        if (type === 'social') {
+            prompt = `Create a viral, attractive Instagram caption for a plant product named "${productName}". 
+                     Details: ${offerDetails}. Tone: ${tone}. Include emojis and relevant hashtags. 
+                     Format the output cleanly in plain text.`;
+        } else if (type === 'email') {
+            prompt = `Write a professional email draft for newsletter subscribers about "${productName}". 
+                     Subject line included. Tone: Catchy and green-focused. Details: ${offerDetails}.`;
+        } else if (type === 'care') {
+            prompt = `Suggest 3 essential, quick-to-read care tips for a plant named "${productName}". 
+                     Focus on: Sunlight, Watering, and a "Pro Secret". Include emojis.`;
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        // 3-second timeout to guarantee ultra-fast responses (either AI or Template!)
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('AI Request Timeout or Rate Limited')), 3000);
+        });
+        
+        const result = await Promise.race([
+            model.generateContent(prompt),
+            timeoutPromise
+        ]);
+
+        const response = await result.response;
+        res.json({ text: response.text() });
+    } catch (err) {
+        console.error('[MarketingAPI] Error/Timeout:', err.message);
+        
+        // INSTANT OFFLINE FALLBACK GENERATOR with 6 VARIATIONS!
+        let fallbackText = "";
+        const cleanName = productName ? productName.trim().charAt(0).toUpperCase() + productName.trim().slice(1) : "Plant";
+        const randomIndex = Math.floor(Math.random() * 6); // Choose from 6 variations
+        
+        if (type === 'social') {
+            const variations = [
+                `🌿 Say hello to green goodness! 🌿\n\nOur stunning ${cleanName} is exactly what your space needs right now. ✨\n\n${offerDetails}\n\nHurry, limited stock available! 🛍️🛒\n\n#GreenieCulture #${cleanName.replace(/\\s+/g, '')} #PlantLove #HomeDecor #GreenLiving`,
+                `✨ **PLANT ALERT** ✨\n\nLevel up your home aesthetic with the one and only ${cleanName}! 🍃\n\n${offerDetails}\n\nSwipe up or DM to order before we sell out! 🚚🏠\n\n#UrbanJungle #PlantParent #InteriorDesign #GreenVibes`,
+                `Did someone say **PLANT REFRESH**? 🌿\n\nThe ${cleanName} is back in stock and looks more vibrant than ever. 😍\n\n🔥 ${offerDetails}\n\nDon't let this one slip away! ✨🙌\n\n#ShopSmall #EcoFriendly #TrendingPlants #BetterLiving`,
+                `🪴 **HOME TRANSFORMATION** 🪴\n\nBring the outdoors in with our best-selling ${cleanName}! 🌿\n\n${offerDetails}\n\nPerfect for your office, bedroom, or living room. 🪴✨\n\n#PlantDecor #LushLiving #GreenieCulture #HomeInspo`,
+                `💚 **VIBE CHECK: PURE GREEN** 💚\n\nMeet the ${cleanName}. Not just a plant, but a mood. 🌿✨\n\n${offerDetails}\n\nGet yours today and breathe better! 🌬️🍃\n\n#BreatheClean #PlantAesthetic #GreenieCulture #MustHave`,
+                `🌿 **INSTANT JUNGLE VIBES** 🌿\n\nWant that jungle look? You need the ${cleanName}. 🍃✨\n\n${offerDetails} for a limited time ONLY!\n\nLink in bio to shop! 📲🛍️\n\n#PlantLover #JungleVibes #GreenieCulture #GreenSpace`
+            ];
+            fallbackText = variations[randomIndex];
+        } else if (type === 'email') {
+            const variations = [
+                `**Subject:** Elevate your space with our ${cleanName}! 🌿\n\nHi Plant Lover,\n\nWe know how much you love adding life to your home. That's why we're bringing you an exclusive update on our beautiful **${cleanName}**!\n\n✨ **Special Offer:** ${offerDetails}\n\nDon't miss out on this chance to grow your indoor jungle. Click below to shop now!\n\nStay Green,\n**The Greenie Culture Team** 🌱`,
+                `**Subject:** Something green is coming your way... 🍃\n\nHello Friend,\n\nOur ${cleanName} collection is finally here, and it's looking spectacular! ✨\n\nTo celebrate, we are offering: **${offerDetails}**\n\nGrab your favorites before they're gone! 🌿🏠\n\nWarmly,\n**Greenie Culture Support**`,
+                `**Subject:** Fresh Vibes only! ✨ (Inside: ${cleanName})\n\nHey there,\n\nReady for a home makeover? The ${cleanName} is the perfect choice for a fresh start. 🌿\n\n🎁 **Bonus:** ${offerDetails}\n\nLet's grow together!\n\n**Greenie Culture HQ** 🌱`,
+                `**Subject:** 🌿 Exclusive Access: The ${cleanName} is here!\n\nGreetings,\n\nWe've saved the best for our inner circle. The ${cleanName} is finally back, and we've got a treat for you.\n\n🍃 **Offer:** ${offerDetails}\n\nMake your space more vibrant today.\n\nBest,\n**Greenie Culture**`,
+                `**Subject:** 🌱 Your daily dose of green + a special gift!\n\nHi there,\n\nAt Greenie Culture, we believe everyone needs a ${cleanName}. Here's why you should get yours now:\n\n✨ **Deal of the Day:** ${offerDetails}\n\nShop the collection before it's too late! 🪴💫`,
+                `**Subject:** 🍃 Time for a Plant Upgrade? (Save on ${cleanName})\n\nHey Plant Parent,\n\nIs your shelf looking a bit empty? Fill it with the gorgeous ${cleanName}! 🌿\n\n🔥 **Hot Offer:** ${offerDetails}\n\nOrder now for fast delivery! 🚚✨\n\nCheers,\n**Greenie Culture Team**`
+            ];
+            fallbackText = variations[randomIndex];
+        } else if (type === 'care') {
+            const variations = [
+                `🌱 **QUICK CARE GUIDE: ${cleanName.toUpperCase()}** 🌱\n\n1. **☀️ Sunlight**: Keep me in bright, indirect light for those lush leaves.\n2. **💧 Watering**: Only water when the top 1-inch of soil feels dry. I hate soggy feet!\n3. **✨ Pro Secret**: Wipe my leaves with a damp cloth once a week to help me breathe better.\n\nHappy Growing! 🌱✨`,
+                `🌿 **CARE TIPS FOR YOUR ${cleanName.toUpperCase()}** 🌿\n\n🌵 **Environment**: I love high humidity and warm spots away from drafts.\n🚿 **Feed**: Give me balanced liquid fertilizer once a month during spring/summer.\n✂️ **Pruning**: Trim any yellow leaves to keep me focused on new growth!\n\nLove your plants! 💚`,
+                `📗 **THE ${cleanName.toUpperCase()} MASTERCLASS** 📗\n\n🌤️ **Exposure**: Diffused light is key. If my leaves burn, I'm too close to the window!\n🧂 **Drainage**: Ensure my pot has holes. Drainage is life! 🕳️\n🔄 **Rotation**: Turn me 90 degrees every week so I grow evenly towards the light. 🔄\n\nKeep it green! 🌿`,
+                `🪴 **HAPPY ${cleanName.toUpperCase()} CHEATSHEET** 🪴\n\n☁️ **Humidity**: I love being misted or placed on a pebble tray! 💦\n🌡️ **Temp**: Anything between 18°C-24°C is perfect for me. 🌡️\n🐾 **Pet Safety**: Check if I'm toxic! Keep me out of reach of curious paws. 🐾\n\nStay safe and green! 🍃`,
+                `🌿 **${cleanName.toUpperCase()} GROWTH TIPS** 🌿\n\n🏺 **Repotting**: I like being slightly root-bound, but repot me every 2 years! 🏺\n🧴 **Pest Control**: Neem oil is my best friend for keeping bugs away. 🐛🚫\n🍯 **Soil**: Use a well-draining peat-based mix for best results. 🪴\n\nWatch me grow! ✨🍃`,
+                `🌟 **EXPERT ${cleanName.toUpperCase()} CARE** 🌟\n\n💧 **Consistency**: I prefer a regular watering schedule over "random soakings". 📅\n🌬️ **Airflow**: Good ventilation prevents many common plant diseases! 🌬️\n🎶 **Music**: Believe it or not, I love some gentle background music! 🎵🌱\n\nLet's thrive together! 💚`
+            ];
+            fallbackText = variations[randomIndex];
+        }
+
+        res.json({ text: fallbackText });
+    }
+});
+
+/**
+ * ADMIN: Get AI-Prioritized Operations (Tasks)
+ */
+app.get('/api/admin/ai-tasks', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        
+        const tasks = [];
+        
+        // 1. Critical Stock Alerts (< 10)
+        const criticalItems = await Product.find({ stock: { $lt: 10 } }).limit(2);
+        criticalItems.forEach(p => tasks.push(`🚨 CRITICAL: Replenish ${p.name} (Stock: ${p.stock})`));
+
+        // 2. Pending Inquiries
+        const pendingCount = await Inquiry.countDocuments({ status: 'Pending' });
+        if (pendingCount > 0) tasks.push(`📧 Action Required: Reply to ${pendingCount} pending customer inquiries.`);
+
+        // 3. Low Stock Alerts (10 - 25)
+        if (tasks.length < 4) {
+            const lowItems = await Product.find({ stock: { $gte: 10, $lt: 25 } }).limit(2);
+            lowItems.forEach(p => tasks.push(`⚠️ Low Stock: ${p.name} (${p.stock} units remaining)`));
+        }
+
+        // 4. Daily Volume Insight
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const orderCount = await Order.countDocuments({ orderDate: { $gte: today } });
+        if (orderCount > 8) tasks.push(`🏁 High Traffic: ${orderCount} orders placed today so far! 🚀`);
+
+        // 5. General AI Optimization Tips
+        if (tasks.length < 3) tasks.push("💡 AI Optimize: Review seasonal placement for Flowering Plants.");
+        if (tasks.length < 5) tasks.push("📊 Strategic: High search volume detected for Peace Lily in Maharashtra.");
+
+        res.json({ tasks: tasks.slice(0, 8) });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+/**
+ * ADMIN: Get Plant Care Reminders Registry
+ */
+app.get('/api/admin/plant-reminders', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const reminders = await PlantReminder.find()
+            .populate('userId', 'fullName email')
+            .sort({ createdAt: -1 })
+            .limit(100);
+        res.json(reminders);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
+/**
+ * ADMIN: Get AI Assistant Chat History
+ */
+app.get('/api/admin/chat-history', auth, async (req, res) => {
+    try {
+        if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const history = await AdminChatMessage.find()
+            .sort({ timestamp: 1 })
+            .limit(100);
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error: ' + err.message });
+    }
+});
+
 // Server startup is now handled inside the MongoDB connection block (line 182-205)
+
+/**
+ * ADMIN: Create a 4-Part Plant Care Reminder Sequence
+ */
+app.post('/api/admin/reminders', auth, async (req, res) => {
+    const debugInfo = { timestamp: new Date(), userId: req.user?.id, body: req.body };
+    fs.appendFileSync(path.join(__dirname, 'reminder_logs.txt'), JSON.stringify(debugInfo) + '\n');
+    
+    try {
+        const { plantName, problemType } = req.body;
+        console.log(`[REMINDER-DEBUG] User ${req.user.id} setting reminder for ${plantName}`);
+        
+        const sequence = [
+            { type: 'water', delayDays: 0, label: 'Water Reminder' },
+            { type: 'fertilizer', delayDays: 4, label: 'Fertilizer Reminder' },
+            { type: 'sunlight', delayDays: 8, label: 'Sunlight Check' },
+            { type: 'general', delayDays: 12, label: 'General Health Assessment' }
+        ];
+
+        const sequenceId = new mongoose.Types.ObjectId().toString();
+        const createdReminders = [];
+
+        for (const item of sequence) {
+            const reminderDate = new Date();
+            
+            if (item.type === 'water') {
+                // First one in 1 minute for immediate feedback
+                reminderDate.setMinutes(reminderDate.getMinutes() + 1);
+            } else {
+                // Subsequent ones every 4 days
+                reminderDate.setDate(reminderDate.getDate() + item.delayDays);
+            }
+
+            const reminder = new PlantReminder({
+                userId: req.user.id,
+                plantName,
+                problemType: `${problemType} (${item.label})`,
+                reminderType: item.type, 
+                reminderDate,
+                sequenceId
+            });
+
+            await reminder.save();
+            createdReminders.push(reminder);
+        }
+
+        res.json({ 
+            message: 'Sequenced reminders scheduled successfully (4 parts)', 
+            reminders: createdReminders 
+        });
+    } catch (err) {
+        console.error('[REMINDER-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to set reminders: ' + err.message });
+    }
+});
+
+/**
+ * Scheduler for Plant Care Reminders (Runs Every Minute)
+ */
+cron.schedule('* * * * *', async () => {
+    console.log('[SCHEDULER] Checking for plant care reminders...');
+    try {
+        const now = new Date();
+        const pendingReminders = await PlantReminder.find({
+            reminderDate: { $lte: now },
+            notificationStatus: 'pending'
+        });
+
+        for (const reminder of pendingReminders) {
+            // Check if ANY previous reminder in this sequence was STOPPED
+            const isStopped = await PlantReminder.findOne({
+                sequenceId: reminder.sequenceId,
+                userAction: 'stopped'
+            });
+
+            if (isStopped) {
+                reminder.notificationStatus = 'dismissed';
+                await reminder.save();
+                console.log(`[SCHEDULER] Skipping stopped sequence ${reminder.sequenceId} for ${reminder.plantName}`);
+                continue;
+            }
+
+            // Create a notification for the user
+            const notification = new Notification({
+                userId: reminder.userId,
+                type: 'Reminder',
+                subType: reminder.reminderType,
+                reminderId: reminder._id,
+                title: `🌿 Plant Care: ${reminder.plantName}`,
+                message: `Hello! It's time to check your ${reminder.plantName}. Is it ready for some ${reminder.reminderType}?`,
+                product: { name: reminder.plantName } 
+            });
+
+            await notification.save();
+            
+            // Mark reminder as sent
+            reminder.notificationStatus = 'sent';
+            await reminder.save();
+            console.log(`[SCHEDULER] Sent reminder for ${reminder.plantName} to user ${reminder.userId}`);
+        }
+    } catch (err) {
+        console.error('[SCHEDULER-ERROR]', err.message);
+    }
+});

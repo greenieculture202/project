@@ -45,6 +45,7 @@ export class UserPanelComponent implements OnInit {
     profilePicPreview = '';
     showStateDropdown = false;
     showCityDropdown = false;
+    expandedOrderId: string | null = null;
 
     indianStates: string[] = [
         "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
@@ -307,7 +308,18 @@ export class UserPanelComponent implements OnInit {
         this.isLoading = true;
         this.userService.getOrders().subscribe({
             next: (orders: any[]) => {
-                this.allOrders = orders;
+                this.allOrders = orders.map(order => {
+                    const orderDate = new Date(order.orderDate);
+                    return {
+                        ...order,
+                        shippedDate: ['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ? 
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 24) : null,
+                        outForDeliveryDate: ['Out for Delivery', 'Delivered'].includes(order.status) ? 
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 48) : null,
+                        deliveryDate: order.status === 'Delivered' ? 
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 56) : null
+                    };
+                });
                 this.isLoading = false;
             },
             error: (err: any) => {
@@ -315,6 +327,14 @@ export class UserPanelComponent implements OnInit {
                 this.isLoading = false;
             }
         });
+    }
+
+    toggleOrderDetails(orderId: string) {
+        if (this.expandedOrderId === orderId) {
+            this.expandedOrderId = null;
+        } else {
+            this.expandedOrderId = orderId;
+        }
     }
 
     cancelOrder(orderId: string) {

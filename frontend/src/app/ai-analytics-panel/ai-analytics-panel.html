@@ -9,25 +9,25 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a class="nav-item" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">
+      <a class="nav-item" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
         <i class="fas fa-th-large"></i> Overview
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'sales'" (click)="activeTab = 'sales'">
+      <a class="nav-item" [class.active]="activeTab === 'sales'" (click)="setActiveTab('sales')">
         <i class="fas fa-chart-line"></i> Sales AI
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'inventory'" (click)="activeTab = 'inventory'">
+      <a class="nav-item" [class.active]="activeTab === 'inventory'" (click)="setActiveTab('inventory')">
         <i class="fas fa-boxes-stacked"></i> Inventory AI
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'customers'" (click)="activeTab = 'customers'">
+      <a class="nav-item" [class.active]="activeTab === 'customers'" (click)="setActiveTab('customers')">
         <i class="fas fa-users-viewfinder"></i> Audience AI
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'chatbot'" (click)="activeTab = 'chatbot'">
+      <a class="nav-item" [class.active]="activeTab === 'chatbot'" (click)="setActiveTab('chatbot')">
         <i class="fas fa-comment-dots"></i> AI Assistant
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'marketing'" (click)="activeTab = 'marketing'">
+      <a class="nav-item" [class.active]="activeTab === 'marketing'" (click)="setActiveTab('marketing')">
         <i class="fas fa-wand-magic-sparkles"></i> Marketing AI
       </a>
-      <a class="nav-item" [class.active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'">
+      <a class="nav-item" [class.active]="activeTab === 'tasks'" (click)="setActiveTab('tasks')">
         <i class="fas fa-list-check"></i> Operations Hub
       </a>
     </nav>
@@ -194,14 +194,21 @@
       <!-- ==================== TAB: INVENTORY AI ==================== -->
       <div *ngIf="!isLoading && activeTab === 'inventory'" class="tab-content animate-fade">
         <div class="glass-card hud-item full-width">
-          <div class="card-header">
+          <div class="card-header inventory-header-wrap">
             <h4><i class="fas fa-boxes-stacked"></i> Low Stock Alert — Click for AI Insights</h4>
+            <div class="inventory-filters">
+              <span class="filter-label"><i class="fas fa-filter"></i> Category:</span>
+              <select class="neural-select" [ngModel]="selectedCategory()" (ngModelChange)="setCategory($event)">
+                <option *ngFor="let cat of allCategories()" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
           </div>
           <div class="inventory-grid">
             <div *ngFor="let item of lowStockItems" class="inventory-card clickable" (click)="showStock(item)" [class.critical]="item.stock <= 5">
               <img [src]="item.image || 'assets/placeholder-plant.png'" [alt]="item.name" class="inv-thumb">
               <div class="inv-info">
                 <span class="inv-name">{{ item.name }}</span>
+                <span class="inv-category">{{ item.category }}</span>
                 <span class="inv-stock" [class.low]="item.stock <= 15">
                   <i class="fas fa-cube"></i> {{ (item.stock === 0 || item.stock === null) ? 'Out of Stock' : item.stock + ' units left' }}
                 </span>
@@ -246,29 +253,7 @@
                     <title>{{ state.name }}: {{ getStateOrderCount(state.id) }} orders</title>
                   </path>
                 </g>
-                <!-- City Pins -->
-                <g class="pins-layer">
-                  <ng-container *ngFor="let pin of pinCities">
-                    <g *ngIf="getStateOrderCount(pin.state) > 0" class="pin-group">
-                      <circle
-                        [attr.cx]="pin.x"
-                        [attr.cy]="pin.y"
-                        [attr.r]="getPinSize(pin.state)"
-                        class="pin-ring"
-                        fill="none"
-                        stroke="rgba(16, 185, 129, 0.4)"
-                        stroke-width="1.5">
-                      </circle>
-                      <circle
-                        [attr.cx]="pin.x"
-                        [attr.cy]="pin.y"
-                        [attr.r]="getPinSize(pin.state) * 0.5"
-                        class="pin-dot"
-                        fill="var(--primary)">
-                      </circle>
-                    </g>
-                  </ng-container>
-                </g>
+
               </svg>
 
               <!-- Floating State Info Tooltip -->
@@ -278,8 +263,24 @@
                   <span>{{ selectedState.name }}</span>
                 </div>
                 <div class="tooltip-body">
-                  <span class="count">{{ selectedState.count }}</span>
-                  <span class="label">Total Orders</span>
+                  <div class="main-stat">
+                    <span class="count">{{ selectedState.count }}</span>
+                    <span class="label">Total Orders</span>
+                  </div>
+                  
+                  <!-- Regional Intelligence Additions -->
+                  <div class="regional-intel" *ngIf="selectedState && (selectedState.topProducts?.length || ((selectedState.priceRange?.high || 0) > 0))">
+                    <div class="intel-section">
+                      <span class="intel-label"><i class="fas fa-crown"></i> Popular Plants</span>
+                      <div class="intel-tags">
+                        <span *ngFor="let p of selectedState.topProducts" class="intel-tag">{{ p.name }}</span>
+                      </div>
+                    </div>
+                    <div class="intel-section">
+                      <span class="intel-label"><i class="fas fa-tags"></i> Price Range</span>
+                      <span class="intel-value">₹{{ selectedState.priceRange?.low }} - ₹{{ selectedState.priceRange?.high }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -291,11 +292,16 @@
             </div>
             <div class="region-list">
               <div *ngFor="let entry of (stateOrderCounts | keyvalue)" class="region-row">
-                <span class="region-name">{{ entry.key.replace('IN-', '') }}</span>
-                <div class="mini-bar-track">
-                  <div class="mini-bar-fill" [style.width.%]="(+entry.value / orders.length) * 100"></div>
+                <div class="region-main-info">
+                  <span class="region-name">{{ entry.key.replace('IN-', '') }}</span>
+                  <div class="mini-bar-track">
+                    <div class="mini-bar-fill" [style.width.%]="(+entry.value / orders.length) * 100"></div>
+                  </div>
+                  <span class="region-count">{{ entry.value }}</span>
                 </div>
-                <span class="region-count">{{ entry.value }}</span>
+                <div class="region-range-info" *ngIf="getRegionRange(entry.key)">
+                  <i class="fas fa-tags"></i> ₹{{ getRegionRange(entry.key).low }} - ₹{{ getRegionRange(entry.key).high }}
+                </div>
               </div>
               <p *ngIf="(stateOrderCounts | keyvalue).length === 0" class="no-data">No regional data yet.</p>
             </div>
@@ -353,24 +359,24 @@
             <div class="marketing-controls">
               <div class="input-group">
                 <label>Product Name</label>
-                <input type="text" #prodName placeholder="e.g. Money Plant">
+                <input type="text" [ngModel]="marketingProductName()" (ngModelChange)="marketingProductName.set($event)" placeholder="e.g. Money Plant">
               </div>
               <div class="input-group">
                 <label>Offer Details</label>
-                <textarea #offerDetails placeholder="e.g. 20% Off for New Year, Limited Stock"></textarea>
+                <textarea [ngModel]="marketingOfferDetails()" (ngModelChange)="marketingOfferDetails.set($event)" placeholder="e.g. 20% Off for New Year, Limited Stock"></textarea>
               </div>
               <div class="action-grid-mini">
-                <button (click)="generateMarketing('social', prodName.value, offerDetails.value)" 
+                <button (click)="generateMarketing('social', marketingProductName(), marketingOfferDetails())" 
                         [disabled]="isMarketingLoading()" class="tool-btn emerald">
                   <i class="fab fa-instagram"></i> Instagram Caption
                 </button>
-                <button (click)="generateMarketing('email', prodName.value, offerDetails.value)" 
+                <button (click)="generateMarketing('email', marketingProductName(), marketingOfferDetails())" 
                         [disabled]="isMarketingLoading()" class="tool-btn lime">
                   <i class="fas fa-envelope"></i> Email Draft
                 </button>
-                <button (click)="generateMarketing('promo', prodName.value, offerDetails.value)" 
+                <button (click)="generateMarketing('care', marketingProductName(), marketingOfferDetails())" 
                         [disabled]="isMarketingLoading()" class="tool-btn glow">
-                  <i class="fas fa-tags"></i> Promo Codes
+                  <i class="fas fa-leaf"></i> Plant Care Tips
                 </button>
               </div>
             </div>
@@ -384,9 +390,14 @@
               <div class="copy-display">
                 {{ marketingContent() }}
               </div>
-              <button class="copy-btn-mini" (click)="copyToClipboard(marketingContent()!)">
-                <i class="fas fa-copy"></i> Copy Copy
-              </button>
+              <div class="result-actions">
+                <button class="copy-btn-mini" (click)="copyToClipboard(marketingContent()!)">
+                  <i class="fas fa-copy"></i> Copy Copy
+                </button>
+                <button class="regen-btn-mini" (click)="generateMarketing(lastType, marketingProductName(), marketingOfferDetails())" [disabled]="isMarketingLoading()">
+                  <i class="fas fa-rotate"></i> Try Another
+                </button>
+              </div>
             </div>
             <ng-template #noMarketing>
               <div class="no-data-large mini">

@@ -442,6 +442,7 @@
                                 <th>Customer Name</th>
                                 <th>Address</th>
                                 <th>Order Date</th>
+                                <th>Speed</th>
                                 <th>Expected Delivery</th>
                                 <th>Status</th>
                                 <th style="text-align: center;">Action</th>
@@ -454,6 +455,16 @@
                                 <td class="address-cell">{{ order.userId?.address || order.shippingAddress || 'N/A' }},
                                     {{ order.userId?.city || '' }}</td>
                                 <td class="date-cell">{{ order.orderDate | date:'mediumDate' }}</td>
+                                <td style="font-weight: 800; color: #166534; font-size: 0.85rem;">
+                                    <span [style.background]="(order.deliveryType || '').includes('2 Day') ? '#fef2f2' : 'transparent'"
+                                          [style.color]="(order.deliveryType || '').includes('2 Day') ? '#ef4444' : '#166534'"
+                                          [style.padding]="(order.deliveryType || '').includes('2 Day') ? '4px 8px' : '0'"
+                                          [style.borderRadius]="'6px'"
+                                          [style.border]="(order.deliveryType || '').includes('2 Day') ? '1px solid #fee2e2' : 'none'">
+                                        <i class="fas fa-bolt" *ngIf="(order.deliveryType || '').includes('2 Day')" style="margin-right: 4px;"></i>
+                                        {{ order.deliveryType || '7 Day Delivery' }}
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="date-picker-wrapper" (click)="dateInput.showPicker()"
                                         style="display: inline-flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s; font-weight: 700; color: #1e293b; font-size: 0.88rem; min-width: 130px;"
@@ -675,6 +686,7 @@
                                 <th>Order ID</th>
                                 <th *ngIf="!selectedCourier">Partner</th>
                                 <th>Method</th>
+                                <th>Speed</th>
                                 <th>Order Amount</th>
                                 <th>Courier Charges</th>
                                 <th>Final Status</th>
@@ -690,6 +702,16 @@
                                     <span style="font-weight: 700; color: #1e293b;">
                                         {{ order.paymentMethod === 'Cash on Delivery' ? 'COD' : order.paymentMethod
                                         }}
+                                    </span>
+                                </td>
+                                <td style="font-weight: 800; color: #166534; font-size: 0.85rem;">
+                                    <span [style.background]="(order.deliveryType || '').includes('2 Day') ? '#fef2f2' : 'transparent'"
+                                          [style.color]="(order.deliveryType || '').includes('2 Day') ? '#ef4444' : '#166534'"
+                                          [style.padding]="(order.deliveryType || '').includes('2 Day') ? '4px 8px' : '0'"
+                                          [style.borderRadius]="'6px'"
+                                          [style.border]="(order.deliveryType || '').includes('2 Day') ? '1px solid #fee2e2' : 'none'">
+                                        <i class="fas fa-bolt" *ngIf="(order.deliveryType || '').includes('2 Day')" style="margin-right: 4px;"></i>
+                                        {{ order.deliveryType || '7 Day Delivery' }}
                                     </span>
                                 </td>
                                 <td>₹{{ order.totalAmount }}</td>
@@ -848,6 +870,7 @@
                                 <th>Order ID</th>
                                 <th>Customer</th>
                                 <th>Payment Method</th>
+                                <th>Speed</th>
                                 <th>Order Amount</th>
                                 <th>Courier Partner</th>
                                 <th>Courier Fee</th>
@@ -871,6 +894,16 @@
                                             [class.fa-qrcode]="!isPaymentCOD(order.paymentMethod)"></i>
                                         {{ isPaymentCOD(order.paymentMethod) ? 'COD' : 'UPI' }}
                                     </div>
+                                </td>
+                                <td style="font-weight: 800; color: #166534; font-size: 0.85rem;">
+                                    <span [style.background]="(order.deliveryType || '').includes('2 Day') ? '#fef2f2' : 'transparent'"
+                                          [style.color]="(order.deliveryType || '').includes('2 Day') ? '#ef4444' : '#166534'"
+                                          [style.padding]="(order.deliveryType || '').includes('2 Day') ? '4px 8px' : '0'"
+                                          [style.borderRadius]="'6px'"
+                                          [style.border]="(order.deliveryType || '').includes('2 Day') ? '1px solid #fee2e2' : 'none'">
+                                        <i class="fas fa-bolt" *ngIf="(order.deliveryType || '').includes('2 Day')" style="margin-right: 4px;"></i>
+                                        {{ order.deliveryType || '7 Day Delivery' }}
+                                    </span>
                                 </td>
                                 <td style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">₹{{ order.totalAmount
                                     | number:'1.0-0' }}</td>
@@ -1505,6 +1538,15 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+
+                        <!-- Delivery Speed Display -->
+                        <div class="input-stack">
+                            <label style="color: #92400e;"><i class="fas fa-bolt" style="margin-right: 6px;"></i> Delivery Speed</label>
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 12px; color: #166534; font-weight: 850; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-clock"></i>
+                                {{ selectedOrderForShip?.deliveryType || '7 Day Delivery' }}
+                            </div>
+                        </div>
 
                         <!-- Courier Partner Selection -->
                         <div class="input-stack">

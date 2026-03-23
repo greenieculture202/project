@@ -95,13 +95,32 @@
                     </div>
                 </div>
 
-                <!-- 5. Residence (Address) -->
+                <!-- 5. State / Region -->
+                <div class="field-box">
+                    <label>State / Region</label>
+                    <div class="input-container"
+                        [class.field-error]="registerForm.get('state')?.invalid && registerForm.get('state')?.touched">
+                        <i class="fas fa-map-location-dot"></i>
+                        <select formControlName="state" class="crystal-select">
+                            <option value="" disabled selected>Select State</option>
+                            <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <div class="error-tag"
+                        *ngIf="registerForm.get('state')?.invalid && registerForm.get('state')?.touched">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span *ngIf="registerForm.get('state')?.errors?.['required']">State is required</span>
+                    </div>
+                </div>
+
+                <!-- 6. Residence (Address) -->
                 <div class="field-box">
                     <label>Residence (Address)</label>
                     <div class="input-container textarea-box"
                         [class.field-error]="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">
                         <i class="fas fa-location-arrow"></i>
-                        <textarea formControlName="address" placeholder="Address, City, State, PIN" rows="1"></textarea>
+                        <textarea formControlName="address" placeholder="Complete address for delivery" rows="1"></textarea>
                     </div>
                     <div class="error-tag"
                         *ngIf="registerForm.get('address')?.invalid && registerForm.get('address')?.touched">

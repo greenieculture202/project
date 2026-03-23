@@ -40,6 +40,8 @@ export class AiPlantAssistantComponent {
   private router = inject(Router);
   private aiService = inject(AiService);
 
+  isLoggedIn = () => this.authService.isLoggedIn();
+
   isOpen = signal(false);
   isTyping = signal(false);
   showHistory = signal(false);
@@ -264,7 +266,27 @@ export class AiPlantAssistantComponent {
             forkJoin(searchRequests).subscribe((results: any) => {
               // Flatten and take a few unique products
               const allProducts = results.flat() as Product[];
-              const uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+              let uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+
+              // --- CRITICAL IMPROVEMENT: Prioritize the identified plantName ---
+              if (res.plantName && res.plantName !== 'Plant') {
+                const targetName = res.plantName.toLowerCase();
+                const exactMatchIdx = uniqueProducts.findIndex(p => p.name.toLowerCase() === targetName);
+                
+                if (exactMatchIdx !== -1) {
+                  // Move exact match to first position
+                  const [exactMatch] = uniqueProducts.splice(exactMatchIdx, 1);
+                  uniqueProducts = [exactMatch, ...uniqueProducts];
+                } else {
+                  // Check for partial match if no exact match
+                  const partialMatchIdx = uniqueProducts.findIndex(p => p.name.toLowerCase().includes(targetName));
+                  if (partialMatchIdx !== -1) {
+                    const [partialMatch] = uniqueProducts.splice(partialMatchIdx, 1);
+                    uniqueProducts = [partialMatch, ...uniqueProducts];
+                  }
+                }
+              }
+
               aiMsg.recommendedProducts = uniqueProducts.slice(0, 3);
               this.scrollToBottom();
             });
@@ -299,7 +321,18 @@ export class AiPlantAssistantComponent {
             );
             forkJoin(searchRequests).subscribe((results: any) => {
               const allProducts = results.flat() as Product[];
-              const uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+              let uniqueProducts = Array.from(new Map(allProducts.map((p: Product) => [p._id || p.name, p])).values());
+
+              // --- CRITICAL IMPROVEMENT: Prioritize the identified plantName (even on error) ---
+              if (errBody.plantName && errBody.plantName !== 'Plant') {
+                const targetName = errBody.plantName.toLowerCase();
+                const exactMatchIdx = uniqueProducts.findIndex(p => p.name.toLowerCase() === targetName);
+                if (exactMatchIdx !== -1) {
+                  const [exactMatch] = uniqueProducts.splice(exactMatchIdx, 1);
+                  uniqueProducts = [exactMatch, ...uniqueProducts];
+                }
+              }
+
               aiMsg.recommendedProducts = uniqueProducts.slice(0, 3);
               this.scrollToBottom();
             });

@@ -30,16 +30,7 @@ export class ProductDetailComponent implements OnInit {
     isLoading = true;
     expandedFaqs = new Set<string>();
 
-    planters = [
-        { id: 'gropot', name: 'GroPot', price: '₹249', thumbnail: 'https://cdn-icons-png.flaticon.com/64/628/628324.png', image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=400&q=60' },
-        { id: 'krish', name: 'Krish', price: '₹299', thumbnail: 'https://cdn-icons-png.flaticon.com/64/1892/1892747.png', image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=400&q=60' },
-        { id: 'kyoto', name: 'Kyoto', price: '₹299', thumbnail: 'https://cdn-icons-png.flaticon.com/64/2917/2917995.png', image: 'https://images.unsplash.com/photo-1463320726281-696a485928c7?auto=format&fit=crop&w=400&q=60' },
-        { id: 'lagos', name: 'Lagos', price: '₹349', thumbnail: 'https://cdn-icons-png.flaticon.com/64/1147/1147767.png', image: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=400&q=60' },
-        { id: 'diamond', name: 'Diamond', price: '₹420', thumbnail: 'https://cdn-icons-png.flaticon.com/64/3076/3076376.png', image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=400&q=60' },
-        { id: 'roma', name: 'Roma', price: '₹420', thumbnail: 'https://cdn-icons-png.flaticon.com/64/3079/3079155.png', image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=400&q=60' }
-    ];
 
-    selectedPlanter = 'gropot';
     selectedWeight = '';
     selectedPrice = '';
     currentPlanterImage = '';
@@ -85,7 +76,6 @@ export class ProductDetailComponent implements OnInit {
 
     setupProductDetails() {
         if (!this.product) return;
-        this.planters[0].price = this.product.price;
 
         const cat = this.product.category || '';
         const isWeightBased = cat.includes('Seeds') ||
@@ -96,9 +86,7 @@ export class ProductDetailComponent implements OnInit {
         if (isWeightBased) {
             this.setupWeightVariants();
         } else {
-            // Default to GroPot for non-weight items
-            this.selectedPlanter = this.planters[0].id;
-            this.selectedPrice = this.planters[0].price;
+            this.selectedPrice = this.product.price;
             this.currentPlanterImage = this.product.image;
         }
 
@@ -135,7 +123,7 @@ export class ProductDetailComponent implements OnInit {
     get thumbnails(): string[] {
         if (!this.product) return [];
         const additionalImages = this.product.images || [];
-        return [this.product.image, ...additionalImages, ...this.planters.map(p => p.image)];
+        return [this.product.image, ...additionalImages];
     }
 
     get displayImage(): string {
@@ -158,27 +146,6 @@ export class ProductDetailComponent implements OnInit {
         } else if (index < totalProductPics) {
             // It's one of the additional images
             this.currentPlanterImage = additionalImages[index - 1];
-        } else {
-            // It's a planter image
-            const planterIndex = index - totalProductPics;
-            if (this.planters[planterIndex]) {
-                this.selectPlanter(this.planters[planterIndex].id);
-            }
-        }
-    }
-
-    selectPlanter(planterId: string) {
-        this.selectedPlanter = planterId;
-        const planter = this.planters.find(p => p.id === planterId);
-        if (planter) {
-            this.selectedPrice = planter.price;
-            this.currentPlanterImage = planter.image;
-
-            const additionalImages = this.product?.images || [];
-            const totalProductPics = 1 + additionalImages.length;
-
-            this.activeImageIndex = totalProductPics + this.planters.findIndex(p => p.id === planterId);
-            this.showVideo = false;
         }
     }
 
@@ -219,7 +186,7 @@ export class ProductDetailComponent implements OnInit {
                 cat.includes('Nutrients');
 
             const weight = isWeightBased ? this.selectedWeight : undefined;
-            const planter = isWeightBased ? undefined : this.selectedPlanter;
+            const planter = undefined;
 
             // Create a modified product object with selected price
             const productToBag = { ...this.product, price: this.selectedPrice };
@@ -248,7 +215,7 @@ export class ProductDetailComponent implements OnInit {
                 cat.includes('Nutrients');
 
             const weight = isWeightBased ? this.selectedWeight : undefined;
-            const planter = isWeightBased ? undefined : this.selectedPlanter;
+            const planter = undefined;
 
             // Create a modified product object with selected price
             const productToBag = { ...this.product, price: this.selectedPrice };

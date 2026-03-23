@@ -61,8 +61,8 @@
             </div>
           </div>
 
-          <!-- Set Reminder Button -->
-          <div *ngIf="msg.type === 'ai' && msg.remindable" class="reminder-prompt">
+          <!-- Set Reminder Button (Only for Logged in Users) -->
+          <div *ngIf="msg.type === 'ai' && msg.remindable && isLoggedIn()" class="reminder-prompt">
             <button class="set-reminder-btn ripple" (click)="confirmReminder()">
               <i class="fas fa-bell"></i> Set Care Reminder
             </button>

@@ -22,9 +22,12 @@
                 [routerLink]="['/product', getSlug(product.name)]" style="cursor: pointer;">
                 <div class="image-container">
                     <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">
-                    <img [src]="product.hoverImage || product.image" [alt]="product.name" class="product-img hover-img"
+                    <img [src]="(product.images && product.images.length > 0) ? product.images[0] : (product.hoverImage || product.image)" [alt]="product.name" class="product-img hover-img"
                         loading="lazy">
                     <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
+                    <span class="regional-badge" *ngIf="product.isRegionalFavorite">
+                        <i class="fas fa-map-marker-alt"></i> Trending in {{ userState }}
+                    </span>
                 </div>
                 <div class="product-info">
                     <h3 class="product-title">{{ product.name }}</h3>

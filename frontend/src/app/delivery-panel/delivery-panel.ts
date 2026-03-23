@@ -489,6 +489,7 @@ export class DeliveryPanelComponent implements OnInit {
       next: (orders) => {
         // Only show relevant delivery statuses
         this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+        this.autoCalculateExpectedDates();
         this.checkAutomaticDelivery();
         this.updateComparisonData();
         this.calculatePaymentSummary();
@@ -1282,6 +1283,47 @@ export class DeliveryPanelComponent implements OnInit {
         this.loadSettlementHistory(courierName);
       },
       error: (err) => this.notiService.show('Settlement processing failed. Please try again.', 'Process Error', 'error')
+    });
+  }
+
+  autoCalculateExpectedDates() {
+    const token = sessionStorage.getItem('auth_token');
+    if (!token) return;
+
+    this.allOrders.forEach(order => {
+      // If expected date is missing AND it's not Delivered/Cancelled
+      if (!order.expectedDeliveryDate && order.status !== 'Delivered' && order.status !== 'Cancelled') {
+        const type = (order.deliveryType || '').toLowerCase();
+        let daysToAdd = 0;
+
+        if (type.includes('2 day')) daysToAdd = 2;
+        else if (type.includes('4 day')) daysToAdd = 4;
+        else if (type.includes('7 day')) daysToAdd = 7;
+        else if (type.includes('10 day')) daysToAdd = 10;
+
+        if (daysToAdd > 0) {
+          const orderDate = new Date(order.orderDate);
+          const expectedDate = new Date(orderDate);
+          expectedDate.setDate(orderDate.getDate() + daysToAdd);
+          
+          order.expectedDeliveryDate = expectedDate.toISOString();
+
+          // Sync with server
+          const payload = {
+            status: order.status,
+            expectedDeliveryDate: order.expectedDeliveryDate
+          };
+
+          this.http.put(`/api/admin/orders/${order._id}/status`, payload, {
+            headers: { 'x-auth-token': token }
+          }).subscribe({
+            next: (updated: any) => {
+              console.log(`[Auto-Date] Updated order ${order.orderId} to ${daysToAdd} days`);
+            },
+            error: (err) => console.error(`[Auto-Date] Error updating order ${order.orderId}:`, err)
+          });
+        }
+      }
     });
   }
 }

@@ -64,9 +64,13 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: 'UPI'
     },
+    deliveryType: {
+        type: String,
+        default: 'Standard Delivery (7 Days)'
+    },
     expectedDeliveryDate: {
-        type: Date,
-        default: null
+        type: String,
+        default: ''
     },
     orderId: {
         type: String,
@@ -81,10 +85,6 @@ const orderSchema = new mongoose.Schema({
         default: null
     },
     deliveryPin: {
-        type: String,
-        default: ''
-    },
-    expectedDeliveryDate: {
         type: String,
         default: ''
     },

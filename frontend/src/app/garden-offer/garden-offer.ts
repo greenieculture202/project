@@ -21,7 +21,7 @@ export class GardenOfferComponent implements OnInit {
 
     ngOnInit() {
         // Fetch products that have the unique G-GARDEN-6-SEC tag/category
-        this.productService.getProducts('G-GARDEN-6-SEC', 6).subscribe(products => {
+        this.productService.getProducts('G-GARDEN-6-SEC', undefined, 6).subscribe(products => {
             if (products) {
                 this.gardenTools = products;
             }

@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, AfterViewInit, inject } from '@angula
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
+import { AuthService } from '../services/auth.service';
 
 
 
@@ -16,6 +17,7 @@ export class ProductTabsComponent implements AfterViewInit {
     @ViewChild('sliderRef') sliderRef!: ElementRef;
 
     productService = inject(ProductService);
+    authService = inject(AuthService);
     router = inject(Router);
 
 
@@ -33,14 +35,19 @@ export class ProductTabsComponent implements AfterViewInit {
         return this.products;
     }
 
+    get userState(): string | null {
+        return sessionStorage.getItem('user_state');
+    }
+
     ngAfterViewInit() {
         // Initialize scroll position
     }
 
     loadProducts() {
+        const userState = sessionStorage.getItem('user_state') || undefined;
         // Subscribe to the Observable from the service
         // Limit to 6 products as requested
-        this.productService.getProducts(this.activeTab, 6).subscribe(products => {
+        this.productService.getProducts(this.activeTab, userState, 6).subscribe(products => {
             this.products = products; // Show all products
         });
     }

@@ -71,9 +71,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.notificationService.notifications$.pipe(
             takeUntil(this.destroy$)
         ).subscribe(notifications => {
+            const newUnreadCount = notifications.filter(n => !n.isRead).length;
+            
+            // Play sound if a NEW notification arrives
+            if (newUnreadCount > this.unreadCount) {
+                this.playNotificationSound();
+            }
+            
             this.notifications = notifications;
-            this.unreadCount = notifications.filter(n => !n.isRead).length;
+            this.unreadCount = newUnreadCount;
         });
+    }
+
+    private playNotificationSound() {
+        try {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play();
+        } catch (err) {
+            console.warn('Could not play notification sound:', err);
+        }
     }
 
     toggleNotifications() {

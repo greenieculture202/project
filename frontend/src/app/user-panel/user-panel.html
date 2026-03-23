@@ -49,8 +49,8 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon orders">
-                        <i class="fas fa-box"></i>
+                    <div class="stat-icon">
+                        <i class="fas fa-shopping-cart"></i>
                     </div>
                     <div class="stat-details">
                         <span class="stat-value">{{ dashboardData.stats.totalOrders }}</span>
@@ -58,8 +58,8 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon points">
-                        <i class="fas fa-star"></i>
+                    <div class="stat-icon">
+                        <i class="fas fa-leaf"></i>
                     </div>
                     <div class="stat-details">
                         <span class="stat-value">{{ dashboardData.stats.greenPoints }}</span>
@@ -75,18 +75,36 @@
                 </div>
                 <div class="orders-list">
                     <div class="order-item" *ngFor="let order of recentOrdersSlice">
-                        <div class="order-info">
-                            <span class="order-id">{{ order.orderId }}</span>
-                            <span class="order-date">{{ order.orderDate | date:'mediumDate' }}</span>
+                        <div class="order-main-info">
+                            <div class="order-id-row">
+                                <span class="order-id">#{{ order.orderId.substr(-8) }}</span>
+                                <span class="order-badge" [ngClass]="order.status.toLowerCase()">{{ order.status }}</span>
+                            </div>
+                            <span class="order-date">Ordered on {{ order.orderDate | date:'mediumDate' }}</span>
                         </div>
-                        <div class="order-status-group">
-                            <div class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</div>
-                            <div class="tracking-mini" *ngIf="order.trackingNumber"
-                                style="font-size: 0.75rem; color: #15803d; margin-top: 4px;">
-                                <i class="fas fa-truck"></i> {{order.trackingNumber}}
+
+                        <div class="delivery-highlight-box" *ngIf="order.deliveryType">
+                            <div class="speed-indicator" [class.priority]="order.deliveryType.includes('2 Day')">
+                                <i class="fas" [class.fa-bolt]="order.deliveryType.includes('2 Day')"
+                                    [class.fa-truck]="!order.deliveryType.includes('2 Day')"></i>
+                                <span>{{ order.deliveryType }}</span>
+                            </div>
+                            <div class="date-indicator"
+                                *ngIf="order.expectedDeliveryDate && order.status !== 'Delivered'">
+                                <span class="label">Expected Delivery</span>
+                                <span class="val">{{ order.expectedDeliveryDate | date:'EEEE, dd MMM' }}</span>
                             </div>
                         </div>
-                        <div class="order-total">₹{{ order.totalAmount }}</div>
+
+                        <div class="order-price-box">
+                            <span class="price-val">₹{{ order.totalAmount }}</span>
+                        </div>
+
+                        <div class="order-actions">
+                            <button class="mini-btn" (click)="setActiveTab('orders')">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="no-orders" *ngIf="dashboardData.recentOrders.length === 0">
                         <p>No orders yet. Start your garden today!</p>
@@ -103,52 +121,141 @@
 
         <!-- Orders Tab -->
         <ng-container *ngIf="activeTab === 'orders' && !isLoading">
-            <header class="content-header">
-                <h1>My Orders</h1>
-                <p>Track and manage your plant deliveries.</p>
+            <header class="content-header orders-header">
+                <div class="header-text">
+                    <h1>My Orders history</h1>
+                    <p>Track, manage and download bills for all your purchases.</p>
+                </div>
+                <div class="order-count-badge" *ngIf="allOrders.length > 0">
+                    <span class="count">{{ allOrders.length }}</span>
+                    <span class="label">Total Orders</span>
+                </div>
             </header>
 
-            <div class="orders-list full-history">
-                <div class="order-item" *ngFor="let order of allOrders">
-                    <div class="order-main-info">
-                        <div class="order-header-row">
-                            <span class="order-id">{{ order.orderId }}</span>
-                            <span class="order-date">{{ order.orderDate | date:'longDate' }}</span>
-                        </div>
-                        <div class="order-items-preview">
-                            <div class="item-detail-row" *ngFor="let item of order.items">
-                                <div class="item-pic">
-                                    <img [src]="item.image" [alt]="item.name" title="{{item.name}}">
+            <div class="orders-list-container">
+                <div class="order-card-wrapper" *ngFor="let order of allOrders">
+                    <!-- Main Order Summary Card -->
+                    <div class="order-item">
+                        <div class="order-main-info">
+                            <div class="order-header-row">
+                                <span class="order-id">#{{ order.orderId.substr(-8) }}</span>
+                                <span class="order-date">{{ order.orderDate | date:'longDate' }}</span>
+                            </div>
+                            <div class="order-items-preview">
+                                <div class="item-detail-row" *ngFor="let item of order.items">
+                                    <div class="item-pic">
+                                        <img [src]="item.image" [alt]="item.name">
+                                    </div>
+                                    <div class="item-text-info">
+                                        <span class="item-name">{{ item.name }} x{{ item.quantity }}</span>
+                                        <span class="item-meta">₹{{ item.price }} per unit</span>
+                                    </div>
                                 </div>
-                                <div class="item-text-info">
-                                    <span class="item-name">{{ item.name }} x{{ item.quantity }}</span>
-                                    <span class="item-meta">
-                                        {{ item.weight ? 'Weight: ' + item.weight : '' }}
-                                        {{ item.planter ? (item.weight ? ' | ' : '') + item.planter + ' Planter' : '' }}
-                                        <span class="gift-badge" *ngIf="item.isGift">
-                                            <i class="fas fa-gift"></i> Gift
-                                        </span>
-                                    </span>
+                            </div>
+                        </div>
+
+                        <div class="status-price-group">
+                            <div class="expected-delivery-info" *ngIf="order.status !== 'Delivered'">
+                                <span class="label">Expected By</span>
+                                <span class="val">{{ order.expectedDeliveryDate | date:'mediumDate' }}</span>
+                            </div>
+                            <div class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</div>
+                            <div class="order-total">₹{{ order.totalAmount }}</div>
+                            <div class="order-actions">
+                                <button class="view-details-btn" (click)="toggleOrderDetails(order.orderId)">
+                                    <i class="fas" [ngClass]="expandedOrderId === order.orderId ? 'fa-chevron-up' : 'fa-info-circle'"></i>
+                                    {{ expandedOrderId === order.orderId ? 'Hide' : 'Details' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expanded Details Section -->
+                    <div class="order-details-expanded" *ngIf="expandedOrderId === order.orderId">
+                        <div class="details-inner">
+                            <!-- Order Tracking Stepper -->
+                            <div class="order-tracker-container">
+                                <div class="tracker-steps">
+                                    <div class="step active">
+                                        <div class="step-icon">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <div class="step-label">Order Placed</div>
+                                        <div class="step-date">{{ order.orderDate | date:'MMM dd, yyyy' }}</div>
+                                    </div>
+                                    <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status)">
+                                        <div class="step-icon">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="step-label">Shipped</div>
+                                        <div class="step-date" *ngIf="order.shippedDate">{{ order.shippedDate | date:'MMM dd, yyyy' }}</div>
+                                    </div>
+                                    <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(order.status)">
+                                        <div class="step-icon">
+                                            <i class="fas fa-truck-fast"></i>
+                                        </div>
+                                        <div class="step-label">Out for Delivery</div>
+                                        <div class="step-date" *ngIf="order.outForDeliveryDate">{{ order.outForDeliveryDate | date:'MMM dd, yyyy' }}</div>
+                                    </div>
+                                    <div class="step" [class.active]="order.status === 'Delivered'">
+                                        <div class="step-icon">
+                                            <i class="fas fa-house-circle-check"></i>
+                                        </div>
+                                        <div class="step-label">Delivered</div>
+                                        <div class="step-date" *ngIf="order.deliveryDate">{{ order.deliveryDate | date:'MMM dd, yyyy' }}</div>
+                                    </div>
+                                </div>
+                                <div class="tracker-line">
+                                    <div class="line-fill" [style.width]="
+                                        order.status === 'Delivered' ? '100%' :
+                                        order.status === 'Out for Delivery' ? '66%' :
+                                        order.status === 'Shipped' ? '33%' : '0%'
+                                    "></div>
+                                </div>
+                            </div>
+
+                            <div class="details-section">
+                                <h5>Price Breakdown</h5>
+                                <div class="breakdown-list">
+                                    <div class="breakdown-item">
+                                        <span>Order Subtotal</span>
+                                        <span>₹{{ order.totalAmount }}</span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span>Delivery Charge</span>
+                                        <span class="free">FREE</span>
+                                    </div>
+                                    <div class="breakdown-item">
+                                        <span>Packaging & Care</span>
+                                        <span>₹0</span>
+                                    </div>
+                                    <div class="breakdown-item grand-total">
+                                        <span>Total Paid</span>
+                                        <span>₹{{ order.totalAmount }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="details-section downloads">
+                                <h5>Bill & Documents</h5>
+                                <div class="bill-btns">
+                                    <button class="sl-btn primary full-width" (click)="downloadBill(order)">
+                                        <i class="fas fa-file-invoice-dollar"></i> Download Bill
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="status-price-group">
-                        <div class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</div>
-                        <div class="tracking-info" *ngIf="order.trackingNumber"
-                            style="margin-top: 8px; font-size: 0.8rem; background: #f0fdf4; padding: 6px 12px; border-radius: 10px; color: #166534; border: 1px solid #dcfce7;">
-                            <i class="fas fa-truck-fast"></i> {{order.courierName}}:
-                            <strong>{{order.trackingNumber}}</strong>
-                        </div>
-                        <div class="order-total">₹{{ order.totalAmount }}</div>
-                        <button class="bill-download-btn" (click)="downloadBill(order)" title="Download Bill">
-                            <i class="fas fa-file-pdf"></i>
-                            <span>Download Bill</span>
-                        </button>
-                    </div>
                 </div>
-                <div class="no-orders" *ngIf="allOrders.length === 0">
-                    <p>You haven't placed any orders yet.</p>
+
+                <div class="no-orders-luxury" *ngIf="allOrders.length === 0">
+                    <div class="empty-icon-wrap">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h2>No orders yet</h2>
+                    <p>It looks like you haven't started your green journey with us yet.</p>
+                    <button class="shop-now-btn" (click)="setActiveTab('dashboard')">
+                        <i class="fas fa-shopping-bag"></i> Start Shopping
+                    </button>
                 </div>
             </div>
         </ng-container>

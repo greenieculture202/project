@@ -851,11 +851,25 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.product-card:hover .card-image img {
+.main-img {
+    z-index: 1;
+}
+
+.hover-img {
+    opacity: 0;
+    z-index: 2;
+}
+
+.product-card:hover .hover-img {
+    opacity: 1;
     transform: scale(1.05);
+}
+
+.product-card:hover .main-img {
+    opacity: 0;
 }
 
 .card-discount {

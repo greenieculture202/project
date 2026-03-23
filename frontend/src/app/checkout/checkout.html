@@ -211,7 +211,30 @@
                                 </div>
                             </div>
                         </div>
-
+                        
+                        <!-- Delivery Options Selection -->
+                        <div class="delivery-selection-box">
+                            <div class="section-title">
+                                <i class="fas fa-shipping-fast"></i>
+                                <h3>Delivery Options</h3>
+                            </div>
+                            <div class="delivery-options-grid">
+                                <div class="delivery-opt-card" *ngFor="let opt of deliveryOptions"
+                                    [class.selected]="selectedOptionId() === opt.id"
+                                    (click)="selectedOptionId.set(opt.id); saveCheckoutState()">
+                                    <div class="opt-radio-wrapper">
+                                        <div class="custom-radio" [class.checked]="selectedOptionId() === opt.id"></div>
+                                    </div>
+                                    <div class="opt-main-info">
+                                        <span class="opt-label">{{ opt.name }}</span>
+                                        <span class="opt-sub">{{ opt.description }}</span>
+                                    </div>
+                                    <div class="opt-price-tag" [class.premium]="opt.surcharge > 0">
+                                        {{ opt.surcharge > 0 ? '+ ₹' + opt.surcharge : 'FREE' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="billing-summary">
                             <div class="bill-row">
@@ -457,6 +480,10 @@
                             <span class="value" [class.success-text]="!placedOrder?.deliveryCharge">
                                 {{ placedOrder?.deliveryCharge ? '₹' + placedOrder.deliveryCharge : '₹0.00 (COMPLIMENTARY)' }}
                             </span>
+                        </div>
+                        <div class="summary-row" *ngIf="placedOrder?.deliveryType">
+                            <span class="label">DELIVERY SPEED</span>
+                            <span class="value">{{ placedOrder.deliveryType }}</span>
                         </div>
                         <div class="summary-divider"></div>
                         <div class="summary-row accent">

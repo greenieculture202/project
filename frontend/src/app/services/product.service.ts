@@ -20,6 +20,7 @@ export interface Product {
     slug?: string;
     variants?: { name: string; price: string; originalPrice?: string; }[];
     stock?: number;
+    isRegionalFavorite?: boolean;
 }
 
 @Injectable({
@@ -327,8 +328,8 @@ export class ProductService {
     };
 
     // Get all products or products by category
-    getProducts(category?: string, limit?: number): Observable<Product[]> {
-        const cacheKey = `${category || 'all'}-${limit || 'none'}`;
+    getProducts(category?: string, state?: string, limit?: number): Observable<Product[]> {
+        const cacheKey = `${category || 'all'}-${state || 'none'}-${limit || 'none'}`;
         if (this.categoryCache.has(cacheKey)) {
             return of(this.categoryCache.get(cacheKey)!);
         }
@@ -338,6 +339,9 @@ export class ProductService {
 
         if (category) {
             params.push(`category=${encodeURIComponent(category)}`);
+        }
+        if (state) {
+            params.push(`state=${encodeURIComponent(state)}`);
         }
         if (limit) {
             params.push(`limit=${limit}`);

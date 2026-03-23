@@ -32,6 +32,15 @@ export class CheckoutComponent implements OnInit {
     private couriersList = signal<any[]>([]);
     selectedState = signal<string>('');
 
+    // Delivery Options
+    deliveryOptions = [
+        { id: 'priority', name: '2 Day Delivery', surcharge: 150, description: 'Priority Handling' },
+        { id: 'express', name: '4 Day Delivery', surcharge: 80, description: 'Express Handling' },
+        { id: 'standard', name: '7 Day Delivery', surcharge: 0, description: 'Standard Handling' },
+        { id: 'eco', name: '10 Day Delivery', surcharge: 0, description: 'Eco Handling' }
+    ];
+    selectedOptionId = signal<string>('standard');
+
     showReviewDialog = false;
 
     items = computed(() => {
@@ -79,10 +88,11 @@ export class CheckoutComponent implements OnInit {
             (c.states || []).map((s: string) => s.toLowerCase()).includes(state.toLowerCase())
         );
         
-        if (servingCouriers.length === 0) return 0;
+        const baseCharge = servingCouriers.length === 0 ? 0 : Math.min(...servingCouriers.map((c: any) => c.fee || 0));
         
-        // Return minimum fee among serving couriers
-        return Math.min(...servingCouriers.map((c: any) => c.fee || 0));
+        // Add surcharge from selected delivery option
+        const selectedOpt = this.deliveryOptions.find(o => o.id === this.selectedOptionId());
+        return baseCharge + (selectedOpt ? selectedOpt.surcharge : 0);
     });
 
     totalAmount = computed(() => {
@@ -479,7 +489,8 @@ export class CheckoutComponent implements OnInit {
             stateName: this.stateName,
             pincode: this.pincode,
             currentStep: this.currentStep,
-            selectedPayment: this.selectedPayment
+            selectedPayment: this.selectedPayment,
+            selectedOptionId: this.selectedOptionId()
         };
         localStorage.setItem('checkout_state', JSON.stringify(state));
     }
@@ -501,6 +512,7 @@ export class CheckoutComponent implements OnInit {
                 this.pincode = state.pincode || '';
                 this.currentStep = state.currentStep || 1;
                 this._selectedPayment = state.selectedPayment || '';
+                if (state.selectedOptionId) this.selectedOptionId.set(state.selectedOptionId);
 
                 if (this.currentStep === 3 && this.selectedPayment === 'upi') {
                     // Reset UPI state on reload to avoid ghost timers
@@ -581,6 +593,7 @@ export class CheckoutComponent implements OnInit {
             })),
             totalAmount: this.totalAmount(),
             deliveryCharge: this.deliveryCharge(),
+            deliveryType: this.deliveryOptions.find(o => o.id === this.selectedOptionId())?.name || 'Standard Delivery (7 Days)',
             paymentMethod: this.selectedPayment === 'cod' ? 'Cash on Delivery' : 'UPI',
             appliedOfferCode: this.appliedOffer?.code || null,
             offerBenefit: this.appliedOffer?.benefit || null,

@@ -23,6 +23,9 @@ export class AuthService {
     private profilePicSubject = new BehaviorSubject<string | null>(sessionStorage.getItem('user_pic'));
     profilePic$ = this.profilePicSubject.asObservable();
 
+    private userStateSubject = new BehaviorSubject<string | null>(sessionStorage.getItem('user_state'));
+    userState$ = this.userStateSubject.asObservable();
+
     private cartService = inject(CartService);
     private notificationService = inject(NotificationService);
 
@@ -58,12 +61,14 @@ export class AuthService {
                 sessionStorage.setItem('user_name', res.user.fullName);
                 sessionStorage.setItem('user_id', res.user._id);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
+                sessionStorage.setItem('user_state', res.user.state || '');
                 sessionStorage.setItem('is_admin', 'false');
 
                 this.isLoggedInSubject.next(true);
                 this.isAdminSubject.next(false);
                 this.currentUserSubject.next(res.user.fullName);
                 this.profilePicSubject.next(res.user.profilePic || null);
+                this.userStateSubject.next(res.user.state || null);
 
                 // Sync cart from backend after login
                 this.cartService.syncWithBackend();
@@ -113,11 +118,13 @@ export class AuthService {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
+                sessionStorage.setItem('user_state', res.user.state || '');
                 sessionStorage.setItem('is_admin', 'false');
                 this.isLoggedInSubject.next(true);
                 this.isAdminSubject.next(false);
                 this.currentUserSubject.next(res.user.fullName);
                 this.profilePicSubject.next(res.user.profilePic || null);
+                this.userStateSubject.next(res.user.state || null);
                 this.cartService.syncWithBackend();
                 this.notificationService.refresh();
             })
@@ -129,11 +136,13 @@ export class AuthService {
         sessionStorage.removeItem('user_name');
         sessionStorage.removeItem('user_id');
         sessionStorage.removeItem('user_pic');
+        sessionStorage.removeItem('user_state');
         sessionStorage.removeItem('is_admin');
         this.isLoggedInSubject.next(false);
         this.isAdminSubject.next(false);
         this.currentUserSubject.next(null);
         this.profilePicSubject.next(null);
+        this.userStateSubject.next(null);
         this.cartService.clear();
     }
 

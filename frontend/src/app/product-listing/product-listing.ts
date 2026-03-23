@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule, ViewportScroller } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
     selector: 'app-product-listing',
@@ -13,13 +14,22 @@ import { ProductService, Product } from '../services/product.service';
 export class ProductListingComponent {
     private route = inject(ActivatedRoute);
     private productService = inject(ProductService);
+    private authService = inject(AuthService);
 
     category: string = '';
     displayCategory: string = '';
     products: Product[] = [];
+    userState: string | null = null;
 
     constructor() {
         const viewportScroller = inject(ViewportScroller);
+        
+        // Listen to state changes
+        this.authService.userState$.subscribe(state => {
+            this.userState = state;
+            if (this.category) this.loadProducts();
+        });
+
         this.route.paramMap.subscribe(params => {
             this.category = params.get('category') || 'Bestsellers';
             // Decode URL parameter if necessary, or map slug to display name
@@ -71,7 +81,7 @@ export class ProductListingComponent {
             }
         }, 8000);
 
-        this.productService.getProducts(categoryName).subscribe({
+        this.productService.getProducts(categoryName, this.userState || '').subscribe({
             next: (products: any[]) => {
                 clearTimeout(fallbackTimer);
                 this.products = products;
