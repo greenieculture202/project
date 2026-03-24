@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ export class UserPanelComponent implements OnInit {
     authService = inject(AuthService);
     private userService = inject(UserService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     dashboardData: { stats: { totalOrders: number; greenPoints: number }; recentOrders: any[] } = {
         stats: { totalOrders: 0, greenPoints: 0 },
@@ -25,7 +26,7 @@ export class UserPanelComponent implements OnInit {
     };
 
     get recentOrdersSlice(): any[] {
-        return this.dashboardData.recentOrders.slice(0, 5);
+        return this.dashboardData.recentOrders.slice(0, 3);
     }
     allOrders: any[] = [];
     activeTab: string = 'dashboard';
@@ -41,6 +42,10 @@ export class UserPanelComponent implements OnInit {
     stateName = '';
     address = '';
     selectedOrderForBill: any = null;
+    selectedOrderForModal: any = null; // For Order Details Modal
+    isGeneratingPdf: boolean = false; // For Download Spinner
+    showImpactModal: boolean = false;
+    co2Offset: number = 0;
     profilePic = '';
     profilePicPreview = '';
     showStateDropdown = false;
@@ -212,6 +217,7 @@ export class UserPanelComponent implements OnInit {
                     this.profilePicPreview = profile.profilePic || '';
                 }
                 if (this.activeTab === 'settings') this.isLoading = false;
+                this.cdr.detectChanges();
             },
             error: (err) => {
                 console.error('[UserPanel] Error loading profile:', err);
@@ -219,6 +225,7 @@ export class UserPanelComponent implements OnInit {
                 if (err.status === 401) {
                     console.log('[UserPanel] Unauthorized - might need to re-login');
                 }
+                this.cdr.detectChanges();
             }
         });
     }
@@ -296,10 +303,12 @@ export class UserPanelComponent implements OnInit {
                 console.log('[UserPanel] Dashboard data received:', data);
                 this.dashboardData = data;
                 this.isLoading = false;
+                this.cdr.detectChanges();
             },
             error: (err: any) => {
                 console.error('[UserPanel] Error loading dashboard:', err);
                 this.isLoading = false;
+                this.cdr.detectChanges();
             }
         });
     }
@@ -321,10 +330,12 @@ export class UserPanelComponent implements OnInit {
                     };
                 });
                 this.isLoading = false;
+                this.cdr.detectChanges();
             },
             error: (err: any) => {
                 console.error('[UserPanel] Error loading all orders:', err);
                 this.isLoading = false;
+                this.cdr.detectChanges();
             }
         });
     }
@@ -335,6 +346,28 @@ export class UserPanelComponent implements OnInit {
         } else {
             this.expandedOrderId = orderId;
         }
+    }
+
+    openOrderModal(order: any) {
+        this.selectedOrderForModal = order;
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    closeOrderModal() {
+        this.selectedOrderForModal = null;
+        document.body.style.overflow = 'auto';
+    }
+
+    openViewBill(order: any) {
+        this.selectedOrderForBill = order;
+        // Keep order details modal open in background or close it? 
+        // User said "click on View Bill -> Bill shows -> then download". 
+        // I'll close the details modal to show the bill clearly.
+        // this.selectedOrderForModal = null; 
+    }
+
+    closeViewBill() {
+        this.selectedOrderForBill = null;
     }
 
     cancelOrder(orderId: string) {
@@ -354,9 +387,12 @@ export class UserPanelComponent implements OnInit {
     }
 
     async downloadBill(order: any) {
+        if (this.isGeneratingPdf) return;
+        this.isGeneratingPdf = true;
         this.selectedOrderForBill = order;
 
-        // Wait for Angular to render the hidden template
+        // Since the bill is already visible in the modal, we only need a tiny timeout 
+        // to Ensure our generator picks it up. 
         setTimeout(async () => {
             const element = document.getElementById('pdf-invoice-template');
             if (!element) {
@@ -366,7 +402,7 @@ export class UserPanelComponent implements OnInit {
 
             try {
                 const canvas = await (html2canvas as any)(element, {
-                    scale: 2, // Higher quality
+                    scale: 1.5, // Good balance between speed and quality
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff'
@@ -381,14 +417,28 @@ export class UserPanelComponent implements OnInit {
                 pdf.addImage(canvas, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save(`Bill_${order.orderId}.pdf`);
 
-                // Clear selection
+                // Reset state
                 this.selectedOrderForBill = null;
+                this.isGeneratingPdf = false;
             } catch (error) {
                 console.error('PDF Generation Error:', error);
                 alert('Error generating PDF. Please try again.');
                 this.selectedOrderForBill = null;
+                this.isGeneratingPdf = false;
             }
         }, 100);
+    }
+
+    openImpactModal() {
+        const totalPlants = (this.dashboardData.recentOrders?.length || 0) + 2;
+        this.co2Offset = totalPlants * 1.2; // 1.2kg CO2 average per common garden plant
+        this.showImpactModal = true;
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeImpactModal() {
+        this.showImpactModal = false;
+        document.body.style.overflow = 'auto';
     }
 
     logout() {
