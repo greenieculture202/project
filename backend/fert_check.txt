@@ -1,0 +1,54 @@
+--- ADMIN PANEL Fertilizers (15) ---
+1. Micronutrients Mix | Cat: Chemical Fertilizers
+2. Slow release Fertilizer | Cat: Chemical Fertilizers
+3. Organic Fertilizer | Cat: Fertilizers & Nutrients
+4. Bone Meal | Cat: Fertilizers & Nutrients
+5. Bio Fertilizer | Cat: Fertilizers & Nutrients
+6. NPK Fertilizer | Cat: Fertilizers & Nutrients
+7. Urea | Cat: Fertilizers & Nutrients
+8. Root Booster | Cat: Fertilizers & Nutrients
+9. Seaweed Extract | Cat: Fertilizers & Nutrients
+10. Fish Emulsion | Cat: Fertilizers & Nutrients
+11. Humic Acid | Cat: Fertilizers & Nutrients
+12. Liquid Fertilizer | Cat: Fertilizers & Nutrients
+13. Compost Tea | Cat: Organic Fertilizers
+14. Plant Growth Booster | Cat: Plant Boosters
+15. Flower Booster | Cat: Plant Boosters
+
+--- BACKEND QUERY RESULT (15) ---
+1. Micronutrients Mix | Cat: Chemical Fertilizers
+2. Slow release Fertilizer | Cat: Chemical Fertilizers
+3. Organic Fertilizer | Cat: Fertilizers & Nutrients
+4. Bone Meal | Cat: Fertilizers & Nutrients
+5. Bio Fertilizer | Cat: Fertilizers & Nutrients
+6. NPK Fertilizer | Cat: Fertilizers & Nutrients
+7. Urea | Cat: Fertilizers & Nutrients
+8. Root Booster | Cat: Fertilizers & Nutrients
+9. Seaweed Extract | Cat: Fertilizers & Nutrients
+10. Fish Emulsion | Cat: Fertilizers & Nutrients
+11. Humic Acid | Cat: Fertilizers & Nutrients
+12. Liquid Fertilizer | Cat: Fertilizers & Nutrients
+13. Compost Tea | Cat: Organic Fertilizers
+14. Plant Growth Booster | Cat: Plant Boosters
+15. Flower Booster | Cat: Plant Boosters
+
+In Admin but NOT in Backend:
+
+--- ALL FERT-RELATED BY REGEX (15) ---
+1. Micronutrients Mix | Cat: Chemical Fertilizers
+2. Slow release Fertilizer | Cat: Chemical Fertilizers
+3. Organic Fertilizer | Cat: Fertilizers & Nutrients
+4. Bone Meal | Cat: Fertilizers & Nutrients
+5. Bio Fertilizer | Cat: Fertilizers & Nutrients
+6. NPK Fertilizer | Cat: Fertilizers & Nutrients
+7. Urea | Cat: Fertilizers & Nutrients
+8. Root Booster | Cat: Fertilizers & Nutrients
+9. Seaweed Extract | Cat: Fertilizers & Nutrients
+10. Fish Emulsion | Cat: Fertilizers & Nutrients
+11. Humic Acid | Cat: Fertilizers & Nutrients
+12. Liquid Fertilizer | Cat: Fertilizers & Nutrients
+13. Compost Tea | Cat: Organic Fertilizers
+14. Plant Growth Booster | Cat: Plant Boosters
+15. Flower Booster | Cat: Plant Boosters
+
+Unique Categories: ["Chemical Fertilizers","Fertilizers & Nutrients","Organic Fertilizers","Plant Boosters"]

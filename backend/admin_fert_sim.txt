@@ -1,0 +1,35 @@
+TOTAL UNIQUE products admin panel shows: 16
+
+--- Organic Fertilizers (5) ---
+- Vermicompost | Cat: Soil & Growing Media
+- Organic Fertilizer | Cat: Fertilizers & Nutrients
+- Bone Meal | Cat: Fertilizers & Nutrients
+- Bio Fertilizer | Cat: Fertilizers & Nutrients
+- Compost Tea | Cat: Organic Fertilizers
+
+--- Chemical Fertilizers (5) ---
+- NPK Fertilizer | Cat: Fertilizers & Nutrients
+- Urea | Cat: Fertilizers & Nutrients
+- Liquid Fertilizer | Cat: Fertilizers & Nutrients
+- Micronutrients Mix | Cat: Chemical Fertilizers
+- Slow release Fertilizer | Cat: Chemical Fertilizers
+
+--- Plant Boosters (6) ---
+- Root Booster | Cat: Fertilizers & Nutrients
+- Seaweed Extract | Cat: Fertilizers & Nutrients
+- Fish Emulsion | Cat: Fertilizers & Nutrients
+- Humic Acid | Cat: Fertilizers & Nutrients
+- Plant Growth Booster | Cat: Plant Boosters
+- Flower Booster | Cat: Plant Boosters
+
+--- Umbrella "Fertilizers & Nutrients" (10) ---
+- Organic Fertilizer | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Bone Meal | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Bio Fertilizer | Cat: Fertilizers & Nutrients [DUPLICATE]
+- NPK Fertilizer | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Urea | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Root Booster | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Seaweed Extract | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Fish Emulsion | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Humic Acid | Cat: Fertilizers & Nutrients [DUPLICATE]
+- Liquid Fertilizer | Cat: Fertilizers & Nutrients [DUPLICATE]
