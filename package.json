@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run clean && concurrently --kill-others -n \"BACKEND,FRONTEND\" -c \"bgBlue,bgGreen\" \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
-    "clean": "powershell -Command \"Get-NetTCPConnection -LocalPort 3000, 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }\" || exit 0",
+    "clean": "powershell -Command \"Get-NetTCPConnection -LocalPort 3000, 5000 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -ne 0 } | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }\" || exit 0",
     "install-all": "cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [],

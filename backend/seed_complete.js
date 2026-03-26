@@ -97,12 +97,8 @@ const potsAndPlanters = [
     'Grow Bags', 'Metal Planters', 'Wooden Planters', 'Wall-Mounted Planters', 'Balcony Railing Planters',
     'Decorative Planters', 'Seedling Trays', 'Nursery Pots', 'Vertical Garden Pots', 'Large Outdoor Planters'
 ];
-potsAndPlanters.forEach((item, idx) => {
-    productsToSeed.push(createProduct(
-        item, 'Accessories Plants', 99 + (idx * 50), 199 + (idx * 80),
-        productImages.pots[idx % productImages.pots.length],
-        productImages.pots[(idx + 1) % productImages.pots.length],
-        ['Premium Quality', 'Durable', 'Stylish']
+        productImages.watering[(idx + 1) % productImages.watering.length],
+        ['Efficient', 'Easy to Use', 'Water Saving']
     ));
 });
 
@@ -114,7 +110,7 @@ const wateringEquipment = [
 ];
 wateringEquipment.forEach((item, idx) => {
     productsToSeed.push(createProduct(
-        item, 'Accessories Plants', 149 + (idx * 60), 249 + (idx * 90),
+        item, 'Accessories', 149 + (idx * 60), 249 + (idx * 90),
         productImages.watering[idx % productImages.watering.length],
         productImages.watering[(idx + 1) % productImages.watering.length],
         ['Efficient', 'Easy to Use', 'Water Saving']
@@ -129,7 +125,7 @@ const plantSupport = [
 ];
 plantSupport.forEach((item, idx) => {
     productsToSeed.push(createProduct(
-        item, 'Accessories Plants', 79 + (idx * 40), 149 + (idx * 60),
+        item, 'Accessories', 79 + (idx * 40), 149 + (idx * 60),
         productImages.support[idx % productImages.support.length],
         productImages.support[(idx + 1) % productImages.support.length],
         ['Plant Protection', 'Weather Resistant', 'Durable']
@@ -145,7 +141,7 @@ const lightingEquipment = [
 ];
 lightingEquipment.forEach((item, idx) => {
     productsToSeed.push(createProduct(
-        item, 'Accessories Plants', 299 + (idx * 100), 499 + (idx * 150),
+        item, 'Accessories', 299 + (idx * 100), 499 + (idx * 150),
         productImages.lighting[idx % productImages.lighting.length],
         productImages.lighting[(idx + 1) % productImages.lighting.length],
         ['Energy Efficient', 'Full Spectrum', 'Plant Growth']
@@ -160,7 +156,7 @@ const decorativeAccessories = [
 ];
 decorativeAccessories.forEach((item, idx) => {
     productsToSeed.push(createProduct(
-        item, 'Accessories Plants', 129 + (idx * 70), 229 + (idx * 100),
+        item, 'Accessories', 129 + (idx * 70), 229 + (idx * 100),
         productImages.decorative[idx % productImages.decorative.length],
         productImages.decorative[(idx + 1) % productImages.decorative.length],
         ['Decorative', 'Premium Design', 'Home Decor']

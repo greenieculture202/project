@@ -167,6 +167,15 @@ export class ProductDetailComponent implements OnInit {
 
     isFaqExpanded(faqId: string): boolean { return this.expandedFaqs.has(faqId); }
 
+    getCleanCategory(cat: string | undefined): string {
+        if (!cat) return '';
+        // Remove " Plants" suffix if it exists and the category is 'Accessories' or other non-plant categories
+        if (cat === 'Accessories Plants') return 'Accessories';
+        if (cat === 'Gardening Plants') return 'Gardening';
+        if (cat === 'Seeds Plants') return 'Seeds';
+        return cat;
+    }
+
     addToCart() {
         if (!this.authService.getCurrentUser()) {
             this.notificationService.show('Please login first to add items into cart.', 'Sign In Required', 'info', 'standard', '/login');

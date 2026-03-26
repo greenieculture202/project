@@ -23,7 +23,8 @@ const Notification = require('./models/Notification');
 const Settlement = require('./models/Settlement');
 const PlantReminder = require('./models/PlantReminder');
 const AdminChatMessage = require('./models/AdminChatMessage');
-const ChatMessage = require('./models/ChatMessage');
+const Cart = require('./models/Cart');
+const Payment = require('./models/Payment');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -1522,6 +1523,24 @@ app.post('/api/user/orders', auth, async (req, res) => {
         const savedOrder = await newOrder.save();
         console.log(`[OrdersAPI] New order placed: ${savedOrder.orderId} for user ${req.user.id}`);
 
+        // Automatically create a record in the Payment table
+        try {
+            const method = (savedOrder.paymentMethod || '').toUpperCase().includes('CASH') || (savedOrder.paymentMethod || '').toUpperCase().includes('COD') ? 'COD' : 'Online';
+            const paymentRecord = new Payment({
+                orderId: savedOrder._id,
+                orderDisplayId: savedOrder.orderId,
+                userId: savedOrder.userId,
+                userName: savedOrder.userName || req.user.name || 'User',
+                amount: savedOrder.totalAmount,
+                method: method,
+                paymentStatus: 'Pending'
+            });
+            await paymentRecord.save();
+            console.log(`[PaymentAPI] Payment record saved for order: ${savedOrder.orderId}`);
+        } catch (payErr) {
+            console.error('[PaymentAPI] Failed to save payment record:', payErr.message);
+        }
+
         // Deduct stock for each item in the order
         for (const item of items) {
             if (item.productId) {
@@ -1589,6 +1608,31 @@ app.get('/api/admin/orders', auth, async (req, res) => {
     }
 });
 
+app.get('/api/admin/payments-stats', auth, async (req, res) => {
+    try {
+        const stats = await Payment.aggregate([
+            {
+                $group: {
+                    _id: "$method",
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: "$amount" }
+                }
+            }
+        ]);
+        
+        // Transform for easier frontend consumption
+        const result = {
+            cod: stats.find(s => s._id === 'COD') || { count: 0, totalAmount: 0 },
+            online: stats.find(s => s._id === 'Online') || { count: 0, totalAmount: 0 }
+        };
+        
+        res.json(result);
+    } catch (err) {
+        console.error('[AdminPaymentStatsAPI] Error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/admin/payment-summary', auth, async (req, res) => {
     try {
         // Fetch ALL orders to match the record count in the transaction table
@@ -1597,7 +1641,7 @@ app.get('/api/admin/payment-summary', auth, async (req, res) => {
         // Filter out "Guest Customer" and missing user data to match frontend table logic
         const orders = rawOrders.filter(o => {
             const name = (o.userName || o.userId?.fullName || '').trim();
-            return name !== 'Guest Customer' && o.userId;
+            return name !== 'Guest Customer';
         });
 
         let cod = 0;
@@ -2988,3 +3032,56 @@ cron.schedule('* * * * *', async () => {
         console.error('[SCHEDULER-ERROR]', err.message);
     }
 });
+
+// =======================
+// CART API ROUTES
+// =======================
+
+// GET /api/cart - Get user's cart
+app.get('/api/cart', auth, async (req, res) => {
+    try {
+        let cart = await Cart.findOne({ userId: req.user.id });
+        if (!cart) {
+            cart = new Cart({ userId: req.user.id, items: [] });
+            await cart.save();
+        }
+        res.json(cart.items);
+    } catch (err) {
+        console.error('[CART GET ERROR]', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// POST /api/cart - Update user's cart
+app.post('/api/cart', auth, async (req, res) => {
+    try {
+        console.log('[CART POST] Hit by user:', req.user.id, 'Payload:', req.body);
+        const { cart: items } = req.body; // frontend sends { cart: items }
+        
+        let cart = await Cart.findOne({ userId: req.user.id });
+        if (!cart) {
+            cart = new Cart({ userId: req.user.id, items: [] });
+        }
+        
+        // Ensure required fields are present
+        const processedItems = (items || []).map(item => ({
+            productId: item.productId || item.id, // Fallback for testing
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1,
+            image: item.image,
+            weight: item.weight,
+            isGift: item.isGift,
+            planter: item.planter
+        }));
+
+        cart.items = processedItems;
+        await cart.save();
+        
+        res.json({ message: 'Cart saved successfully', items: cart.items, totalAmount: cart.totalAmount });
+    } catch (err) {
+        console.error('[CART POST ERROR]', err.message);
+        res.status(500).json({ message: 'Server Error', details: err.message });
+    }
+});
+// END CART ROUTES

@@ -4,16 +4,12 @@
             <div class="avatar" [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : ''"
                 [style.background-size]="'cover'">
                 <i class="fas fa-user" *ngIf="!profilePicPreview"></i>
+                <div class="status-indicator"></div>
             </div>
             <h3>{{ authService.currentUser$ | async }}</h3>
             <p>Premium Member</p>
         </div>
         <nav class="side-nav">
-            <a class="nav-item website-link" routerLink="/">
-                <i class="fas fa-home"></i>
-                <span>Go to Website</span>
-            </a>
-            <div class="nav-separator"></div>
             <a class="nav-item" [class.active]="activeTab === 'dashboard'" (click)="setActiveTab('dashboard')">
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
@@ -26,6 +22,10 @@
             <a class="nav-item" [class.active]="activeTab === 'settings'" (click)="setActiveTab('settings')">
                 <i class="fas fa-user-edit"></i>
                 <span>Profile Settings</span>
+            </a>
+            <a class="nav-item website-link" routerLink="/">
+                <i class="fas fa-home"></i>
+                <span>Go to Website</span>
             </a>
             <a class="nav-item logout" (click)="logout()">
                 <i class="fas fa-sign-out-alt"></i>
@@ -57,13 +57,14 @@
                         <span class="stat-label">Total Orders</span>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card impact-card" (click)="openImpactModal()" style="cursor: pointer;">
                     <div class="stat-icon">
-                        <i class="fas fa-leaf"></i>
+                        <i class="fas fa-seedling"></i>
                     </div>
                     <div class="stat-details">
-                        <span class="stat-value">{{ dashboardData.stats.greenPoints }}</span>
-                        <span class="stat-label">Green Points</span>
+                        <span class="stat-value">{{ dashboardData.recentOrders.length + 2 }}</span>
+                        <span class="stat-label">Plants Cultivated</span>
+                        <small class="click-hint">Click to see impact</small>
                     </div>
                 </div>
             </div>
@@ -71,7 +72,6 @@
             <section class="recent-orders">
                 <div class="section-header">
                     <h2>Recent Orders</h2>
-                    <button class="view-all" (click)="setActiveTab('orders')">View All</button>
                 </div>
                 <div class="orders-list">
                     <div class="order-item" *ngFor="let order of recentOrdersSlice">
@@ -110,7 +110,7 @@
                         <p>No orders yet. Start your garden today!</p>
                     </div>
                     <!-- View All button at bottom if more than 5 orders -->
-                    <div class="view-all-row" *ngIf="dashboardData.recentOrders.length > 5">
+                    <div class="view-all-row" *ngIf="dashboardData.recentOrders.length > 3">
                         <button class="view-all-large" (click)="setActiveTab('orders')">
                             <i class="fas fa-list"></i> View All {{ dashboardData.recentOrders.length }} Orders
                         </button>
@@ -162,86 +162,10 @@
                             <div class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</div>
                             <div class="order-total">₹{{ order.totalAmount }}</div>
                             <div class="order-actions">
-                                <button class="view-details-btn" (click)="toggleOrderDetails(order.orderId)">
-                                    <i class="fas" [ngClass]="expandedOrderId === order.orderId ? 'fa-chevron-up' : 'fa-info-circle'"></i>
-                                    {{ expandedOrderId === order.orderId ? 'Hide' : 'Details' }}
+                                <button class="view-details-btn" (click)="openOrderModal(order)">
+                                    <i class="fas fa-info-circle"></i>
+                                    Details
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Expanded Details Section -->
-                    <div class="order-details-expanded" *ngIf="expandedOrderId === order.orderId">
-                        <div class="details-inner">
-                            <!-- Order Tracking Stepper -->
-                            <div class="order-tracker-container">
-                                <div class="tracker-steps">
-                                    <div class="step active">
-                                        <div class="step-icon">
-                                            <i class="fas fa-receipt"></i>
-                                        </div>
-                                        <div class="step-label">Order Placed</div>
-                                        <div class="step-date">{{ order.orderDate | date:'MMM dd, yyyy' }}</div>
-                                    </div>
-                                    <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status)">
-                                        <div class="step-icon">
-                                            <i class="fas fa-box"></i>
-                                        </div>
-                                        <div class="step-label">Shipped</div>
-                                        <div class="step-date" *ngIf="order.shippedDate">{{ order.shippedDate | date:'MMM dd, yyyy' }}</div>
-                                    </div>
-                                    <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(order.status)">
-                                        <div class="step-icon">
-                                            <i class="fas fa-truck-fast"></i>
-                                        </div>
-                                        <div class="step-label">Out for Delivery</div>
-                                        <div class="step-date" *ngIf="order.outForDeliveryDate">{{ order.outForDeliveryDate | date:'MMM dd, yyyy' }}</div>
-                                    </div>
-                                    <div class="step" [class.active]="order.status === 'Delivered'">
-                                        <div class="step-icon">
-                                            <i class="fas fa-house-circle-check"></i>
-                                        </div>
-                                        <div class="step-label">Delivered</div>
-                                        <div class="step-date" *ngIf="order.deliveryDate">{{ order.deliveryDate | date:'MMM dd, yyyy' }}</div>
-                                    </div>
-                                </div>
-                                <div class="tracker-line">
-                                    <div class="line-fill" [style.width]="
-                                        order.status === 'Delivered' ? '100%' :
-                                        order.status === 'Out for Delivery' ? '66%' :
-                                        order.status === 'Shipped' ? '33%' : '0%'
-                                    "></div>
-                                </div>
-                            </div>
-
-                            <div class="details-section">
-                                <h5>Price Breakdown</h5>
-                                <div class="breakdown-list">
-                                    <div class="breakdown-item">
-                                        <span>Order Subtotal</span>
-                                        <span>₹{{ order.totalAmount }}</span>
-                                    </div>
-                                    <div class="breakdown-item">
-                                        <span>Delivery Charge</span>
-                                        <span class="free">FREE</span>
-                                    </div>
-                                    <div class="breakdown-item">
-                                        <span>Packaging & Care</span>
-                                        <span>₹0</span>
-                                    </div>
-                                    <div class="breakdown-item grand-total">
-                                        <span>Total Paid</span>
-                                        <span>₹{{ order.totalAmount }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="details-section downloads">
-                                <h5>Bill & Documents</h5>
-                                <div class="bill-btns">
-                                    <button class="sl-btn primary full-width" (click)="downloadBill(order)">
-                                        <i class="fas fa-file-invoice-dollar"></i> Download Bill
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -273,100 +197,119 @@
                     <div class="settings-form">
                         <!-- Profile Photo Section -->
                         <div class="profile-photo-section">
-                            <div class="photo-preview"
-                                [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : ''">
-                                <i class="fas fa-user" *ngIf="!profilePicPreview"></i>
+                            <div class="photo-preview-container">
+                                <div class="photo-preview"
+                                    [style.background-image]="profilePicPreview ? 'url(' + profilePicPreview + ')' : ''">
+                                    <i class="fas fa-user-plus" *ngIf="!profilePicPreview"></i>
+                                </div>
+                                <button class="camera-floating-btn" (click)="fileInput.click()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
                             </div>
                             <div class="photo-actions">
                                 <h3>Profile Picture</h3>
-                                <p>PNG, JPG or GIF. Max 500KB.</p>
+                                <p>Help others recognize you. PNG or JPG, max 500KB.</p>
                                 <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*"
                                     style="display: none;">
-                                <button class="btn-upload" (click)="fileInput.click()">
-                                    <i class="fas fa-camera"></i> Change Photo
-                                </button>
+                                <div class="upload-btn-row">
+                                    <button class="btn-clear-photo" (click)="profilePicPreview = ''" *ngIf="profilePicPreview">Remove</button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" [(ngModel)]="fullName" placeholder="Enter your full name"
-                                class="settings-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" [(ngModel)]="email" readonly>
-                            <small>Email cannot be changed.</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number</label>
-                            <div class="phone-input-container">
-                                <span class="country-prefix">+91</span>
-                                <input type="text" [(ngModel)]="phone" placeholder="Enter your phone number"
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label><i class="fas fa-id-card"></i> Full Name</label>
+                                <input type="text" [(ngModel)]="fullName" placeholder="Enter your full name"
                                     class="settings-input">
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label>City</label>
-                            <div class="state-autocomplete-container">
-                                <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
-                                    placeholder="City" class="settings-input">
-                                <div class="state-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
-                                    <div class="state-option" *ngFor="let city of filteredCities"
-                                        (click)="selectCity(city)">
-                                        {{ city }}
+
+                            <div class="form-group email-group">
+                                <label><i class="fas fa-envelope"></i> Email Address</label>
+                                <div class="input-with-badge">
+                                    <input type="email" [(ngModel)]="email" readonly class="settings-input readonly-input">
+                                    <span class="readonly-badge"><i class="fas fa-lock"></i> Locked</span>
+                                </div>
+                                <small class="input-hint">Email cannot be changed once verified.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-phone-alt"></i> Phone Number</label>
+                                <div class="phone-input-wrapper">
+                                    <span class="country-prefix">+91</span>
+                                    <input type="text" [(ngModel)]="phone" maxlength="10" placeholder="98765 43210"
+                                        class="settings-input phone-input">
+                                </div>
+                            </div>
+
+                            <div class="form-row-dual">
+                                <div class="form-group">
+                                    <label><i class="fas fa-map-marker-alt"></i> City</label>
+                                    <div class="state-autocomplete-container">
+                                        <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
+                                            placeholder="City" class="settings-input">
+                                        <div class="state-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+                                            <div class="state-option" *ngFor="let city of filteredCities"
+                                                (click)="selectCity(city)">
+                                                {{ city }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-map"></i> State</label>
+                                    <div class="state-autocomplete-container">
+                                        <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
+                                            (blur)="closeDropdowns()" placeholder="State" class="settings-input">
+                                        <div class="state-dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
+                                            <div class="state-option" *ngFor="let state of filteredStates"
+                                                (click)="selectState(state)">
+                                                {{ state }}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label>State</label>
-                            <div class="state-autocomplete-container">
-                                <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
-                                    (blur)="closeDropdowns()" placeholder="State" class="settings-input">
-                                <div class="state-dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
-                                    <div class="state-option" *ngFor="let state of filteredStates"
-                                        (click)="selectState(state)">
-                                        {{ state }}
-                                    </div>
-                                </div>
+
+                            <div class="form-group full-width">
+                                <label><i class="fas fa-home"></i> Shipping Address</label>
+                                <textarea rows="3" [(ngModel)]="address" placeholder="Room no, Street, Landmark..." class="settings-input"></textarea>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Shipping Address</label>
-                            <textarea rows="3" [(ngModel)]="address" placeholder="Enter full address"></textarea>
+
+                        <div class="settings-footer">
+                            <button class="save-btn-luxury" (click)="saveSettings()" [disabled]="isSaving">
+                                <span *ngIf="!isSaving"><i class="fas fa-check-circle"></i> Update Profile</span>
+                                <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+                            </button>
                         </div>
-                        <button class="save-btn" (click)="saveSettings()" [disabled]="isSaving">
-                            <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
-                            {{ isSaving ? 'Saving...' : 'Save Changes' }}
-                        </button>
                     </div>
                 </div>
 
                 <!-- Summary/Status (Right) -->
                 <div class="settings-sidebar">
-                    <div class="summary-card">
-                        <h3>Account Overview</h3>
+                    <div class="summary-card gardener-profile">
+                        <h3>Garden Status</h3>
                         <div class="summary-item">
-                            <div class="sum-icon points">
-                                <i class="fas fa-star"></i>
+                            <div class="sum-icon impact">
+                                <i class="fas fa-hand-holding-heart"></i>
                             </div>
                             <div class="sum-info">
-                                <span>Green Points</span>
-                                <strong>{{ dashboardData.stats.greenPoints }}</strong>
+                                <span>Plants Adopted</span>
+                                <strong>{{ dashboardData.recentOrders.length + 2 }}</strong>
                             </div>
                         </div>
                         <div class="summary-item">
-                            <div class="sum-icon member">
-                                <i class="fas fa-medal"></i>
+                            <div class="sum-icon rank">
+                                <i class="fas fa-crown"></i>
                             </div>
                             <div class="sum-info">
-                                <span>Status</span>
-                                <strong>Premium Member</strong>
+                                <span>Gardener Rank</span>
+                                <strong class="rank-master">Master Gardener</strong>
                             </div>
                         </div>
-                        <div class="membership-badge">
-                            <i class="fas fa-shield-alt"></i> Verified Account
+                        <div class="impact-badge-luxury">
+                            <i class="fas fa-earth-americas"></i> Carbon Hero
                         </div>
                     </div>
 
@@ -381,108 +324,256 @@
         </ng-container>
     </main>
 
-    <!-- Hidden PDF Template for Download -->
-    <div id="pdf-invoice-template" class="pdf-template-wrapper" *ngIf="selectedOrderForBill">
-        <div style="padding: 40px; border: 2px solid #166534; border-radius: 20px; background: white;">
-            <!-- Header -->
-            <div
-                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
-                <div>
-                    <h1 style="margin: 0; color: #166534; font-size: 2.5rem; letter-spacing: -1px;">GREENIE CULTURE 🌿
-                    </h1>
-                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">123 Botanical Avenue, Green City,
-                        400001</p>
-                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.9rem;">support@greenieculture.com | +91
-                        9876543210</p>
+    <!-- Order Details Modal -->
+    <div class="user-modal-overlay" *ngIf="selectedOrderForModal" (click)="closeOrderModal()">
+        <div class="user-modal-container" (click)="$event.stopPropagation()">
+            <!-- Modal Header -->
+            <header class="modal-header">
+                <div class="modal-title-wrap">
+                    <h2>Order Details</h2>
+                    <span class="modal-id">#{{ selectedOrderForModal.orderId }}</span>
                 </div>
-                <div style="text-align: right;">
-                    <h2 style="margin: 0; color: #1e293b; font-size: 1.5rem;">INVOICE</h2>
-                    <p style="margin: 5px 0 0 0; font-weight: 700; color: #166534;">#{{ selectedOrderForBill.orderId }}
-                    </p>
-                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.8rem;">Date: {{
-                        selectedOrderForBill.orderDate | date:'dd MMM yyyy' }}</p>
-                </div>
-            </div>
+                <button class="modal-close" (click)="closeOrderModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
 
-            <!-- Billing Info -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
-                <div>
-                    <h4
-                        style="margin: 0 0 10px 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                        Bill To</h4>
-                    <p style="margin: 0; font-weight: 700; color: #1e293b; font-size: 1.1rem;">{{
-                        selectedOrderForBill.userId?.fullName || fullName }}</p>
-                    <p style="margin: 5px 0 0 0; color: #475569; line-height: 1.5;">
-                        {{ selectedOrderForBill.userId?.address || address }}<br>
-                        {{ selectedOrderForBill.userId?.city || city }}, {{ selectedOrderForBill.userId?.state ||
-                        stateName }}
-                    </p>
+            <div class="modal-body scrollable">
+                <!-- Tracking Timeline -->
+                <div class="modal-section stepper-section">
+                    <div class="tracker-steps">
+                        <div class="tracker-line-bg">
+                            <div class="tracker-line-fill" [style.width.%]="
+                                selectedOrderForModal.status === 'Delivered' ? 100 : 
+                                selectedOrderForModal.status === 'Out for Delivery' ? 66 : 
+                                selectedOrderForModal.status === 'Shipped' ? 33 : 0
+                            "></div>
+                        </div>
+                        <div class="step active">
+                            <div class="step-icon"><i class="fas fa-receipt"></i></div>
+                            <div class="step-label">Order Placed</div>
+                        </div>
+                        <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(selectedOrderForModal.status)">
+                            <div class="step-icon"><i class="fas fa-box"></i></div>
+                            <div class="step-label">Shipped</div>
+                        </div>
+                        <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(selectedOrderForModal.status)">
+                            <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
+                            <div class="step-label">Out for Delivery</div>
+                        </div>
+                        <div class="step" [class.active]="selectedOrderForModal.status === 'Delivered'">
+                            <div class="step-icon"><i class="fas fa-house-circle-check"></i></div>
+                            <div class="step-label">Delivered</div>
+                        </div>
+                    </div>
                 </div>
-                <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
-                    <h4
-                        style="margin: 0 0 10px 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                        Payment Method</h4>
-                    <p style="margin: 0; font-weight: 700; color: #1e293b;">{{ selectedOrderForBill.paymentMethod ||
-                        'Online Payment' }}</p>
-                    <p
-                        style="margin: 10px 0 0 0; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                        Status</p>
-                    <p style="margin: 0; font-weight: 700; color: #16a34a;">{{ selectedOrderForBill.status }}</p>
-                </div>
-            </div>
 
-            <!-- Items Table -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
-                <thead>
-                    <tr style="background: #166534; color: white;">
-                        <th style="padding: 15px; text-align: left; border-radius: 8px 0 0 8px;">Item Description</th>
-                        <th style="padding: 15px; text-align: center;">Qty</th>
-                        <th style="padding: 15px; text-align: right;">Price</th>
-                        <th style="padding: 15px; text-align: right; border-radius: 0 8px 8px 0;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let item of selectedOrderForBill.items" style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 15px;">
-                            <div style="font-weight: 700; color: #1e293b;">{{ item.name }}</div>
-                            <div style="font-size: 0.8rem; color: #64748b;" *ngIf="item.weight || item.planter">
-                                {{ item.weight }} {{ item.planter ? '| ' + item.planter : '' }}
+                <!-- Product List -->
+                <div class="modal-section items-section">
+                    <h3 class="section-title">Items Ordered</h3>
+                    <div class="modal-items-list">
+                        <div class="modal-item-row" *ngFor="let item of selectedOrderForModal.items">
+                            <div class="item-img-box">
+                                <img [src]="item.image" alt="Product">
                             </div>
-                        </td>
-                        <td style="padding: 15px; text-align: center; color: #475569;">{{ item.quantity }}</td>
-                        <td style="padding: 15px; text-align: right; color: #475569;">₹{{ item.price }}</td>
-                        <td style="padding: 15px; text-align: right; font-weight: 700; color: #1e293b;">₹{{ item.price *
-                            item.quantity }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                            <div class="item-info-box">
+                                <span class="name">{{ item.name }}</span>
+                                <span class="qty">Qty: {{ item.quantity }}</span>
+                            </div>
+                            <div class="item-price-box">
+                                ₹{{ item.price * item.quantity }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Totals -->
-            <div style="display: flex; justify-content: flex-end;">
-                <div style="width: 300px;">
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; color: #64748b;">
-                        <span>Subtotal</span>
-                        <span>₹{{ selectedOrderForBill.totalAmount }}</span>
+                <!-- Footer Summary -->
+                <div class="modal-footer-grid">
+                    <div class="footer-box price-box">
+                        <h3 class="section-title">Payment Summary</h3>
+                        <div class="modal-price-list">
+                            <div class="price-row">
+                                <span>Subtotal</span>
+                                <strong>₹{{ selectedOrderForModal.totalAmount }}</strong>
+                            </div>
+                            <div class="price-row">
+                                <span>Shipping</span>
+                                <strong class="green">FREE</strong>
+                            </div>
+                            <div class="price-row total">
+                                <span>Total Paid</span>
+                                <strong>₹{{ selectedOrderForModal.totalAmount }}</strong>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; color: #64748b;">
-                        <span>Shipping</span>
-                        <span style="color: #16a34a; font-weight: 700;">FREE</span>
+                    <div class="footer-box bill-box">
+                        <h3 class="section-title">Actions</h3>
+                        <div class="action-btns-wrap">
+                            <button class="modal-action-btn primary" (click)="openViewBill(selectedOrderForModal)">
+                                <i class="fas fa-eye"></i>
+                                View Bill
+                            </button>
+                            <button class="modal-action-btn" *ngIf="selectedOrderForModal.status === 'Order Placed'" (click)="cancelOrder(selectedOrderForModal.orderId)">
+                                <i class="fas fa-ban"></i>
+                                Cancel Order
+                            </button>
+                        </div>
                     </div>
-                    <div
-                        style="display: flex; justify-content: space-between; padding: 20px 0; border-top: 2px solid #166534; margin-top: 10px;">
-                        <span style="font-weight: 800; color: #1e293b; font-size: 1.2rem;">Grand Total</span>
-                        <span style="font-weight: 800; color: #166534; font-size: 1.2rem;">₹{{
-                            selectedOrderForBill.totalAmount }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Bill Modal (The actual Bill) -->
+    <div class="user-modal-overlay bill-preview-overlay" *ngIf="selectedOrderForBill" (click)="closeViewBill()">
+        <div class="user-modal-container bill-container" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h2>Invoice Preview</h2>
+                <button class="modal-close" (click)="closeViewBill()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
+
+            <div class="modal-body scrollable">
+                <!-- The Invoice Template Structure -->
+                <div id="pdf-invoice-template" class="pdf-template-render">
+                    <div class="invoice-content-box">
+                        <!-- Invoice Header -->
+                        <div class="invoice-top-row">
+                            <div class="brand-left">
+                                <h1 class="brand-name">GREENIE CULTURE 🌿</h1>
+                                <p class="brand-info">123 Botanical Avenue, Green City, 400001</p>
+                                <p class="brand-info">support@greenieculture.com | +91 9876543210</p>
+                            </div>
+                            <div class="invoice-right">
+                                <h2 class="invoice-label">INVOICE</h2>
+                                <p class="invoice-id">#{{ selectedOrderForBill.orderId }}</p>
+                                <p class="invoice-date">Date: {{ selectedOrderForBill.orderDate | date:'dd MMM yyyy' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Billing Grid -->
+                        <div class="invoice-billing-grid">
+                            <div class="bill-to">
+                                <h4 class="tiny-label">Bill To</h4>
+                                <strong class="cust-name">{{ selectedOrderForBill.userId?.fullName || fullName }}</strong>
+                                <p class="cust-addr">
+                                    {{ selectedOrderForBill.userId?.address || address }}<br>
+                                    {{ selectedOrderForBill.userId?.city || city }}, 
+                                    {{ selectedOrderForBill.userId?.state || stateName }}
+                                </p>
+                            </div>
+                            <div class="payment-method-box">
+                                <h4 class="tiny-label">Payment Method</h4>
+                                <strong class="method">{{ selectedOrderForBill.paymentMethod || 'Online Payment' }}</strong>
+                                <h4 class="tiny-label mt-2">Status</h4>
+                                <strong class="status success">{{ selectedOrderForBill.status }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Description</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of selectedOrderForBill.items">
+                                    <td>
+                                        <div class="item-name-bold">{{ item.name }}</div>
+                                    </td>
+                                    <td class="center">{{ item.quantity }}</td>
+                                    <td class="right">₹{{ item.price }}</td>
+                                    <td class="right bold">₹{{ item.price * item.quantity }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Totals Wrap -->
+                        <div class="invoice-totals-wrap">
+                            <div class="totals-inner">
+                                <div class="total-row">
+                                    <span>Subtotal</span>
+                                    <span>₹{{ selectedOrderForBill.totalAmount }}</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Shipping</span>
+                                    <span class="success">FREE</span>
+                                </div>
+                                <div class="total-row grand">
+                                    <span>Grand Total</span>
+                                    <strong>₹{{ selectedOrderForBill.totalAmount }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="invoice-footer-msg">
+                            <p>Thank you for shopping with Greenie Culture! 🌿</p>
+                            <small>This is a computer generated invoice and does not require a signature.</small>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer -->
-            <div style="margin-top: 60px; text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 30px;">
-                <p style="margin: 0; color: #1e293b; font-weight: 700;">Thank you for shopping with Greenie Culture! 🌿
-                </p>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.8rem;">This is a computer generated invoice
-                    and does not require a signature.</p>
+            <footer class="modal-footer-sticky">
+                <button class="modal-action-btn primary large" (click)="downloadBill(selectedOrderForBill)" [disabled]="isGeneratingPdf">
+                    <i class="fas" [ngClass]="isGeneratingPdf ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+                    {{ isGeneratingPdf ? 'Generating PDF...' : 'Download Official Bill' }}
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Impact Modal: Your Green Legacy -->
+    <div class="user-modal-overlay impact-overlay" *ngIf="showImpactModal" (click)="closeImpactModal()">
+        <div class="user-modal-container impact-card-modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h2>Your Green Legacy 🌿</h2>
+                <button class="modal-close" (click)="closeImpactModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
+
+            <div class="modal-body impact-content scrollable">
+                <div class="impact-hero">
+                    <div class="floating-seedlings">
+                        <i class="fas fa-seedling s1"></i>
+                        <i class="fas fa-leaf s2"></i>
+                        <i class="fas fa-tree s3"></i>
+                    </div>
+                    <h3 class="impact-main-title">You're making a difference!</h3>
+                    <p>By bringing these plants home, you've started a mini-ecosystem in your own garden.</p>
+                </div>
+
+                <div class="impact-stats-grid">
+                    <div class="impact-stat-tile co2">
+                        <div class="tile-icon"><i class="fas fa-cloud"></i></div>
+                        <div class="tile-vals">
+                            <strong>{{ co2Offset | number:'1.2-2' }} kg</strong>
+                            <span>CO2 Offset Annually</span>
+                        </div>
+                    </div>
+                    <div class="impact-stat-tile oxygen">
+                        <div class="tile-icon"><i class="fas fa-wind"></i></div>
+                        <div class="tile-vals">
+                            <strong>{{ co2Offset * 10 | number:'1.1-1' }} Liters</strong>
+                            <span>Oxygen Produced Daily</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="impact-quote">
+                    <i class="fas fa-quote-left"></i>
+                    <p>He who plants a garden, plants happiness.</p>
+                </div>
+
+                <div class="impact-footer-info">
+                    <p>Your garden isn't just beautiful—it's helping our planet breathe 🌍</p>
+                </div>
             </div>
         </div>
     </div>

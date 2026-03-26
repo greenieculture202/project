@@ -291,7 +291,10 @@
               <h4><i class="fas fa-users"></i> Regional Breakdown</h4>
             </div>
             <div class="region-list">
-              <div *ngFor="let entry of (stateOrderCounts | keyvalue)" class="region-row">
+              <div *ngFor="let entry of (stateOrderCounts | keyvalue)" 
+                   class="region-row clickable" 
+                   (click)="onRegionClick(entry.key.toString())"
+                   title="Click to view deep insights for {{ entry.key.replace('IN-', '') }}">
                 <div class="region-main-info">
                   <span class="region-name">{{ entry.key.replace('IN-', '') }}</span>
                   <div class="mini-bar-track">
@@ -299,8 +302,8 @@
                   </div>
                   <span class="region-count">{{ entry.value }}</span>
                 </div>
-                <div class="region-range-info" *ngIf="getRegionRange(entry.key)">
-                  <i class="fas fa-tags"></i> ₹{{ getRegionRange(entry.key).low }} - ₹{{ getRegionRange(entry.key).high }}
+                <div class="region-range-info" *ngIf="getRegionRange(entry.key.toString())">
+                  <i class="fas fa-tags"></i> ₹{{ getRegionRange(entry.key.toString()).low }} - ₹{{ getRegionRange(entry.key.toString()).high }}
                 </div>
               </div>
               <p *ngIf="(stateOrderCounts | keyvalue).length === 0" class="no-data">No regional data yet.</p>
@@ -584,7 +587,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="action-btn primary" (click)="closeStockModal()">Acknowledge</button>
+          <button class="action-btn primary" (click)="closeStockModal()">Done</button>
         </div>
       </div>
     </div>

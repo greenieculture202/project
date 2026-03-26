@@ -484,7 +484,7 @@ export class AdminPanelComponent implements OnInit {
     selectedCourier: string = '';
     trackingNumber: string = '';
     expectedDeliveryDate: string = '';
-    courierOptions: string[] = ['Blue Dart', 'Delhivery', 'DTDC'];
+    courierOptions: string[] = []; // Fetched from DB
 
     // Tracking Generation Limits
     // Store: { [orderId]: { count: number, lockUntil: number } }
@@ -501,23 +501,8 @@ export class AdminPanelComponent implements OnInit {
 
     isSubmitting: boolean = false;
 
-    // State to Courier Mapping
-    public courierStateMapping: { [key: string]: string[] } = {
-        'Blue Dart': [
-            'Maharashtra', 'Gujarat', 'Goa', 'Rajasthan', 'Madhya Pradesh',
-            'Chhattisgarh', 'Dadra and Nagar Haveli', 'Daman and Diu'
-        ],
-        'Delhivery': [
-            'Delhi', 'Uttar Pradesh', 'Haryana', 'Punjab', 'Himachal Pradesh',
-            'Uttarakhand', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh', 'Bihar', 'Jharkhand'
-        ],
-        'DTDC': [
-            'Karnataka', 'Kerala', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana',
-            'West Bengal', 'Odisha', 'Assam', 'Arunachal Pradesh', 'Manipur',
-            'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Puducherry',
-            'Andaman and Nicobar Islands', 'Lakshadweep'
-        ]
-    };
+    // State to Courier Mapping (Populated dynamically via DB)
+    public courierStateMapping: { [key: string]: string[] } = {};
 
     isShaking: boolean = false;
     showCourierMismatchError: boolean = false;
@@ -2153,7 +2138,7 @@ export class AdminPanelComponent implements OnInit {
                     // Filter out orders marked as "Guest Customer" or those missing registered user data
                     this.orders = data.filter((order: any) => {
                         const name = (order.userName || order.userId?.fullName || '').trim();
-                        return name !== 'Guest Customer' && order.userId;
+                        return name !== 'Guest Customer';
                     });
 
                     this.calculatePaymentSummary();
@@ -3026,6 +3011,7 @@ export class AdminPanelComponent implements OnInit {
         this.http.get<any[]>('/api/admin/couriers', { headers: { 'x-auth-token': token || '' } }).subscribe({
             next: (data) => {
                 this.couriers = data;
+                this.courierOptions = data.map(c => c.name); // <--- Make dropdown dynamic!
                 this.courierStateMapping = {};
                 this.courierFees = {};
                 data.forEach(c => {

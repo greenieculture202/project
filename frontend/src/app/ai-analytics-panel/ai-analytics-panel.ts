@@ -291,12 +291,23 @@ export class AiAnalyticsPanelComponent implements OnInit {
       avg: stats?.avgOrderValue || 0
     };
     
-    // Auto-hide after 5 seconds
+    // Auto-hide after 8 seconds for a better reading experience
     setTimeout(() => {
       if (this.selectedState?.name === state.name) {
         this.selectedState = null;
       }
-    }, 5000);
+    }, 8000);
+  }
+
+  onRegionClick(id: string) {
+    const state = this.statePaths.find(p => p.id === id);
+    if (!state) return;
+    this.onStateClick(state);
+    
+    // Also scroll the map into view if on mobile
+    if (window.innerWidth < 768) {
+      document.querySelector('.map-card')?.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   getRegionRange(id: string) {

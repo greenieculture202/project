@@ -4,6 +4,28 @@
 </div>
 
 <div class="product-detail-container" *ngIf="!isLoading && product">
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumb-nav">
+        <div class="breadcrumb-container">
+            <a routerLink="/" class="breadcrumb-item home-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <div class="breadcrumb-separator">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <a *ngIf="product.category" [routerLink]="['/products', product.category]" class="breadcrumb-item category-link">
+                <span>{{ getCleanCategory(product.category) }}</span>
+            </a>
+            <div class="breadcrumb-separator" *ngIf="product.category">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="breadcrumb-item current-item">
+                <span>{{ product.name }}</span>
+            </div>
+        </div>
+    </nav>
+
     <div class="product-main-content">
         <div class="product-images-wrapper">
             <!-- Main Image / Video -->

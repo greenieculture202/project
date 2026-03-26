@@ -71,7 +71,7 @@ const productImages = {
 
 // ACCESSORIES
 const accessories = {
-    'Accessories Plants': [
+    'Accessories': [
         // Pots & Planters
         'Plastic Pots', 'Ceramic Pots', 'Terracotta Pots', 'Hanging Planters', 'Self-Watering Pots',
         'Grow Bags', 'Metal Planters', 'Wooden Planters', 'Wall-Mounted Planters', 'Balcony Railing Planters',
