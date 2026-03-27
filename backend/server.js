@@ -285,9 +285,23 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor'
 console.log('Attempting to connect to MongoDB...');
 console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
 
+// Event Listeners for MongoDB Connection Stability
+mongoose.connection.on('error', err => {
+    console.error('⚠️ [MONGODB-DYNAMIC-ERROR]:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('⚠️ [MONGODB] Connection lost! Mongoose will attempt to reconnect...');
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('✅ [MONGODB] Connection stabilized/reconnected.');
+});
+
 mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 15000, // 15 seconds timeout
-    connectTimeoutMS: 15000
+    serverSelectionTimeoutMS: 30000, // 30 seconds timeout
+    connectTimeoutMS: 30000,
+    family: 4 // Force IPv4 to avoid common Windows DNS/IPv6 resolution issues
 })
     .then(async () => {
         console.log('✅ MongoDB connected successfully');

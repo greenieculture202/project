@@ -8229,3 +8229,11 @@
 [2026-03-26T09:46:51.126Z] GET /api/admin/orders
 [2026-03-26T09:46:51.133Z] GET /api/admin/notifications
 [2026-03-26T09:46:54.022Z] GET /api/user/notifications
+[2026-03-27T06:17:45.082Z] GET /api/products?category=Bestsellers&limit=6
+[2026-03-27T06:17:45.377Z] GET /api/reviews
+[2026-03-27T06:17:45.581Z] GET /api/faqs
+[2026-03-27T06:17:45.597Z] GET /api/placements
+[2026-03-27T06:18:35.479Z] GET /api/products?category=Seeds
+[2026-03-27T06:18:39.320Z] GET /api/products?category=Soil%20%26%20Growing%20Media
+[2026-03-27T06:20:52.645Z] GET /api/products?category=Fertilizers%20%26%20Nutrients
+[2026-03-27T06:21:06.069Z] GET /api/products?category=Accessories
