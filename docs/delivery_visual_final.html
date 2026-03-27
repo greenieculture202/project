@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Panel - Level 1 DFD Visual</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 50px; 
+            display: flex; 
+            justify-content: center; 
+            background-color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .canvas {
+            width: 1200px;
+            border: 1px solid #ddd;
+            padding: 40px;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.05);
+        }
+        h2 { 
+            text-align: center; 
+            color: #333; 
+            margin-bottom: 50px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <h2>Level 1 Data Flow Diagram: Delivery Panel</h2>
+        <div class="mermaid">
+graph LR
+    %% Entity on Left
+    ADM[ADMIN / COURIER]
+
+    %% Processes in Middle
+    P1((1.0 <br/> USER INTERFACE))
+    P2((2.0 <br/> MANAGE PLANTS))
+    P3((3.0 <br/> MANAGE ACCESSORIES))
+    P4((4.0 <br/> BLOGS & FAQ's))
+    P5((5.0 <br/> MANAGE ORDERS))
+    P6((6.0 <br/> MANAGE USERS))
+    P7((7.0 <br/> PAYMENTS))
+    P8((8.0 <br/> SETTINGS))
+
+    %% Data Stores on Right
+    E1[Admins, Users]
+    E2[Plants]
+    E3[Accessories]
+    E4[Blogs & FAQ's]
+    E5[Orders]
+    E6[Users]
+    E7[Payments]
+    E8[Settings]
+
+    %% Left to Mid
+    ADM -- "Pass login details" --> P1
+    ADM -- "Pass plants info" --> P2
+    ADM -- "Pass accessories info" --> P3
+    ADM -- "Pass details" --> P4
+    ADM -- "Pass order details" --> P5
+    ADM -- "Pass user details" --> P6
+    ADM -- "Pass payment details" --> P7
+    ADM -- "Pass change password" --> P8
+
+    %% Mid to Right
+    P1 -- "Verify Details" --> E1
+    P2 -- "Store Details" --> E2
+    P3 -- "Store Details" --> E3
+    P4 -- "Store Details" --> E4
+    P5 -- "Store Details" --> E5
+    P6 -- "Store Details" --> E6
+    P7 -- "Store Details" --> E7
+    P8 -- "Store Details" --> E8
+
+    %% Right to Mid
+    E1 -- "Send Response" --> P1
+    E2 -- "Send Response" --> P2
+    E3 -- "Send Response" --> P3
+    E4 -- "Send Response" --> P4
+    E5 -- "Send Response" --> P5
+    E6 -- "Send Response" --> P6
+    E7 -- "Send Response" --> P7
+    E8 -- "Send Response" --> P8
+
+    %% Mid to Left
+    P1 -- "Receive Response" --> ADM
+    P2 -- "Receive Response" --> ADM
+    P3 -- "Receive Response" --> ADM
+    P4 -- "Receive Response" --> ADM
+    P5 -- "Receive Response" --> ADM
+    P6 -- "Receive Response" --> ADM
+    P7 -- "Receive Response" --> ADM
+    P8 -- "Receive Response" --> ADM
+
+    %% Styling
+    style ADM fill:#fff,stroke:#000,stroke-width:2px,rx:10,ry:10
+    style E1,E2,E3,E4,E5,E6,E7,E8 fill:#fff,stroke:#000,stroke-width:1px
+    
+    classDef circleProc fill:#fff,stroke:#000,stroke-width:1.5px
+    class P1,P2,P3,P4,P5,P6,P7,P8 circleProc
+        </div>
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+Potential Fertilizers in DB: 15
+- Organic Fertilizer | Cat: Fertilizers & Nutrients
+- Bone Meal | Cat: Fertilizers & Nutrients
+- Bio Fertilizer | Cat: Fertilizers & Nutrients
+- NPK Fertilizer | Cat: Fertilizers & Nutrients
+- Urea | Cat: Fertilizers & Nutrients
+- Root Booster | Cat: Fertilizers & Nutrients
+- Seaweed Extract | Cat: Fertilizers & Nutrients
+- Fish Emulsion | Cat: Fertilizers & Nutrients
+- Humic Acid | Cat: Fertilizers & Nutrients
+- Liquid Fertilizer | Cat: Fertilizers & Nutrients
+- Micronutrients Mix | Cat: Chemical Fertilizers
+- Slow release Fertilizer | Cat: Chemical Fertilizers
+- Plant Growth Booster | Cat: Plant Boosters
+- Flower Booster | Cat: Plant Boosters
+- Compost Tea | Cat: Organic Fertilizers
