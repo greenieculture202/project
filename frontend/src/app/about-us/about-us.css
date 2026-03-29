@@ -100,7 +100,7 @@
     width: 100%;
     height: 90vh;
     min-height: 600px;
-    background-image: url('https://images.unsplash.com/photo-1466692476877-339fa9e48c3f?w=1600&auto=format&fit=crop');
+    background-image: url('/images/about_hero_bg.png');
     background-size: cover;
     background-position: center;
     display: flex;
@@ -533,57 +533,126 @@
     opacity: 0.9;
 }
 
-/* Founder Section */
+.stat-icon {
+    font-size: 2.5rem;
+    color: #74c69d;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+/* Founder Section - Premium Redesign */
 .founder-section {
-    background: #fdfdfd;
+    background: linear-gradient(135deg, #fdfdfd 0%, #f7f9f7 100%);
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.founder-section::before {
+    content: 'HAN';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    transform: translateY(-50%);
+    font-size: 20rem;
+    font-weight: 900;
+    color: rgba(27, 67, 50, 0.03);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .founder-grid {
     display: grid;
-    grid-template-columns: 400px 1fr;
-    gap: 80px;
+    grid-template-columns: 450px 1fr;
+    gap: 100px;
     align-items: center;
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .founder-img-container {
     width: 100%;
-    aspect-ratio: 1/1.2;
-    border-radius: 30px;
+    border-radius: 40px;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+    box-shadow: 
+        0 20px 60px rgba(27, 67, 50, 0.15),
+        -15px -15px 30px rgba(255, 255, 255, 0.8);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.founder-img-container:hover {
+    transform: scale(1.02) translateY(-10px);
 }
 
 .founder-img-container img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.8s ease;
+}
+
+.founder-img-container:hover img {
+    transform: scale(1.05);
 }
 
 .founder-text-side {
     position: relative;
+    padding-left: 20px;
+}
+
+.founder-text-side::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #2d6a4f, transparent);
+    border-radius: 2px;
 }
 
 .quote-mark {
-    font-size: 4rem;
-    color: #f1f3e9;
-    margin-top: -20px;
-    margin-bottom: 10px;
+    font-size: 5rem;
+    background: linear-gradient(135deg, #2d6a4f, #1b4332);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.15;
+    margin-bottom: -10px;
 }
 
 .founder-content {
-    font-size: 1.4rem;
-    line-height: 1.8;
-    color: #344e41;
-    font-style: italic;
-    margin-bottom: 30px;
+    font-size: 1.6rem;
+    line-height: 1.7;
+    color: #1b4332;
+    font-weight: 500;
+    margin-bottom: 40px;
+    position: relative;
+    font-family: 'Playfair Display', serif;
 }
 
 .founder-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #1b4332;
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #1b4332, #2d6a4f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.founder-role {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #52796f;
+    font-weight: 600;
+    display: block;
 }
 
 /* Quotes Grid */

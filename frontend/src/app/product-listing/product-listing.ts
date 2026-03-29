@@ -3,6 +3,7 @@ import { CommonModule, ViewportScroller } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
+import { OFFER_RULES, CATEGORY_TO_OFFER } from '../services/offer-rules';
 
 @Component({
     selector: 'app-product-listing',
@@ -53,6 +54,10 @@ export class ProductListingComponent {
             'fertilizers--nutrients': 'Fertilizers & Nutrients',
             'fertilizers-nutrients': 'Fertilizers & Nutrients',
             'gardening-tools': 'Gardening Tools',
+            'hand-tools': 'Hand Tools',
+            'cutting-tools': 'Cutting Tools',
+            'digging-tools': 'Digging Tools',
+            'power-tools': 'Power Tools',
             'seeds-plants': 'Seeds',
             'seeds': 'Seeds',
             'accessories-plants': 'Accessories',
@@ -107,5 +112,24 @@ export class ProductListingComponent {
 
     getTagClass(tag: string): string {
         return tag.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    hasOfferTag(product: Product): boolean {
+        if (!product || !product.tags) return false;
+        const offerTags = OFFER_RULES.map(r => r.code);
+        return product.tags.some(tag => offerTags.includes(tag));
+    }
+
+    getOfferBenefit(product: Product): string {
+        if (!product) return '';
+        const offerTags = OFFER_RULES.map(r => r.code);
+        const code = product.tags?.find(tag => offerTags.includes(tag)) || 
+                     (product.category ? CATEGORY_TO_OFFER[product.category] : null);
+        
+        if (code) {
+            const rule = OFFER_RULES.find(r => r.code === code);
+            return rule ? rule.shortBenefit : '';
+        }
+        return '';
     }
 }

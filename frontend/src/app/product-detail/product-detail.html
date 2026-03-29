@@ -58,32 +58,33 @@
                     <img [src]="product.image" alt="Watch Video" loading="lazy">
                 </div>
             </div>
-
-            <!-- ABOUT PRODUCT Section -->
-            <div class="about-section">
-                <h3 class="section-title">About The Product</h3>
-                <p class="about-text"
-                    [innerHTML]="product.description || 'Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just its care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting option that works as a personal pick-me-up!'">
-                </p>
-
-                <!-- Go to Home Button (Moved here for better layout) -->
-                <a routerLink="/" class="go-home-btn">
-                    <i class="fas fa-home"></i> Go to Home
-                </a>
-            </div>
         </div>
 
         <!-- Product Details Sidebar -->
         <div class="product-info-wrapper">
             <h1 class="product-title">{{ product.name }}</h1>
-            <div class="rating">
-                <i class="fas fa-star"></i> 4.8 | 195
-            </div>
             <div class="price-block">
                 <span class="current-price">{{ selectedPrice }}</span>
                 <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
-                <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
+                <span class="discount-badge" *ngIf="product.discount && !hasOfferTag(product)">{{ product.discount }}</span>
+                <span class="offer-badge" *ngIf="hasOfferTag(product)">
+                    <i class="fas fa-gift"></i> {{ getOfferBenefit(product) }}
+                </span>
                 <span class="sold-out-badge" *ngIf="product.stock !== undefined && product.stock <= 0">SOLD OUT</span>
+            </div>
+
+            <!-- Attractive Offer Info Card -->
+            <div class="special-offer-card" *ngIf="hasOfferTag(product)">
+                <div class="offer-glow"></div>
+                <div class="card-inner">
+                    <div class="icon-wrap">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <div class="offer-text">
+                        <span class="promo-title">SPECIAL OFFER</span>
+                        <p class="promo-desc">{{ getOfferBenefit(product) }} AVAILABLE</p>
+                    </div>
+                </div>
             </div>
             <span class="taxes-text">(Incl. of all taxes)</span>
 
@@ -104,16 +105,20 @@
                 </div>
             </div>
 
-            <label class="gift-option">
-                <input type="checkbox" [(ngModel)]="isGift"
-                    [disabled]="product.stock !== undefined && product.stock <= 0"> Make This a Gift
-            </label>
+
+            <!-- ABOUT PRODUCT Section moved here -->
+            <div class="about-section">
+                <h3 class="section-title">About The Product</h3>
+                <p class="about-text"
+                    [innerHTML]="product.description || 'Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just its care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting option that works as a personal pick-me-up!'">
+                </p>
+            </div>
 
             <div class="actions">
                 <div class="quantity-selector" [class.disabled]="product.stock !== undefined && product.stock <= 0">
                     <button (click)="decreaseQuantity()"
                         [disabled]="product.stock !== undefined && product.stock <= 0">-</button>
-                    <span>{{ quantity }}</span>
+                    <input type="number" [(ngModel)]="quantity" (input)="onQuantityChange()" min="1" max="20" class="qty-input">
                     <button (click)="increaseQuantity()"
                         [disabled]="product.stock !== undefined && product.stock <= 0">+</button>
                 </div>
@@ -124,11 +129,17 @@
                     (click)="buyNow()">BUY IT NOW</button>
             </div>
 
+            <div class="limit-message" *ngIf="isLimitReached">
+                <i class="fas fa-info-circle"></i>
+                <span>We're sorry, but the maximum limit is 20 plants per order to ensure safe delivery. Please place a separate order for more. Thank you!</span>
+            </div>
+
             <div style="color: #008f53; font-weight: 600; margin-top: 25px; margin-bottom: 15px; cursor: pointer;">
                 <i class="fas fa-leaf"></i> View Light guide
             </div>
 
             <!-- FAQs (Accordion Style) -->
+            <h3 class="section-title" *ngIf="isHowToUseCategory()" style="margin-top: 35px; margin-bottom: 15px; border-top: 1px solid #f8f8f8; padding-top: 25px;">How to Use</h3>
             <div class="features-list">
                 <div *ngFor="let faq of currentFaqs" class="feature-card" [class.expanded]="isFaqExpanded(faq.id)">
                     <div class="feature-header" (click)="toggleFaq(faq.id)">
@@ -157,7 +168,8 @@
                     <img [src]="p.image" [alt]="p.name" class="main-img" loading="lazy">
                     <img [src]="(p.images && p.images.length > 0) ? p.images[0] : (p.hoverImage || p.image)" [alt]="p.name" class="hover-img"
                         loading="lazy">
-                    <span class="card-discount" *ngIf="p.discount">{{ p.discount }}</span>
+                    <span class="card-discount" *ngIf="p.discount && !hasOfferTag(p)">{{ p.discount }}</span>
+                    <span class="offer-badge mini" *ngIf="hasOfferTag(p)">{{ getOfferBenefit(p) }}</span>
                 </div>
                 <div class="card-details">
                     <h3 class="card-title">{{ p.name }}</h3>

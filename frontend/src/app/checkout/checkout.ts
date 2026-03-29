@@ -1,4 +1,4 @@
-// Forced rebuild - change v1
+// UI Update: Unified Name v3
 import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -9,6 +9,7 @@ import { ReviewDialogComponent } from '../review-dialog/review-dialog';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '../services/user.service';
 import { HttpClient } from '@angular/common/http';
+import { AiService } from '../services/ai.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -25,6 +26,7 @@ export class CheckoutComponent implements OnInit {
     authService = inject(AuthService);
     reviewService = inject(ReviewService);
     userService = inject(UserService);
+    aiService = inject(AiService);
     router = inject(Router);
     http = inject(HttpClient);
 
@@ -40,12 +42,13 @@ export class CheckoutComponent implements OnInit {
         { id: 'eco', name: '10 Day Delivery', surcharge: 0, description: 'Eco Handling' }
     ];
     selectedOptionId = signal<string>('standard');
+    showDeliveryWarning = signal<boolean>(false);
 
     showReviewDialog = false;
 
     items = computed(() => {
         const cartItems = this.cartService.items();
-        const offer = this.detectedOffer;
+        const offer = this.cartService.appliedOffer();
 
         // 1. Apply any discounts to original items (e.g. Garden Essentials 40%)
         const processedItems = cartItems.map(item => {
@@ -101,8 +104,7 @@ export class CheckoutComponent implements OnInit {
     totalSavings = this.cartService.totalSavings;
 
     contactEmail = '';
-    firstName = '';
-    lastName = '';
+    fullName = '';
     address = '';
     city = '';
     stateName = '';
@@ -111,84 +113,8 @@ export class CheckoutComponent implements OnInit {
     alternatePhone = '';
     currentTimestamp = new Date();
 
-    // Offer Mapping with multi-condition support
-    private readonly offerBenefitMap: { [key: string]: { name: string, benefit: string, discount?: number, freeProduct?: any, minQty?: number } } = {
-        'G-BOGO-6-SECTION': {
-            name: 'BOGO XL Plants',
-            benefit: 'Buy 2 XL Plants, Get 1 Medium Plant FREE',
-            minQty: 2,
-            freeProduct: { name: 'Gift: Bonus Medium Plant', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d' }
-        },
-        'G-INDOOR-6-SEC': {
-            name: 'Indoor Jungle',
-            benefit: 'Buy 2 Indoor Plants, Get 1 Ceramic Pot FREE',
-            minQty: 2,
-            freeProduct: { name: 'Gift: Premium Ceramic Pot', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45' }
-        },
-        'G-GARDEN-6-SEC': {
-            name: 'Garden Essentials',
-            benefit: 'Buy 2+, Get Flat 40% Instant Discount',
-            discount: 0.40,
-            minQty: 2
-        },
-        'G-FLOWER-6-SEC': {
-            name: 'Flowering Bonanza',
-            benefit: 'Buy 2+, Get Free Professional Fertilizer Pack',
-            freeProduct: { name: 'Gift: Organic Fertilizer (1kg)', quantity: 1, price: 0, image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d' },
-            minQty: 2
-        }
-    };
-
-    // Map categories to Offer Codes for automatic detection
-    private readonly categoryToOfferMap: { [key: string]: string } = {
-        'XL Plants': 'G-BOGO-6-SECTION',
-        'Indoor Plants': 'G-INDOOR-6-SEC',
-        'Gardening Tools': 'G-GARDEN-6-SEC',
-        'Flowering Plants': 'G-FLOWER-6-SEC'
-    };
-
     get appliedOffer() {
-        return this.detectedOffer;
-    }
-
-    get detectedOffer() {
-        const cartItems = this.cartService.items();
-        if (!cartItems || cartItems.length === 0) return null;
-
-        const offerCounts: { [key: string]: number } = {};
-
-        for (const item of cartItems) {
-            let codesForItem: string[] = [];
-
-            // 1. Strict Tag Check (The most reliable way)
-            if (item.tags && Array.isArray(item.tags)) {
-                codesForItem = [...item.tags];
-            }
-
-            // 2. Exact Category Mapping
-            if (item.category && this.categoryToOfferMap[item.category]) {
-                codesForItem.push(this.categoryToOfferMap[item.category]);
-            }
-
-            // Deduplicate and increment counts
-            [...new Set(codesForItem)].forEach(code => {
-                if (this.offerBenefitMap[code]) {
-                    offerCounts[code] = (offerCounts[code] || 0) + (item.quantity || 1);
-                }
-            });
-        }
-
-        // Evaluate counts against requirements
-        const priorityOrder = ['G-BOGO-6-SECTION', 'G-INDOOR-6-SEC', 'G-GARDEN-6-SEC', 'G-FLOWER-6-SEC'];
-        for (const code of priorityOrder) {
-            const count = offerCounts[code] || 0;
-            const benefit = this.offerBenefitMap[code];
-            if (count >= (benefit.minQty || 1)) {
-                return { code, ...benefit };
-            }
-        }
-
-        return null;
+        return this.cartService.appliedOffer();
     }
 
 
@@ -213,8 +139,10 @@ export class CheckoutComponent implements OnInit {
             this.showUPIScanner = false;
             this.paymentReceived = false;
             this.showPaymentSuccessPopup = false;
-            // Generate a provisional order ID for display
-            this.tempOrderId = 'T-ORD-' + Math.floor(1000 + Math.random() * 9000);
+            // Generate a provisional order ID for display (if not already generated)
+            if (!this.tempOrderId) {
+                this.tempOrderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+            }
         } else {
             this.showUPIDetailBox = false;
             this.showUPIScanner = false;
@@ -235,7 +163,7 @@ export class CheckoutComponent implements OnInit {
         // NOTIFY ANALYTICS / ADMIN IMMEDIATELY
         this.http.post('/api/admin/notifications', {
             title: 'UPI Payment Initiated',
-            message: `User ${this.firstName} ${this.lastName} is scanned for ₹${this.totalAmount()}. (ID: ${this.tempOrderId})`,
+            message: `User ${this.fullName} is scanned for ₹${this.totalAmount()}. (ID: ${this.tempOrderId})`,
             type: 'PaymentInitiated'
         }).subscribe({
             next: () => console.log('[ANALYTICS] Admin notified of pending payment'),
@@ -264,7 +192,7 @@ export class CheckoutComponent implements OnInit {
                 this.paymentReceived = true;
                 this.showPaymentSuccessPopup = true;
             }
-        }, 60000); // Back to 1 minute
+        }, 10000); // Reduced to 10 seconds as requested
     }
 
     onPaymentSuccessOk() {
@@ -382,24 +310,47 @@ export class CheckoutComponent implements OnInit {
     onCityInput() {
         this.showCityDropdown = true;
         this.showStateDropdown = false;
-        if (!this.city) {
+        
+        // Normalize input for easier matching
+        const inputCity = this.city.trim();
+        
+        if (!inputCity) {
             this.filteredCities = [...this.indianCities];
         } else {
             this.filteredCities = this.indianCities.filter(c =>
-                c.toLowerCase().includes(this.city.toLowerCase())
+                c.toLowerCase().includes(inputCity.toLowerCase())
             );
+            
+            // NEW: Auto-fill state if exact city match is found while typing
+            // We search keys case-insensitively
+            const exactMatch = this.indianCities.find(c => c.toLowerCase() === inputCity.toLowerCase());
+            if (exactMatch && this.cityToState[exactMatch]) {
+                const autoState = this.cityToState[exactMatch];
+                if (this.stateName !== autoState) {
+                    console.log(`[Checkout] Auto-detected state for ${exactMatch}: ${autoState}`);
+                    this.stateName = autoState;
+                    this.selectedState.set(this.stateName);
+                    this.saveCheckoutState(); // Save the auto-detected state
+                }
+            }
         }
     }
 
     selectCity(city: string) {
+        console.log(`[Checkout] City selected from dropdown: ${city}`);
         this.city = city;
         this.showCityDropdown = false;
-        // Auto-fill state
+        
+        // Auto-fill state on selection
         if (this.cityToState[city]) {
             this.stateName = this.cityToState[city];
             this.selectedState.set(this.stateName);
         }
+        
+        // Manually trigger state save since we're using mousedown (sometimes ngModel hasn't fully updated UI)
+        this.saveCheckoutState();
     }
+
 
     closeDropdowns() {
         setTimeout(() => {
@@ -442,15 +393,11 @@ export class CheckoutComponent implements OnInit {
                 next: (profile: any) => {
                     console.log('[Checkout] Fetched user profile for auto-fill:', profile);
 
-                    // Only fill if current field is empty (prefere user's recent edits in session)
-                    if (!this.firstName || !this.lastName) {
-                        const names = (profile.fullName || '').split(' ');
-                        if (!this.firstName) this.firstName = names[0] || '';
-                        if (!this.lastName) this.lastName = names.slice(1).join(' ') || '';
-                    }
-                    if (!this.contactEmail) this.contactEmail = profile.email || '';
-                    if (!this.phone) this.phone = profile.phone || '';
-                    if (!this.alternatePhone) this.alternatePhone = profile.alternatePhone || '';
+                    // Always refresh the core contact details from the verified profile when logged in
+                    this.fullName = profile.fullName || this.fullName;
+                    this.contactEmail = profile.email || this.contactEmail;
+                    this.phone = profile.phone || this.phone;
+                    this.alternatePhone = profile.alternatePhone || this.alternatePhone;
                     
                     /* Disabled auto-fill for address fields to prevent overwriting user input
                     if (!this.address) this.address = profile.address || '';
@@ -479,8 +426,7 @@ export class CheckoutComponent implements OnInit {
 
     saveCheckoutState() {
         const state = {
-            firstName: this.firstName,
-            lastName: this.lastName,
+            fullName: this.fullName,
             contactEmail: this.contactEmail,
             phone: this.phone,
             alternatePhone: this.alternatePhone,
@@ -500,8 +446,7 @@ export class CheckoutComponent implements OnInit {
         if (savedState) {
             try {
                 const state = JSON.parse(savedState);
-                this.firstName = state.firstName || '';
-                this.lastName = state.lastName || '';
+                this.fullName = state.fullName || '';
                 this.contactEmail = state.contactEmail || '';
                 this.phone = state.phone || '';
                 this.alternatePhone = state.alternatePhone || '';
@@ -540,8 +485,7 @@ export class CheckoutComponent implements OnInit {
     isStep1Valid(): boolean {
         const isAltPhoneValid = !this.alternatePhone || this.isValidPhone(this.alternatePhone);
         return !!(
-            this.isValidName(this.firstName) &&
-            this.isValidName(this.lastName) &&
+            this.isValidName(this.fullName) &&
             this.isValidEmail(this.contactEmail) &&
             this.isValidPhone(this.phone) &&
             isAltPhoneValid &&
@@ -598,7 +542,7 @@ export class CheckoutComponent implements OnInit {
             appliedOfferCode: this.appliedOffer?.code || null,
             offerBenefit: this.appliedOffer?.benefit || null,
             shippingDetails: {
-                fullName: `${this.firstName} ${this.lastName}`.trim(),
+                fullName: this.fullName.trim(),
                 email: this.contactEmail,
                 address: this.address,
                 city: this.city,
@@ -610,7 +554,7 @@ export class CheckoutComponent implements OnInit {
         const saveOrder = () => {
             // First try to update the user profile with the latest shipping/contact details
             const profileData = {
-                fullName: `${this.firstName} ${this.lastName}`.trim(),
+                fullName: this.fullName.trim(),
                 phone: this.phone,
                 alternatePhone: this.alternatePhone,
                 address: this.address,
@@ -635,9 +579,26 @@ export class CheckoutComponent implements OnInit {
         }
     }
 
+    selectDeliveryOption(optionId: string) {
+        if (optionId === 'priority' && this.itemsTotal() > 5000) {
+            this.showDeliveryWarning.set(true);
+            // Optionally auto-set to express if priority is blocked
+            // this.selectedOptionId.set('express'); 
+            return;
+        }
+        
+        this.showDeliveryWarning.set(false);
+        this.selectedOptionId.set(optionId);
+        this.saveCheckoutState();
+    }
+
     private executePlaceOrder(orderData: any) {
         this.userService.placeOrder(orderData).subscribe({
             next: (res: any) => {
+                // Ensure the response items are prioritized, but fallback to our sent items if missing
+                if (!res.items || res.items.length === 0) {
+                    res.items = orderData.items;
+                }
                 this.placedOrder = res;
                 this.showInvoiceModal = true;
                 this.isProcessing = false;
@@ -647,6 +608,7 @@ export class CheckoutComponent implements OnInit {
                 localStorage.removeItem('checkout_state');
             },
             error: (err: any) => {
+
                 console.error('[Checkout] Save failed, but showing invoice view for user:', err);
                 this.isProcessing = false;
                 // Create a temporary mock object for better fallback UI
@@ -737,7 +699,7 @@ export class CheckoutComponent implements OnInit {
 
     handleReviewSubmit(data: { rating: number, description: string }) {
         const user = this.authService.getCurrentUser();
-        const checkoutName = `${this.firstName} ${this.lastName}`.trim();
+        const checkoutName = this.fullName.trim();
         this.reviewService.addReview({
             userName: user || checkoutName || 'Guest User',
             rating: data.rating,
@@ -745,13 +707,22 @@ export class CheckoutComponent implements OnInit {
             date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         });
         this.showReviewDialog = false;
-        this.router.navigate(['/']);
+        this.router.navigate(['/']).then(() => {
+            setTimeout(() => this.aiService.triggerReminderCheck(), 1000);
+        });
+    }
+
+    handleSkipReview() {
+        this.showReviewDialog = false;
+        this.router.navigate(['/']).then(() => {
+            setTimeout(() => this.aiService.triggerReminderCheck(), 1000);
+        });
     }
 
     finishOrder() {
-        localStorage.removeItem('checkout_state');
+        this.showInvoiceModal = false;
         sessionStorage.removeItem('last_placed_order');
-        this.cartService.clear();
-        this.router.navigate(['/']);
+        this.showReviewDialog = true;
     }
 }
+

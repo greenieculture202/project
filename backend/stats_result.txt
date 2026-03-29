@@ -1,0 +1,4 @@
+Happy Planters: 36
+Plant Varieties: 159
+Gardening Tools: 14
+User Rating: 4.7

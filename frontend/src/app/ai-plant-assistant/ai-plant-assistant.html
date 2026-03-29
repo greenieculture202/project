@@ -2,7 +2,7 @@
   <!-- Floating Bubble -->
   <button class="chat-bubble ripple" (click)="toggleChat()" [class.hidden]="isOpen()">
     <div class="bubble-icon">
-      <i class="fas fa-leaf"></i>
+      <img src="/images/greenie-logo.png" alt="Logo" class="bubble-logo">
       <span class="pulse"></span>
     </div>
     <span class="bubble-label">AI Assistant</span>
@@ -27,10 +27,8 @@
         <button class="new-chat-btn" (click)="startNewChat()" title="Start New Chat">
           <i class="fas fa-plus"></i>
         </button>
-        <button class="history-btn" (click)="toggleHistory()" [class.active]="showHistory()" title="View Chat History">
-          <i class="fas fa-history"></i>
-        </button>
         <button class="close-btn" (click)="toggleChat()">
+
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -61,14 +59,9 @@
             </div>
           </div>
 
-          <!-- Set Reminder Button (Only for Logged in Users) -->
-          <div *ngIf="msg.type === 'ai' && msg.remindable && isLoggedIn()" class="reminder-prompt">
-            <button class="set-reminder-btn ripple" (click)="confirmReminder()">
-              <i class="fas fa-bell"></i> Set Care Reminder
-            </button>
-          </div>
 
         </div> <!-- end message-bubble -->
+
       </div> <!-- end message-row -->
     </div> <!-- end messages-container -->
 
@@ -109,5 +102,46 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Reminder Modal - Decoupled from Chatbot UI -->
+<div class="reminder-modal-overlay" *ngIf="showReminderModal()" (click)="closeReminderModal()">
+  <div class="reminder-modal-content shadow-premium" (click)="$event.stopPropagation()">
+    <div class="modal-header-accent"></div>
+    
+    <div class="modal-body">
+      <div class="modal-icon-wrapper" [class.success]="showConfirmationMessage" [class.info]="showThankYouMessage">
+        <i class="fas fa-bell pulse-alert" *ngIf="!showConfirmationMessage && !showThankYouMessage"></i>
+        <i class="fas fa-check-double" *ngIf="showConfirmationMessage"></i>
+        <i class="fas fa-heart" *ngIf="showThankYouMessage"></i>
+      </div>
+
+      <!-- Initial Question -->
+      <ng-container *ngIf="!showConfirmationMessage && !showThankYouMessage">
+        <h3 class="premium-title">Plant Care Reminders</h3>
+        <p class="plant-emoji-large">🌱</p>
+        <p class="modal-desc">Stay updated with expert care tips for your <strong class="highlight-green">new plants</strong> every 3 days on our website bell icon.</p>
+        <div class="modal-actions-premium">
+          <button class="btn-no-premium" (click)="onNoReminder()">NO</button>
+          <button class="btn-yes-premium" (click)="confirmReminder()">YES, PLEASE!</button>
+        </div>
+      </ng-container>
+
+      <!-- Inline Success State for YES -->
+      <ng-container *ngIf="showConfirmationMessage">
+        <h3 class="success-title">Success! 🌱</h3>
+        <p class="modal-desc">Ok, now you will receive reminders every 3 days on our website <strong>Greenie Culture's bell icon</strong>. ✅</p>
+        <div class="auto-close-hint">Closing window...</div>
+      </ng-container>
+
+      <!-- Inline Thank You state for NO -->
+      <ng-container *ngIf="showThankYouMessage">
+        <h3 class="thanks-title">Happy Gardening! 🌿</h3>
+        <p class="modal-desc">We won't send you care reminders for this order. We hope your plants bring you joy! 🎁</p>
+        <div class="auto-close-hint">Closing window...</div>
+      </ng-container>
+    </div>
+
   </div>
 </div>

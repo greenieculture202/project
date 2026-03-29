@@ -21,7 +21,7 @@ export class BogoOfferComponent implements OnInit {
 
     ngOnInit() {
         // Fetch products tagged with G-BOGO-6-SECTION, limit to 4
-        this.productService.getProducts('G-BOGO-6-SECTION', undefined, 4).subscribe(products => {
+        this.productService.getProducts('G-BOGO-6-SECTION', undefined, 20).subscribe(products => {
             if (products) {
                 this.xlPlants = products;
             }

@@ -1,0 +1,229 @@
+import { __decorate } from "tslib";
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ProductService } from '../services/product.service';
+import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
+import { CartService } from '../services/cart.service';
+let ProductDetailComponent = class ProductDetailComponent {
+    constructor() {
+        this.route = inject(ActivatedRoute);
+        this.router = inject(Router);
+        this.productService = inject(ProductService);
+        this.authService = inject(AuthService);
+        this.notificationService = inject(NotificationService);
+        this.cartService = inject(CartService);
+        this.activeImageIndex = 0;
+        this.showVideo = false;
+        this.relatedProducts = [];
+        this.isLoading = true;
+        this.expandedFaqs = new Set();
+        this.selectedWeight = '';
+        this.selectedPrice = '';
+        this.currentPlanterImage = '';
+        this.quantity = 1;
+        this.isGift = false;
+        this.seedWeights = [];
+        this.categoryFaqs = {
+            'Indoor': [
+                { id: 'water', title: 'Water once a week', icon: 'https://cdn-icons-png.flaticon.com/64/3105/3105807.png', content: 'Always check your plants before watering, the topsoil should be dry to touch.' },
+                { id: 'sunlight', title: 'Needs bright indirect sunlight', icon: 'https://cdn-icons-png.flaticon.com/64/6974/6974854.png', content: 'Place your plants on window sills where it can get the brightest possible indirect light.' },
+                { id: 'pets', title: 'Keep out of pet reach', icon: 'https://cdn-icons-png.flaticon.com/64/1998/1998592.png', content: 'Some species can be toxic if ingested.' },
+                { id: 'beginner', title: 'Great for beginners', icon: 'https://cdn-icons-png.flaticon.com/64/2491/2491418.png', content: 'Hardy and easy to care for.' }
+            ],
+            'Outdoor': [
+                { id: 'water', title: 'Water daily in summers', icon: 'https://cdn-icons-png.flaticon.com/64/3105/3105807.png', content: 'Outdoor plants evaporate water quickly.' },
+                { id: 'sunlight', title: 'Thrives in direct sunlight', icon: 'https://cdn-icons-png.flaticon.com/64/6974/6974854.png', content: 'Requires at least 4-6 hours of direct sun.' },
+                { id: 'pets', title: 'Safe for garden pets', icon: 'https://cdn-icons-png.flaticon.com/64/1998/1998592.png', content: 'Generally hardy and safe.' },
+                { id: 'beginner', title: 'Beginner Friendly', icon: 'https://cdn-icons-png.flaticon.com/64/1162/1162283.png', content: 'Very hardy and difficult to kill.' }
+            ]
+        };
+    }
+    ngOnInit() {
+        this.route.params.subscribe((params) => {
+            const slug = params['id'];
+            if (slug) {
+                window.scrollTo(0, 0);
+                // Check cache for instant load
+                const cachedProduct = this.productService.productCache?.get(slug);
+                if (cachedProduct) {
+                    this.product = cachedProduct;
+                    this.isLoading = false;
+                    this.setupProductDetails();
+                }
+                else {
+                    this.isLoading = true;
+                }
+                this.productService.getProductBySlug(slug).subscribe({
+                    next: (product) => {
+                        this.product = product || undefined;
+                        this.isLoading = false;
+                        if (this.product) {
+                            this.setupProductDetails();
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Error loading product', err);
+                        this.isLoading = false;
+                    }
+                });
+            }
+        });
+    }
+    setupProductDetails() {
+        if (!this.product)
+            return;
+        const cat = this.product.category || '';
+        const isWeightBased = cat.includes('Seeds') ||
+            cat.includes('Soil') ||
+            cat.includes('Fertilizers') ||
+            cat.includes('Nutrients');
+        if (isWeightBased) {
+            this.setupWeightVariants();
+        }
+        else {
+            this.selectedPrice = this.product.price;
+            this.currentPlanterImage = this.product.image;
+        }
+        if (this.product.category) {
+            this.productService.getRelatedProducts(this.product.category, 4).subscribe(related => {
+                this.relatedProducts = related;
+            });
+        }
+    }
+    setupWeightVariants() {
+        if (!this.product)
+            return;
+        // If product has variants from backend, use them
+        if (this.product.variants && this.product.variants.length > 0) {
+            this.seedWeights = this.product.variants;
+        }
+        else {
+            // Default weights
+            const basePrice = parseFloat(String(this.product.price).replace(/[^\d.]/g, '')) || 50;
+            this.seedWeights = [
+                { name: '250g', price: `₹${basePrice}` },
+                { name: '500g', price: `₹${Math.round(basePrice * 1.8)}` },
+                { name: '1kg', price: `₹${Math.round(basePrice * 3.2)}` },
+                { name: '2kg', price: `₹${Math.round(basePrice * 6)}` },
+                { name: '5kg', price: `₹${Math.round(basePrice * 14)}` },
+                { name: '10kg', price: `₹${Math.round(basePrice * 26)}` }
+            ];
+        }
+        this.selectedWeight = this.seedWeights[0].name;
+        this.selectedPrice = this.seedWeights[0].price;
+    }
+    get thumbnails() {
+        if (!this.product)
+            return [];
+        const additionalImages = this.product.images || [];
+        return [this.product.image, ...additionalImages];
+    }
+    get displayImage() {
+        return this.currentPlanterImage || (this.product?.image ?? '');
+    }
+    setShowVideo(show) {
+        this.showVideo = show;
+    }
+    setActiveImage(index) {
+        this.showVideo = false;
+        this.activeImageIndex = index;
+        const additionalImages = this.product?.images || [];
+        const totalProductPics = 1 + additionalImages.length;
+        if (index === 0) {
+            this.currentPlanterImage = this.product?.image || '';
+        }
+        else if (index < totalProductPics) {
+            // It's one of the additional images
+            this.currentPlanterImage = additionalImages[index - 1];
+        }
+    }
+    selectWeight(weightName) {
+        this.selectedWeight = weightName;
+        const weight = this.seedWeights.find(w => w.name === weightName);
+        if (weight) {
+            this.selectedPrice = weight.price;
+        }
+    }
+    increaseQuantity() { this.quantity++; }
+    decreaseQuantity() { if (this.quantity > 1)
+        this.quantity--; }
+    toggleFaq(faqId) {
+        if (this.expandedFaqs.has(faqId))
+            this.expandedFaqs.delete(faqId);
+        else
+            this.expandedFaqs.add(faqId);
+    }
+    isFaqExpanded(faqId) { return this.expandedFaqs.has(faqId); }
+    addToCart() {
+        if (!this.authService.getCurrentUser()) {
+            this.notificationService.show('Please login first to add items into cart.', 'Sign In Required', 'info', 'standard', '/login');
+            return;
+        }
+        if (this.product) {
+            // Check stock
+            if (this.product.stock !== undefined && this.product.stock <= 0) {
+                this.notificationService.show(`"${this.product.name}" is currently out of stock.`, 'Out of Stock', 'warning', 'standard');
+                return;
+            }
+            const cat = this.product.category || '';
+            const isWeightBased = cat.includes('Seeds') ||
+                cat.includes('Soil') ||
+                cat.includes('Fertilizers') ||
+                cat.includes('Nutrients');
+            const weight = isWeightBased ? this.selectedWeight : undefined;
+            const planter = undefined;
+            // Create a modified product object with selected price
+            const productToBag = { ...this.product, price: this.selectedPrice };
+            this.cartService.addItem(productToBag, this.quantity, planter, weight, this.isGift);
+            this.notificationService.show(`"${this.product.name}" added to cart.`, 'Success', 'success', 'cart');
+        }
+    }
+    buyNow() {
+        if (!this.authService.getCurrentUser()) {
+            this.notificationService.show('Please login first to proceed with the purchase.', 'Sign In Required', 'info', 'standard', '/login');
+            return;
+        }
+        if (this.product) {
+            // Check stock
+            if (this.product.stock !== undefined && this.product.stock <= 0) {
+                this.notificationService.show(`"${this.product.name}" is currently out of stock.`, 'Out of Stock', 'warning', 'standard');
+                return;
+            }
+            const cat = this.product.category || '';
+            const isWeightBased = cat.includes('Seeds') ||
+                cat.includes('Soil') ||
+                cat.includes('Fertilizers') ||
+                cat.includes('Nutrients');
+            const weight = isWeightBased ? this.selectedWeight : undefined;
+            const planter = undefined;
+            // Create a modified product object with selected price
+            const productToBag = { ...this.product, price: this.selectedPrice };
+            this.cartService.addItem(productToBag, this.quantity, planter, weight, this.isGift);
+            this.router.navigate(['/checkout']);
+        }
+    }
+    get currentFaqs() {
+        if (!this.product?.category)
+            return this.categoryFaqs['Indoor'];
+        const cat = this.product.category;
+        if (cat.includes('Outdoor'))
+            return this.categoryFaqs['Outdoor'];
+        return this.categoryFaqs['Indoor'];
+    }
+    createSlug(name) { return this.productService.createSlug(name); }
+    getTagClass(tag) { return tag.toLowerCase().replace(/\s+/g, '-'); }
+};
+ProductDetailComponent = __decorate([
+    Component({
+        selector: 'app-product-detail',
+        standalone: true,
+        imports: [CommonModule, RouterLink, FormsModule],
+        templateUrl: './product-detail.html',
+        styleUrl: './product-detail.css'
+    })
+], ProductDetailComponent);
+export { ProductDetailComponent };
+//# sourceMappingURL=product-detail.js.map

@@ -31,16 +31,17 @@
             <div class="video-wrapper">
                 <div class="video-container">
                     <ng-container *ngIf="selectedPlacement && selectedVideo">
-                        <!-- YouTube Iframe -->
+                        <!-- Embedded Video Player (YouTube, Pinterest, etc.) -->
                         <iframe *ngIf="!selectedPlacement.isLocal" [src]="selectedVideo" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
+                            allowfullscreen class="embed-video">
                         </iframe>
 
-                        <!-- Local Video Player with End Event - Now using sanitized URL -->
+                        <!-- Local Video Player (Direct MP4 links) -->
                         <video *ngIf="selectedPlacement.isLocal" [src]="selectedVideo" controls autoplay
                             (ended)="onVideoEnded()" class="local-video">
                         </video>
+
                     </ng-container>
 
                     <!-- View Plants Overlay Button -->

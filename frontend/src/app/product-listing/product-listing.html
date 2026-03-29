@@ -22,7 +22,10 @@
                 <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">
                 <img [src]="(product.images && product.images.length > 0) ? product.images[0] : (product.hoverImage || product.image)" [alt]="product.name" class="product-img hover-img"
                     loading="lazy">
-                <span class="discount-badge" *ngIf="product.discount">{{ product.discount }}</span>
+                <span class="discount-badge" *ngIf="product.discount && !hasOfferTag(product)">{{ product.discount }}</span>
+                <span class="offer-badge" *ngIf="hasOfferTag(product)">
+                    <i class="fas fa-gift"></i> {{ getOfferBenefit(product) }}
+                </span>
                 <span class="regional-badge" *ngIf="product.isRegionalFavorite">
                     <i class="fas fa-location-dot"></i> Regional Favorite
                 </span>

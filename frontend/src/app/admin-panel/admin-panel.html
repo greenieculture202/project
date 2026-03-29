@@ -4,7 +4,7 @@
         <div class="sidebar-header">
             <div class="brand-container" routerLink="/">
                 <div class="logo-wrapper">
-                    <img src="/images/log-removebg-preview.png" alt="Logo" class="admin-logo">
+                    <img src="/images/greenie-logo.png" alt="Logo" class="admin-logo">
                 </div>
                 <div class="brand-names">
                     <span class="main-name">Greenie Culture</span>
@@ -62,9 +62,6 @@
             </a>
             <a routerLink="/ai-analytics">
                 <i class="fas fa-robot"></i> AI Analytics
-            </a>
-            <a routerLink="/all-reviews">
-                <i class="fas fa-star"></i> All Reviews
             </a>
         </nav>
 
@@ -126,8 +123,8 @@
                                                 alt="product" class="noti-prod-img">
                                         </div>
                                         <!-- Icon for Admin Messages/Settlements -->
-                                        <div class="noti-icon-wrapper" *ngIf="noti.type === 'admin'" 
-                                             style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #eff6ff; border-radius: 12px; margin-right: 12px;">
+                                        <div class="noti-icon-wrapper" *ngIf="noti.type === 'admin'"
+                                            style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #eff6ff; border-radius: 12px; margin-right: 12px;">
                                             <i class="fas fa-bell" style="font-size: 1.2rem; color: #3b82f6;"></i>
                                         </div>
 
@@ -141,7 +138,8 @@
                                                     *ngIf="noti.type === 'admin' && noti.title.includes('Settlement')"></i>
                                                 {{noti.title}}
                                             </div>
-                                            <div class="noti-item-msg" style="word-break: break-word;">{{noti.message}}</div>
+                                            <div class="noti-item-msg" style="word-break: break-word;">{{noti.message}}
+                                            </div>
 
                                             <div class="noti-item-footer" *ngIf="noti.product">
                                                 <div class="noti-price-tag" *ngIf="noti.product.price">
@@ -152,8 +150,10 @@
                                                     Stock: {{noti.product.stock}}
                                                 </div>
                                             </div>
-                                            <div class="noti-item-footer" *ngIf="noti.type === 'admin' && noti.courierName">
-                                                <button class="noti-reply-btn" (click)="openCourierReply(noti.courierName, $event)">
+                                            <div class="noti-item-footer"
+                                                *ngIf="noti.type === 'admin' && noti.courierName">
+                                                <button class="noti-reply-btn"
+                                                    (click)="openCourierReply(noti.courierName, $event)">
                                                     <i class="fas fa-reply"></i> Reply to {{noti.courierName}}
                                                 </button>
                                             </div>
@@ -216,7 +216,7 @@
                         </div>
                         <div class="header-options">
                             <button class="btn-premium-export" (click)="downloadAnalyticsReport()"
-                                title="Download CSV Report">
+                                title="Download PDF Report">
                                 <i class="fas fa-download"></i>
                                 Download
                             </button>
@@ -331,7 +331,6 @@
                         <h3>Recent Transactions</h3>
                         <span>Latest successful order placements</span>
                     </div>
-                    <button class="btn-link" (click)="setTab('orders')">View Database</button>
                 </div>
                 <div class="premium-table-wrapper">
                     <table class="premium-minimal-table">
@@ -342,7 +341,6 @@
                                 <th>Date & Time</th>
                                 <th>Billing</th>
                                 <th>Status</th>
-                                <th class="text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -373,14 +371,9 @@
                                         {{order.status}}
                                     </span>
                                 </td>
-                                <td class="text-right">
-                                    <button class="btn-icon-premium" (click)="viewOrderDetails(order)">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
-                                </td>
                             </tr>
                             <tr *ngIf="orders.length === 0">
-                                <td colspan="6" class="table-empty-state">
+                                <td colspan="5" class="table-empty-state">
                                     <i class="fas fa-inbox"></i>
                                     <p>No transactions found in queue</p>
                                 </td>
@@ -582,7 +575,7 @@
                             </div>
                         </div>
                         <div class="search-filter">
-                            <input type="text" placeholder="Search users...">
+                            <input type="text" [(ngModel)]="userSearchQuery" placeholder="Search users...">
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -1048,8 +1041,8 @@
                             <span class="order-id">#{{order.orderId}}</span>
                             <span class="order-timestamp">{{order.orderDate | date:'MMM d, HH:mm'}}</span>
                             <div class="order-badge-v2" [ngClass]="order.status.toLowerCase()">{{order.status}}</div>
-                            <div class="delivery-speed-badge" *ngIf="order.deliveryType" 
-                                 style="margin-left: auto; background: #f0fdf4; color: #166534; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 5px;">
+                            <div class="delivery-speed-badge" *ngIf="order.deliveryType"
+                                style="margin-left: auto; background: #f0fdf4; color: #166534; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 5px;">
                                 <i class="fas fa-bolt"></i> {{order.deliveryType}}
                             </div>
                         </div>
@@ -1081,7 +1074,8 @@
                         </div>
 
                         <!-- 5. Courier Name & Timings -->
-                        <div class="courier-column" style="display: flex; flex-direction: column; gap: 4px; justify-content: center;">
+                        <div class="courier-column"
+                            style="display: flex; flex-direction: column; gap: 4px; justify-content: center;">
                             <div class="courier-pill-linear" *ngIf="order.courierName">
                                 <i class="fas fa-truck-fast"></i>
                                 <span>{{order.courierName}}</span>
@@ -1090,10 +1084,24 @@
                                 <i class="far fa-clock"></i> Not Assigned
                             </div>
                             <div *ngIf="order.assignedAt" style="color: #64748b; font-size: 0.7rem;">
-                                <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> {{order.assignedAt | date:'MMM d, HH:mm'}}
+                                <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> {{order.assignedAt |
+                                date:'MMM d, HH:mm'}}
                             </div>
-                            <div *ngIf="order.status === 'Delivered' && order.deliveredAt" style="color: #10b981; font-size: 0.7rem; font-weight: 600;">
-                                <i class="fas fa-check-double" style="margin-right: 4px;"></i> {{order.deliveredAt | date:'MMM d, HH:mm'}}
+                            <!-- Expected Delivery Date -->
+                            <div *ngIf="order.status === 'Shipped' && getExpectedDeliveryDate(order)"
+                                style="color: #0369a1; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-calendar-alt" style="margin-right: 4px;"></i>
+                                Delivery: {{getExpectedDeliveryDate(order) | date:'MMM d'}}
+                            </div>
+                            <!-- Out for Delivery auto-status badge -->
+                            <div *ngIf="getEffectiveStatus(order) === 'Out for Delivery'"
+                                style="background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #fde68a; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-truck-fast"></i> Out for Delivery
+                            </div>
+                            <div *ngIf="order.status === 'Delivered' && order.deliveredAt"
+                                style="color: #10b981; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-check-double" style="margin-right: 4px;"></i> {{order.deliveredAt |
+                                date:'MMM d, HH:mm'}}
                             </div>
                         </div>
 
@@ -1254,10 +1262,10 @@
                             </div>
 
                             <!-- "Show Cards" Dynamic Button -->
-                            <div class="offer-view-cards-btn-container" *ngIf="getOfferCodeByLink(offer.ctaLink)">
+                            <div class="offer-view-cards-btn-container" *ngIf="getOfferCodeByOffer(offer)">
                                 <button class="offers-empty-btn"
                                     style="width: 100%; margin-top: 15px; background: #6366f1; font-size: 0.8rem; padding: 8px;"
-                                    (click)="viewOfferCards(getOfferCodeByLink(offer.ctaLink)!)">
+                                    (click)="viewOfferCards(getOfferCodeByOffer(offer)!)">
                                     <i class="fas fa-th"></i> Show Associated Cards
                                 </button>
                             </div>
@@ -1589,13 +1597,18 @@
                 </div>
                 <div class="header-actions" style="display: flex; gap: 15px; align-items: center;">
                     <div class="user-filters" style="margin: 0;">
-                        <button [class.active]="inquiryActiveSubTab === 'customers'" (click)="inquiryActiveSubTab = 'customers'">
+                        <button [class.active]="inquiryActiveSubTab === 'customers'"
+                            (click)="inquiryActiveSubTab = 'customers'">
                             <i class="fas fa-user-tag"></i> Customers
                         </button>
-                        <button [class.active]="inquiryActiveSubTab === 'couriers'" (click)="inquiryActiveSubTab = 'couriers'">
+                        <button [class.active]="inquiryActiveSubTab === 'couriers'"
+                            (click)="inquiryActiveSubTab = 'couriers'">
                             <i class="fas fa-truck-fast"></i> Courier Channels
                         </button>
                     </div>
+                    <button class="add-floating-btn" *ngIf="inquiryActiveSubTab === 'couriers'" (click)="openNewCourierMessageModal($event)" style="background: #10b981; margin-right: 10px;">
+                        <i class="fas fa-paper-plane"></i> New Message
+                    </button>
                     <button class="add-floating-btn" (click)="loadInquiries(); loadAdminNotifications()">
                         <i class="fas fa-sync"></i> Refresh All
                     </button>
@@ -1678,32 +1691,35 @@
                                 <tr *ngIf="noti.type === 'admin' || getCourierName(noti)">
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 10px;">
-                                            <div style="width: 35px; height: 35px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #3b82f6;">
+                                            <div
+                                                style="width: 35px; height: 35px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #3b82f6;">
                                                 <i class="fas fa-truck"></i>
                                             </div>
-                                            <span style="font-weight: 700; color: #1e293b;">{{ getCourierName(noti) || 'System Message' }}</span>
+                                            <span style="font-weight: 700; color: #1e293b;">{{ getCourierName(noti) ||
+                                                'System Message' }}</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; color: #475569;">
+                                        <div
+                                            style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; color: #475569;">
                                             {{ noti.title }}
                                         </div>
-                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">{{ noti.message }}</div>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">{{ noti.message
+                                            }}</div>
                                     </td>
                                     <td>{{ noti.createdAt | date:'medium' }}</td>
                                     <td>
-                                        <span class="badge-status" 
-                                              [style.background]="noti.sender !== 'admin' ? '#ecfdf5' : '#fff7ed'"
-                                              [style.color]="noti.sender !== 'admin' ? '#065f46' : '#9a3412'"
-                                              style="font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: 700;">
+                                        <span class="badge-status"
+                                            [style.background]="noti.sender !== 'admin' ? '#ecfdf5' : '#fff7ed'"
+                                            [style.color]="noti.sender !== 'admin' ? '#065f46' : '#9a3412'"
+                                            style="font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: 700;">
                                             {{ noti.sender !== 'admin' ? 'INBOUND' : 'OUTBOUND' }}
                                         </span>
                                     </td>
                                     <td style="text-align: center;">
-                                        <button class="btn-details-v2" 
-                                                *ngIf="getCourierName(noti)"
-                                                (click)="openCourierReply(getCourierName(noti), $event)"
-                                                style="border-radius: 8px; padding: 8px 15px; font-size: 0.8rem;">
+                                        <button class="btn-details-v2" *ngIf="getCourierName(noti)"
+                                            (click)="openCourierReply(getCourierName(noti), $event)"
+                                            style="border-radius: 8px; padding: 8px 15px; font-size: 0.8rem;">
                                             Reply
                                         </button>
                                     </td>
@@ -2112,7 +2128,9 @@
                             </p>
                         </div>
                         <div class="info-item">
-                            <label style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery Speed</label>
+                            <label
+                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery
+                                Speed</label>
                             <p style="font-size:1.05rem; font-weight:700; color:#16a34a; margin-top:5px;">
                                 <i class="fas fa-clock" style="margin-right:8px;"></i>
                                 {{ selectedOrder.deliveryType || '7 Day Delivery' }}
@@ -2155,19 +2173,19 @@
                             *ngIf="!selectedOrder.trackingNumber">
                             <div style="flex: 1;">
                                 <label
-                                    style="display: block; font-size: 0.8rem; color: #92400e; font-weight: 700; margin-bottom: 5px;">Courier
+                                    style="display: block; font-size: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Courier
                                     Partner</label>
-                                <!-- Static display instead of dropdown -->
-                                <div
-                                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; background: #fff5f5; color: #b91c1c; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-                                    <i class="fas fa-building-flag"></i>
-                                    {{selectedCourier || 'Detecting...'}}
-                                </div>
+                                <!-- Dropdown instead of static display -->
+                                <select [(ngModel)]="selectedCourier" (change)="onCourierChange()" class="premium-select-v3">
+                                    <option *ngFor="let courier of orderedCourierOptions" [value]="courier">
+                                        {{courier}}
+                                    </option>
+                                </select>
                             </div>
                             <div>
                                 <label
                                     style="display: block; font-size: 0.8rem; color: #92400e; font-weight: 700; margin-bottom: 5px;">Tracking
-                                    Number (Optional)</label>
+                                    Number</label>
                                 <div style="display: flex; gap: 5px;">
                                     <input type="text" [(ngModel)]="trackingNumber" name="stracking"
                                         placeholder="Auto-generates if empty"
@@ -2227,10 +2245,12 @@
                             </p>
                             <div style="margin-top: 5px; display: flex; gap: 12px; font-size: 0.8rem; color: #166534;">
                                 <span *ngIf="selectedOrder.assignedAt">
-                                    <i class="fas fa-calendar-check"></i> Assigned: {{selectedOrder.assignedAt | date:'MMM d, HH:mm'}}
+                                    <i class="fas fa-calendar-check"></i> Assigned: {{selectedOrder.assignedAt |
+                                    date:'MMM d, HH:mm'}}
                                 </span>
                                 <span *ngIf="selectedOrder.deliveredAt">
-                                    <i class="fas fa-check-double"></i> Delivered: {{selectedOrder.deliveredAt | date:'MMM d, HH:mm'}}
+                                    <i class="fas fa-check-double"></i> Delivered: {{selectedOrder.deliveredAt |
+                                    date:'MMM d, HH:mm'}}
                                 </span>
                             </div>
                         </div>
@@ -2302,8 +2322,8 @@
                     style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #15803d; padding-bottom: 25px; margin-bottom: 30px;">
                     <div>
                         <h1
-                            style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px;">
-                            GREENIE CULTURE 🌿</h1>
+                            style="color: #15803d; font-size: 2.2rem; margin: 0; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 15px;">
+                            <img src="/images/greenie-logo.png" alt="Logo" style="height: 45px; width: auto;"> GREENIE CULTURE</h1>
                         <p style="color: #64748b; margin: 8px 0 0 0; font-weight: 600;">The Premium Botanical Experience
                         </p>
                     </div>
@@ -2779,9 +2799,10 @@
                         <div class="section-tag">Media Assets</div>
                         <div class="info-grid">
                             <div class="info-item full">
-                                <label>Video URL * (MP4 link or YouTube)</label>
+                                <label>Video URL * (YouTube, Pinterest, or MP4)</label>
                                 <input type="text" [(ngModel)]="newPlacement.videoUrl" name="plac_video" required
-                                    placeholder="https://...">
+                                    placeholder="Enter YouTube URL, Pinterest Pin, or direct .mp4 link...">
+
                             </div>
                             <div class="info-item full">
                                 <label>Thumbnail Image URL *</label>
@@ -3166,9 +3187,9 @@
 
     <!-- Add Product to Offer Modal -->
     <div class="modal-overlay" *ngIf="showAddProductToOfferModal" (click)="showAddProductToOfferModal = false"
-        style="z-index: 1100;">
+        style="z-index: 999999 !important;">
         <div class="user-detail-modal" (click)="$event.stopPropagation()"
-            style="max-width: 700px; border-radius: 20px;">
+            style="max-width: 700px; border-radius: 20px; z-index: 999999 !important; position: relative;">
             <!-- ... existing content ... -->
             <div class="modal-header" style="background: #6366f1; color: white; padding: 20px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
@@ -3394,6 +3415,47 @@
         </div>
     </div>
 
+    <!-- New Courier Message Modal (Premium) -->
+    <div class="modal-overlay" *ngIf="showNewCourierMessageModal" (click)="showNewCourierMessageModal = false">
+        <div class="user-detail-modal" (click)="$event.stopPropagation()" style="max-width: 500px;">
+            <div class="modal-header-premium" style="padding: 40px 30px 80px; background: linear-gradient(135deg, #10b981, #059669);">
+                <button class="close-modal" (click)="showNewCourierMessageModal = false">×</button>
+                <h2 style="font-size: 1.5rem;"><i class="fas fa-paper-plane"></i> New Courier Message</h2>
+                <p>Initiate direct communication with a partner.</p>
+            </div>
+
+            <div class="modal-body-premium" style="margin-top: -40px;">
+                <div class="profile-card-floating" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                    <div style="width: 100%;">
+                        <label style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.85rem;">SELECT COURIER PARTNER</label>
+                        <select [(ngModel)]="newCourierName" style="width: 100%; border: 2px solid #f1f5f9; border-radius: 12px; padding: 12px 15px; font-size: 0.95rem; outline: none; margin-bottom: 15px; appearance: auto;">
+                            <option *ngFor="let courier of availableCouriers" [value]="courier">{{ courier }}</option>
+                        </select>
+                        <label style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.85rem;">YOUR MESSAGE</label>
+                        <textarea [(ngModel)]="newCourierMessage"
+                            placeholder="Type your new message here..."
+                            style="width: 100%; min-height: 150px; border: 2px solid #f1f5f9; border-radius: 16px; padding: 15px; font-size: 0.95rem; resize: none; outline: none; transition: border-color 0.2s;"></textarea>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                            <span style="font-size: 0.75rem; color: #94a3b8;">Characters: {{ newCourierMessage.length }}</span>
+                            <span style="font-size: 0.75rem; color: #10b981; font-weight: 700;">Admin Official Message</span>
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; display: flex; gap: 10px; margin-top: 10px;">
+                        <button (click)="sendNewCourierMessage()" [disabled]="!newCourierMessage.trim() || !newCourierName"
+                            style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                            <i class="fas fa-paper-plane"></i> SEND MESSAGE
+                        </button>
+                        <button (click)="showNewCourierMessageModal = false"
+                            style="background: #f1f5f9; color: #64748b; border: none; padding: 14px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                            CANCEL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Courier Reply Modal (Premium) -->
     <div class="modal-overlay" *ngIf="showCourierReplyModal" (click)="showCourierReplyModal = false">
         <div class="user-detail-modal" (click)="$event.stopPropagation()" style="max-width: 500px;">
@@ -3406,30 +3468,27 @@
             <div class="modal-body-premium" style="margin-top: -40px;">
                 <div class="profile-card-floating" style="flex-direction: column; align-items: flex-start; gap: 15px;">
                     <div style="width: 100%;">
-                        <label style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.85rem;">YOUR MESSAGE</label>
-                        <textarea 
-                            [(ngModel)]="courierReplyMessage"
+                        <label
+                            style="display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.85rem;">YOUR
+                            MESSAGE</label>
+                        <textarea [(ngModel)]="courierReplyMessage"
                             placeholder="Type your reply to {{ currentReplyCourierName }} here..."
-                            style="width: 100%; min-height: 150px; border: 2px solid #f1f5f9; border-radius: 16px; padding: 15px; font-size: 0.95rem; resize: none; outline: none; transition: border-color 0.2s;"
-                        ></textarea>
+                            style="width: 100%; min-height: 150px; border: 2px solid #f1f5f9; border-radius: 16px; padding: 15px; font-size: 0.95rem; resize: none; outline: none; transition: border-color 0.2s;"></textarea>
                         <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-                            <span style="font-size: 0.75rem; color: #94a3b8;">Characters: {{ courierReplyMessage.length }}</span>
-                            <span style="font-size: 0.75rem; color: #4f46e5; font-weight: 700;">Admin Official Reply</span>
+                            <span style="font-size: 0.75rem; color: #94a3b8;">Characters: {{ courierReplyMessage.length
+                                }}</span>
+                            <span style="font-size: 0.75rem; color: #4f46e5; font-weight: 700;">Admin Official
+                                Reply</span>
                         </div>
                     </div>
 
                     <div style="width: 100%; display: flex; gap: 10px; margin-top: 10px;">
-                        <button 
-                            (click)="sendCourierReply()"
-                            [disabled]="!courierReplyMessage.trim()"
-                            style="flex: 1; background: #4f46e5; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);"
-                        >
+                        <button (click)="sendCourierReply()" [disabled]="!courierReplyMessage.trim()"
+                            style="flex: 1; background: #4f46e5; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
                             <i class="fas fa-paper-plane"></i> SEND REPLY
                         </button>
-                        <button 
-                            (click)="showCourierReplyModal = false"
-                            style="background: #f1f5f9; color: #64748b; border: none; padding: 14px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                        >
+                        <button (click)="showCourierReplyModal = false"
+                            style="background: #f1f5f9; color: #64748b; border: none; padding: 14px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
                             CANCEL
                         </button>
                     </div>

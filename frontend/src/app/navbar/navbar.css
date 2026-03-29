@@ -24,28 +24,26 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 12px;
   color: #1b4332;
-  /* Deep premium forest green */
   font-size: 1.6rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', sans-serif;
   letter-spacing: -0.5px;
 }
 
-.logo:hover {
-  transform: scale(1.02);
-  color: #2d6a4f;
+.logo-img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
-.logo .icon {
-  font-size: 2rem;
-  color: #74c69d;
-  /* Fresh mint green icon */
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-  animation: leaf-sway 4s ease-in-out infinite;
+.logo:hover .logo-img {
+  transform: scale(1.1) rotate(5deg);
 }
 
 @keyframes leaf-sway {
@@ -350,6 +348,7 @@
 }
 
 /* User Profile Styles */
+
 .user-profile {
   display: flex;
   align-items: center;

@@ -23,6 +23,8 @@ const Notification = require('./models/Notification');
 const Settlement = require('./models/Settlement');
 const PlantReminder = require('./models/PlantReminder');
 const AdminChatMessage = require('./models/AdminChatMessage');
+const ChatMessage = require('./models/ChatMessage');
+
 const Cart = require('./models/Cart');
 const Payment = require('./models/Payment');
 const bcrypt = require('bcryptjs');
@@ -206,6 +208,8 @@ const sendOrderStatusEmail = async (order) => {
         } else if (order.status === 'Delivered') {
             statusText = 'Delivered & Green! 🎁';
             statusMessage = 'Your plants have reached their new home. We hope they bring you joy!';
+            
+            trackingSection = '';
         } else {
             return;
         }
@@ -285,23 +289,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor'
 console.log('Attempting to connect to MongoDB...');
 console.log('URI:', MONGODB_URI.split('@')[1] ? 'mongodb+srv://***@' + MONGODB_URI.split('@')[1] : MONGODB_URI);
 
-// Event Listeners for MongoDB Connection Stability
-mongoose.connection.on('error', err => {
-    console.error('⚠️ [MONGODB-DYNAMIC-ERROR]:', err.message);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('⚠️ [MONGODB] Connection lost! Mongoose will attempt to reconnect...');
-});
-
-mongoose.connection.on('connected', () => {
-    console.log('✅ [MONGODB] Connection stabilized/reconnected.');
-});
-
 mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 30000, // 30 seconds timeout
-    connectTimeoutMS: 30000,
-    family: 4 // Force IPv4 to avoid common Windows DNS/IPv6 resolution issues
+    serverSelectionTimeoutMS: 30000, // Increased to 30s
+    connectTimeoutMS: 30000         // Increased to 30s
 })
     .then(async () => {
         console.log('✅ MongoDB connected successfully');
@@ -315,16 +305,21 @@ mongoose.connect(MONGODB_URI, {
         } catch (seedErr) {
             console.error('⚠️ Seeding internal error:', seedErr.message);
         }
-
-        // Start listening only after DB is ready (or skip if port already in use)
-        app.listen(PORT, '127.0.0.1', () => {
-            console.log(`🚀 Server is running on port ${PORT} at http://127.0.0.1:${PORT}`);
-        });
     })
     .catch(err => {
-        console.error('❌ MongoDB connection error:', err);
-        console.log('💡 TIP: Check if your IP is whitelisted in MongoDB Atlas and if your connection string is correct.');
+        console.error('❌ MongoDB connection error:', err.message);
+        console.log('\n--- DIAGNOSTIC HELP ---');
+        console.log('1. Check if your IP is whitelisted in MongoDB Atlas (Network Access).');
+        console.log('   Current Environment IP: 152.59.15.24');
+        console.log('2. Verify that your connection string in .env is correct.');
+        console.log('3. Ensure your firewall allows outbound traffic on port 27017.');
+        console.log('-----------------------\n');
     });
+
+// Start listening immediately so frontend proxy doesn't fail with ECONNREFUSED
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server is running on port ${PORT} at http://0.0.0.0:${PORT}`);
+});
 
 // Helper: Send SMS/WhatsApp Notification (Placeholder)
 const sendSMSWhatsAppNotification = async (order) => {
@@ -571,7 +566,7 @@ app.get('/api/admin/regional-analytics', auth, async (req, res) => {
                 .map(p => ({ name: p[0], count: p[1] }));
 
             const prices = stateData.prices.sort((a, b) => a - b);
-
+            
             finalized[s] = {
                 state: s,
                 topProducts: sortedProducts,
@@ -845,9 +840,9 @@ app.post('/api/cart', auth, async (req, res) => {
 
 // --- UNIFIED AI HANDLER (Failover Strategy) ---
 const callGemini = async (systemPrompt, userPrompt, image, apiKey) => {
-    const model = genAI.getGenerativeModel({
+    const model = genAI.getGenerativeModel({ 
         model: 'gemini-1.5-flash',
-        systemInstruction: systemPrompt
+        systemInstruction: systemPrompt 
     });
     let result;
     if (image) {
@@ -869,7 +864,7 @@ const callGroq = async (systemPrompt, userPrompt, image, apiKey) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'llama-3.1-70b-versatile',
+            model: 'llama-3.3-70b-versatile',
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt }
@@ -934,7 +929,7 @@ const callHuggingFace = async (systemPrompt, userPrompt, image, apiKey) => {
     if (!response.ok) throw new Error(`Hugging Face Error: ${response.statusText}`);
     const data = await response.json();
     const text = Array.isArray(data) ? (data[0].generated_text || data[0].text) : (data.generated_text || JSON.stringify(data));
-    return { text: text.replace(fullPrompt, '').trim() };
+    return { text: text.replace(fullPrompt, '').trim() }; 
 };
 
 const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
@@ -966,7 +961,7 @@ const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
 
 // API Routes for AI Assistant
 app.post('/api/ai-assistant', async (req, res) => {
-    let userId;
+    let userId; 
     try {
         const { message, image } = req.body;
         userId = req.body.userId;
@@ -986,9 +981,9 @@ app.post('/api/ai-assistant', async (req, res) => {
                     .sort({ timestamp: -1 })
                     .limit(6)
                     .lean();
-
+                
                 if (history && history.length > 0) {
-                    historyText = "\nRecent Conversation History:\n" +
+                    historyText = "\nRecent Conversation History:\n" + 
                         history.reverse().map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n') + "\n";
                 }
 
@@ -1005,26 +1000,31 @@ app.post('/api/ai-assistant', async (req, res) => {
             }
         }
 
-        const systemPrompt = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice.
-        CRITICAL INSTRUCTION: Analyze the user's message language. Your response "text" field MUST be in the SAME language and SCRIPT as the user's question.
-        - If user asks in Gujarati script, answer in Gujarati script. 
-        - If user asks in Roman/Hinglish (e.g. "mara plant ma..."), answer in Gujarati/Hindi using Roman script.
+        const systemPrompt = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice with a friendly tone.
         
-        STRICT INTERACTIVE FLOW:
-        1. IF THE USER'S CURRENT QUESTION (User Current Question) DOES NOT EXPLICITLY MENTION A SPECIFIC PLANT OR PRODUCT NAME (e.g., just says "leaves are yellow" or "my plant is dying"), 
-           your response text MUST ONLY be a polite question asking for the name (e.g., "Aapke paas kaunsa plant hai jiske baare mein aap pooch rahe hain?"). 
-           DO NOT guess the plant from history or context if not mentioned in the CURRENT question.
-           In this case: set "recommendations" to [], "remindable" to false, and "plantName" to "Plant".
+        LANGUAGE & FORMATTING:
+        1. MATCH SCRIPT: Your response MUST match the script/language of the user's question.
+           - User asks in Gujarati script -> Answer in Gujarati script.
+           - User asks in Roman script (Hinglish/Gujarati mix) -> Answer in Roman script (Hindi/Gujarati).
+        2. EMOJIS ARE MANDATORY: Use relevant emojis (🌱, 🌿, 💧, ☀️, 🧪, 🧤, ✅, ⚠️, 😉) to make your response visually professional and engaging.
+        3. STRUCTURE: Use bullet points and paragraphs for readability.
         
-        2. ONLY IF THE SUBJECT IS EXPLICITLY MENTIONED IN THE CURRENT MESSAGE:
-           - Provide the specific advice.
-           - Set "plantName" correctly.
-           - Put that name as the FIRST item in "recommendations".
-           
+        SMART PLANT RECOGNITION:
+        - Identify plant names even if misspelled or mentioned in mixed-language sentences (e.g., "maru money plant...", "tulsi ma pani...").
+        - COMMON PLANTS: Recognize Money Plant (Pothos), Tulsi (Holy Basil), Aloe Vera, Snake Plant, Peace Lily, Ficus, etc.
+        - DIRECT ANSWER: If a plant name is found in the CURRENT message, provide immediate advice. DO NOT ask "Aapke paas kaunsa plant hai?" if you can identify the plant from the message.
+        - ASK ONLY AS LAST RESORT: Only ask for the plant name if the message is completely generic (e.g., "Mera plant sukh raha hai" without specifying which one).
+        
         Your response MUST be a valid JSON object with the following fields:
-        { "text": "Advice or Question", "recommendations": ["Keyword1", "Keyword2"], "remindable": true/false, "plantName": "Specific Name or Plant" }
+        { 
+          "text": "Detailed advice or polite question with plenty of emojis", 
+          "recommendations": ["Identified Plant Name", "Related Category/Product"], 
+          "remindable": true/false (true if specific advice given), 
+          "plantName": "Identified Name or 'Plant'" 
+        }
         
         AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]`;
+
 
         const userPrompt = `${historyText}\nUser Current Question: "${message}"`;
 
@@ -1078,9 +1078,9 @@ app.post('/api/ai-assistant', async (req, res) => {
         res.json({ text: aiText, recommendations, remindable, plantName: identifiedPlantName });
     } catch (err) {
         console.error('[AI-ASSISTANT-ERROR]', err.message);
-
+        
         let errorText = "Lagta hai main abhi thoda vyast hoon ya API limit khatam ho gayi hai. Please thodi der mein phir se try karein! 🌱";
-
+        
         if (err.message.includes('429') || err.message.includes('Resource has been exhausted')) {
             errorText = "Aapki free AI limit aaj ke liye khatam ho gayi hai (Daily Quota Reached). 🛑 Please kal try karein ya naya API key use karein. (Your free AI limit is reached. Please try again tomorrow! or use a new key) 🌱";
         } else if (err.message.includes('API_KEY_INVALID')) {
@@ -1091,7 +1091,7 @@ app.post('/api/ai-assistant', async (req, res) => {
         let fallbackRecs = ['Indoor Plants', 'Gardening'];
         if (msgLower.includes('tulsi')) fallbackRecs = ['Tulsi Plant', ...fallbackRecs];
         if (msgLower.includes('money plant')) fallbackRecs = ['Money Plant', ...fallbackRecs];
-
+        
         res.json({
             text: errorText,
             recommendations: fallbackRecs.slice(0, 3),
@@ -1099,6 +1099,254 @@ app.post('/api/ai-assistant', async (req, res) => {
             remindable: true,
             plantName: 'Plant'
         });
+    }
+});
+
+// --- ADMIN MASTER AI ASSISTANT ---
+app.post('/api/admin/ai-assistant', auth, async (req, res) => {
+    try {
+        const { message, contextData } = req.body;
+
+        // Fetch systemic data for context
+        const [recentOrders, recentInquiries, lowStockProducts] = await Promise.all([
+            Order.find({}).sort({ orderDate: -1 }).limit(10).populate('userId', 'fullName').lean(),
+            Inquiry.find({}).sort({ createdAt: -1 }).limit(5).lean(),
+            Product.find({ stock: { $lte: 30 } }).sort({ stock: 1 }).limit(15).lean()
+        ]);
+
+        const orderCtx = recentOrders.map(o => `#${o.orderId}: ${o.userId?.fullName || 'Guest'} - ₹${o.totalAmount} (${o.status})`).join('\n');
+        const inquiryCtx = recentInquiries.map(i => `${i.name}: ${i.subject} - ${i.status}`).join('\n');
+        const stockCtx = lowStockProducts.map(p => `${p.name}: ${p.stock} units left`).join('\n');
+
+        let systemPrompt = `You are "Greenie Culture Master Intelligence". You have a birds-eye view of all business operations. 
+        
+        CURRENT SYSTEM SNAPSHOT (Real-time DB Data):
+        
+        Recent Orders:
+        ${orderCtx || 'No recent orders.'}
+        
+        Recent User Inquiries:
+        ${inquiryCtx || 'No recent inquiries.'}
+        
+        Inventory Alerts (Low Stock):
+        ${stockCtx || 'All products well stocked.'}
+        
+        Live Dashboard Stats:
+        - Total Orders: ${contextData?.totalOrders || 'Loading...'}
+        - Total Revenue: ₹${contextData?.totalRevenue || 0}
+        - Top State: ${contextData?.topState || 'Unknown'}
+        - Low Stock Count: ${contextData?.lowStockCount || 0}
+        
+        INSTRUCTIONS:
+        1. Act as a Chief Operating Officer (COO). Analyze the snapshot to answer the user's specific query.
+        2. If they ask about "stock", "orders", or "money", use the exact numbers from the snapshots above.
+        3. Format with bold headers and bullet points.`;
+
+        const userPrompt = `User Query: "${message}"`;
+
+        const result = await callUnifiedAI(systemPrompt, userPrompt, null);
+        const aiText = result.text;
+        console.log(`[MASTER-AI-SUCCESS] Response from ${result.provider}`);
+
+        // Save History
+        try {
+            const userMsg = new AdminChatMessage({ adminId: req.user.id, role: 'user', text: message });
+            const aiMsg = new AdminChatMessage({ adminId: req.user.id, role: 'ai', text: aiText });
+            await Promise.all([userMsg.save(), aiMsg.save()]);
+        } catch (saveErr) {
+            console.error('[MASTER-AI-HISTORY-ERROR]', saveErr.message);
+        }
+
+        res.json({ text: aiText });
+
+    } catch (err) {
+        console.error('[MASTER-AI-CRITICAL-ERROR]', err); // Full error for logs
+        
+        let customError = "AI Diagnostic: Detailed Master AI analysis is currently on cooldown (All providers tested). Please rely on the live dashboard metrics above! 🌱";
+        
+        if (err.message.includes('429')) customError = "⚠️ **AI Rate Limit Reached**: Too many requests in a short time. Please wait 60 seconds.";
+        if (err.message.includes('API_KEY_INVALID')) customError = "⚠️ **AI Configuration Error**: One or more API keys are invalid. Detailed analytics are limited.";
+
+        res.json({ text: customError, isFallback: true });
+    }
+});
+
+app.get('/api/admin/chat-history', auth, async (req, res) => {
+    try {
+        const history = await AdminChatMessage.find({ adminId: req.user.id }).sort({ timestamp: 1 }).limit(50).lean();
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch admin history' });
+    }
+});
+
+// --- USER NOTIFICATION SYSTEM ---
+app.get('/api/user/notifications', auth, async (req, res) => {
+    try {
+        // Since userId in Notification schema is 'Mixed', we must query both as string and ObjectId
+        const notifications = await Notification.find({ 
+            userId: { $in: [req.user.id, new mongoose.Types.ObjectId(req.user.id)] } 
+        }).sort({ createdAt: -1 });
+        res.json(notifications);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error fetching notifications' });
+    }
+});
+
+app.put('/api/user/notifications/:id/read', auth, async (req, res) => {
+    try {
+        await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.json({ message: 'Notification marked as read' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/api/user/notifications', auth, async (req, res) => {
+    try {
+        await Notification.deleteMany({ userId: req.user.id });
+        res.json({ message: 'All notifications cleared' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// USER Opt-in for Plant Care Reminders from Email
+app.get('/api/reminders/opt-in', async (req, res) => {
+    try {
+        const { userId, orderId, choice } = req.query;
+        
+        if (!userId || !orderId) {
+            return res.status(400).send('<h1>Invalid Request</h1><p>Missing user or order information.</p>');
+        }
+
+        if (choice === 'no') {
+            return res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Thank you! 🎁</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #fffcf0; color: #92400e; }
+                        .card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: center; max-width: 450px; border: 2px solid #fef3c7; }
+                        h2 { margin-top: 0; font-size: 28px; color: #b45309; }
+                        p { font-size: 18px; line-height: 1.6; color: #4b5563; }
+                        .status { display: inline-block; background: #fef3c7; color: #92400e; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; margin-top: 20px; }
+                    </style>
+                    <script>
+                        setTimeout(() => { window.close(); }, 1500);
+                    </script>
+                </head>
+                <body>
+                    <div class="card">
+                        <h2>Thank you for shopping! 🎁</h2>
+                        <p>We won't send you care reminders for this order. Happy Gardening! 🌿</p>
+                        <div class="status">This window will close automatically...</div>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        // Logic for YES - Create reminders for each plant in the order
+        const order = await Order.findById(orderId).lean();
+        if (!order) return res.status(404).send('<h1>Order Not Found</h1>');
+
+        const sequence = [
+            { type: 'water', delayDays: 3, label: 'Water Reminder' },
+            { type: 'fertilizer', delayDays: 6, label: 'Fertilizer Reminder' },
+            { type: 'sunlight', delayDays: 9, label: 'Sunlight Check' },
+            { type: 'general', delayDays: 12, label: 'General Health Assessment' }
+        ];
+
+        const sequenceId = new mongoose.Types.ObjectId().toString();
+        let reminderCount = 0;
+
+        // Filter valid plant items from order
+        const plantItems = (order.items || []).filter(item => !item.isGift); 
+        
+        const firstPlant = plantItems[0]; 
+        if (firstPlant) {
+            for (const item of sequence) {
+                const reminderDate = new Date();
+                // Sequence starts 3 days later, then stays every 3 days
+                reminderDate.setDate(reminderDate.getDate() + item.delayDays);
+
+                const reminder = new PlantReminder({
+                    userId: userId,
+                    plantName: firstPlant.name,
+                    problemType: `Post-Delivery Care (${item.label})`,
+                    reminderType: item.type,
+                    reminderDate,
+                    sequenceId: `${sequenceId}-${firstPlant.name.replace(/\s+/g, '-')}`
+                });
+                await reminder.save();
+                reminderCount++;
+            }
+        }
+
+        console.log(`[OPT-IN] User ${userId} opted-in for reminders for order ${orderId}. Created ${reminderCount} tasks.`);
+
+        // Self-closing minimalist English response
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Success! 🌱</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f0fdf4; color: #166534; }
+                    .card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: center; max-width: 450px; border: 2px solid #bbf7d0; }
+                    h2 { margin-top: 0; font-size: 28px; color: #1a5d1a; }
+                    p { font-size: 18px; line-height: 1.6; color: #374151; }
+                    .status { display: inline-block; background: #dcfce7; color: #166534; padding: 8px 16px; border-radius: 30px; font-weight: 700; font-size: 14px; margin-top: 20px; }
+                </style>
+                <script>
+                    setTimeout(() => { window.close(); }, 1500);
+                </script>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>Success! 🌱</h2>
+                    <p>Now you will receive a reminder **after every 3 days** on our website's **bell icon**. ✅</p>
+                    <div class="status">This window will close automatically...</div>
+                </div>
+            </body>
+            </html>
+        `);
+
+    } catch (err) {
+        console.error('[OPT-IN-ERROR]', err.message);
+        res.status(500).send('<h1>Something went wrong</h1><p>Please try again later.</p>');
+    }
+});
+
+// AI Assistant Chat History Routes
+app.get('/api/chat-history', auth, async (req, res) => {
+    try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json([]);
+        }
+        const messages = await ChatMessage.find({ userId: req.user.id })
+            .sort({ timestamp: 1 })
+            .limit(50)
+            .lean();
+        res.json(messages);
+    } catch (err) {
+        console.error('[CHAT-HISTORY-FETCH-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to fetch chat history' });
+    }
+});
+
+app.delete('/api/chat-history', auth, async (req, res) => {
+    try {
+        if (req.user.id === 'admin-special-id') {
+            return res.json({ message: 'History cleared (Admin mode)' });
+        }
+        await ChatMessage.deleteMany({ userId: req.user.id });
+        res.json({ message: 'Chat history cleared successfully' });
+    } catch (err) {
+        console.error('[CHAT-HISTORY-CLEAR-ERROR]', err.message);
+        res.status(500).json({ message: 'Failed to clear chat history' });
     }
 });
 
@@ -1151,60 +1399,105 @@ app.get('/api/products', async (req, res) => {
         if (category && category !== 'Bestsellers') {
             let decodedCategory = decodeURIComponent(category).trim();
 
-            // Broaden search for main categories
-            let usePartial = false;
-            if (['seeds', 'plants', 'accessories', 'soil', 'fertilizer', 'nutrient'].some(c => decodedCategory.toLowerCase().includes(c))) {
-                usePartial = true;
-            }
+            const categoryMap = {
+                'Soil & Growing Media': {
+                    subCats: ['Soil & Growing Media', 'Soil Types', 'Organic Amendments', 'Growth Media'],
+                    names: ['Garden Soil', 'Potting Mix', 'Red Soil', 'Black Soil', 'Sand Mix', 'Coco Peat', 'Vermicompost', 'Peat Moss', 'Compost', 'Organic Manure', 'Perlite', 'Vermiculite', 'Hydroponic Media', 'Mulch', 'Leaf Mold']
+                },
+                'Fertilizers & Nutrients': {
+                    subCats: ['Fertilizers & Nutrients', 'Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters', 'Growth Boosters', 'Plant Growth Booster', 'Fertilizers'],
+                    names: ['Organic Fertilizer', 'Vermicompost', 'Bone Meal', 'Compost Tea', 'Bio Fertilizer', 'Liquid Fertilizer', 'NPK Fertilizer', 'Urea', 'Slow Release Fertilizer', 'Micronutrient Mix', 'Plant Growth Booster', 'Flower Booster', 'Root Booster', 'Seaweed Extract', 'Fish Emulsion', 'Humic Acid', 'Nutrient']
+                },
+                'Gardening Tools': {
+                    subCats: ['Gardening Tools', 'Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools', 'Tool', 'Gardening Tool'],
+                    names: ['Hand Trowel', 'Garden Fork', 'Soil Scoop', 'Dibber', 'Transplanter', 'Pruning Shears', 'Hedge Cutter', 'Garden Scissors', 'Garden Knife', 'Rake', 'Shovel', 'Spade', 'Hoe', 'Weeder', 'Lawn Mower', 'Trowel', 'Fork', 'Scoop', 'Shears', 'Cutter', 'Scissors', 'Knife', 'Mower', 'Planting Tool', 'Digging Tool'],
+                    exclude: /Plants|Flowers|Blooms|Fruits|Vegetables|Herbs|Seeds/i
+                },
+                'Hand Tools': {
+                    subCats: ['Hand Tools', 'Hand Tool'],
+                    names: ['Hand Trowel', 'Garden Fork', 'Soil Scoop', 'Dibber', 'Transplanter', 'Trowel', 'Fork', 'Scoop'],
+                    exclude: /Plants|Flowers|Blooms|Seeds/i
+                },
+                'Cutting Tools': {
+                    subCats: ['Cutting Tools', 'Cutting Tool'],
+                    names: ['Pruning Shears', 'Hedge Cutter', 'Garden Scissors', 'Garden Knife', 'Pruning', 'Shears', 'Cutter', 'Scissors', 'Knife'],
+                    exclude: /Plants|Flowers|Blooms|Seeds/i
+                },
+                'Digging Tools': {
+                    subCats: ['Digging Tools', 'Digging Tool'],
+                    names: ['Rake', 'Shovel', 'Spade', 'Hoe', 'Weeder', 'Rake', 'Shovel', 'Spade', 'Hoe', 'Weeder'],
+                    exclude: /Plants|Flowers|Blooms|Seeds/i
+                },
+                'Power Tools': {
+                    subCats: ['Power Tools', 'Power Tool'],
+                    names: ['Lawn Mower', 'Mower', 'Power Tool'],
+                    exclude: /Plants|Flowers|Blooms|Seeds/i
+                },
+                'Seeds': {
+                    subCats: ['Seeds', 'Vegetable Seeds', 'Fruit Seeds', 'Herb Seeds', 'Flower Seeds', 'Microgreen Seeds', 'Seeds Kit'],
+                    names: ['Seed']
+                },
+                'Accessories': {
+                    subCats: ['Accessories', 'Pots & Planters', 'Watering Equipment', 'Support & Protection', 'Lighting Equipment', 'Decorative & Display'],
+                    names: ['Pot', 'Planter', 'Watering', 'Tool']
+                }
+            };
 
-            // Normalize names for better matching
-            let normalized = decodedCategory.replace(/[-\s]+/g, '[-\\s]+');
-            const regex = new RegExp(`^${normalized}$`, 'i');
-
-            // Partial regex for matching tags or nested category strings
-            let partialPattern = decodedCategory.replace(/[-\s]+/g, '.*');
-
-            // SPECIAL FIX for Soil & Growing Media: Match both "Soil" AND "Media" categories for consistency with Admin
-            if (decodedCategory.toLowerCase().includes('soil') && decodedCategory.toLowerCase().includes('media')) {
-                partialPattern = 'Soil|Media|Amendment';
-            }
-
-            // SPECIAL FIX for Fertilizers & Nutrients: Match fertilizers, nutrients, boosters and Vermicompost
-            if (decodedCategory.toLowerCase().includes('fertilizer') || decodedCategory.toLowerCase().includes('nutrient')) {
-                partialPattern = 'Fertilizer|Nutrient|Booster|Vermicompost';
-            }
-
-            const partialRegex = new RegExp(partialPattern, 'i');
-
-            if (usePartial) {
+            if (categoryMap[decodedCategory]) {
+                const map = categoryMap[decodedCategory];
+                const nameRegex = new RegExp(map.names.join('|'), 'i');
                 query = {
                     $or: [
-                        { category: { $regex: partialRegex } },
-                        { tags: { $regex: partialRegex } }
+                        { category: { $in: map.subCats } },
+                        { name: { $regex: nameRegex } },
+                        { tags: { $in: map.subCats } }
                     ]
                 };
-
-                // CRITICAL REFINEMENT: Ensure exactly 16 products for Soil & Fertilizers
-                // to match the count in the Admin panel.
-                if (decodedCategory.toLowerCase().includes('soil') || decodedCategory.toLowerCase().includes('fertilizer') || decodedCategory.toLowerCase().includes('nutrient')) {
-                    query = { 
-                        $or: [
-                            { category: { $regex: partialRegex } },
-                            { name: /Vermicompost/i }
+                
+                if (map.exclude) {
+                    query = {
+                        $and: [
+                            query,
+                            { category: { $not: map.exclude } },
+                            { tags: { $not: map.exclude } },
+                            { name: { $not: map.exclude } }
                         ]
                     };
                 }
             } else {
-                query = {
-                    $or: [
-                        { category: decodedCategory },
-                        { tags: decodedCategory },
-                        { category: { $regex: regex } },
-                        { tags: { $regex: regex } },
-                        { category: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } },
-                        { tags: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } }
-                    ]
-                };
+                // Broaden search for main categories
+                let usePartial = false;
+                if (['seeds', 'plants', 'accessories', 'soil'].some(c => decodedCategory.toLowerCase().includes(c))) {
+                    usePartial = true;
+                }
+
+                // Normalize names for better matching
+                let normalized = decodedCategory.replace(/[-\s]+/g, '[-\\s]+');
+                const regex = new RegExp(`^${normalized}$`, 'i');
+
+                // Partial regex for matching tags or nested category strings
+                const partialPattern = decodedCategory.replace(/[-\s]+/g, '.*');
+                const partialRegex = new RegExp(partialPattern, 'i');
+
+                if (usePartial) {
+                    query = {
+                        $or: [
+                            { category: { $regex: partialRegex } },
+                            { tags: { $regex: partialRegex } }
+                        ]
+                    };
+                } else {
+                    query = {
+                        $or: [
+                            { category: decodedCategory },
+                            { tags: decodedCategory },
+                            { category: { $regex: regex } },
+                            { tags: { $regex: regex } },
+                            { category: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } },
+                            { tags: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } }
+                        ]
+                    };
+                }
             }
         }
 
@@ -1256,7 +1549,7 @@ app.get('/api/products', async (req, res) => {
         if (state && products.length > 0) {
             const rawState = state.trim().toUpperCase();
             const searchStates = [rawState];
-
+            
             // If full name provided, find code; if code provided, find full name
             if (INDIAN_STATE_CODE_MAP[rawState]) {
                 searchStates.push(INDIAN_STATE_CODE_MAP[rawState]);
@@ -1272,7 +1565,7 @@ app.get('/api/products', async (req, res) => {
 
             try {
                 // 1. Get regional popularity data - Using JS-side filtering like Admin Analytics for robustness
-                const allOrders = await Order.find({
+                const allOrders = await Order.find({ 
                     status: { $ne: 'Cancelled' }
                 }).limit(500).lean();
 
@@ -1297,7 +1590,7 @@ app.get('/api/products', async (req, res) => {
                     const scoreB = popularityMap[b.name?.trim().toLowerCase()] || 0;
                     return scoreB - scoreA;
                 });
-
+                
                 // Mark top regional favorites
                 let markedCount = 0;
                 products.forEach((p) => {
@@ -1311,7 +1604,7 @@ app.get('/api/products', async (req, res) => {
                 });
 
                 // Debug log to file
-                require('fs').appendFileSync('popular_plants_debug.log',
+                require('fs').appendFileSync('popular_plants_debug.log', 
                     `[${new Date().toISOString()}] State: ${rawState} | Matches: ${searchStates.join(',')} | Total Orders: ${allOrders.length} | Filtered: ${filteredOrders.length} | PopularityMap: ${JSON.stringify(popularityMap)}\n`
                 );
 
@@ -1655,13 +1948,13 @@ app.get('/api/admin/payments-stats', auth, async (req, res) => {
                 }
             }
         ]);
-
+        
         // Transform for easier frontend consumption
         const result = {
             cod: stats.find(s => s._id === 'COD') || { count: 0, totalAmount: 0 },
             online: stats.find(s => s._id === 'Online') || { count: 0, totalAmount: 0 }
         };
-
+        
         res.json(result);
     } catch (err) {
         console.error('[AdminPaymentStatsAPI] Error:', err.message);
@@ -1719,10 +2012,10 @@ app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
         const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
         const updateData = { status };
-
+        
         // Find existing order first to check previous states
         const existingOrder = await Order.findById(req.params.id);
-        if (!existingOrder) return res.status(404).json({ message: 'Order not found' });
+        if(!existingOrder) return res.status(404).json({ message: 'Order not found' });
 
         if (courierName) {
             updateData.courierName = courierName;
@@ -2688,14 +2981,15 @@ app.get('/api/admin/notifications', auth, async (req, res) => {
             return res.status(403).json({ message: 'Access denied - Admins only' });
         }
         // Fetch ALL admin-relevant notifications (Settlements, Low Stock, Messages, etc.)
-        const notifications = await Notification.find({
+        const notifications = await Notification.find({ 
             $or: [
                 { userId: 'admin' },
                 { type: 'admin' },
+                { type: 'admin-msg' },
                 { type: 'LowStock' },
                 { type: 'NewOrder' },
                 { type: 'Reply' }
-            ]
+            ] 
         }).sort({ createdAt: -1 }).limit(100);
         res.json(notifications);
     } catch (err) {
@@ -2719,7 +3013,7 @@ app.post('/api/admin/notify-courier', auth, async (req, res) => {
                 userId: courierName,   // Recipient
                 sender: 'admin',      // Sender
                 type: 'admin-msg',
-                title: 'Message from Admin 📩',
+                title: title || 'Message from Admin 📩',
                 message: message,
                 isRead: false
             });
@@ -2748,7 +3042,7 @@ app.post('/api/admin/notify-courier', auth, async (req, res) => {
 app.get('/api/courier/notifications/:courierName', async (req, res) => {
     try {
         const { courierName } = req.params;
-        const notifications = await Notification.find({
+        const notifications = await Notification.find({ 
             $or: [
                 { userId: courierName }, // Received by courier
                 { sender: courierName }  // Sent by courier
@@ -2794,14 +3088,14 @@ app.put('/api/admin/notifications/read', auth, async (req, res) => {
         if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
             return res.status(403).json({ message: 'Access denied' });
         }
-        await Notification.updateMany({
+        await Notification.updateMany({ 
             $or: [
                 { userId: 'admin' },
                 { type: 'admin' },
                 { type: 'LowStock' },
                 { type: 'NewOrder' },
                 { type: 'Reply' }
-            ]
+            ] 
         }, { $set: { isRead: true } });
         res.json({ message: 'All admin notifications marked as read' });
     } catch (err) {
@@ -2830,12 +3124,12 @@ app.post('/api/admin/generate-marketing', auth, async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
+        
         // 3-second timeout to guarantee ultra-fast responses (either AI or Template!)
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('AI Request Timeout or Rate Limited')), 3000);
         });
-
+        
         const result = await Promise.race([
             model.generateContent(prompt),
             timeoutPromise
@@ -2845,12 +3139,12 @@ app.post('/api/admin/generate-marketing', auth, async (req, res) => {
         res.json({ text: response.text() });
     } catch (err) {
         console.error('[MarketingAPI] Error/Timeout:', err.message);
-
+        
         // INSTANT OFFLINE FALLBACK GENERATOR with 6 VARIATIONS!
         let fallbackText = "";
         const cleanName = productName ? productName.trim().charAt(0).toUpperCase() + productName.trim().slice(1) : "Plant";
         const randomIndex = Math.floor(Math.random() * 6); // Choose from 6 variations
-
+        
         if (type === 'social') {
             const variations = [
                 `🌿 Say hello to green goodness! 🌿\n\nOur stunning ${cleanName} is exactly what your space needs right now. ✨\n\n${offerDetails}\n\nHurry, limited stock available! 🛍️🛒\n\n#GreenieCulture #${cleanName.replace(/\\s+/g, '')} #PlantLove #HomeDecor #GreenLiving`,
@@ -2895,9 +3189,9 @@ app.get('/api/admin/ai-tasks', auth, async (req, res) => {
         if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
             return res.status(403).json({ message: 'Access denied' });
         }
-
+        
         const tasks = [];
-
+        
         // 1. Critical Stock Alerts (< 10)
         const criticalItems = await Product.find({ stock: { $lt: 10 } }).limit(2);
         criticalItems.forEach(p => tasks.push(`🚨 CRITICAL: Replenish ${p.name} (Stock: ${p.stock})`));
@@ -2914,7 +3208,7 @@ app.get('/api/admin/ai-tasks', auth, async (req, res) => {
 
         // 4. Daily Volume Insight
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setHours(0,0,0,0);
         const orderCount = await Order.countDocuments({ orderDate: { $gte: today } });
         if (orderCount > 8) tasks.push(`🏁 High Traffic: ${orderCount} orders placed today so far! 🚀`);
 
@@ -2971,11 +3265,11 @@ app.get('/api/admin/chat-history', auth, async (req, res) => {
 app.post('/api/admin/reminders', auth, async (req, res) => {
     const debugInfo = { timestamp: new Date(), userId: req.user?.id, body: req.body };
     fs.appendFileSync(path.join(__dirname, 'reminder_logs.txt'), JSON.stringify(debugInfo) + '\n');
-
+    
     try {
         const { plantName, problemType } = req.body;
         console.log(`[REMINDER-DEBUG] User ${req.user.id} setting reminder for ${plantName}`);
-
+        
         const sequence = [
             { type: 'water', delayDays: 0, label: 'Water Reminder' },
             { type: 'fertilizer', delayDays: 4, label: 'Fertilizer Reminder' },
@@ -2988,7 +3282,7 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
 
         for (const item of sequence) {
             const reminderDate = new Date();
-
+            
             if (item.type === 'water') {
                 // First one in 1 minute for immediate feedback
                 reminderDate.setMinutes(reminderDate.getMinutes() + 1);
@@ -3001,7 +3295,7 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
                 userId: req.user.id,
                 plantName,
                 problemType: `${problemType} (${item.label})`,
-                reminderType: item.type,
+                reminderType: item.type, 
                 reminderDate,
                 sequenceId
             });
@@ -3010,9 +3304,9 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
             createdReminders.push(reminder);
         }
 
-        res.json({
-            message: 'Sequenced reminders scheduled successfully (4 parts)',
-            reminders: createdReminders
+        res.json({ 
+            message: 'Sequenced reminders scheduled successfully (4 parts)', 
+            reminders: createdReminders 
         });
     } catch (err) {
         console.error('[REMINDER-ERROR]', err.message);
@@ -3024,6 +3318,12 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
  * Scheduler for Plant Care Reminders (Runs Every Minute)
  */
 cron.schedule('* * * * *', async () => {
+    // Guard against running queries when DB is not connected
+    if (mongoose.connection.readyState !== 1) {
+        console.log('[SCHEDULER] Database not connected. Skipping reminder check...');
+        return;
+    }
+
     console.log('[SCHEDULER] Checking for plant care reminders...');
     try {
         const now = new Date();
@@ -3054,11 +3354,11 @@ cron.schedule('* * * * *', async () => {
                 reminderId: reminder._id,
                 title: `🌿 Plant Care: ${reminder.plantName}`,
                 message: `Hello! It's time to check your ${reminder.plantName}. Is it ready for some ${reminder.reminderType}?`,
-                product: { name: reminder.plantName }
+                product: { name: reminder.plantName } 
             });
 
             await notification.save();
-
+            
             // Mark reminder as sent
             reminder.notificationStatus = 'sent';
             await reminder.save();
@@ -3093,12 +3393,12 @@ app.post('/api/cart', auth, async (req, res) => {
     try {
         console.log('[CART POST] Hit by user:', req.user.id, 'Payload:', req.body);
         const { cart: items } = req.body; // frontend sends { cart: items }
-
+        
         let cart = await Cart.findOne({ userId: req.user.id });
         if (!cart) {
             cart = new Cart({ userId: req.user.id, items: [] });
         }
-
+        
         // Ensure required fields are present
         const processedItems = (items || []).map(item => ({
             productId: item.productId || item.id, // Fallback for testing
@@ -3113,7 +3413,7 @@ app.post('/api/cart', auth, async (req, res) => {
 
         cart.items = processedItems;
         await cart.save();
-
+        
         res.json({ message: 'Cart saved successfully', items: cart.items, totalAmount: cart.totalAmount });
     } catch (err) {
         console.error('[CART POST ERROR]', err.message);

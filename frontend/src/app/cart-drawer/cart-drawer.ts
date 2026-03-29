@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CartService, CartItem } from '../services/cart.service';
 
 @Component({
     selector: 'app-cart-drawer',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     templateUrl: './cart-drawer.html',
     styleUrl: './cart-drawer.css'
 })
@@ -34,12 +35,39 @@ export class CartDrawerComponent {
         return this.cartService.totalSavings();
     }
 
+    get appliedOffer() {
+        return this.cartService.appliedOffer();
+    }
+
+    get potentialOffer() {
+        return this.cartService.potentialOffer();
+    }
+
     close() {
         this.cartService.close();
     }
 
     updateQuantity(item: CartItem, delta: number) {
-        this.cartService.updateQuantity(item.id, item.quantity + delta);
+        const newQty = item.quantity + delta;
+        // Limit button clicks to 10. Manual entry allows up to 20.
+        if (delta > 0 && item.quantity >= 10) return;
+        
+        if (newQty >= 1 && newQty <= 20) {
+            this.cartService.updateQuantity(item.id, newQty);
+        }
+    }
+
+    onQuantityChange(item: CartItem) {
+        if (item.quantity > 20) {
+            item.quantity = 20;
+        } else if (item.quantity < 1 && item.quantity !== null) {
+            item.quantity = 1;
+        }
+        this.cartService.updateQuantity(item.id, item.quantity);
+    }
+
+    isLimitReached(item: CartItem): boolean {
+        return item.quantity >= 20;
     }
 
     removeItem(item: CartItem) {

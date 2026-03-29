@@ -5,7 +5,7 @@
         <header class="cart-header">
             <div class="header-left">
                 <div class="cart-logo-small">
-                    <img src="images/greenie-culture-logo.png" alt="Greenie Culture">
+                    <img src="/images/greenie-logo.png" alt="Greenie Culture">
                 </div>
                 <div class="cart-title-container">
                     <span class="cart-text">CART</span>
@@ -27,6 +27,36 @@
                 </div>
                 <div class="banner-text">
                     Yay! you're getting <span>Free Delivery</span>
+                </div>
+            </div>
+
+            <!-- Applied Offer Banner -->
+            <div class="offer-banner-applied" *ngIf="appliedOffer">
+                <div class="banner-content">
+                    <div class="confetti-mini"></div>
+                    <i class="fas fa-gift"></i>
+                    <div class="text-group">
+                        <span class="offer-title">{{ appliedOffer.name }} Applied!</span>
+                        <span class="offer-desc">{{ appliedOffer.benefit }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Potential Offer / Nudge Banner -->
+            <div class="offer-banner-nudge" *ngIf="potentialOffer">
+                <div class="banner-content">
+                    <div class="gift-icon-shake">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="badge-dot" *ngIf="potentialOffer.needed">{{ potentialOffer.needed }}</span>
+                    </div>
+                    <div class="text-group">
+                        <span class="nudge-title">Unlock Special Gift!</span>
+                        <span class="nudge-desc">Add <strong>{{ potentialOffer.needed }} more</strong> {{ potentialOffer.category }} to get <strong>{{ potentialOffer.shortBenefit }}</strong></span>
+                    </div>
+                    <button class="add-more-btn" (click)="close()">ADD MORE</button>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" [style.width.%]="((potentialOffer.minQty - potentialOffer.needed) / potentialOffer.minQty) * 100"></div>
                 </div>
             </div>
 
@@ -71,7 +101,7 @@
                             <div class="qty-control">
                                 <button class="qty-btn minus" (click)="updateQuantity(item, -1)"
                                     [disabled]="item.quantity <= 0">-</button>
-                                <span class="qty">{{ item.quantity }}</span>
+                                <input type="number" [(ngModel)]="item.quantity" (input)="onQuantityChange(item)" min="1" max="20" class="cart-qty-input">
                                 <button class="qty-btn plus" (click)="updateQuantity(item, 1)">+</button>
                             </div>
                             <div class="item-price-group">
@@ -81,6 +111,9 @@
                                         item.quantity }}</span>
                                 </div>
                             </div>
+                        </div>
+                        <div class="limit-message cart-limit" *ngIf="isLimitReached(item)">
+                            We apologize, the limit is 20 per order for safe shipping. Please place another order for more. Thank you!
                         </div>
                     </div>
                 </div>

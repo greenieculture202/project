@@ -7,9 +7,9 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../services/auth.service';
 import { ProductService, Product } from '../services/product.service';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, filter } from 'rxjs/operators';
 
 interface Message {
   type: 'user' | 'ai';
@@ -49,13 +49,17 @@ export class AiPlantAssistantComponent {
   selectedImage: string | null = null;
   selectedFile: File | null = null;
   showReminderModal = signal(false);
-  activePlantName = '';
   activeProblemType = '';
+  activePlantName = 'Your Plant';
+  activeOrderId = '';
+  showConfirmationMessage = false;
+  showThankYouMessage = false;
 
   messages: Message[] = [];
   private destroy$ = new Subject<void>();
 
   private readonly STORAGE_KEY = 'ai_plant_chat_history';
+  private readonly REMINDER_OPTED_KEY = 'plant_reminder_choice_made_';
 
   ngOnInit() {
     this.aiService.chatTrigger$.pipe(takeUntil(this.destroy$)).subscribe(trigger => {
@@ -66,8 +70,60 @@ export class AiPlantAssistantComponent {
       }
     });
 
+    // Watch for navigation to Home page to trigger reminder check
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe((event: any) => {
+      if (event.url === '/' || event.urlAfterRedirects === '/') {
+        this.checkForDeliveredOrders();
+      }
+    });
+
     this.authService.isLoggedIn$.subscribe(loggedIn => {
       this.loadHistory();
+      if (loggedIn) {
+        this.checkForDeliveredOrders();
+      }
+    });
+
+    // Dedicated reminder check trigger (independent of chat)
+    this.aiService.reminderTrigger$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.checkForDeliveredOrders();
+    });
+
+    if (this.authService.isLoggedIn()) {
+      this.checkForDeliveredOrders();
+    }
+  }
+
+  private checkForDeliveredOrders() {
+    const token = this.authService.getToken();
+    if (!token) return;
+
+    this.http.get<any[]>('/api/user/orders', {
+      headers: { 'x-auth-token': token }
+    }).subscribe({
+      next: (orders) => {
+        if (!orders || !Array.isArray(orders) || orders.length === 0) return;
+        
+        // Find the most recent order that hasn't been opted-in/out yet
+        const latestOrder = orders
+          .sort((a, b) => new Date(b.createdAt || b.orderDate).getTime() - new Date(a.createdAt || a.orderDate).getTime())[0];
+
+        if (latestOrder) {
+          const choiceMade = localStorage.getItem(this.REMINDER_OPTED_KEY + latestOrder._id);
+          if (!choiceMade) {
+            this.activeOrderId = latestOrder._id;
+            this.activePlantName = latestOrder.items?.[0]?.name || 'Your Plant';
+            
+            // Show the modal
+            setTimeout(() => {
+              this.showReminderModal.set(true);
+            }, 800);
+          }
+        }
+      }
     });
   }
 
@@ -379,29 +435,42 @@ export class AiPlantAssistantComponent {
 
   closeReminderModal() {
     this.showReminderModal.set(false);
+    this.showConfirmationMessage = false;
+    this.showThankYouMessage = false;
   }
 
   confirmReminder() {
     const token = this.authService.getToken();
-    if (!token) {
-      alert('Please login to set a reminder!');
-      return;
-    }
+    if (!token) return;
 
     const body = {
       plantName: this.activePlantName || 'My Plant',
-      problemType: this.activeProblemType || 'Care Follow-up'
+      problemType: 'Post-Delivery Care',
+      orderId: this.activeOrderId
     };
 
     this.http.post<any>('/api/admin/reminders', body, {
       headers: { 'x-auth-token': token }
     }).subscribe({
-      next: (res) => {
-        alert("Shabash! Humne aapke liye 4 unique reminders set kar diye hain (Water, Fertilizer, Sunlight, Health). Pehla reminder 1 min mein aayega! 🌿✨");
-        this.closeReminderModal();
+      next: () => {
+        this.showConfirmationMessage = true;
+        if (this.activeOrderId) {
+          localStorage.setItem(this.REMINDER_OPTED_KEY + this.activeOrderId, 'yes');
+        }
+        setTimeout(() => this.closeReminderModal(), 4000);
       },
-      error: () => alert('Failed to set reminders. Please try again later.')
+      error: () => {
+        this.closeReminderModal();
+      }
     });
+  }
+
+  onNoReminder() {
+    this.showThankYouMessage = true;
+    if (this.activeOrderId) {
+      localStorage.setItem(this.REMINDER_OPTED_KEY + this.activeOrderId, 'no');
+    }
+    setTimeout(() => this.closeReminderModal(), 3000);
   }
 
   private extractPlantName(text: string): string {

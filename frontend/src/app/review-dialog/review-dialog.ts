@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AiService } from '../services/ai.service';
 
 @Component({
   selector: 'app-review-dialog',
@@ -10,6 +11,8 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './review-dialog.css'
 })
 export class ReviewDialogComponent {
+  private aiService = inject(AiService);
+
   rating = 0;
   description = '';
   @Output() submitReview = new EventEmitter<{ rating: number, description: string }>();
@@ -19,11 +22,17 @@ export class ReviewDialogComponent {
     this.rating = r;
   }
 
+  onClose() {
+    this.close.emit();
+    this.aiService.triggerReminderCheck();
+  }
+
   submit() {
     if (this.rating === 0) {
       alert('Please select a rating');
       return;
     }
     this.submitReview.emit({ rating: this.rating, description: this.description });
+    this.aiService.triggerReminderCheck();
   }
 }

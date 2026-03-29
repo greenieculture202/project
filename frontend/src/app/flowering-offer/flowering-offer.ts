@@ -21,7 +21,7 @@ export class FloweringOfferComponent implements OnInit {
 
     ngOnInit() {
         // Fetch products that have the unique G-FLOWER-6-SEC tag/category
-        this.productService.getProducts('G-FLOWER-6-SEC', undefined, 6).subscribe(products => {
+        this.productService.getProducts('G-FLOWER-6-SEC', undefined, 20).subscribe(products => {
             if (products) {
                 this.flowerSeeds = products;
             }

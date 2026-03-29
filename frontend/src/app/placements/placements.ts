@@ -52,20 +52,42 @@ export class PlacementsComponent implements OnInit {
                 url = url.replace('watch?v=', 'embed/');
             } else if (url.includes('youtu.be/')) {
                 url = url.replace('youtu.be/', 'youtube.com/embed/');
+            } else if (url.includes('youtube.com/shorts/')) {
+                url = url.replace('youtube.com/shorts/', 'youtube.com/embed/');
             }
 
             // Clean up extra parameters if any
             if (url.includes('&')) {
                 url = url.split('&')[0];
             }
-        } else {
-            this.selectedPlacement.isLocal = true;
+        } 
+        // Auto-detect Pinterest and transform to embed URL
+        else if (url.includes('pinterest.com/pin/') || url.includes('pin.it/')) {
+            this.selectedPlacement.isLocal = false;
+            const pinId = this.extractPinterestId(url);
+            if (pinId) {
+                url = `https://assets.pinterest.com/ext/embed.html?id=${pinId}`;
+            }
+        } 
+        else {
+            // Detect if it is a direct media file
+            const mediaExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
+            const isMediaFile = mediaExtensions.some(ext => url.toLowerCase().split('?')[0].endsWith(ext));
+            this.selectedPlacement.isLocal = isMediaFile;
         }
 
         this.selectedVideo = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         this.isModalOpen = true;
         this.showViewPlantsBtn = false;
     }
+
+    private extractPinterestId(url: string): string | null {
+        // Long URL: pinterest.com/pin/12345/
+        const pinMatch = url.match(/pin\/(\d+)/);
+        if (pinMatch && pinMatch[1]) return pinMatch[1];
+        return null;
+    }
+
 
     onVideoEnded() {
         this.showViewPlantsBtn = true;

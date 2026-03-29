@@ -1,7 +1,6 @@
 import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ReviewsComponent } from '../reviews/reviews';
 import { FaqService, Faq } from '../services/faq.service';
 
 interface CategoryGroup {
@@ -13,7 +12,7 @@ interface CategoryGroup {
 @Component({
     selector: 'app-faq',
     standalone: true,
-    imports: [CommonModule, RouterLink, ReviewsComponent],
+    imports: [CommonModule, RouterLink],
     templateUrl: './faq.html',
     styleUrl: './faq.css'
 })
