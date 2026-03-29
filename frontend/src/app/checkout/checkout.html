@@ -1,9 +1,10 @@
+<!-- UI Update: Combined Name Field - v3 (Final Force) -->
 <div class="checkout-page">
     <div class="checkout-layout">
         <!-- Sidebar Stepper -->
         <aside class="checkout-sidebar">
             <div class="sidebar-header">
-                <img src="images/greenie-culture-logo.png" alt="Greenie Culture" class="logo">
+                <img src="/images/greenie-logo.png" alt="Greenie Culture" style="height: 35px; width: auto; object-fit: contain;">
             </div>
 
             <div class="vertical-stepper">
@@ -64,15 +65,10 @@
                             have an account? Sign in</a>
                     </div>
                     <div class="input-grid">
-                        <div class="input-field">
-                            <label>First Name</label>
-                            <input type="text" [(ngModel)]="firstName" (ngModelChange)="saveCheckoutState()"
-                                placeholder="e.g. Rahul" class="checkout-input" maxlength="50" pattern="[A-Za-z\s]+">
-                        </div>
-                        <div class="input-field">
-                            <label>Last Name</label>
-                            <input type="text" [(ngModel)]="lastName" (ngModelChange)="saveCheckoutState()"
-                                placeholder="e.g. Sharma" class="checkout-input" maxlength="50" pattern="[A-Za-z\s]+">
+                        <div class="input-field full-width-name">
+                            <label>Full Name</label>
+                            <input type="text" [(ngModel)]="fullName" (ngModelChange)="saveCheckoutState()"
+                                placeholder="e.g. Rahul Sharma" class="checkout-input" maxlength="100" pattern="[A-Za-z\s]+">
                         </div>
                         <div class="input-field">
                             <label>Email Address</label>
@@ -119,9 +115,9 @@
                                     (ngModelChange)="saveCheckoutState(); onCityInput()" (blur)="closeDropdowns()"
                                     placeholder="Search City" class="checkout-input">
                                 <div class="dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
-                                    <div class="option" *ngFor="let city of filteredCities"
-                                        (click)="selectCity(city); saveCheckoutState()">
-                                        {{ city }}</div>
+                                    <div class="option" *ngFor="let optionCity of filteredCities"
+                                        (mousedown)="selectCity(optionCity); saveCheckoutState()">
+                                        {{ optionCity }}</div>
                                 </div>
                             </div>
                         </div>
@@ -132,8 +128,8 @@
                                     (ngModelChange)="saveCheckoutState(); onStateInput()" (blur)="closeDropdowns()"
                                     placeholder="Search State" class="checkout-input">
                                 <div class="dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
-                                    <div class="option" *ngFor="let state of filteredStates"
-                                        (click)="selectState(state); saveCheckoutState()">{{ state }}</div>
+                                    <div class="option" *ngFor="let optionState of filteredStates"
+                                        (mousedown)="selectState(optionState); saveCheckoutState()">{{ optionState }}</div>
                                 </div>
                             </div>
                         </div>
@@ -221,7 +217,7 @@
                             <div class="delivery-options-grid">
                                 <div class="delivery-opt-card" *ngFor="let opt of deliveryOptions"
                                     [class.selected]="selectedOptionId() === opt.id"
-                                    (click)="selectedOptionId.set(opt.id); saveCheckoutState()">
+                                    (click)="selectDeliveryOption(opt.id)">
                                     <div class="opt-radio-wrapper">
                                         <div class="custom-radio" [class.checked]="selectedOptionId() === opt.id"></div>
                                     </div>
@@ -233,6 +229,12 @@
                                         {{ opt.surcharge > 0 ? '+ ₹' + opt.surcharge : 'FREE' }}
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- Delivery Restriction Warning -->
+                            <div class="delivery-warning-msg" *ngIf="showDeliveryWarning()">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>We apologize, but 2-Day Delivery is not available for orders above ₹5000. Please try 4-Day Delivery instead. Thank you for your understanding!</span>
                             </div>
                         </div>
 
@@ -287,258 +289,201 @@
                             <!-- Step A: Payment Info & Pay Now Button -->
                             <div class="upi-pre-pay-card" *ngIf="!showUPIScanner">
                                 <div class="upi-info-row">
-                                    <span class="label">Temporary Order ID</span>
+                                    <span class="label">Order ID</span>
                                     <span class="value">{{ tempOrderId }}</span>
                                 </div>
                                 <div class="upi-info-row">
                                     <span class="label">Payment Amount</span>
                                     <span class="value amount">₹{{ totalAmount() }}</span>
                                 </div>
-                                <button class="pay-now-btn" (click)="onUPIScanClick()">
-                                    <i class="fas fa-bolt"></i> Pay Now & Scan
+                                <button class="upi-pay-now-btn" (click)="onUPIScanClick()">
+                                    <i class="fas fa-qrcode"></i>
+                                    Generate QR for Payment
                                 </button>
-                                <p class="secure-tag"><i class="fas fa-shield-check"></i> 100% Secure Transaction</p>
+                                <div class="upi-security-note">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Secure, encrypted UPI payment processing
+                                </div>
                             </div>
 
-                            <!-- Step B: Scanner (Multi-step Verification) -->
-                            <div class="qr-card" *ngIf="showUPIScanner && !paymentReceived">
-                                <h3>Scan & Pay</h3>
-                                <div class="qr-image" [class.scanning-effect]="isScanning">
-                                    <img [src]="getQRCodeUrl()" alt="QR Code">
-                                    <div class="scan-bar" *ngIf="isScanning"></div>
+                            <!-- Step B: QR Scanner View (Shown after Pay Now) -->
+                            <div class="qr-card animated-qr" *ngIf="showUPIScanner">
+                                <div class="qr-card-header">
+                                    <i class="fas fa-shield-check"></i>
+                                    <h3>Scan to Securely Pay</h3>
                                 </div>
                                 
-                                <div class="status-box">
-                                    <!-- Status 1: Waiting for user to scan -->
-                                    <div class="simulated-payment-info" *ngIf="isScanning">
-                                        <span class="loader-dot pulse"></span>
-                                        <span>Please scan from any UPI App...</span>
+                                <div class="qr-main-view">
+                                    <div class="qr-image">
+                                        <img [src]="getQRCodeUrl()" alt="Payment QR">
+                                        <div class="qr-scan-line" *ngIf="isScanning"></div>
                                     </div>
-                                    
-                                    <!-- Status 2: Scan detected, now verifying (1-min) -->
-                                    <div class="simulated-payment-info" *ngIf="isVerifying">
-                                        <span class="loader-dot verifying"></span>
-                                        <span class="verifying-text">Scan Detected! Verifying with Bank (1 min)...</span>
+                                    <div class="qr-status-indicator" [class.verifying]="isVerifying" [class.done]="paymentReceived">
+                                        <div class="loader-dot" *ngIf="isScanning || isVerifying"></div>
+                                        <span *ngIf="isScanning">Waiting for Scan...</span>
+                                        <span *ngIf="isVerifying">Verifying Payment...</span>
+                                        <span *ngIf="paymentReceived">Success!</span>
                                     </div>
                                 </div>
-                                <p class="helper-text">Stay on this screen until verification is complete</p>
+
+                                <div class="qr-meta-info">
+                                    <p>Scan using GPay, PhonePe, Paytm, or any BHIM UPI App</p>
+                                    <div class="timer-warning" *ngIf="isVerifying">
+                                        <i class="fas fa-clock"></i>
+                                        DO NOT Refresh or Close this page
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-
 
                         <div class="pay-method" [class.selected]="selectedPayment === 'cod'"
                             (click)="selectedPayment = 'cod'">
                             <input type="radio" name="pay" [checked]="selectedPayment === 'cod'">
                             <div class="method-info">
                                 <div class="method-main">
-                                    <i class="fas fa-hand-holding-usd"></i>
-                                    <span>Cash on Delivery</span>
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Cash on Delivery (COD)</span>
                                 </div>
-                                <img src="https://cdn-icons-png.flaticon.com/128/649/649454.png" alt="COD" class="icon">
+                                <span class="cod-badge">AVAILABLE</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="action-bar">
-                        <button class="back-link" (click)="prevStep()">Review Order</button>
-                        <button class="primary-btn checkout-btn" [disabled]="isProcessing || (selectedPayment === 'upi' && !paymentReceived)" (click)="onPayNow()">
-                            <span *ngIf="!isProcessing">Place Order - ₹{{ totalAmount() }}</span>
-                            <span *ngIf="isProcessing">Processing Payment...</span>
-                        </button>
+                        <button class="back-link" (click)="prevStep()"><i class="fas fa-arrow-left"></i> Back to
+                            Summary</button>
+                        <button class="primary-btn" [disabled]="!selectedPayment || (selectedPayment === 'upi' && !paymentReceived)"
+                            (click)="onPayNow()">Confirm & Place Order</button>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-</div>
 
-<!-- LUXURY GLASSMORPHISM INVOICE MODAL -->
-<div class="invoice-luxury-overlay no-print" *ngIf="showInvoiceModal">
-    <div class="luxury-bill-card printable-area">
-        <!-- Floating Brand Jewel (Visual Flair) -->
-        <div class="luxury-jewel-header no-print">
-            <div class="jewel-logo">
-                <img src="assets/images/log-removebg-preview.png" alt="Greenie Logo">
+    <!-- Success Popup for UPI -->
+    <div class="premium-popup-overlay" *ngIf="showPaymentSuccessPopup">
+        <div class="premium-popup-card">
+            <div class="success-lottie-placeholder">
+                <div class="success-checkmark">
+                    <div class="check-icon"></div>
+                </div>
             </div>
-            <div class="jewel-text">
-                <h3>PREMIUM DIGITAL SLIP</h3>
-                <p>GREENIE CULTURE • OFFICIAL TRANSACTION</p>
-            </div>
+            <h2>Payment Successful!</h2>
+            <p>We've successfully verified your UPI transaction. Your order is now ready to be processed.</p>
+            <button class="popup-cta-btn" (click)="onPaymentSuccessOk()">Continue to Order Summary</button>
         </div>
+    </div>
 
-        <div class="luxury-glass-container">
-            <!-- Professional Integrated Branding (Inside Slip) -->
-            <div class="integrated-branding">
-                <div class="brand-top">
-                    <h1 class="brand-h1">GREENIE CULTURE 🌿</h1>
-                    <p class="brand-subtitle">EXQUISITE BOTANICALS & PREMIUM DECOR</p>
-                </div>
-                <div class="brand-details">
-                    <p>123 Botanical Avenue, Green City, 400001</p>
-                    <p>Contact: support@greenieculture.com | +91 9876543210</p>
-                </div>
-            </div>
-
-            <!-- Invoice Header Section -->
-            <div class="invoice-body">
-                <div class="luxury-header">
-                    <div class="order-slug">
-                        <span class="label">ORDER NUMBER</span>
-                        <h2 class="order-id">#{{ placedOrder?.orderId }}</h2>
-                    </div>
-                    <div class="date-slug">
-                        <span class="label">TRANSACTION DATE</span>
-                        <span class="value">{{ placedOrder?.orderDate | date:'MMMM dd, yyyy' }}</span>
-                    </div>
-                </div>
-
-                <!-- Offer Badge in Invoice (if any) -->
-                <div class="invoice-offer-banner" *ngIf="placedOrder?.appliedOfferCode">
-                    <div class="banner-content">
-                        <i class="fas fa-gift"></i>
-                        <span>OFFER APPLIED: <strong>{{ placedOrder.appliedOfferCode }}</strong>
-                            ({{ placedOrder.offerBenefit }})</span>
-                    </div>
-                </div>
-
-
-                <!-- Customer & Payment Info -->
-                <div class="luxury-info-grid">
-                    <div class="info-pill">
-                        <div class="pill-icon"><i class="fas fa-user-tie"></i></div>
-                        <div class="pill-content">
-                            <label>DELIVER TO</label>
-                            <h4>{{ placedOrder?.shippingDetails?.fullName || (firstName + ' ' + lastName) }}</h4>
-                            <p class="pill-sub">{{ placedOrder?.shippingDetails?.address || address }}</p>
-                            <p class="pill-sub">
-                                {{ placedOrder?.shippingDetails?.city || city }}, 
-                                {{ placedOrder?.shippingDetails?.state || stateName }}
-                            </p>
+    <!-- Luxury Invoice Modal - Premium Glassmorphism -->
+    <div class="invoice-luxury-overlay" *ngIf="showInvoiceModal">
+        <div class="luxury-bill-card printable-area">
+            <div class="luxury-glass-container">
+                <!-- Dark Gradient Header -->
+                <div class="integrated-branding">
+                    <div class="luxury-jewel-header">
+                        <div class="jewel-logo"><img src="/images/greenie-logo.png" alt="Greenie Culture"></div>
+                        <div class="jewel-text">
+                            <h3>GREENIE CULTURE</h3>
+                            <p>LUXURY BOTANICAL GIFTS</p>
                         </div>
                     </div>
-                    <div class="info-pill">
-                        <div class="pill-icon"><i class="fas fa-credit-card"></i></div>
-                        <div class="pill-content">
-                            <label>PAYMENT METHOD</label>
-                            <h4>{{ placedOrder?.paymentMethod }}</h4>
-                            <span class="status-indicator" [class.confirmed]="placedOrder?.paymentMethod === 'UPI' || placedOrder?.paymentMethod === 'Cash on Delivery'">
-                                <i class="fas" [class.fa-certificate]="placedOrder?.paymentMethod === 'Cash on Delivery'" [class.fa-check-circle]="placedOrder?.paymentMethod === 'UPI'"></i> 
-                                {{ placedOrder?.paymentMethod === 'UPI' ? 'PAYMENT VERIFIED' : 'VERIFIED SECURE' }}
-                            </span>
-                            <p class="pill-sub" *ngIf="placedOrder?.paymentMethod === 'UPI'" style="font-size: 0.6rem; color: #10b981; font-weight: 700; margin-top: 4px;">
-                                TXN: {{ placedOrder?.orderId?.replace('#ORD-', 'TXN-') }}
-                            </p>
+                    <h1 class="brand-h1">Your Order is <span>Confirmed!</span></h1>
+                    <p class="brand-subtitle">THANK YOU FOR SHOPPING WITH US</p>
+                    <div class="brand-details"><p>Order placed on {{ placedOrder?.orderDate | date:'mediumDate' }}</p></div>
+                </div>
+                <!-- White Body -->
+                <div class="invoice-body">
+                    <div class="luxury-header">
+                        <div class="order-slug">
+                            <span class="label">Order Reference</span>
+                            <h2>#{{ placedOrder?.orderId || 'PROCESSING' }}</h2>
+                        </div>
+                        <div class="date-slug">
+                            <span class="label">Order Date</span>
+                            <span class="value">{{ placedOrder?.orderDate | date:'mediumDate' }}</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Professional Summary Table -->
-                <div class="luxury-items-section">
-                    <table class="luxury-invoice-table">
-                        <thead>
-                            <tr>
-                                <th class="text-left">OFFICIAL PRODUCT PARTICULARS</th>
-                                <th class="text-center">QTY</th>
-                                <th class="text-right">UNIT VAL</th>
-                                <th class="text-right">SUBTOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let item of placedOrder?.items">
-                                <td class="text-left">
-                                    <div class="table-item-info">
-                                        <span class="item-name">
-                                            {{ item.name }}
-                                            <span class="free-badge" *ngIf="item.price === 0 || item.isGift">FREE</span>
-                                        </span>
-                                        <span class="item-meta" *ngIf="item.weight || item.planter">
-                                            {{ item.weight }} <span *ngIf="item.weight && item.planter">|</span> {{
-                                            item.planter }}
-                                            <span class="gift-sticker" *ngIf="item.isGift">🎁 Gift Product</span>
-                                        </span>
-                                    </div>
-                                </td>
-
-                                <td class="text-center">{{ item.quantity }}</td>
-                                <td class="text-right">₹{{ item.price }}</td>
-                                <td class="text-right font-bold">₹{{ item.quantity * item.price }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Financial Totals -->
-                <div class="luxury-summary-card">
-                    <div class="summary-rows">
-                        <div class="summary-row">
-                            <span class="label">BASE AMOUNT</span>
-                            <span class="value">₹{{ placedOrder?.totalAmount - (placedOrder?.deliveryCharge || 0) }}</span>
+                    <div class="luxury-info-grid">
+                        <div class="info-pill">
+                            <div class="pill-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="pill-content">
+                                <label>Deliver To</label>
+                                <h4>{{ placedOrder?.shippingDetails?.fullName || fullName }}</h4>
+                                <p class="pill-sub">{{ placedOrder?.shippingDetails?.address || address }}</p>
+                                <p class="pill-sub">{{ placedOrder?.shippingDetails?.city || city }}, {{ placedOrder?.shippingDetails?.state || stateName }}</p>
+                                <p class="pill-sub"><i class="fas fa-phone-alt"></i> {{ placedOrder?.shippingDetails?.phone || phone }}</p>
+                            </div>
                         </div>
-                        <div class="summary-row">
-                            <span class="label">SHIPPING CHARGES</span>
-                            <span class="value" [class.success-text]="!placedOrder?.deliveryCharge">
-                                {{ placedOrder?.deliveryCharge ? '₹' + placedOrder.deliveryCharge : '₹0.00 (COMPLIMENTARY)' }}
-                            </span>
+                        <div class="info-pill">
+                            <div class="pill-icon"><i class="fas fa-credit-card"></i></div>
+                            <div class="pill-content">
+                                <label>Payment Method</label>
+                                <h4>{{ placedOrder?.paymentMethod || 'Cash on Delivery' }}</h4>
+                                <span class="status-indicator confirmed"><i class="fas fa-check-circle"></i> Transaction Verified</span>
+                                <p class="pill-sub" style="margin-top:6px;">Delivery: {{ placedOrder?.deliveryType || 'Standard' }}</p>
+                            </div>
                         </div>
-                        <div class="summary-row" *ngIf="placedOrder?.deliveryType">
-                            <span class="label">DELIVERY SPEED</span>
-                            <span class="value">{{ placedOrder.deliveryType }}</span>
-                        </div>
-                        <div class="summary-divider"></div>
-                        <div class="summary-row accent">
-                            <span class="label">NET PAYABLE AMOUNT</span>
-                            <span class="value">₹{{ placedOrder?.totalAmount }}</span>
+                    </div>
+                    <div class="luxury-items-section">
+                        <table class="luxury-invoice-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Item Description</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of (placedOrder?.items || items())">
+                                    <td>
+                                        <div class="table-item-info">
+                                            <span class="item-name">{{ item.name }}</span>
+                                            <span class="item-meta" *ngIf="item.isGift">&#127873; Complimentary Gift</span>
+                                            <span class="item-meta" *ngIf="item.planter">{{ item.planter }} Planter</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-bold">{{ item.quantity }}</td>
+                                    <td class="text-right font-bold">&#8377;{{ item.price * item.quantity }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="luxury-summary-card">
+                        <div class="summary-rows">
+                            <div class="summary-row">
+                                <span class="label">Subtotal</span>
+                                <span class="value">&#8377;{{ itemsTotal() }}</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row">
+                                <span class="label">Shipping ({{ placedOrder?.deliveryType || 'Standard' }})</span>
+                                <span class="value">{{ placedOrder?.deliveryCharge > 0 ? '&#8377;' + placedOrder?.deliveryCharge : (deliveryCharge() > 0 ? '&#8377;' + deliveryCharge() : 'FREE') }}</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row accent">
+                                <span class="label">TOTAL AMOUNT</span>
+                                <span class="value">&#8377;{{ placedOrder?.totalAmount || totalAmount() }}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="luxury-thanks">
-                        <i class="fas fa-heart"></i>
-                        <span>Thank you for choosing Greenie Culture!</span>
+                        <i class="fas fa-leaf"></i>
+                        <span>Thank you for choosing Greenie Culture &#8212; Eco-Friendly Packaging Guaranteed</span>
+                    </div>
+                    <div class="luxury-footer">
+                        <div class="legal-text">
+                            <p>GREENIE CULTURE &middot; LUXURY BOTANICAL GIFTS &middot; INDIA</p>
+                            <p>This is an auto-generated invoice &middot; support&#64;greenieculture.com</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Footnote/Legal -->
-                <div class="luxury-footer">
-                    <div class="legal-text">
-                        <p>© 2026 GREENIE CULTURE • PRIVACY SECURED</p>
-                        <p>This is a computer-generated transaction certificate.</p>
-                    </div>
-                </div> <!-- /luxury-footer -->
-            </div> <!-- /invoice-body -->
-        </div>
-
-        <!-- Interactive Actions -->
-        <div class="luxury-actions no-print">
-            <button class="lux-btn secondary" (click)="downloadInvoice()">
-                <i class="fas fa-download"></i> DOWNLOAD BILL
-            </button>
-            <button class="lux-btn primary" (click)="closeInvoice()">
-                CONTINUE TO REVIEW <i class="fas fa-arrow-right"></i>
-            </button>
+                <!-- Action Buttons - Now moved inside the card and at the bottom -->
+                <div class="luxury-actions no-print">
+                    <button class="lux-btn secondary" (click)="downloadInvoice()"><i class="fas fa-file-pdf"></i> Download Invoice</button>
+                    <button class="lux-btn primary" (click)="finishOrder()"><i class="fas fa-check"></i> Done</button>
+                </div>
+            </div>
         </div>
     </div>
+    <app-review-dialog *ngIf="showReviewDialog" (submitReview)="handleReviewSubmit($event)" (close)="handleSkipReview()"></app-review-dialog>
 </div>
-
-<!-- Payment Success Popup Modal (1-minute delayed) -->
-<div class="fixed-overlay" *ngIf="showPaymentSuccessPopup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);">
-    <div class="success-popup-card">
-        <div class="confetti-effect"></div>
-        <div class="success-icon">
-            <i class="fas fa-check-double"></i>
-        </div>
-        <h2>Online Payment Successful</h2>
-        <p>We have successfully verified your transaction of <strong>₹{{ totalAmount() }}</strong>.</p>
-        <div class="payment-meta">
-            <span>TXN ID: {{ (tempOrderId || 'TXN').replace('T-ORD', 'TXN') }}</span>
-            <span>Date: {{ currentTimestamp | date:'short' }}</span>
-        </div>
-        <button class="popup-ok-btn" (click)="onPaymentSuccessOk()">
-            OK - View Receipt
-        </button>
-    </div>
-</div>
-
-<!-- Review Dialog -->
-<app-review-dialog *ngIf="showReviewDialog" (submitReview)="handleReviewSubmit($event)"
-    (close)="showReviewDialog = false; finishOrder()">
-</app-review-dialog>

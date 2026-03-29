@@ -15,9 +15,9 @@ const seedAbout = async () => {
         const sections = [
             {
                 type: 'journey',
-                title: 'Rooted in Passion, Growing with Purpose',
-                content: 'Greenie Culture was born out of a simple realization: in our fast-paced digital world, we are losing our connection to the living, breathing world around us. Our journey began in 2024 with a mission to bridge this gap. We spent months traveling to hidden nurseries, meeting with master botanists, and sourcing the most resilient, vibrant species that could thrive in modern homes.',
-                image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80',
+                title: 'Growing with Purpose',
+                content: 'Greenie Culture was born out of a simple realization: in our fast-paced digital world, we are losing our connection to the living, breathing world around us. Our journey began in 2024 with a mission to bridge this gap.',
+                image: '/images/growing_with_purpose.png',
                 order: 1
             },
             {
@@ -44,28 +44,28 @@ const seedAbout = async () => {
             {
                 type: 'stat',
                 title: 'Happy Planters',
-                content: '5k+',
+                content: '36',
                 icon: 'fa-users-viewfinder',
                 order: 5
             },
             {
                 type: 'stat',
                 title: 'Plant Varieties',
-                content: '200+',
+                content: '159',
                 icon: 'fa-seedling',
                 order: 6
             },
             {
                 type: 'stat',
                 title: 'Gardening Tools',
-                content: '1k+',
+                content: '14',
                 icon: 'fa-tools',
                 order: 7
             },
             {
                 type: 'stat',
                 title: 'User Rating',
-                content: '4.8★',
+                content: '4.7★',
                 icon: 'fa-star',
                 order: 8
             },
@@ -73,6 +73,7 @@ const seedAbout = async () => {
                 type: 'founder',
                 title: 'Founder, Greenie Culture',
                 content: 'Plants don\'t just decorate a room; they change how you feel in it. Our goal is to make plant parenthood accessible, joyful, and deeply rewarding for everyone, regardless of their thumb color.',
+                image: '/images/founder.jpg',
                 author: 'Founder',
                 order: 9
             },

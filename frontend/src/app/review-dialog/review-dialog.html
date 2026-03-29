@@ -2,7 +2,7 @@
     <div class="review-modal">
         <div class="modal-header">
             <h2>Share Your Experience</h2>
-            <button class="close-btn" (click)="close.emit()">&times;</button>
+            <button class="close-btn" (click)="onClose()">&times;</button>
         </div>
 
         <div class="modal-body">
@@ -19,7 +19,7 @@
         </div>
 
         <div class="modal-footer">
-            <button class="skip-btn" (click)="close.emit()">Skip Review</button>
+            <button class="skip-btn" (click)="onClose()">Skip Review</button>
             <button class="submit-btn" (click)="submit()">Submit Review</button>
         </div>
     </div>

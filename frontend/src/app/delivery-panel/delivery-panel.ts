@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +13,7 @@ import { NotificationService } from '../services/notification.service';
   templateUrl: './delivery-panel.html',
   styleUrls: ['./delivery-panel.css']
 })
-export class DeliveryPanelComponent implements OnInit {
+export class DeliveryPanelComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -23,6 +23,7 @@ export class DeliveryPanelComponent implements OnInit {
   private notiService = inject(NotificationService);
 
   allOrders: any[] = [];
+  private autoDeliveryInterval: any = null;
   comparisonData: any[] = [];
   topCourier: any = null;
   activeMainTab: string = 'orders';
@@ -33,6 +34,11 @@ export class DeliveryPanelComponent implements OnInit {
   activeCourierSubTab: number = 1; // 1: Orders Table, 2: Payment Summary, 3: Analytics
   isLoading: boolean = true;
   today: Date = new Date();
+
+  // Pagination State
+  currentPageOrders: number = 1;
+  currentPagePayments: number = 1;
+  readonly pageSize: number = 10;
 
   // Detailed Interactive Sales Chart
   dashboardChartCourier: string | null = null;
@@ -80,6 +86,7 @@ export class DeliveryPanelComponent implements OnInit {
   showCourierMismatchError: boolean = false;
   suggestedCourier: string = '';
   isShaking: boolean = false;
+  selectedOrderDetails: any = null;  // For View Details modal
 
   // Territory View State
   showTerritoryModal: boolean = false;
@@ -234,6 +241,7 @@ export class DeliveryPanelComponent implements OnInit {
     } else {
       this.calculatePaymentSummary();
     }
+    this.resetPagination();
   }
 
   selectSettlementCourier(courierName: string) {
@@ -243,9 +251,9 @@ export class DeliveryPanelComponent implements OnInit {
 
   // Placeholder for resetPagination if it's intended to be added.
   // If not, the call in setTab should be removed or the method defined.
-  private resetPagination() {
-    // Implement pagination reset logic here if needed
-    console.log('Pagination reset logic would go here.');
+  resetPagination() {
+    this.currentPageOrders = 1;
+    this.currentPagePayments = 1;
   }
 
   selectCourier(name: string) {
@@ -301,9 +309,8 @@ export class DeliveryPanelComponent implements OnInit {
         const states = (this.courierStateMapping as any)[this.selectedCourier] || [];
         return states.includes(orderState) || o.courierName === this.selectedCourier;
       });
-    } else {
-      filtered = [];
     }
+    // If no courier selected, it shows all orders (All Shipments mode)
 
     // Filter by Status
     if (this.filterStatus !== 'All') {
@@ -313,14 +320,38 @@ export class DeliveryPanelComponent implements OnInit {
     // Filter by Search Query
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(o =>
-        o.orderId.toLowerCase().includes(q) ||
-        (o.userId?.fullName && o.userId.fullName.toLowerCase().includes(q))
-      );
+      filtered = filtered.filter(o => {
+        const orderIdMatch = o.orderId?.toLowerCase().includes(q);
+        const nameMatch = (o.userId?.fullName || o.userName || '').toLowerCase().includes(q);
+        
+        // Date Searches
+        const orderDate = new Date(o.orderDate);
+        const orderDateStr = orderDate.toLocaleDateString('en-GB').replace(/\//g, '-'); // dd-mm-yyyy
+        const orderDateMonth = orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase(); // mar 27
+        
+        const expectedDateStr = o.expectedDeliveryDate ? 
+          new Date(o.expectedDeliveryDate).toLocaleDateString('en-GB').replace(/\//g, '-') : '';
+        const expectedDateMonth = o.expectedDeliveryDate ? 
+          new Date(o.expectedDeliveryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase() : '';
+
+        return orderIdMatch || nameMatch || 
+               orderDateStr.includes(q) || orderDateMonth.includes(q) || 
+               expectedDateStr.includes(q) || expectedDateMonth.includes(q);
+      });
     }
 
     // Sort by Date (newest first)
     return filtered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+  }
+
+  get paginatedOrders() {
+    const orders = this.filteredOrdersV2;
+    const startIndex = (this.currentPageOrders - 1) * this.pageSize;
+    return orders.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPagesOrders() {
+    return Math.ceil(this.filteredOrdersV2.length / this.pageSize) || 1;
   }
 
   ngOnInit() {
@@ -340,7 +371,18 @@ export class DeliveryPanelComponent implements OnInit {
       const courier = params['courier'] || '';
       this.setTab(tab, courier, false);
     });
+    // 3. Auto-check every 60 seconds for due deliveries
+    this.autoDeliveryInterval = setInterval(() => {
+      this.checkAutomaticDelivery();
+    }, 60000);
   }
+
+  ngOnDestroy() {
+    if (this.autoDeliveryInterval) {
+      clearInterval(this.autoDeliveryInterval);
+    }
+  }
+
 
   loadShipmentsPromise(): Promise<void> {
     return new Promise((resolve) => {
@@ -502,9 +544,8 @@ export class DeliveryPanelComponent implements OnInit {
     });
   }
 
+
   checkAutomaticDelivery() {
-    // Note: Automatic delivery update is currently disabled to ensure database only reflects manual delivery confirmation.
-    /*
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -514,10 +555,13 @@ export class DeliveryPanelComponent implements OnInit {
         const expected = new Date(order.expectedDeliveryDate);
         expected.setHours(0, 0, 0, 0);
 
+        // Auto-deliver when today >= expected delivery date
         if (today.getTime() >= expected.getTime()) {
-          order.status = 'Delivered'; // Update locally for immediate feedback
+          order.status = 'Delivered';   // Immediate local UI update
+          order.deliveredAt = new Date().toISOString();
           this.silentMarkAsDelivered(order._id);
           hasUpdates = true;
+          console.log(`[Auto-Delivery] Order ${order.orderId} marked as Delivered.`);
         }
       }
     });
@@ -527,7 +571,6 @@ export class DeliveryPanelComponent implements OnInit {
       this.calculatePaymentSummary();
       this.cdr.detectChanges();
     }
-    */
   }
 
   silentMarkAsDelivered(orderId: string) {
@@ -636,10 +679,6 @@ export class DeliveryPanelComponent implements OnInit {
     return delivered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()).slice(0, 5);
   }
 
-  setFilter(status: string) {
-    this.filterStatus = status;
-  }
-
   extractState(order: any): string {
     // Attempt to find state from user profile or shipping address string
     const address = (order.userId?.address || order.shippingAddress || '').toLowerCase();
@@ -727,7 +766,8 @@ export class DeliveryPanelComponent implements OnInit {
     const diffTime = expected.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays <= 0) return 'Delivered';
+    if (diffDays === 0) return 'Due Today';
+    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
     return `${diffDays} days to go`;
   }
 
@@ -820,6 +860,14 @@ export class DeliveryPanelComponent implements OnInit {
     this.expectedDeliveryDate = '';
     this.showCourierMismatchError = false;
     this.shipCourier = '';
+  }
+
+  openOrderDetails(order: any) {
+    this.selectedOrderDetails = order;
+  }
+
+  closeOrderDetails() {
+    this.selectedOrderDetails = null;
   }
 
   dispatchOrder(orderId: string) {
@@ -918,7 +966,41 @@ export class DeliveryPanelComponent implements OnInit {
     } else if (this.paymentFilterMethod === 'UPI') {
       orders = orders.filter(o => !this.isPaymentCOD(o.paymentMethod));
     }
+
+    // Filter by Search Query (Consistent with Orders tab)
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      orders = orders.filter(o => {
+        const orderIdMatch = o.orderId?.toLowerCase().includes(q);
+        const nameMatch = (o.userId?.fullName || o.userName || '').toLowerCase().includes(q);
+        
+        const orderDate = new Date(o.orderDate);
+        const orderDateStr = orderDate.toLocaleDateString('en-GB').replace(/\//g, '-');
+        const orderDateMonth = orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase();
+
+        return orderIdMatch || nameMatch || orderDateStr.includes(q) || orderDateMonth.includes(q);
+      });
+    }
     return orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+  }
+
+  get paginatedPayments() {
+    const orders = this.paymentViewOrders;
+    const startIndex = (this.currentPagePayments - 1) * this.pageSize;
+    return orders.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPagesPayments() {
+    return Math.ceil(this.paymentViewOrders.length / this.pageSize) || 1;
+  }
+
+  setFilter(status: string) {
+    this.filterStatus = status;
+    this.resetPagination();
+  }
+
+  onSearchChange() {
+    this.resetPagination();
   }
 
   calculatePaymentStats() {

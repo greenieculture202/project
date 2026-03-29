@@ -80,7 +80,7 @@ export class InteractiveHeroComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   scrollToPlacements() {
-    const element = document.getElementById('placements');
+    const element = document.getElementById('products-section');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

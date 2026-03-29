@@ -60,6 +60,7 @@ export class AdminPanelComponent implements OnInit {
     faqCategoryFilter: string = 'All';
     faqCategories: string[] = ['Orders', 'Payment', 'Delivery', 'Plants', 'Returns', 'Account'];
     userFilter: string = 'All';
+    userSearchQuery: string = '';
     users: any[] = [];
     orders: any[] = [];
     selectedOrder: any = null;
@@ -225,7 +226,7 @@ export class AdminPanelComponent implements OnInit {
         {
             name: 'Indoor Jungle Page',
             page: '/indoor-offer',
-            cardsCount: 6,
+            cardsCount: 20,
             code: 'G-INDOOR-6-SEC',
             badge: 'ELITE PICK',
             instruction: 'Add this code to a product\'s TAGS or CATEGORY to show it here.'
@@ -233,7 +234,7 @@ export class AdminPanelComponent implements OnInit {
         {
             name: 'Garden Essentials Page',
             page: '/garden-offer',
-            cardsCount: 6,
+            cardsCount: 20,
             code: 'G-GARDEN-6-SEC',
             badge: 'KIT SAVINGS',
             instruction: 'Add this code to a product\'s TAGS or CATEGORY to show it here.'
@@ -241,7 +242,7 @@ export class AdminPanelComponent implements OnInit {
         {
             name: 'Flowering Bonanza Page',
             page: '/flowering-offer',
-            cardsCount: 6,
+            cardsCount: 20,
             code: 'G-FLOWER-6-SEC',
             badge: 'SALE',
             instruction: 'Add this code to a product\'s TAGS or CATEGORY to show it here.'
@@ -299,7 +300,7 @@ export class AdminPanelComponent implements OnInit {
             { key: 'Bestsellers', label: 'Bestsellers' },
             { key: 'Flowering Plants', label: 'Flowering' },
             { key: 'Gardening', label: 'Gardening' },
-            { key: 'New Arrivals', label: 'New Arrivals' },
+            { key: 'XL Plants', label: 'XL Plants' },
             { key: 'Air Purifying Plants', label: 'Air Purifying' }
         ],
         'Seeds': [
@@ -525,6 +526,25 @@ export class AdminPanelComponent implements OnInit {
         return 'Unknown';
     }
 
+    get orderedCourierOptions(): string[] {
+        // Return exactly 3 companies as requested
+        // Ensure the recommended/selected one is first
+        const recommended = this.selectedCourier;
+        let options = [...this.courierOptions];
+
+        // Ensure we have at least the primary 3 if DB is empty or has fewer
+        if (options.length === 0) {
+            options = ['Delhivery', 'BlueDart', 'Ecom Express'];
+        }
+
+        if (recommended) {
+            options = options.filter(o => o !== recommended);
+            options.unshift(recommended);
+        }
+
+        return options.slice(0, 3);
+    }
+
     onCourierChange() {
         if (!this.selectedCourier || !this.selectedOrder) {
             this.showCourierMismatchError = false;
@@ -570,14 +590,29 @@ export class AdminPanelComponent implements OnInit {
 
 
     get filteredUsers() {
-        if (this.userFilter === 'All') return this.users;
-        return this.users.filter(u => u.method === this.userFilter);
+        let filtered = this.users;
+        
+        // Filter by Login Type
+        if (this.userFilter !== 'All') {
+            filtered = filtered.filter(u => u.method === this.userFilter);
+        }
+        
+        // Filter by Search Query (Name or Email)
+        if (this.userSearchQuery) {
+            const query = this.userSearchQuery.toLowerCase().trim();
+            filtered = filtered.filter(u => 
+                (u.name && u.name.toLowerCase().includes(query)) || 
+                (u.email && u.email.toLowerCase().includes(query))
+            );
+        }
+        
+        return filtered;
     }
 
     stats = [
         { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month', targetTab: 'users' },
         { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month', targetTab: 'orders' },
-        { label: 'Total Revenue', value: 'â‚¹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month', targetTab: 'orders' },
+        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month', targetTab: 'orders' },
         { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average', targetTab: 'analytics' }
     ];
 
@@ -828,6 +863,7 @@ export class AdminPanelComponent implements OnInit {
         this.showCourierMismatchError = false;
         this.suggestedCourier = '';
         this.toggleBodyScroll(true);
+        this.cdr.detectChanges();
     }
 
     closeOrderModal() {
@@ -910,6 +946,10 @@ export class AdminPanelComponent implements OnInit {
         this.activeTab = tab;
         if (mainCategory) {
             this.activeMainCategory = mainCategory;
+            // Reset filters so category overview cards always show on navigation
+            this.productCategoryFilter = 'All';
+            this.searchTerm = '';
+            this.backendResults = [];
         }
 
         // Update URL to persist tab state across refreshes
@@ -1097,6 +1137,55 @@ export class AdminPanelComponent implements OnInit {
         this.showCourierReplyModal = true;
     }
 
+    // --- NEW COURIER MESSAGE ---
+    showNewCourierMessageModal: boolean = false;
+    newCourierName: string = 'Delhivery';
+    newCourierMessage: string = '';
+    availableCouriers: string[] = ['Blue Dart', 'Delhivery', 'DTDC'];
+
+    openNewCourierMessageModal(event?: Event) {
+        if (event) event.stopPropagation();
+        this.newCourierName = 'Delhivery';
+        this.newCourierMessage = '';
+        this.showNewCourierMessageModal = true;
+    }
+
+    sendNewCourierMessage() {
+        if (!this.newCourierMessage.trim() || !this.newCourierName) return;
+
+        const payload = {
+            courierName: this.newCourierName,
+            title: 'Message from Admin 📬',
+            message: this.newCourierMessage
+        };
+
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+
+        this.http.post('/api/admin/notify-courier', payload, { headers }).subscribe({
+            next: (res: any) => {
+                this.notiService.show(`Message sent to ${this.newCourierName}`, 'Message Sent', 'success', 'toast');
+                this.showNewCourierMessageModal = false;
+                
+                // Add the outbound message locally so it shows up immediately
+                const outboundMsg = {
+                    sender: 'admin',
+                    title: `To ${this.newCourierName}`,
+                    message: this.newCourierMessage,
+                    createdAt: new Date(),
+                    isRead: true,
+                    courierName: this.newCourierName,
+                    type: 'admin'
+                };
+                this.adminNotifications.unshift(outboundMsg);
+                this.cdr.detectChanges();
+            },
+            error: (err: any) => {
+                this.notiService.show('Failed to send message. Please check your connection.', 'Error', 'error');
+            }
+        });
+    }
+
     sendCourierReply() {
         if (!this.courierReplyMessage.trim()) return;
 
@@ -1123,10 +1212,14 @@ export class AdminPanelComponent implements OnInit {
 
     getCourierName(noti: any): string {
         if (noti.courierName) return noti.courierName;
+        
+        // For outbound admin messages, the recipient (userId) is the courier name
+        if (noti.sender === 'admin' && noti.userId && noti.userId !== 'admin') return noti.userId;
+
         // Fallback for older messages: "Message from Blue Dart 📥"
         if (noti.title && noti.title.toLowerCase().includes('from ')) {
             const matches = noti.title.match(/from\s+(Blue Dart|Delhivery|DTDC|[a-zA-Z0-9]+)/i);
-            if (matches && matches[1]) return matches[1];
+            if (matches && matches[1] && matches[1].toLowerCase() !== 'admin') return matches[1];
         }
         return '';
     }
@@ -2112,6 +2205,50 @@ export class AdminPanelComponent implements OnInit {
         return diffInHours < 24;
     }
 
+    // =============================================
+    // DELIVERY STATUS TRANSITION HELPERS
+    // Rules: 2-day -> OFD after 1 day
+    //        4-day -> OFD after 2 days
+    //        7-day -> OFD after 4 days
+    //       10-day -> OFD after 8 days
+    // =============================================
+
+    getDeliveryDurationDays(order: any): number {
+        const dt = (order.deliveryType || '').toLowerCase();
+        if (dt.includes('2')) return 2;
+        if (dt.includes('4')) return 4;
+        if (dt.includes('7')) return 7;
+        if (dt.includes('10')) return 10;
+        return 7; // default
+    }
+
+    getOutForDeliveryThresholdDays(order: any): number {
+        const days = this.getDeliveryDurationDays(order);
+        const thresholdMap: { [k: number]: number } = { 2: 1, 4: 2, 7: 4, 10: 8 };
+        return thresholdMap[days] ?? Math.floor(days / 2);
+    }
+
+    getExpectedDeliveryDate(order: any): Date | null {
+        const shippedAt = order.assignedAt ? new Date(order.assignedAt) : null;
+        if (!shippedAt) return null;
+        const days = this.getDeliveryDurationDays(order);
+        return new Date(shippedAt.getTime() + days * 24 * 60 * 60 * 1000);
+    }
+
+    getEffectiveStatus(order: any): string {
+        if (!order || !order.assignedAt || order.status !== 'Shipped') {
+            return order?.status || 'Processing';
+        }
+        const shippedAt = new Date(order.assignedAt);
+        const now = new Date();
+        const daysSinceShipping = (now.getTime() - shippedAt.getTime()) / (1000 * 60 * 60 * 24);
+        const deliveryDays = this.getDeliveryDurationDays(order);
+        const threshold = this.getOutForDeliveryThresholdDays(order);
+        if (daysSinceShipping >= deliveryDays) return 'Delivered';
+        if (daysSinceShipping >= threshold) return 'Out for Delivery';
+        return 'Shipped';
+    }
+
     getOfferBadgeFromCode(code: string): string | null {
         const offer = this.offerSectionCodes.find(o => o.code === code);
         return offer ? offer.badge : null;
@@ -2252,17 +2389,34 @@ export class AdminPanelComponent implements OnInit {
                 this.trackingNumber = this.createTrackingNumberString();
                 body.trackingNumber = this.trackingNumber;
             }
+
+            // Auto-calculate expected delivery date based on deliveryType
+            if (!this.expectedDeliveryDate && targetOrder.deliveryType) {
+                const durationDays = this.getDeliveryDurationDays(targetOrder);
+                const deliveryDate = new Date();
+                deliveryDate.setDate(deliveryDate.getDate() + durationDays);
+                body.expectedDeliveryDate = deliveryDate.toISOString();
+            }
+
+            // Always set assignedAt for OFD threshold calculation
+            body.assignedAt = new Date().toISOString();
         }
 
         this.http.put(`/api/admin/orders/${orderId}/status`, body, { headers: { 'x-auth-token': token } })
             .subscribe({
                 next: (updatedOrder: any) => {
-                    this.ngZone.run(() => {
+                        this.ngZone.run(() => {
                         const idx = this.orders.findIndex(o => o._id === orderId);
                         if (idx !== -1) {
                             this.orders[idx] = updatedOrder;
                             this.selectedCourier = '';
                             this.trackingNumber = '';
+                            
+                            // Close modal after successful dispatch
+                            if (updatedOrder.status === 'Shipped') {
+                                this.closeOrderModal();
+                            }
+                            
                             this.cdr.detectChanges();
                         }
                     });
@@ -2457,6 +2611,15 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(true);
     }
 
+    getOfferCodeByOffer(offer: any): string | null {
+        if (!offer) return null;
+        if (offer.badge) {
+            const matchByBadge = this.offerSectionCodes.find(o => o.badge === offer.badge);
+            if (matchByBadge) return matchByBadge.code;
+        }
+        return this.getOfferCodeByLink(offer.ctaLink);
+    }
+
     getOfferCodeByLink(ctaLink: string | undefined): string | null {
         if (!ctaLink) return null;
 
@@ -2579,11 +2742,18 @@ export class AdminPanelComponent implements OnInit {
 
     addProductToOffer(product: any) {
         const updatedProduct = { ...product };
-        if (!Array.isArray(updatedProduct.tags)) updatedProduct.tags = [];
-
-        if (!updatedProduct.tags.includes(this.activeOfferCode)) {
-            updatedProduct.tags.push(this.activeOfferCode);
+        
+        let currentTags = [];
+        if (Array.isArray(updatedProduct.tags)) {
+            currentTags = [...updatedProduct.tags];
+        } else if (typeof updatedProduct.tags === 'string' && updatedProduct.tags.trim() !== '') {
+            currentTags = updatedProduct.tags.split(',').map((t: string) => t.trim());
         }
+        
+        if (!currentTags.includes(this.activeOfferCode)) {
+            currentTags.push(this.activeOfferCode);
+        }
+        updatedProduct.tags = currentTags;
 
         this.productService.updateProduct(product._id, updatedProduct).subscribe({
             next: (res) => {
@@ -2680,7 +2850,7 @@ export class AdminPanelComponent implements OnInit {
                 }
                 return acc;
             }, 0);
-            this.stats[2].value = 'â‚¹' + totalRevenue.toLocaleString();
+            this.stats[2].value = '₹' + totalRevenue.toLocaleString();
 
             // --- REAL CONVERSION ANALYTICS LOGIC ---
             const successfulOrders = this.orders.filter(o => o.status === 'Delivered').length;
@@ -2762,7 +2932,7 @@ export class AdminPanelComponent implements OnInit {
             windowStart.setDate(windowStart.getDate() - 7);
 
             // Calculate New Users this week
-            const newOnes = this.users.filter(u => u.regDate && new Date(u.regDate) >= windowStart);
+            const newOnes = this.users.filter(u => u.date && new Date(u.date) >= windowStart);
             this.newUsersThisWeek = newOnes.length;
             this.newUsersPercentage = this.users.length > 0 ? Math.round((this.newUsersThisWeek / this.users.length) * 100) : 0;
 
@@ -2943,35 +3113,96 @@ export class AdminPanelComponent implements OnInit {
         }
     }
 
-    downloadAnalyticsReport() {
-        // Prepare CSV Content
-        const data = [
-            ['Metric', 'Value'],
-            ['Total Users', this.stats[0]?.value || '0'],
-            ['Total Orders', this.stats[1]?.value || '0'],
-            ['Total Revenue', this.stats[2]?.value || '0'],
-            ['Conversion Rate', this.realConversion.convRate + '%'],
-            ['Successful Orders', this.realConversion.successfulOrders],
-            ['Add to Cart Rate', this.realConversion.cartRate + '%'],
-            ['Checkout Started Rate', this.realConversion.checkoutRate + '%'],
-            ['New Customer Rate', this.realConversion.newCustRate + '%'],
-            ['Repeat Customer Rate', this.realConversion.repeatRate + '%'],
-            ['Abandoned Cart Rate', this.realConversion.abandonRate + '%'],
-            ['', ''],
-            ['Top Products', 'Items Sold'],
-            ...(this.realConversion.topProducts.map((p: any) => [p.name, p.count]))
-        ];
+    async downloadAnalyticsReport() {
+        const chartElement = document.querySelector('.chart-card') as HTMLElement;
+        if (!chartElement) {
+            console.error('[AdminPanel] Chart element not found!');
+            return;
+        }
 
-        let csvContent = "data:text/csv;charset=utf-8," 
-            + data.map(e => e.join(",")).join("\n");
+        try {
+            // 1. Capture the chart area as an image
+            const canvas = await html2canvas(chartElement, {
+                scale: 2, // Higher quality for PDF
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false
+            });
+            const imgData = canvas.toDataURL('image/png');
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Greenie_Analytics_Report_${new Date().toLocaleDateString()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            // 2. Create jsPDF instance (A4 size)
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            
+            // 3. Add Brand Header
+            pdf.setFontSize(24);
+            pdf.setTextColor(22, 101, 52); // Brand green #166534
+            pdf.text('GREENIE CULTURE', 15, 20);
+            
+            pdf.setFontSize(14);
+            pdf.setTextColor(71, 85, 105); // Slate gray
+            pdf.text('Weekly Analytics Distribution Report', 15, 28);
+            
+            pdf.setFontSize(10);
+            pdf.text(`Report Date: ${new Date().toLocaleDateString('en-IN', { 
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            })}`, 15, 34);
+
+            // 4. Add the Chart Image
+            const imgWidth = pageWidth - 30; // 15mm margins
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            // Draw a subtle border for the chart
+            pdf.setDrawColor(226, 232, 240); // Lighter gray
+            pdf.rect(14.5, 41.5, imgWidth + 1, imgHeight + 1, 'S');
+            pdf.addImage(imgData, 'PNG', 15, 42, imgWidth, imgHeight);
+
+            // 5. Performance Insights Section
+            let currentY = 42 + imgHeight + 20;
+            pdf.setFontSize(16);
+            pdf.setTextColor(15, 23, 42); // Navy
+            pdf.text('Key Performance Indicators (KPIs)', 15, currentY);
+            
+            pdf.setDrawColor(22, 101, 52);
+            pdf.setLineWidth(0.5);
+            pdf.line(15, currentY + 2, 60, currentY + 2); // Underline
+
+            currentY += 12;
+            pdf.setFontSize(11);
+            pdf.setTextColor(30, 41, 59);
+
+            const metrics = [
+                { label: 'Total Active Users', value: this.stats[0]?.value || '0' },
+                { label: 'Total Orders Processed', value: this.stats[1]?.value || '0' },
+                { label: 'Total Revenue Generated', value: this.stats[2]?.value || '₹0' },
+                { label: 'Store Conversion Rate', value: (this.realConversion.convRate || 0) + '%' },
+                { label: 'Successful Valid Deliveries', value: (this.realConversion.successfulOrders || 0).toString() },
+                { label: 'Repeat Customer Engagement', value: (this.realConversion.repeatRate || 0) + '%' },
+                { label: 'Add to Cart Success Rate', value: (this.realConversion.cartRate || 0) + '%' }
+            ];
+
+            metrics.forEach((m, idx) => {
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(`${m.label}:`, 15, currentY);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(`${m.value}`, 85, currentY);
+                currentY += 8;
+            });
+
+            // Footer
+            pdf.setFontSize(9);
+            pdf.setTextColor(148, 163, 184);
+            pdf.text('Confidentially generated by Greenie Culture Admin Dashboard.', 15, 285);
+
+            // 6. Save/Download
+            const fileName = `Greenie_Analytics_${new Date().getTime()}.pdf`;
+            pdf.save(fileName);
+            console.log('[AdminPanel] PDF generated successfully:', fileName);
+
+        } catch (error) {
+            console.error('[AdminPanel] PDF Export Error:', error);
+            alert('An error occurred while generating the PDF. Please ensure you are viewing the dashboard tab.');
+        }
     }
 
     openItemsPopup(order: any) {

@@ -33,7 +33,7 @@ export class CategoryNavComponent {
             plantersStyle: [
                 'Philodendron', 'Croton', 'Fiddle Leaf Fig', 'English Ivy', 'Orchid'
             ],
-            image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_indoor.png',
             imageText: 'Indoor Plants'
         },
         'Outdoor': {
@@ -49,10 +49,8 @@ export class CategoryNavComponent {
             plantersStyle: [
                 'Snake Plant', 'Hibiscus', 'Bougainvillea', 'Areca Palm', 'Croton'
             ],
-            images: [
-                { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=360&q=80', text: 'Outdoor Trees' },
-                { url: 'https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=360&q=80', text: 'Garden Plants' }
-            ]
+            image: '/images/navbar_outdoor.png',
+            imageText: 'Outdoor Plants'
         },
         'Flowering': {
             eliteGreens: [
@@ -67,7 +65,7 @@ export class CategoryNavComponent {
             plantersStyle: [
                 'Cyclamen', 'Impatiens', 'Lipstick Plant', 'Hoya', 'Anthurium Lily'
             ],
-            image: 'https://images.unsplash.com/photo-1512423924558-124e4d50937c?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_flowering.png',
             imageText: 'Flowering Plants'
         },
         'Plants': {
@@ -110,7 +108,7 @@ export class CategoryNavComponent {
             decorativeStyle: [
                 'Bougainvillea', 'Hibiscus (Gudhal)', 'Coleus', 'Golden Pothos', 'Song of India'
             ],
-            image: 'https://images.unsplash.com/photo-1416870262648-2513dfeffabd?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_gardening.png',
             imageText: 'Gardening Essentials'
         },
         'Seeds': {
@@ -181,7 +179,7 @@ export class CategoryNavComponent {
                 'Methi',
                 'Peas'
             ],
-            image: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_seeds.png',
             imageText: 'Premium Seeds Collection'
         },
         'Accessories': {
@@ -215,8 +213,8 @@ export class CategoryNavComponent {
                 'Moss Decoration', 'Terrarium Glass', 'Garden Lights', 'Balcony Stand',
                 'Vertical Frame', 'Garden Border Fence', 'Plant Labels'
             ],
-            image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=360&q=80',
-            imageText: 'Garden Tools'
+            image: '/images/navbar_accessories.png',
+            imageText: 'Premium Accessories'
         },
         'Soil & Growing Media': {
             soilTypes: [
@@ -240,7 +238,7 @@ export class CategoryNavComponent {
                 'Mulch',
                 'Leaf Mold'
             ],
-            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_soil.png',
             imageText: 'Premium Growing Media'
         },
         'Fertilizers & Nutrients': {
@@ -266,7 +264,7 @@ export class CategoryNavComponent {
                 'Fish Emulsion',
                 'Humic Acid'
             ],
-            image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_fertilizers.png',
             imageText: 'Premium Fertilizers'
         },
         'Gardening Tools': {
@@ -293,7 +291,7 @@ export class CategoryNavComponent {
             powerTools: [
                 'Lawn Mower'
             ],
-            image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=360&q=80',
+            image: '/images/navbar_tools.png',
             imageText: 'Essential Garden Tools'
         }
     };
@@ -400,9 +398,13 @@ export class CategoryNavComponent {
             return `/products/${this.productService.createSlug(itemName)}`;
         }
 
-        // For new gardening categories, navigate to individual product detail pages
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
         if (gardeningCategories.includes(category)) {
+            // Titles or known category strings should go to products listing
+            const toolCats = ['Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools'];
+            if (toolCats.includes(itemName)) {
+                return `/products/${this.productService.createSlug(itemName)}`;
+            }
             // Individual items go to product detail page
             return `/product/${this.productService.createSlug(itemName)}`;
         }

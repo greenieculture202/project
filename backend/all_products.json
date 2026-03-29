@@ -1,0 +1,1272 @@
+[
+  {
+    "_id": "69c26b0b363b921ce3cdd0c8",
+    "name": "Majestic Zen Garden",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0c9",
+    "name": "Jade Luck Charm",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ca",
+    "name": "Peace Lily Purification",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0cb",
+    "name": "Snake Plant Sansevieria",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0cc",
+    "name": "Money Plant Golden",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0cd",
+    "name": "Areca Palm",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ce",
+    "name": "Rubber Plant Burgundy",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0cf",
+    "name": "ZZ Plant Zamia",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d0",
+    "name": "Fiddle Leaf Fig",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d1",
+    "name": "Bamboo Palm",
+    "category": "Bestsellers"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d2",
+    "name": "Monstera Deliciosa",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d3",
+    "name": "String of Pearls",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d4",
+    "name": "Calathea Roseopicta",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d5",
+    "name": "Aglaonema Red",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d6",
+    "name": "Philodendron Birkin",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d7",
+    "name": "Begonia Maculata",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d8",
+    "name": "Syngonium Pink",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0d9",
+    "name": "Neon Pothos",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0da",
+    "name": "Hoya Kerrii Heart",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0db",
+    "name": "Orchid Mini",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0dc",
+    "name": "Monstera Deliciosa II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0dd",
+    "name": "String of Pearls II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0de",
+    "name": "Calathea Roseopicta II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0df",
+    "name": "Aglaonema Red II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e0",
+    "name": "Philodendron Birkin II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e1",
+    "name": "Begonia Maculata II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e2",
+    "name": "Syngonium Pink II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e3",
+    "name": "Neon Pothos II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e4",
+    "name": "Hoya Kerrii Heart II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e5",
+    "name": "Orchid Mini II",
+    "category": "New Arrivals"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e6",
+    "name": "Spider Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e7",
+    "name": "Money Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e8",
+    "name": "Boston Fern",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0e9",
+    "name": "Snake Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ea",
+    "name": "Aloe Vera",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0eb",
+    "name": "Jade Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ec",
+    "name": "Rubber Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ed",
+    "name": "ZZ Plant",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ee",
+    "name": "Areca Palm",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ef",
+    "name": "Lucky Bamboo",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f0",
+    "name": "Peace Lily",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f1",
+    "name": "Chinese Evergreen",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f2",
+    "name": "Dracaena",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f3",
+    "name": "Anthurium",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f4",
+    "name": "Calathea",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f5",
+    "name": "Philodendron",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f6",
+    "name": "Croton",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f7",
+    "name": "Fiddle Leaf Fig",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f8",
+    "name": "English Ivy",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0f9",
+    "name": "Orchid",
+    "category": "Indoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0fa",
+    "name": "Ashoka Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0fb",
+    "name": "Neem Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0fc",
+    "name": "Mango Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0fd",
+    "name": "Guava Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0fe",
+    "name": "Coconut Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd0ff",
+    "name": "Banyan Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd100",
+    "name": "Peepal Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd101",
+    "name": "Palm Tree",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd102",
+    "name": "Bamboo Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd103",
+    "name": "Tulsi Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd104",
+    "name": "Curry Leaf Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd105",
+    "name": "Lemon Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd106",
+    "name": "Papaya Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd107",
+    "name": "Banana Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd108",
+    "name": "Aloe Vera",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd109",
+    "name": "Snake Plant",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10a",
+    "name": "Hibiscus",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10b",
+    "name": "Bougainvillea",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10c",
+    "name": "Areca Palm",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10d",
+    "name": "Croton",
+    "category": "Outdoor Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10e",
+    "name": "Peace Lily",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd10f",
+    "name": "lavender Flower",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd110",
+    "name": "Orchid",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd111",
+    "name": "Kalanchoe",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd112",
+    "name": "Begonia",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd113",
+    "name": "Geranium",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd114",
+    "name": "African Violet",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd115",
+    "name": "Jasmine ",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd116",
+    "name": "Bromeliad",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd117",
+    "name": "Amaryllis",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd118",
+    "name": "Christmas Cactus",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd119",
+    "name": "Crown of Thorns",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11a",
+    "name": "Clivia",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11b",
+    "name": "Gloxinia",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11c",
+    "name": "Dahlia",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11d",
+    "name": "Cyclamen",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11e",
+    "name": "Zinnia",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd11f",
+    "name": "Lipstick Plant",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd120",
+    "name": "Hoya",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd121",
+    "name": "Anthurium Lily",
+    "category": "Flowering Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd122",
+    "name": "Snake Plant",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd123",
+    "name": "Areca Palm",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd124",
+    "name": "Spider Plant",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd125",
+    "name": "Peace Lily",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd126",
+    "name": "Rubber Plant",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd127",
+    "name": "Aloe Vera",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd128",
+    "name": "English Ivy",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd129",
+    "name": "Boston Fern",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12a",
+    "name": "ZZ Plant",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12b",
+    "name": "Philodendron",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12c",
+    "name": "Snake Plant II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12d",
+    "name": "Areca Palm II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12e",
+    "name": "Spider Plant II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd12f",
+    "name": "Peace Lily II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd130",
+    "name": "Rubber Plant II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd131",
+    "name": "Aloe Vera II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd132",
+    "name": "English Ivy II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd133",
+    "name": "Boston Fern II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd134",
+    "name": "ZZ Plant II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd135",
+    "name": "Philodendron II",
+    "category": "Air Purifying"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd136",
+    "name": "Rose (Gulab)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd137",
+    "name": "Marigold (Genda)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd138",
+    "name": "Jasmine (Mogra)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd139",
+    "name": "Petunia",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13a",
+    "name": "Sunflower",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13b",
+    "name": "Tulsi (Holy Basil)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13c",
+    "name": "Curry Leaves (Kadi Patta)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13d",
+    "name": "Aloe Vera",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13e",
+    "name": "Lemon Plant",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd13f",
+    "name": "Mint (Pudina)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd140",
+    "name": "Areca Palm",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd141",
+    "name": "Ferns",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd142",
+    "name": "Bamboo Palm",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd143",
+    "name": "Croton",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd144",
+    "name": "Cypress",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd145",
+    "name": "Bougainvillea",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd146",
+    "name": "Hibiscus (Gudhal)",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd147",
+    "name": "Coleus",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd148",
+    "name": "Golden Pothos",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd149",
+    "name": "Song of India",
+    "category": "Gardening"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14a",
+    "name": "Fiddle Leaf Fig XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14b",
+    "name": "Monstera Deliciosa XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14c",
+    "name": "Areca Palm XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14d",
+    "name": "Rubber Plant Burgundy XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14e",
+    "name": "Bonsai Ficus XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd14f",
+    "name": "Peace Lily XL",
+    "category": "XL Plants"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd150",
+    "name": "Pro Gardener Starter Kit",
+    "category": "Garden Toolkits"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd151",
+    "name": "Master Gardeners Belt Set",
+    "category": "Garden Toolkits"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd152",
+    "name": "Bonsai Care Specialist Kit",
+    "category": "Garden Toolkits"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd153",
+    "name": "Kids Discovery Garden Kit",
+    "category": "Garden Toolkits"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd154",
+    "name": "Daisy Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd155",
+    "name": "Balsam Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd156",
+    "name": "Cosmos Mixed Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd157",
+    "name": "Sunflower Dwarf Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd158",
+    "name": "Petunia Hybrid Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd159",
+    "name": "Hibiscus Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd15a",
+    "name": "Spinach (Palak) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd15b",
+    "name": "Tomato Hybrid Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd15c",
+    "name": "Chilli (Mirch) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd15d",
+    "name": "Coriander (Dhaniya) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd160",
+    "name": "Cucumber Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd161",
+    "name": "Brinjal (Baingan) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd167",
+    "name": "Rasp berry Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd168",
+    "name": "Guava (Amrood) Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd169",
+    "name": "Watermelon Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd16a",
+    "name": "Pomegranate (Anaar) Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd16c",
+    "name": "Apple Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd16d",
+    "name": "Blue Berry Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd16e",
+    "name": "Muskmelon Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd16f",
+    "name": "Orange Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd170",
+    "name": "Basil (Tulsi) Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd171",
+    "name": "Mint (Pudina) Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd172",
+    "name": "Lemongrass Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd173",
+    "name": "Parsley Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd174",
+    "name": "Oregano Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd175",
+    "name": "Thyme Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd176",
+    "name": "Aloe Vera Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd177",
+    "name": "Sage Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd178",
+    "name": "Chamomile Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd17a",
+    "name": "Mustard (Sarson) Microgreens",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd17b",
+    "name": "Radish Microgreens",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd17c",
+    "name": "Broccoli Microgreens",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd17d",
+    "name": "Fenugreek Microgreens",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd182",
+    "name": "Cabbage Microgreens",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd184",
+    "name": "Kitchen Garden Starter Kit",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd185",
+    "name": "Herb Garden Collection",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd186",
+    "name": "Microgreens Starter Pack",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd187",
+    "name": "Flower Garden Mix",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd188",
+    "name": "Vegetable Garden Bundle",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd189",
+    "name": "Balcony Garden Kit",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18a",
+    "name": "Kids Gardening Kit",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18b",
+    "name": "Organic Farming Kit",
+    "category": "Seeds Kit"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18c",
+    "name": "Garden Soil",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18d",
+    "name": "Potting Mix",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18e",
+    "name": "Red Soil",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd18f",
+    "name": "Black Soil",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd190",
+    "name": "Sand Mix",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd191",
+    "name": "Coco Peat",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd192",
+    "name": "Vermicompost",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd193",
+    "name": "Peat Moss",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd194",
+    "name": "Compost",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd195",
+    "name": "Organic Manure",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd196",
+    "name": "Perlite",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd197",
+    "name": "Vermiculite",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd198",
+    "name": "Organic Fertilizer",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd199",
+    "name": "Bone Meal",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19a",
+    "name": "Bio Fertilizer",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19b",
+    "name": "NPK Fertilizer",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19c",
+    "name": "Urea",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19d",
+    "name": "Root Booster",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19e",
+    "name": "Seaweed Extract",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd19f",
+    "name": "Fish Emulsion",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a0",
+    "name": "Humic Acid",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a1",
+    "name": "Liquid Fertilizer",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a2",
+    "name": "Hand Trowel",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a3",
+    "name": "Garden Fork",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a4",
+    "name": "Soil Scoop",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a5",
+    "name": "Pruning Shears",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a6",
+    "name": "Hedge Cutter",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a7",
+    "name": "Rake",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a8",
+    "name": "Shovel",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1a9",
+    "name": "Watering Can",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1aa",
+    "name": "Garden Knife",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ab",
+    "name": "Dibber",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ac",
+    "name": "Spade",
+    "category": "Gardening Tools"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ad",
+    "name": "Plastic Pots",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ae",
+    "name": "Ceramic Pots",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1af",
+    "name": "Terracotta Pots",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b0",
+    "name": "Hanging Planters",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b1",
+    "name": "Plant Stand",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b2",
+    "name": "Grow Lights",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b3",
+    "name": "Garden Statue",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b4",
+    "name": "Watering Spray",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b5",
+    "name": "Plant Clips",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b6",
+    "name": "Trellis",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b7",
+    "name": "Pebbles",
+    "category": "Accessories"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1b9",
+    "name": "Fenugreek (Methi) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ba",
+    "name": "Coriander (Dhaniya) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1bb",
+    "name": "Tomato (Tamatar) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1bc",
+    "name": "Mustard greens Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1bd",
+    "name": "Capsicum (Shimla Mirch) Seeds",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1be",
+    "name": "Mango (Aam) Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1bf",
+    "name": "Orange (Santra) Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c0",
+    "name": "Papaya Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c1",
+    "name": "Black Berry Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c3",
+    "name": "Strawberry Seeds",
+    "category": "Fruit Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c7",
+    "name": "Rosemary Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c8",
+    "name": "Ashwagandha Seeds",
+    "category": "Herb Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1c9",
+    "name": "Marigold (Genda) Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ca",
+    "name": "Pency Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1cb",
+    "name": "Rose Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1cc",
+    "name": "Zinnia Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1cd",
+    "name": "Portulaca Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1ce",
+    "name": "Gompherna Seeds",
+    "category": "Flower Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1cf",
+    "name": "Mustard (Sarson) Seeds",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c26b0b363b921ce3cdd1d2",
+    "name": "Peas (Matar) Seeds",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "_id": "69c40bf3f9e108ffc3a015ce",
+    "name": "Hydroponic Media",
+    "category": "Growth Media"
+  },
+  {
+    "_id": "69c40c7cf9e108ffc3a01629",
+    "name": "Organic Mulch",
+    "category": "Growth Media"
+  },
+  {
+    "_id": "69c40f3ef9e108ffc3a017ab",
+    "name": "Micronutrients Mix",
+    "category": "Chemical Fertilizers"
+  },
+  {
+    "_id": "69c40fc1e7d59d8745083347",
+    "name": "Slow release Fertilizer",
+    "category": "Chemical Fertilizers"
+  },
+  {
+    "_id": "69c4114df9e108ffc3a018ee",
+    "name": "Plant Growth Booster",
+    "category": "Plant Boosters"
+  },
+  {
+    "_id": "69c41179f9e108ffc3a0190e",
+    "name": "Flower Booster",
+    "category": "Plant Boosters"
+  },
+  {
+    "_id": "69c51270e070ca68c498aa08",
+    "name": "leaf Mold",
+    "category": "Growth Media"
+  },
+  {
+    "_id": "69c51376e070ca68c498aaaf",
+    "name": "Compost Tea",
+    "category": "Organic Fertilizers"
+  }
+]

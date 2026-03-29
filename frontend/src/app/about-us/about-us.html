@@ -10,7 +10,7 @@
         <div class="hero-overlay"></div>
         <div class="fnp-hero-content reveal reveal-up">
             <div class="brand-logo-container">
-                <i class="fas fa-leaf brand-leaf-main"></i>
+                <img src="/images/greenie-logo.png" alt="Logo" style="height: 35px; width: auto; object-fit: contain;">
             </div>
             <p class="hero-subtitle">Nurturing Nature at</p>
             <h2 class="hero-name">Greenie Culture</h2>
@@ -42,9 +42,10 @@
     <!-- Stats Section (Dynamic from Admin) -->
     <div class="fnp-stats-strip reveal reveal-up" *ngIf="statSections.length > 0">
         <div class="stats-container">
-            <div class="stat-item" *ngFor="let s of statSections">
-                <h3 class="stat-number">{{ s.title }}</h3>
-                <p class="stat-label">{{ s.content }}</p>
+            <div class="stat-item reveal reveal-up" *ngFor="let stat of statSections">
+                <div class="stat-icon" *ngIf="stat.icon"><i [class]="'fas ' + stat.icon"></i></div>
+                <div class="stat-number">{{ stat.content }}</div>
+                <div class="stat-label">{{ stat.title }}</div>
             </div>
         </div>
     </div>
@@ -106,21 +107,20 @@
         </div>
     </div>
 
-    <!-- Founder Message (Dynamic from Admin) -->
+    <!-- Founder Message (Premium Redesign) -->
     <div class="fnp-section founder-section reveal reveal-up" *ngIf="founderSection">
         <div class="founder-grid">
             <div class="founder-image-side">
                 <div class="founder-img-container">
-                    <img [src]="founderSection.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop'"
-                        alt="Founder">
+                    <img [src]="founderSection.image" alt="Founder">
                 </div>
             </div>
             <div class="founder-text-side">
-                <span class="section-badge">MESSAGE FROM FOUNDER</span>
-                <h2 class="fnp-section-title">{{ founderSection.title }}</h2>
+                <span class="section-badge">A VISION FROM THE HEART</span>
+                <span class="founder-name">HAN</span>
+                <span class="founder-role">Founder & Chief Visionary</span>
                 <div class="quote-mark"><i class="fas fa-quote-left"></i></div>
                 <p class="founder-content">{{ founderSection.content }}</p>
-                <p class="founder-name">— {{ founderSection.author || 'The Founder' }}</p>
             </div>
         </div>
     </div>
@@ -196,7 +196,7 @@
             <div class="cta-card-content">
                 <h2>Join the Green Revolution</h2>
                 <p>Connect with nature today and help us make India green.</p>
-                <button class="btn-primary" routerLink="/">Explore Collection</button>
+                <button class="btn-primary" routerLink="/products/flowering-plants">Explore Collection</button>
             </div>
         </div>
     </div>

@@ -107,6 +107,36 @@
     /* Ensure badge stays above images */
 }
 
+.offer-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 800;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: badgePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes badgePop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.offer-badge i {
+    font-size: 0.75rem;
+}
+
 .regional-badge {
     position: absolute;
     top: 42px;

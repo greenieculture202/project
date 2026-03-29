@@ -1,16 +1,28 @@
 const mongoose = require('mongoose');
-const User = require('./models/User');
-require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:radheradhe@cluster1.bqxczz3.mongodb.net/mejor?retryWrites=true&w=majority&appName=Cluster1';
+async function listUsers() {
+    try {
+        await mongoose.connect('mongodb://localhost:27017/mejor', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        console.log('Connected to MongoDB');
 
-mongoose.connect(MONGODB_URI)
-    .then(async () => {
-        const users = await User.find({}, 'fullName email').lean();
+        const userSchema = new mongoose.Schema({
+            fullName: String,
+            email: String,
+            role: String
+        }, { strict: false });
+        const User = mongoose.model('User', userSchema);
+
+        const users = await User.find({}).limit(5).lean();
         console.log(JSON.stringify(users, null, 2));
+
         process.exit(0);
-    })
-    .catch(err => {
-        console.error(err);
+    } catch (err) {
+        console.error('Error:', err);
         process.exit(1);
-    });
+    }
+}
+
+listUsers();

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { OFFER_RULES, CATEGORY_TO_OFFER, OfferBenefit } from './offer-rules';
 
 export interface CartItem {
     id: string;
@@ -41,6 +42,60 @@ export class CartService {
             }
             return acc;
         }, 0);
+    });
+
+    appliedOffer = computed(() => {
+        const cartItems = this.itemsSignal();
+        if (!cartItems || cartItems.length === 0) return null;
+
+        const offerCounts: { [key: string]: number } = {};
+        for (const item of cartItems) {
+            let codes: string[] = [];
+            if (item.tags) codes.push(...item.tags);
+            if (item.category && CATEGORY_TO_OFFER[item.category]) codes.push(CATEGORY_TO_OFFER[item.category]);
+
+            [...new Set(codes)].forEach(code => {
+                const rule = OFFER_RULES.find(r => r.code === code);
+                if (rule) offerCounts[code] = (offerCounts[code] || 0) + (item.quantity || 1);
+            });
+        }
+
+        // Evaluate priority
+        for (const rule of OFFER_RULES) {
+            const count = offerCounts[rule.code] || 0;
+            if (count >= rule.minQty) return rule;
+        }
+        return null;
+    });
+
+    potentialOffer = computed(() => {
+        if (this.appliedOffer()) return null;
+
+        const cartItems = this.itemsSignal();
+        if (!cartItems || cartItems.length === 0) return null;
+
+        const offerCounts: { [key: string]: number } = {};
+        for (const item of cartItems) {
+            let codes: string[] = [];
+            if (item.tags) codes.push(...item.tags);
+            if (item.category && CATEGORY_TO_OFFER[item.category]) codes.push(CATEGORY_TO_OFFER[item.category]);
+
+            [...new Set(codes)].forEach(code => {
+                const rule = OFFER_RULES.find(r => r.code === code);
+                if (rule) offerCounts[code] = (offerCounts[code] || 0) + (item.quantity || 1);
+            });
+        }
+
+        for (const rule of OFFER_RULES) {
+            const count = offerCounts[rule.code] || 0;
+            if (count > 0 && count < rule.minQty) {
+                return {
+                    ...rule,
+                    needed: rule.minQty - count
+                };
+            }
+        }
+        return null;
     });
 
     open() {

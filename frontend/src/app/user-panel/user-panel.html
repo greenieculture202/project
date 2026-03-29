@@ -155,11 +155,11 @@
                         </div>
 
                         <div class="status-price-group">
-                            <div class="expected-delivery-info" *ngIf="order.status !== 'Delivered'">
+                             <div class="expected-delivery-info" *ngIf="order.status !== 'Delivered' && order.expectedDeliveryDate">
                                 <span class="label">Expected By</span>
                                 <span class="val">{{ order.expectedDeliveryDate | date:'mediumDate' }}</span>
                             </div>
-                            <div class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</div>
+                            <div class="order-status" [ngClass]="(order.effectiveStatus || order.status).toLowerCase().replace(' ', '-')">{{ order.effectiveStatus || order.status }}</div>
                             <div class="order-total">₹{{ order.totalAmount }}</div>
                             <div class="order-actions">
                                 <button class="view-details-btn" (click)="openOrderModal(order)">
@@ -286,40 +286,8 @@
                     </div>
                 </div>
 
-                <!-- Summary/Status (Right) -->
-                <div class="settings-sidebar">
-                    <div class="summary-card gardener-profile">
-                        <h3>Garden Status</h3>
-                        <div class="summary-item">
-                            <div class="sum-icon impact">
-                                <i class="fas fa-hand-holding-heart"></i>
-                            </div>
-                            <div class="sum-info">
-                                <span>Plants Adopted</span>
-                                <strong>{{ dashboardData.recentOrders.length + 2 }}</strong>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="sum-icon rank">
-                                <i class="fas fa-crown"></i>
-                            </div>
-                            <div class="sum-info">
-                                <span>Gardener Rank</span>
-                                <strong class="rank-master">Master Gardener</strong>
-                            </div>
-                        </div>
-                        <div class="impact-badge-luxury">
-                            <i class="fas fa-earth-americas"></i> Carbon Hero
-                        </div>
-                    </div>
-
-                    <div class="promotion-card">
-                        <i class="fas fa-seedling"></i>
-                        <h4>Go Green!</h4>
-                        <p>Share your garden progress and earn more points.</p>
-                        <button class="btn-share">Share Now</button>
-                    </div>
-                </div>
+                <!-- Summary/Status (Right) - Removed as per user request -->
+                <!-- <div class="settings-sidebar">...</div> -->
             </div>
         </ng-container>
     </main>
@@ -344,8 +312,9 @@
                     <div class="tracker-steps">
                         <div class="tracker-line-bg">
                             <div class="tracker-line-fill" [style.width.%]="
-                                selectedOrderForModal.status === 'Delivered' ? 100 : 
-                                selectedOrderForModal.status === 'Out for Delivery' ? 66 : 
+                                selectedOrderForModal.effectiveStatus === 'Delivered' || selectedOrderForModal.status === 'Delivered' ? 100 : 
+                                selectedOrderForModal.effectiveStatus === 'Out for Delivery' ? 66 : 
+                                selectedOrderForModal.status === 'Out for Delivery' ? 66 :
                                 selectedOrderForModal.status === 'Shipped' ? 33 : 0
                             "></div>
                         </div>
@@ -353,17 +322,25 @@
                             <div class="step-icon"><i class="fas fa-receipt"></i></div>
                             <div class="step-label">Order Placed</div>
                         </div>
-                        <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(selectedOrderForModal.status)">
+                        <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
                             <div class="step-icon"><i class="fas fa-box"></i></div>
                             <div class="step-label">Shipped</div>
                         </div>
-                        <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(selectedOrderForModal.status)">
+                        <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
                             <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
                             <div class="step-label">Out for Delivery</div>
                         </div>
-                        <div class="step" [class.active]="selectedOrderForModal.status === 'Delivered'">
+                        <div class="step" [class.active]="(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status) === 'Delivered'">
                             <div class="step-icon"><i class="fas fa-house-circle-check"></i></div>
                             <div class="step-label">Delivered</div>
+                        </div>
+                    </div>
+                <!-- Tracking ID Section -->
+                <div class="modal-section tracking-id-section" *ngIf="selectedOrderForModal.trackingNumber">
+                    <div class="tracking-card-premium">
+                        <div class="tracking-left">
+                            <span class="track-label">TRACKING ID</span>
+                            <span class="track-value">{{ selectedOrderForModal.trackingNumber }}</span>
                         </div>
                     </div>
                 </div>
@@ -441,7 +418,7 @@
                         <!-- Invoice Header -->
                         <div class="invoice-top-row">
                             <div class="brand-left">
-                                <h1 class="brand-name">GREENIE CULTURE 🌿</h1>
+                                <h1 class="brand-name"><img src="/images/greenie-logo.png" alt="Logo" style="height: 45px; width: auto;"> GREENIE CULTURE</h1>
                                 <p class="brand-info">123 Botanical Avenue, Green City, 400001</p>
                                 <p class="brand-info">support@greenieculture.com | +91 9876543210</p>
                             </div>
@@ -512,7 +489,7 @@
                         </div>
 
                         <div class="invoice-footer-msg">
-                            <p>Thank you for shopping with Greenie Culture! 🌿</p>
+                            <p>Thank you for shopping with Greenie Culture! <img src="/images/greenie-logo.png" alt="Logo" style="height: 18px; width: auto; vertical-align: middle; margin-left: 5px;"></p>
                             <small>This is a computer generated invoice and does not require a signature.</small>
                         </div>
                     </div>
@@ -532,7 +509,7 @@
     <div class="user-modal-overlay impact-overlay" *ngIf="showImpactModal" (click)="closeImpactModal()">
         <div class="user-modal-container impact-card-modal" (click)="$event.stopPropagation()">
             <header class="modal-header">
-                <h2>Your Green Legacy 🌿</h2>
+                <h2>Your Green Legacy <img src="/images/greenie-logo.png" alt="Logo" style="height: 24px; width: auto; vertical-align: middle; margin-left: 8px;"></h2>
                 <button class="modal-close" (click)="closeImpactModal()">
                     <i class="fas fa-times"></i>
                 </button>

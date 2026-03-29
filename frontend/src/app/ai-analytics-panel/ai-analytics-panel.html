@@ -155,21 +155,21 @@
       <!-- ==================== TAB: SALES AI ==================== -->
       <div *ngIf="!isLoading && activeTab === 'sales'" class="tab-content animate-fade">
         <div class="stats-grid">
-          <div class="glass-card diagnostic-card">
+          <div class="glass-card diagnostic-card clickable" (click)="openMetricIntelligence('revenue')">
             <div class="stat-icon revenue"><i class="fas fa-indian-rupee-sign"></i></div>
             <div class="stat-data">
               <span class="label">Total Revenue</span>
               <h3>₹{{ totalRevenue | number }} <span class="trend up">Live</span></h3>
             </div>
           </div>
-          <div class="glass-card diagnostic-card">
+          <div class="glass-card diagnostic-card clickable" (click)="openMetricIntelligence('conversion')">
             <div class="stat-icon orders"><i class="fas fa-arrow-trend-up"></i></div>
             <div class="stat-data">
               <span class="label">Conversion Rate</span>
-              <h3>4.2% <span class="trend up">+0.5%</span></h3>
+              <h3>{{ conversionRate }}% <span class="trend up">+0.5%</span></h3>
             </div>
           </div>
-          <div class="glass-card diagnostic-card">
+          <div class="glass-card diagnostic-card clickable" (click)="openMetricIntelligence('aov')">
             <div class="stat-icon efficiency"><i class="fas fa-tags"></i></div>
             <div class="stat-data">
               <span class="label">Avg. Order Value</span>
@@ -290,7 +290,7 @@
             <div class="card-header">
               <h4><i class="fas fa-users"></i> Regional Breakdown</h4>
             </div>
-            <div class="region-list">
+            <div class="region-list custom-scrollbar">
               <div *ngFor="let entry of (stateOrderCounts | keyvalue)" 
                    class="region-row clickable" 
                    (click)="onRegionClick(entry.key.toString())"
@@ -418,28 +418,6 @@
 
       <!-- ==================== TAB: OPERATIONS HUB ==================== -->
       <div *ngIf="!isLoading && activeTab === 'tasks'" class="tab-content animate-fade tasks-tab">
-        <div class="glass-card hud-item full-width">
-          <div class="card-header">
-            <h4><i class="fas fa-bolt-lightning"></i> AI-Prioritized Operations</h4>
-            <button class="refresh-tasks-btn" (click)="getAiTasks()" [disabled]="isTasksLoading()">
-              <i class="fas fa-rotate" [class.fa-spin]="isTasksLoading()"></i>
-            </button>
-          </div>
-          <div class="tasks-grid">
-            <div *ngFor="let task of aiTasks(); let i = index" class="task-card animate-slide-up">
-              <div class="task-glow"></div>
-              <div class="task-content">{{ task }}</div>
-              <div class="task-actions">
-                <button class="task-done-btn" (click)="completeTask(i)"><i class="fas fa-check"></i></button>
-              </div>
-            </div>
-            <div *ngIf="aiTasks().length === 0 && !isTasksLoading()" class="no-data-large">
-              <i class="fas fa-clipboard-check"></i>
-              <p>Everything is optimized. AI sees no urgent tasks.</p>
-            </div>
-          </div>
-        </div>
-
         <!-- NEW: Plant Care Reminders Dedicated Section -->
         <div class="glass-card hud-item full-width mt-20">
           <div class="card-header">
@@ -603,13 +581,15 @@
           type="text" 
           [(ngModel)]="searchQuery" 
           (ngModelChange)="onSearchChange()"
-          placeholder="Search orders, customers, or insights..."
+          placeholder="Explore orders, products, or neural insights..."
           autoFocus>
-        <span class="esc-hint">ESC to close</span>
+        <button class="esc-hint close-search-btn" (click)="toggleSearch()">
+          <i class="fas fa-times"></i> Close
+        </button>
       </div>
       
       <div class="search-results custom-scrollbar" *ngIf="searchResults().length > 0; else noResults">
-        <div *ngFor="let res of searchResults()" class="result-item clickable" (click)="toggleSearch()">
+        <div *ngFor="let res of searchResults()" class="result-item clickable" (click)="onResultClick(res)">
           <div class="res-icon" [ngClass]="res.type">
             <i class="fas" [ngClass]="res.icon"></i>
           </div>
@@ -630,6 +610,69 @@
           <p>Start typing to search the neural database...</p>
         </div>
       </ng-template>
+    </div>
+  </div>
+
+  <!-- Metric Intelligence Modal -->
+  <div class="modal-overlay animate-fade" *ngIf="showMetricModal()" (click)="closeMetricIntelligence()">
+    <div class="glass-modal intelligence-modal animate-scale-up" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fas fa-brain"></i> Neural Intelligence</h3>
+        <button class="close-btn" (click)="closeMetricIntelligence()">&times;</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedMetric()">
+        <div class="metric-hero">
+          <div class="hero-icon" [ngClass]="selectedMetric().icon">
+            <i class="fas {{ selectedMetric().icon }}"></i>
+          </div>
+          <div class="hero-text">
+            <h4>{{ selectedMetric().title }}</h4>
+            <div class="live-status">
+              <span class="dot pulse"></span> PROCESSING_LIVE
+            </div>
+          </div>
+        </div>
+
+        <div class="logic-block">
+          <div class="block-label">CALCULATION_FORMULA</div>
+          <div class="formula-code">
+            <code>{{ selectedMetric().formula }}</code>
+          </div>
+        </div>
+
+        <div class="result-display">
+          <span class="label">COMPUTED_RESULT</span>
+          <div class="value">{{ selectedMetric().result }}</div>
+        </div>
+
+        <div class="intel-grid">
+          <div class="intel-box">
+            <span class="box-lbl">DATA_SOURCE</span>
+            <span class="box-val">{{ selectedMetric().source }}</span>
+          </div>
+          <div class="intel-box">
+            <span class="box-lbl">NEURAL_ENGINE</span>
+            <span class="box-val">{{ selectedMetric().processing }}</span>
+          </div>
+        </div>
+
+        <div class="data-breakdown">
+          <div class="breakdown-header">
+            <i class="fas fa-list-check"></i> RAWDATA_INDEX
+          </div>
+          <ul class="raw-list">
+            <li *ngFor="let detail of selectedMetric().details">
+              <i class="fas fa-caret-right"></i> {{ detail }}
+            </li>
+          </ul>
+        </div>
+
+        <p class="intel-desc">{{ selectedMetric().description }}</p>
+      </div>
+      <div class="modal-footer">
+        <div class="scanning-line"></div>
+        <button class="action-btn primary" (click)="closeMetricIntelligence()">Understand Logic</button>
+      </div>
     </div>
   </div>
 </div>

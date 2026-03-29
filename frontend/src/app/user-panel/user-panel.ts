@@ -318,15 +318,11 @@ export class UserPanelComponent implements OnInit {
         this.userService.getOrders().subscribe({
             next: (orders: any[]) => {
                 this.allOrders = orders.map(order => {
-                    const orderDate = new Date(order.orderDate);
+                    const expectedDate = this.getExpectedDeliveryDate(order);
                     return {
                         ...order,
-                        shippedDate: ['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ? 
-                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 24) : null,
-                        outForDeliveryDate: ['Out for Delivery', 'Delivered'].includes(order.status) ? 
-                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 48) : null,
-                        deliveryDate: order.status === 'Delivered' ? 
-                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 56) : null
+                        expectedDeliveryDate: expectedDate || order.expectedDeliveryDate,
+                        effectiveStatus: this.getEffectiveStatus(order)
                     };
                 });
                 this.isLoading = false;
@@ -346,6 +342,50 @@ export class UserPanelComponent implements OnInit {
         } else {
             this.expandedOrderId = orderId;
         }
+    }
+
+    // =============================================
+    // DELIVERY STATUS TRANSITION HELPERS
+    // Rules: 2-day -> OFD after 1 day
+    //        4-day -> OFD after 2 days
+    //        7-day -> OFD after 4 days
+    //       10-day -> OFD after 8 days
+    // =============================================
+
+    getDeliveryDurationDays(order: any): number {
+        const dt = (order.deliveryType || '').toLowerCase();
+        if (dt.includes('2')) return 2;
+        if (dt.includes('4')) return 4;
+        if (dt.includes('7')) return 7;
+        if (dt.includes('10')) return 10;
+        return 7;
+    }
+
+    getOutForDeliveryThresholdDays(order: any): number {
+        const days = this.getDeliveryDurationDays(order);
+        const thresholdMap: { [k: number]: number } = { 2: 1, 4: 2, 7: 4, 10: 8 };
+        return thresholdMap[days] ?? Math.floor(days / 2);
+    }
+
+    getExpectedDeliveryDate(order: any): Date | null {
+        const shippedAt = order.assignedAt ? new Date(order.assignedAt) : null;
+        if (!shippedAt) return order.expectedDeliveryDate ? new Date(order.expectedDeliveryDate) : null;
+        const days = this.getDeliveryDurationDays(order);
+        return new Date(shippedAt.getTime() + days * 24 * 60 * 60 * 1000);
+    }
+
+    getEffectiveStatus(order: any): string {
+        if (!order) return 'Processing';
+        if (order.status === 'Delivered' || order.status === 'Cancelled') return order.status;
+        if (!order.assignedAt || order.status !== 'Shipped') return order.status;
+        const shippedAt = new Date(order.assignedAt);
+        const now = new Date();
+        const daysSinceShipping = (now.getTime() - shippedAt.getTime()) / (1000 * 60 * 60 * 24);
+        const deliveryDays = this.getDeliveryDurationDays(order);
+        const threshold = this.getOutForDeliveryThresholdDays(order);
+        if (daysSinceShipping >= deliveryDays) return 'Delivered';
+        if (daysSinceShipping >= threshold) return 'Out for Delivery';
+        return 'Shipped';
     }
 
     openOrderModal(order: any) {

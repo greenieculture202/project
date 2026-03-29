@@ -1,0 +1,376 @@
+import { __decorate } from "tslib";
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/user.service';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+let UserPanelComponent = class UserPanelComponent {
+    constructor() {
+        this.authService = inject(AuthService);
+        this.userService = inject(UserService);
+        this.router = inject(Router);
+        this.dashboardData = {
+            stats: { totalOrders: 0, greenPoints: 0 },
+            recentOrders: []
+        };
+        this.allOrders = [];
+        this.activeTab = 'dashboard';
+        this.isLoading = true;
+        this.isSaving = false;
+        this.userProfile = null;
+        // Settings fields
+        this.fullName = '';
+        this.email = '';
+        this.phone = '';
+        this.city = '';
+        this.stateName = '';
+        this.address = '';
+        this.selectedOrderForBill = null;
+        this.profilePic = '';
+        this.profilePicPreview = '';
+        this.showStateDropdown = false;
+        this.showCityDropdown = false;
+        this.expandedOrderId = null;
+        this.indianStates = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+            "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+            "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+            "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+            "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+            "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir",
+            "Ladakh", "Lakshadweep", "Puducherry"
+        ];
+        this.indianCities = [
+            "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat",
+            "Pune", "Jaipur", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", "Visakhapatnam",
+            "Pimpri-Chinchwad", "Patna", "Vadodara", "Ghaziabad", "Ludhiana", "Coimbatore", "Agra",
+            "Madurai", "Nashik", "Vijayawada", "Faridabad", "Meerut", "Rajkot", "Kalyan-Dombivli",
+            "Vasai-Virar", "Varanasi", "Srinagar", "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai",
+            "Allahabad", "Howrah", "Ranchi", "Gwalior", "Jabalpur", "Guntur", "Amaravati", "Sarkhej-Okaf",
+            "Bhavnagar", "Jamnagar", "Junagadh", "Gandhidham", "Nadiad", "Gandhinagar", "Anand", "Morbi"
+        ];
+        this.cityToState = {
+            // Andhra Pradesh
+            "Visakhapatnam": "Andhra Pradesh", "Vijayawada": "Andhra Pradesh", "Guntur": "Andhra Pradesh", "Nellore": "Andhra Pradesh", "Kurnool": "Andhra Pradesh", "Tirupati": "Andhra Pradesh", "Rajahmundry": "Andhra Pradesh", "Kakinada": "Andhra Pradesh",
+            // Assam
+            "Guwahati": "Assam", "Silchar": "Assam", "Dibrugarh": "Assam", "Jorhat": "Assam", "Nagaon": "Assam", "Tinsukia": "Assam",
+            // Bihar
+            "Patna": "Bihar", "Gaya": "Bihar", "Bhagalpur": "Bihar", "Muzaffarpur": "Bihar", "Purnia": "Bihar", "Darbhanga": "Bihar", "Arrah": "Bihar", "Begusarai": "Bihar",
+            // Chhattisgarh
+            "Raipur": "Chhattisgarh", "Bhilai": "Chhattisgarh", "Bilaspur": "Chhattisgarh", "Korba": "Chhattisgarh", "Rajnandgaon": "Chhattisgarh",
+            // Delhi
+            "Delhi": "Delhi", "New Delhi": "Delhi",
+            // Goa
+            "Panaji": "Goa", "Margao": "Goa", "Vasco da Gama": "Goa",
+            // Gujarat
+            "Ahmedabad": "Gujarat", "Surat": "Gujarat", "Vadodara": "Gujarat", "Rajkot": "Gujarat", "Bhavnagar": "Gujarat", "Jamnagar": "Gujarat", "Junagadh": "Gujarat", "Gandhidham": "Gujarat", "Nadiad": "Gujarat", "Gandhinagar": "Gujarat", "Anand": "Gujarat", "Morbi": "Gujarat", "Surendranagar": "Gujarat", "Bharuch": "Gujarat", "Vapi": "Gujarat", "Navsari": "Gujarat", "Veraval": "Gujarat", "Porbandar": "Gujarat", "Godhra": "Gujarat", "Patan": "Gujarat", "Dahod": "Gujarat", "Botad": "Gujarat", "Sarkhej-Okaf": "Gujarat",
+            // Haryana
+            "Faridabad": "Haryana", "Gurgaon": "Haryana", "Panipat": "Haryana", "Ambala": "Haryana", "Yamunanagar": "Haryana", "Rohtak": "Haryana", "Hisar": "Haryana", "Karnal Haryana": "Haryana",
+            // Himachal Pradesh
+            "Shimla": "Himachal Pradesh", "Dharamshala": "Himachal Pradesh", "Solan": "Himachal Pradesh",
+            // Jammu & Kashmir
+            "Srinagar": "Jammu and Kashmir", "Jammu": "Jammu and Kashmir", "Anantnag": "Jammu and Kashmir",
+            // Jharkhand
+            "Dhanbad": "Jharkhand", "Ranchi": "Jharkhand", "Jamshedpur": "Jharkhand", "Bokaro": "Jharkhand", "Deoghar": "Jharkhand",
+            // Karnataka
+            "Bangalore": "Karnataka", "Hubli-Dharwad": "Karnataka", "Mysore": "Karnataka", "Gulbarga": "Karnataka", "Belgaum": "Karnataka", "Mangalore": "Karnataka", "Davanagere": "Karnataka", "Bellary": "Karnataka", "Shimoga": "Karnataka", "Tumkur": "Karnataka",
+            // Kerala
+            "Thiruvananthapuram": "Kerala", "Kochi": "Kerala", "Kozhikode": "Kerala", "Kollam": "Kerala", "Thrissur": "Kerala", "Alappuzha": "Kerala", "Palakkad": "Kerala", "Malappuram": "Kerala",
+            // Madhya Pradesh
+            "Indore": "Madhya Pradesh", "Bhopal": "Madhya Pradesh", "Jabalpur": "Madhya Pradesh", "Gwalior": "Madhya Pradesh", "Ujjain": "Madhya Pradesh", "Sagar": "Madhya Pradesh", "Dewas": "Madhya Pradesh", "Satna": "Madhya Pradesh", "Ratlam": "Madhya Pradesh",
+            // Maharashtra
+            "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra", "Thane": "Maharashtra", "Pimpri-Chinchwad": "Maharashtra", "Nashik": "Maharashtra", "Kalyan-Dombivli": "Maharashtra", "Vasai-Virar": "Maharashtra", "Aurangabad": "Maharashtra", "Navi Mumbai": "Maharashtra", "Solapur": "Maharashtra", "Mira-Bhayandar": "Maharashtra", "Bhiwandi": "Maharashtra", "Amravati": "Maharashtra", "Nanded": "Maharashtra", "Kolhapur": "Maharashtra", "Akola": "Maharashtra", "Ulhasnagar": "Maharashtra", "Sangli": "Maharashtra", "Malegaon": "Maharashtra", "Jalgaon": "Maharashtra", "Latur": "Maharashtra", "Dhule": "Maharashtra", "Ahmednagar": "Maharashtra", "Chandrapur": "Maharashtra", "Parbhani": "Maharashtra", "Ichalkaranji": "Maharashtra", "Jalna": "Maharashtra", "Ambarnath": "Maharashtra",
+            // Manipur
+            "Imphal": "Manipur",
+            // Meghalaya
+            "Shillong": "Meghalaya",
+            // Odisha
+            "Bhubaneswar": "Odisha", "Cuttack": "Odisha", "Rourkela": "Odisha", "Berhampur": "Odisha", "Sambalpur": "Odisha",
+            // Punjab
+            "Ludhiana": "Punjab", "Amritsar": "Punjab", "Jalandhar": "Punjab", "Patiala Punjab": "Punjab", "Bathinda": "Punjab", "Hoshiarpur": "Punjab", "Mohali": "Punjab",
+            // Rajasthan
+            "Jaipur": "Rajasthan", "Jodhpur": "Rajasthan", "Kota": "Rajasthan", "Bikaner": "Rajasthan", "Ajmer": "Rajasthan", "Udaipur": "Rajasthan", "Bhilwara": "Rajasthan", "Alwar": "Rajasthan", "Bharatpur": "Rajasthan", "Pali": "Rajasthan", "Sikar": "Rajasthan", "Sri Ganganagar": "Rajasthan",
+            // Tamil Nadu
+            "Chennai": "Tamil Nadu", "Coimbatore": "Tamil Nadu", "Madurai": "Tamil Nadu", "Tiruchirappalli": "Tamil Nadu", "Salem": "Tamil Nadu", "Tiruppur": "Tamil Nadu", "Erode": "Tamil Nadu", "Vellore": "Tamil Nadu", "Thoothukudi": "Tamil Nadu", "Tirunelveli": "Tamil Nadu",
+            // Telangana
+            "Hyderabad": "Telangana", "Warangal": "Telangana", "Nizamabad": "Telangana", "Karimnagar": "Telangana", "Khammam": "Telangana",
+            // Tripura
+            "Agartala": "Tripura",
+            // Uttar Pradesh
+            "Lucknow": "Uttar Pradesh", "Kanpur": "Uttar Pradesh", "Ghaziabad": "Uttar Pradesh", "Agra": "Uttar Pradesh", "Meerut": "Uttar Pradesh", "Varanasi": "Uttar Pradesh", "Prayagraj": "Uttar Pradesh", "Allahabad": "Uttar Pradesh", "Bareilly": "Uttar Pradesh", "Aligarh": "Uttar Pradesh", "Moradabad": "Uttar Pradesh", "Saharanpur": "Uttar Pradesh", "Gorakhpur": "Uttar Pradesh", "Noida": "Uttar Pradesh", "Firozabad": "Uttar Pradesh", "Jhansi": "Uttar Pradesh", "Muzaffarnagar": "Uttar Pradesh", "Mathura": "Uttar Pradesh", "Ayodhya": "Uttar Pradesh", "Rampur": "Uttar Pradesh", "Shahjahanpur": "Uttar Pradesh", "Farrukhabad": "Uttar Pradesh", "Maunath Bhanjan": "Uttar Pradesh", "Hapur": "Uttar Pradesh", "Etawah": "Uttar Pradesh",
+            // Uttarakhand
+            "Dehradun": "Uttarakhand", "Haridwar": "Uttarakhand", "Roorkee": "Uttarakhand", "Haldwani": "Uttarakhand", "Rudrapur": "Uttarakhand",
+            // West Bengal
+            "Kolkata": "West Bengal", "Howrah": "West Bengal", "Durgapur": "West Bengal", "Asansol": "West Bengal", "Siliguri": "West Bengal", "Maheshtala": "West Bengal", "Rajpur Sonarpur": "West Bengal", "Gopalpur": "West Bengal", "Bhatpara": "West Bengal", "Panihati": "West Bengal", "Kamarhati": "West Bengal", "Bardhaman": "West Bengal"
+        };
+        this.filteredStates = [];
+        this.filteredCities = [];
+    }
+    get recentOrdersSlice() {
+        return this.dashboardData.recentOrders.slice(0, 5);
+    }
+    updateIndianCities() {
+        this.indianCities = Object.keys(this.cityToState).sort();
+    }
+    onStateInput() {
+        this.showStateDropdown = true;
+        this.showCityDropdown = false;
+        if (!this.stateName) {
+            this.filteredStates = [...this.indianStates];
+        }
+        else {
+            this.filteredStates = this.indianStates.filter(s => s.toLowerCase().includes(this.stateName.toLowerCase()));
+        }
+    }
+    selectState(state) {
+        this.stateName = state;
+        this.showStateDropdown = false;
+    }
+    onCityInput() {
+        this.showCityDropdown = true;
+        this.showStateDropdown = false;
+        if (!this.city) {
+            this.filteredCities = [...this.indianCities];
+        }
+        else {
+            this.filteredCities = this.indianCities.filter(c => c.toLowerCase().includes(this.city.toLowerCase()));
+        }
+    }
+    selectCity(city) {
+        this.city = city;
+        this.showCityDropdown = false;
+        // Auto-fill state
+        if (this.cityToState[city]) {
+            this.stateName = this.cityToState[city];
+        }
+    }
+    closeDropdowns() {
+        setTimeout(() => {
+            this.showStateDropdown = false;
+            this.showCityDropdown = false;
+        }, 200);
+    }
+    ngOnInit() {
+        this.updateIndianCities();
+        // Restore active tab from session storage if it exists
+        const savedTab = sessionStorage.getItem('user_panel_tab');
+        if (savedTab) {
+            this.activeTab = savedTab;
+        }
+        // Set initial preview from session storage to avoid blank UI on refresh
+        this.profilePicPreview = sessionStorage.getItem('user_pic') || '';
+        // Load data based on restored tab
+        if (this.activeTab === 'dashboard')
+            this.loadDashboard();
+        else if (this.activeTab === 'orders')
+            this.loadAllOrders();
+        else if (this.activeTab === 'settings')
+            this.loadProfile();
+        // Always load profile in background to sync name/pic
+        if (this.activeTab !== 'settings')
+            this.loadProfile();
+    }
+    loadProfile() {
+        console.log('[UserPanel] Fetching profile...');
+        this.userService.getUserProfile().subscribe({
+            next: (profile) => {
+                console.log('[UserPanel] Profile data received:', profile);
+                this.userProfile = profile;
+                if (profile) {
+                    this.fullName = profile.fullName || '';
+                    this.email = profile.email || '';
+                    this.phone = profile.phone || '';
+                    this.address = profile.address || '';
+                    this.city = profile.city || '';
+                    this.stateName = profile.state || '';
+                    this.profilePic = profile.profilePic || '';
+                    this.profilePicPreview = profile.profilePic || '';
+                }
+                if (this.activeTab === 'settings')
+                    this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('[UserPanel] Error loading profile:', err);
+                if (this.activeTab === 'settings')
+                    this.isLoading = false;
+                if (err.status === 401) {
+                    console.log('[UserPanel] Unauthorized - might need to re-login');
+                }
+            }
+        });
+    }
+    onFileSelected(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // Limit to 500KB to stay within safe payload sizes for NoSQL/JSON
+            if (file.size > 512 * 1024) {
+                alert('File is too large! Please choose an image smaller than 500KB.');
+                return;
+            }
+            console.log(`[UserPanel] Selected file: ${file.name}, Size: ${file.size} bytes`);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.profilePicPreview = e.target.result;
+                this.profilePic = e.target.result; // Send base64 to server
+                console.log('[UserPanel] Base64 image generated');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    saveSettings() {
+        this.isSaving = true;
+        const profileData = {
+            fullName: this.fullName,
+            phone: this.phone,
+            address: this.address,
+            city: this.city,
+            state: this.stateName,
+            profilePic: this.profilePic
+        };
+        this.userService.updateUserProfile(profileData).subscribe({
+            next: (res) => {
+                this.isSaving = false;
+                this.authService.updateUserLocalInfo(this.fullName, this.profilePic);
+                alert('Profile updated successfully!');
+                this.loadProfile(); // Refresh
+                // If it's the dashboard, maybe need to update name in sidebar? 
+                // Currently sidebar uses authService.currentUser$
+            },
+            error: (err) => {
+                this.isSaving = false;
+                console.error('[UserPanel] Update failed:', err);
+                if (err.status === 401) {
+                    alert('Your session has expired. Please log in again.');
+                    this.logout();
+                    return;
+                }
+                const errorMsg = err.error?.message || err.error?.error || 'Database sync failed. Please check your inputs.';
+                alert(`Error: ${errorMsg}`);
+            }
+        });
+    }
+    setActiveTab(tab) {
+        this.activeTab = tab;
+        sessionStorage.setItem('user_panel_tab', tab);
+        this.isLoading = true; // Show loader when switching
+        if (tab === 'dashboard')
+            this.loadDashboard();
+        if (tab === 'orders')
+            this.loadAllOrders();
+        if (tab === 'settings')
+            this.loadProfile();
+    }
+    loadDashboard() {
+        console.log('[UserPanel] Loading dashboard...');
+        this.isLoading = true;
+        this.userService.getDashboardData().subscribe({
+            next: (data) => {
+                console.log('[UserPanel] Dashboard data received:', data);
+                this.dashboardData = data;
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('[UserPanel] Error loading dashboard:', err);
+                this.isLoading = false;
+            }
+        });
+    }
+    loadAllOrders() {
+        this.isLoading = true;
+        this.userService.getOrders().subscribe({
+            next: (orders) => {
+                this.allOrders = orders.map(order => {
+                    const orderDate = new Date(order.orderDate);
+                    return {
+                        ...order,
+                        shippedDate: ['Shipped', 'Out for Delivery', 'Delivered'].includes(order.status) ?
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 24) : null,
+                        outForDeliveryDate: ['Out for Delivery', 'Delivered'].includes(order.status) ?
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 48) : null,
+                        deliveryDate: order.status === 'Delivered' ?
+                            new Date(orderDate.getTime() + 1000 * 60 * 60 * 56) : null
+                    };
+                });
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('[UserPanel] Error loading all orders:', err);
+                this.isLoading = false;
+            }
+        });
+    }
+    toggleOrderDetails(orderId) {
+        if (this.expandedOrderId === orderId) {
+            this.expandedOrderId = null;
+        }
+        else {
+            this.expandedOrderId = orderId;
+        }
+    }
+    cancelOrder(orderId) {
+        if (!confirm('Are you sure you want to cancel this order?'))
+            return;
+        this.userService.updateOrderStatus(orderId, 'Cancelled').subscribe({
+            next: () => {
+                alert('Order cancelled successfully.');
+                this.loadAllOrders();
+                this.loadDashboard();
+            },
+            error: (err) => {
+                console.error('[UserPanel] Cancel failed:', err);
+                alert('Failed to cancel order: ' + (err.error?.message || 'Error occurred'));
+            }
+        });
+    }
+    async downloadBill(order) {
+        this.selectedOrderForBill = order;
+        // Wait for Angular to render the hidden template
+        setTimeout(async () => {
+            const element = document.getElementById('pdf-invoice-template');
+            if (!element) {
+                alert('Could not generate bill. Please try again.');
+                return;
+            }
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(canvas, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Bill_${order.orderId}.pdf`);
+                // Clear selection
+                this.selectedOrderForBill = null;
+            }
+            catch (error) {
+                console.error('PDF Generation Error:', error);
+                alert('Error generating PDF. Please try again.');
+                this.selectedOrderForBill = null;
+            }
+        }, 100);
+    }
+    logout() {
+        this.authService.logout();
+        this.router.navigate(['/']);
+    }
+};
+UserPanelComponent = __decorate([
+    Component({
+        selector: 'app-user-panel',
+        standalone: true,
+        imports: [CommonModule, RouterModule, FormsModule],
+        templateUrl: './user-panel.html',
+        styleUrl: './user-panel.css'
+    })
+], UserPanelComponent);
+export { UserPanelComponent };
+//# sourceMappingURL=user-panel.js.map

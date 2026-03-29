@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
+import { OFFER_RULES, CATEGORY_TO_OFFER } from '../services/offer-rules';
 
 
 
@@ -21,7 +22,7 @@ export class ProductTabsComponent implements AfterViewInit {
     router = inject(Router);
 
 
-    tabs = ['Bestsellers', 'New Arrivals', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Gardening'];
+    tabs = ['Bestsellers', 'XL Plants', 'Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Gardening'];
     activeTab = 'Bestsellers';
     showArrows = true;
 
@@ -46,8 +47,8 @@ export class ProductTabsComponent implements AfterViewInit {
     loadProducts() {
         const userState = sessionStorage.getItem('user_state') || undefined;
         // Subscribe to the Observable from the service
-        // Limit to 6 products as requested
-        this.productService.getProducts(this.activeTab, userState, 6).subscribe(products => {
+        // Limit to 10 products as requested
+        this.productService.getProducts(this.activeTab, userState, 10).subscribe(products => {
             this.products = products; // Show all products
         });
     }
@@ -80,5 +81,24 @@ export class ProductTabsComponent implements AfterViewInit {
 
     getTagClass(tag: string): string {
         return tag.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    hasOfferTag(product: Product): boolean {
+        if (!product || !product.tags) return false;
+        const offerTags = OFFER_RULES.map(r => r.code);
+        return product.tags.some(tag => offerTags.includes(tag));
+    }
+
+    getOfferBenefit(product: Product): string {
+        if (!product) return '';
+        const offerTags = OFFER_RULES.map(r => r.code);
+        const code = product.tags?.find(tag => offerTags.includes(tag)) || 
+                     (product.category ? CATEGORY_TO_OFFER[product.category] : null);
+        
+        if (code) {
+            const rule = OFFER_RULES.find(r => r.code === code);
+            return rule ? rule.shortBenefit : '';
+        }
+        return '';
     }
 }

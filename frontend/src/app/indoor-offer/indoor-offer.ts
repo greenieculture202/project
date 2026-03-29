@@ -21,7 +21,7 @@ export class IndoorOfferComponent implements OnInit {
 
     ngOnInit() {
         // Fetch products that have the unique G-INDOOR-6-SEC tag/category
-        this.productService.getProducts('G-INDOOR-6-SEC', undefined, 6).subscribe(products => {
+        this.productService.getProducts('G-INDOOR-6-SEC', undefined, 20).subscribe(products => {
             if (products) {
                 this.indoorPlants = products;
             }
