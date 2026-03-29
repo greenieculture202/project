@@ -610,10 +610,17 @@ export class AdminPanelComponent implements OnInit {
     }
 
     stats = [
-        { label: 'Total Users', value: '0', icon: 'users', color: '#4f46e5', trend: '+12% from last month', targetTab: 'users' },
-        { label: 'Total Orders', value: '0', icon: 'shopping-bag', color: '#10b981', trend: '+18% from last month', targetTab: 'orders' },
-        { label: 'Total Revenue', value: '₹0', icon: 'credit-card', color: '#f59e0b', trend: '+25% from last month', targetTab: 'orders' },
-        { label: 'Conversion Rate', value: '3.2%', icon: 'chart-pie', color: '#ef4444', trend: '+5% higher than average', targetTab: 'analytics' }
+        { label: 'Total Orders', value: '0', icon: 'shopping-cart', color: '#4f46e5', trend: '+12% this week', targetTab: 'orders' },
+        { label: 'Total Sales', value: '₹0', icon: 'wallet', color: '#10b981', trend: 'Lifetime revenue', targetTab: 'payment' },
+        { label: 'Conversion Rate', value: '0%', icon: 'chart-line', color: '#f59e0b', trend: 'Based on deliveries', targetTab: 'dashboard' },
+        { label: 'Total Products', value: '0', icon: 'box', color: '#8b5cf6', trend: 'In inventory', targetTab: 'products' }
+    ];
+
+    orderStats = [
+        { label: 'TOTAL VOLUME', value: '0', icon: 'shopping-bag', color: '#4f46e5', trend: '+12% this week' },
+        { label: 'REVENUE FLOW', value: '₹0', icon: 'rupee-sign', color: '#10b981', trend: 'Verified' },
+        { label: 'IN PIPELINE', value: '0', icon: 'spinner', color: '#f59e0b', trend: 'Active now' },
+        { label: 'FULFILLED', value: '0', icon: 'check-double', color: '#8b5cf6', trend: '99.8% Success' }
     ];
 
     dashboardTrends: any[] = [
@@ -2832,25 +2839,34 @@ export class AdminPanelComponent implements OnInit {
 
     updateDashboardStats() {
         if (!this.stats || this.stats.length < 4) return;
+        if (!this.orderStats || this.orderStats.length < 4) return;
 
-        const totalUsersCount = (this.users || []).length;
         const totalOrdersCount = (this.orders || []).length;
+        const totalUsersCount = (this.users || []).length;
 
-        // Update Total Users
-        this.stats[0].value = totalUsersCount.toString();
-
-        // Update Total Orders & Revenue
         if (this.orders && this.orders.length > 0) {
-            this.stats[1].value = totalOrdersCount.toString();
-
-            const totalRevenue = this.orders.reduce((acc, order) => {
-                const amount = Number(order.totalAmount) || 0;
+            // --- MAIN DASHBOARD STATS (Total Orders, Total Sales, Conversion Rate, Total Products) ---
+            const totalRevenueValue = (this.orders || []).reduce((acc, order) => {
                 if (this.getStatusClass(order.status) !== 'status-cancelled') {
-                    return acc + amount;
+                    return acc + (Number(order.totalAmount) || 0);
                 }
                 return acc;
             }, 0);
-            this.stats[2].value = '₹' + totalRevenue.toLocaleString();
+            const deliveredOrders = this.orders.filter(o => o.status === 'Delivered').length;
+            const convRate = totalOrdersCount > 0 ? ((deliveredOrders / totalOrdersCount) * 100).toFixed(1) : '0';
+
+            this.stats[0].value = totalOrdersCount.toString();
+            this.stats[1].value = '₹' + totalRevenueValue.toLocaleString();
+            this.stats[2].value = convRate + '%';
+            this.stats[3].value = (this.allProductsList || []).length.toString();
+
+            // --- SPECIALIZED ORDER PAGE STATS (VOLUME, REVENUE, PIPELINE, FULFILLED) ---
+            const inPipelineCount = this.orders.filter(o => ['Pending', 'Processing', 'Shipped'].includes(o.status)).length;
+            
+            this.orderStats[0].value = totalOrdersCount.toString();
+            this.orderStats[1].value = '₹' + totalRevenueValue.toLocaleString();
+            this.orderStats[2].value = inPipelineCount.toString();
+            this.orderStats[3].value = deliveredOrders.toString();
 
             // --- REAL CONVERSION ANALYTICS LOGIC ---
             const successfulOrders = this.orders.filter(o => o.status === 'Delivered').length;
