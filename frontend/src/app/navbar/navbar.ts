@@ -72,12 +72,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
             takeUntil(this.destroy$)
         ).subscribe(notifications => {
             const newUnreadCount = notifications.filter(n => !n.isRead).length;
-            
+
             // Play sound if a NEW notification arrives
             if (newUnreadCount > this.unreadCount) {
                 this.playNotificationSound();
             }
-            
+
             this.notifications = notifications;
             this.unreadCount = newUnreadCount;
         });

@@ -63,14 +63,14 @@
                     <div class="input-container"
                         [class.field-error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
                         <i class="far fa-envelope"></i>
-                        <input type="email" formControlName="email" placeholder="example@gmail.com">
+                        <input type="email" formControlName="email" placeholder="example&#64;gmail.com">
                     </div>
                     <div class="error-tag"
                         *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
                         <i class="fas fa-circle-exclamation"></i>
                         <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required</span>
                         <span *ngIf="registerForm.get('email')?.errors?.['email']">Invalid email format</span>
-                        <span *ngIf="registerForm.get('email')?.errors?.['gmailOnly']">Must use @gmail.com</span>
+                        <span *ngIf="registerForm.get('email')?.errors?.['gmailOnly']">Must use &#64;gmail.com</span>
                     </div>
                 </div>
 

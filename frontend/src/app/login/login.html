@@ -33,13 +33,13 @@
                         <i class="far fa-user"></i>
                         <input type="text" formControlName="email" placeholder="username">
                         <span class="domain-suffix"
-                            [style.display]="loginForm.get('email')?.value?.includes('@') ? 'none' : 'inline'">@gmail.com</span>
+                            [style.display]="loginForm.get('email')?.value?.includes('@') ? 'none' : 'inline'">&#64;gmail.com</span>
                     </div>
                     <div class="error-tag" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <i class="fas fa-circle-exclamation"></i>
                         <span *ngIf="loginForm.get('email')?.errors?.['required']">Username required</span>
                         <span *ngIf="loginForm.get('email')?.errors?.['email']">Check format</span>
-                        <span *ngIf="loginForm.get('email')?.errors?.['gmailOnly']">Must be @gmail.com</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['gmailOnly']">Must be &#64;gmail.com</span>
                     </div>
                 </div>
 

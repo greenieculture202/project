@@ -1,0 +1,382 @@
+[
+  {
+    "name": "Majestic Zen Garden",
+    "image": "https://tse2.mm.bing.net/th/id/OIP.X3jDS9J58Q4ilo4vgjh-RAHaE5?rs=1&pid=ImgDetMain&o=7&rm=3",
+    "hoverImage": "https://thewowstyle.com/wp-content/uploads/2015/01/nature-images..jpg",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Jade Luck Charm",
+    "image": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Peace Lily Purification",
+    "image": "https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Snake Plant Sansevieria",
+    "image": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Money Plant Golden",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Areca Palm",
+    "image": "https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Rubber Plant Burgundy",
+    "image": "https://images.unsplash.com/photo-1598880940371-c756e015ee16?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "ZZ Plant Zamia",
+    "image": "https://images.unsplash.com/photo-1632207191677-8446985f9d65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "image": "https://images.unsplash.com/photo-1601985705806-8b998a3458ae?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Bamboo Palm",
+    "image": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Bestsellers"
+  },
+  {
+    "name": "Monstera Deliciosa",
+    "image": "https://images.unsplash.com/photo-1617173945092-1c6622e5b651?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "String of Pearls",
+    "image": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Calathea Roseopicta",
+    "image": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Aglaonema Red",
+    "image": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Philodendron Birkin",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Begonia Maculata",
+    "image": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Syngonium Pink",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Neon Pothos",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Hoya Kerrii Heart",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Orchid Mini",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Monstera Deliciosa II",
+    "image": "https://images.unsplash.com/photo-1617173945092-1c6622e5b651?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "String of Pearls II",
+    "image": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Calathea Roseopicta II",
+    "image": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Aglaonema Red II",
+    "image": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Philodendron Birkin II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Begonia Maculata II",
+    "image": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Syngonium Pink II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Neon Pothos II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Hoya Kerrii Heart II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Orchid Mini II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "New Arrivals"
+  },
+  {
+    "name": "Snake Plant",
+    "image": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Areca Palm",
+    "image": "https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Spider Plant",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Peace Lily",
+    "image": "https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Rubber Plant",
+    "image": "https://images.unsplash.com/photo-1598880940371-c756e015ee16?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Aloe Vera",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "English Ivy",
+    "image": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Boston Fern",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "ZZ Plant",
+    "image": "https://images.unsplash.com/photo-1632207191677-8446985f9d65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Philodendron",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Snake Plant II",
+    "image": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Areca Palm II",
+    "image": "https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Spider Plant II",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Peace Lily II",
+    "image": "https://images.unsplash.com/photo-1593696954577-ab3d39317b97?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Rubber Plant II",
+    "image": "https://images.unsplash.com/photo-1598880940371-c756e015ee16?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Aloe Vera II",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "English Ivy II",
+    "image": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Boston Fern II",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "ZZ Plant II",
+    "image": "https://images.unsplash.com/photo-1632207191677-8446985f9d65?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Philodendron II",
+    "image": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "Air Purifying"
+  },
+  {
+    "name": "Hand Trowel",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774593016/Hawkesbury-Hand-Trowel-scaled_xqsxgn.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Garden Fork",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774593331/813vr3n1YjL._SL1500__ebpfqd.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Soil Scoop",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774593658/61FMxrNh6TL._AC_SL1500__osahdf.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Pruning Shears",
+    "image": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Hedge Cutter",
+    "image": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Rake",
+    "image": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Shovel",
+    "image": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Garden Knife",
+    "image": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Dibber",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774594478/415886374_bnk5co.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Spade",
+    "image": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Gardening Tools"
+  },
+  {
+    "name": "Micronutrients Mix",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448421/WhatsApp_Image_2026-03-25_at_6.45.21_PM_cgjpot.jpg",
+    "category": "Chemical Fertilizers"
+  },
+  {
+    "name": "Slow release Fertilizer",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448456/WhatsApp_Image_2026-03-25_at_6.43.12_PM_r6k3rf.jpg",
+    "category": "Chemical Fertilizers"
+  },
+  {
+    "name": "Plant Growth Booster",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448398/WhatsApp_Image_2026-03-25_at_6.45.46_PM_crmepa.jpg",
+    "category": "Plant Boosters"
+  },
+  {
+    "name": "Flower Booster",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448384/WhatsApp_Image_2026-03-25_at_6.48.37_PM_yyqtin.jpg",
+    "category": "Plant Boosters"
+  }
+]

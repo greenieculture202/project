@@ -1,0 +1,242 @@
+[
+  {
+    "name": "Spider Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774410033/2048x1365-Houseplants-for-shade-spider-plant-8b7aabb_qhcp2v.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Money Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774409904/unnamed4_y8r6um.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Boston Fern",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774411114/6IN_Nephrolepis_Compacta_Boston_Fern_blk_pot_lifestyle_final_4_pcit71.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Snake Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774410429/snake-plant_kqcbvw.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Aloe Vera",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774411700/aloe-vera-air-purifier_rxpnlg.webp",
+    "hoverImage": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Jade Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774411926/Crassula_ovata_700_mnsacv.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Rubber Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774413232/72def3ad8a55926925b7f3a0cda104da_vycyxc.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1598880940371-c756e015ee16?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "ZZ Plant",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774413561/ZANGEM_itfekp.webp",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Areca Palm",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774414578/98bb8d_4a74d56710304922a39d511d27eb4771_mv2_d_2810_4216_s_4_2_1400x_wvmzf9.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Lucky Bamboo",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774415063/lucky_20_2_qempr2.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Peace Lily",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774415366/03878cf79059fa8c72507b2b4f3f7a08_msv7b9.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Chinese Evergreen",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Dracaena",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1620127370217-062e7f3b5c65?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Anthurium",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774410817/20201030063049_file_5f9c5bd9afe63_5f9c5c0355dc1_cp1o4y.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Calathea",
+    "image": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "hoverImage": "https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Philodendron",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774414661/split-leaf-philodendron-plant_t7obgh.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1509937528035-ad76254b0356?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Croton",
+    "image": "https://res.cloudinary.com/dzuewhxxm/image/upload/v1774402931/croton-plant_uq60o7.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1598880940371-c756e015ee16?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774413442/Kent-48-3265.048-WH_Fiddle-Leaf-Fig-Tree-14_hlip1w.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "English Ivy",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774413327/xglpc5atxixbkwkr3rkx_fwugiu.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1612365319830-bd028886d34e?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Orchid",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774413042/nurserylive-dendrobium-orchid-plant-1_6a08f54c-e219-430f-b047-8c7bb826eea8-998763_525x700_oq3cxt.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Indoor Plants"
+  },
+  {
+    "name": "Ashoka Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774370876/326d06fe-763c-4a6d-83c1-ee6419ea5617-1000x1000_ajy0wp.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Neem Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774371140/neem-tree-grow-pot_nzjehs.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Mango Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774374205/a-liitle-mango-in-a-pot_abhkl1.webp",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Guava Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774374329/Ruby-Supreme-Guava-Tree-Plant-Pot__47217.1758732840_vn33fm.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Coconut Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774374803/1671104244_exw9ou.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Banyan Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774374949/banyan-tree-plant-1000x1000_xokzce.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Peepal Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774375246/peepal-tree-plant-500x500_gzkdv3.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Palm Tree",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774375654/green-palm-foliage-tree-isolated-939891318-e133a47a1e3f4214a8c7f727ae655260_bx13nl.jpg",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Bamboo Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774375888/6412b268eebbbd118a65e9fee0ddecf7_kxsubz.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Tulsi Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774376354/compressed_img_1659552537452_btmis8.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Curry Leaf Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774376476/61jzGXf9v5L._AC__cwioeo.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Lemon Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774376881/ce4ac1bd881934f24e55744d41a22fa1_nlh17t.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Papaya Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774377129/51p4jWmv2-L._AC_UL320__yky6fc.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Banana Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774377411/14504338-4325037951629301_omdzxs.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Aloe Vera",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774377646/187cd302-ed34-4dff-8708-fabc58b38f01.d1aecbe0797f49d8bdd0757c1321df94_n8pzjm.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1616690248297-25e2213d29c4?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Snake Plant",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774377946/snake-plant-isolated-white-background-showcasing-indoor-plants-greenery-themes-snake-plant-isolated-white-background-363407437_gmvxyb.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1512428813838-659ddce53363?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Hibiscus",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774378134/Red_Tropical_Hibiscus_Tree_9_FGT_uzbsxv.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Bougainvillea",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774378509/bougainvillea-bonsai-tree_wdd6jh.jpg",
+    "hoverImage": "https://plus.unsplash.com/premium_photo-1675827055694-010aef2cf08f?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Areca Palm",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774378758/Areca_Palm_-_plantshopme_zvvymj.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1599598425947-f3eb24cc3c8c?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  },
+  {
+    "name": "Croton",
+    "image": "https://res.cloudinary.com/dcgxf7dcu/image/upload/v1774379004/Croton_Petra_Delilah_Brown_Pot_1024x1024_wagpee.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=1200&q=100",
+    "category": "Outdoor Plants"
+  }
+]

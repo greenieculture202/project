@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Garden Soil",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449170/WhatsApp_Image_2026-03-25_at_6.15.01_PM_ctcnlk.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Potting Mix",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449185/WhatsApp_Image_2026-03-25_at_6.11.21_PM_t3mrnf.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Red Soil",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449123/WhatsApp_Image_2026-03-25_at_6.20.06_PM_lhikmu.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Black Soil",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449144/WhatsApp_Image_2026-03-25_at_6.18.10_PM_fvjzta.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Sand Mix",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449102/WhatsApp_Image_2026-03-25_at_6.20.48_PM_ozx6yd.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Coco Peat",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449049/WhatsApp_Image_2026-03-25_at_6.22.57_PM_gjp6y1.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Vermicompost",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774449017/WhatsApp_Image_2026-03-25_at_6.25.17_PM_n8lv0y.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Peat Moss",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448993/WhatsApp_Image_2026-03-25_at_6.25.18_PM_yivfum.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Compost",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448952/WhatsApp_Image_2026-03-25_at_6.26.18_PM_xmj7sp.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Organic Manure",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448882/WhatsApp_Image_2026-03-25_at_6.27.52_PM_qgvkvf.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Perlite",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448863/WhatsApp_Image_2026-03-25_at_6.28.20_PM_ehezrt.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  },
+  {
+    "name": "Vermiculite",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448841/WhatsApp_Image_2026-03-25_at_6.30.33_PM_smfkjb.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Soil & Growing Media"
+  }
+]

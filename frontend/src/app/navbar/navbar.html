@@ -9,6 +9,8 @@
         [class.fa-spin]="isLoading"></i>
       <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search For Plants..."
         (keyup.escape)="clearSearch()">
+      
+
       <button class="clear-search-btn" *ngIf="searchTerm" (click)="clearSearch()" title="Clear search">
         <i class="fas fa-times"></i>
       </button>
@@ -71,7 +73,7 @@
                     </div>
                     <div class="msg-row reply-box">
                       <span class="msg-label">Reply:</span>
-                      <span class="msg-value">{{ n.message.split('Reply:')[1]?.trim() || n.message }}</span>
+                      <span class="msg-value">{{ (n.message.split('Reply:')[1]?.trim()) || n.message }}</span>
                     </div>
                   </ng-container>
                   <ng-template #plainMessage>

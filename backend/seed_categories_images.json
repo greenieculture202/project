@@ -1,0 +1,374 @@
+[
+  {
+    "name": "Daisy Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339101/WhatsApp_Image_2026-03-24_at_1.20.09_PM_2_al1q5d.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Balsam Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339122/WhatsApp_Image_2026-03-24_at_1.20.10_PM_tojmba.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Cosmos Mixed Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338803/WhatsApp_Image_2026-03-24_at_1.20.08_PM_2_ccb6d7.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Sunflower Dwarf Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338810/WhatsApp_Image_2026-03-24_at_1.20.09_PM_oefufp.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Petunia Hybrid Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339137/WhatsApp_Image_2026-03-24_at_1.20.10_PM_2_hqgm4a.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Hibiscus Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339144/WhatsApp_Image_2026-03-24_at_1.20.11_PM_zvghyu.jpg",
+    "hoverImage": "",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Spinach (Palak) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335312/WhatsApp_Image_2026-03-24_at_12.20.41_PM_emd4py.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Tomato Hybrid Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335835/WhatsApp_Image_2026-03-24_at_12.20.52_PM_beaxpi.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Chilli (Mirch) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335454/WhatsApp_Image_2026-03-24_at_12.20.42_PM_uapcwr.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Coriander (Dhaniya) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335439/WhatsApp_Image_2026-03-24_at_12.20.41_PM_2_ioxvu3.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Cucumber Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335878/WhatsApp_Image_2026-03-24_at_12.20.52_PM_2_ohe3kt.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Brinjal (Baingan) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335854/WhatsApp_Image_2026-03-24_at_12.20.52_PM_1_lgdkta.jpg",
+    "hoverImage": "",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Rasp berry Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336931/WhatsApp_Image_2026-03-24_at_12.40.08_PM_1_yc9fd9.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Guava (Amrood) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336447/WhatsApp_Image_2026-03-24_at_12.40.05_PM_aayzac.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Watermelon Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336745/WhatsApp_Image_2026-03-24_at_12.40.07_PM_1_xbemof.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Pomegranate (Anaar) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336737/WhatsApp_Image_2026-03-24_at_12.40.07_PM_vrrke4.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Apple Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336752/WhatsApp_Image_2026-03-24_at_12.40.07_PM_2_a1auce.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Blue Berry Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336716/WhatsApp_Image_2026-03-24_at_12.40.06_PM_2_mlrx1z.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Muskmelon Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336465/WhatsApp_Image_2026-03-24_at_12.40.06_PM_s4igbi.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Orange Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336430/WhatsApp_Image_2026-03-24_at_12.40.04_PM_zqknbd.jpg",
+    "hoverImage": "",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Basil (Tulsi) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774337325/WhatsApp_Image_2026-03-24_at_12.56.17_PM_2_w87qyo.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Mint (Pudina) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774337317/WhatsApp_Image_2026-03-24_at_12.56.17_PM_1_r8nybg.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Lemongrass Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338267/WhatsApp_Image_2026-03-24_at_12.56.19_PM_3_d4cdtm.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Parsley Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774337301/WhatsApp_Image_2026-03-24_at_12.56.16_PM_uihudo.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Oregano Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774337333/WhatsApp_Image_2026-03-24_at_12.56.18_PM_x95eqk.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Thyme Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774337308/WhatsApp_Image_2026-03-24_at_12.56.17_PM_v2pvxs.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Aloe Vera Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338232/WhatsApp_Image_2026-03-24_at_12.56.18_PM_2_lb7y1w.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Sage Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338250/WhatsApp_Image_2026-03-24_at_12.56.19_PM_1_wdxpsx.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Chamomile Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338223/WhatsApp_Image_2026-03-24_at_12.56.18_PM_1_o2uwvw.jpg",
+    "hoverImage": "",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Mustard (Sarson) Microgreens",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339500/WhatsApp_Image_2026-03-24_at_1.33.08_PM_b6f2ab.jpg",
+    "hoverImage": "",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Radish Microgreens",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339533/WhatsApp_Image_2026-03-24_at_1.33.09_PM_1_nlpkif.jpg",
+    "hoverImage": "",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Broccoli Microgreens",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339507/WhatsApp_Image_2026-03-24_at_1.33.08_PM_1_vswmbe.jpg",
+    "hoverImage": "",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Fenugreek Microgreens",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339515/WhatsApp_Image_2026-03-24_at_1.33.08_PM_2_y5yv6c.jpg",
+    "hoverImage": "",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Cabbage Microgreens",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339541/WhatsApp_Image_2026-03-24_at_1.33.09_PM_2_f0czak.jpg",
+    "hoverImage": "",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Kitchen Garden Starter Kit",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339918/WhatsApp_Image_2026-03-24_at_1.40.15_PM_k3acgx.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Herb Garden Collection",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339931/WhatsApp_Image_2026-03-24_at_1.40.16_PM_hduvie.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Microgreens Starter Pack",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339937/WhatsApp_Image_2026-03-24_at_1.40.16_PM_1_pqiijw.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Flower Garden Mix",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339986/WhatsApp_Image_2026-03-24_at_1.40.17_PM_1_qisguq.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Vegetable Garden Bundle",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339962/WhatsApp_Image_2026-03-24_at_1.40.16_PM_3_xxuied.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Balcony Garden Kit",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339945/WhatsApp_Image_2026-03-24_at_1.40.16_PM_2_u1pmeo.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Kids Gardening Kit",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339976/WhatsApp_Image_2026-03-24_at_1.40.17_PM_ygjmad.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Organic Farming Kit",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339908/WhatsApp_Image_2026-03-24_at_1.39.47_PM_qtsgbh.jpg",
+    "hoverImage": "",
+    "category": "Seeds Kit"
+  },
+  {
+    "name": "Fenugreek (Methi) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335349/WhatsApp_Image_2026-03-24_at_12.20.41_PM_1_wi50km.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Coriander (Dhaniya) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335439/WhatsApp_Image_2026-03-24_at_12.20.41_PM_2_ioxvu3.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Tomato (Tamatar) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335835/WhatsApp_Image_2026-03-24_at_12.20.52_PM_beaxpi.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Mustard greens Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335467/WhatsApp_Image_2026-03-24_at_12.20.51_PM_esoizg.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Capsicum (Shimla Mirch) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335821/WhatsApp_Image_2026-03-24_at_12.20.51_PM_2_xn1bvc.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Vegetable Seeds"
+  },
+  {
+    "name": "Mango (Aam) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336437/WhatsApp_Image_2026-03-24_at_12.40.04_PM_1_ju5j35.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Orange (Santra) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336430/WhatsApp_Image_2026-03-24_at_12.40.04_PM_zqknbd.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Papaya Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336925/WhatsApp_Image_2026-03-24_at_12.40.08_PM_fywuhw.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Black Berry Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336730/WhatsApp_Image_2026-03-24_at_12.40.06_PM_3_degpmg.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Strawberry Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774336467/WhatsApp_Image_2026-03-24_at_12.40.06_PM_1_qo0kxp.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fruit Seeds"
+  },
+  {
+    "name": "Rosemary Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338241/WhatsApp_Image_2026-03-24_at_12.56.19_PM_uewmsv.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Ashwagandha Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338260/WhatsApp_Image_2026-03-24_at_12.56.19_PM_2_qdzdxr.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Herb Seeds"
+  },
+  {
+    "name": "Marigold (Genda) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338784/WhatsApp_Image_2026-03-24_at_1.20.08_PM_v5n7pd.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Pency Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339113/WhatsApp_Image_2026-03-24_at_1.20.09_PM_3_q76vec.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Rose Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338795/WhatsApp_Image_2026-03-24_at_1.20.08_PM_1_cwewsu.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Zinnia Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774338817/WhatsApp_Image_2026-03-24_at_1.20.09_PM_1_jzrrk4.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Portulaca Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339151/WhatsApp_Image_2026-03-24_at_1.20.11_PM_1_uej1h1.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Gompherna Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339130/WhatsApp_Image_2026-03-24_at_1.20.10_PM_1_r6aqks.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Flower Seeds"
+  },
+  {
+    "name": "Mustard (Sarson) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774335467/WhatsApp_Image_2026-03-24_at_12.20.51_PM_esoizg.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Microgreen Seeds"
+  },
+  {
+    "name": "Peas (Matar) Seeds",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774339526/WhatsApp_Image_2026-03-24_at_1.33.09_PM_tj9x9u.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=1200&q=100",
+    "category": "Microgreen Seeds"
+  }
+]

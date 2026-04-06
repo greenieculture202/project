@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Organic Fertilizer",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448679/WhatsApp_Image_2026-03-25_at_6.37.06_PM_lxtehq.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Bone Meal",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448710/WhatsApp_Image_2026-03-25_at_6.36.53_PM_izz653.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Bio Fertilizer",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448658/WhatsApp_Image_2026-03-25_at_6.38.23_PM_rllk0h.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "NPK Fertilizer",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448598/WhatsApp_Image_2026-03-25_at_6.41.28_PM_dmnwnl.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Urea",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448580/WhatsApp_Image_2026-03-25_at_6.42.15_PM_kkusu2.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Root Booster",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448368/WhatsApp_Image_2026-03-25_at_6.49.45_PM_pfymyq.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Seaweed Extract",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448357/WhatsApp_Image_2026-03-25_at_6.52.52_PM_a6bne6.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Fish Emulsion",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448344/WhatsApp_Image_2026-03-25_at_6.53.32_PM_vouyrs.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Humic Acid",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448330/WhatsApp_Image_2026-03-25_at_6.59.21_PM_iahg5n.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  },
+  {
+    "name": "Liquid Fertilizer",
+    "image": "https://res.cloudinary.com/dpknptkzy/image/upload/v1774448622/WhatsApp_Image_2026-03-25_at_6.40.27_PM_ip0xet.jpg",
+    "hoverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=100",
+    "category": "Fertilizers & Nutrients"
+  }
+]

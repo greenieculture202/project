@@ -1,6 +1,6 @@
-node_modules/
-dist/
-coverage/
+**/node_modules/
+**/dist/
+**/coverage/
 .DS_Store
 .env
 .idea/
@@ -9,4 +9,8 @@ coverage/
 .angular/
 tmp/
 .cache/
+.project
+.settings/
+bin/
+target/
 

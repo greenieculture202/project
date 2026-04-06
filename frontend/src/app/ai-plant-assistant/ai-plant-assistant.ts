@@ -43,7 +43,10 @@ export class AiPlantAssistantComponent {
   isLoggedIn = () => this.authService.isLoggedIn();
 
   isOpen = signal(false);
+  isVoiceWindowOpen = signal(false);
   isTyping = signal(false);
+  isSpeaking = signal(false); 
+  interimTranscript = signal(''); // New signal for real-time feedback
   showHistory = signal(false);
   userMessage = '';
   selectedImage: string | null = null;
@@ -54,6 +57,12 @@ export class AiPlantAssistantComponent {
   activeOrderId = '';
   showConfirmationMessage = false;
   showThankYouMessage = false;
+  
+  // Voice Settings
+  isListening = signal(false);
+  isVoiceEnabled = signal(false);
+  private recognition: any;
+  private synth = window.speechSynthesis;
 
   messages: Message[] = [];
   private destroy$ = new Subject<void>();
@@ -94,6 +103,13 @@ export class AiPlantAssistantComponent {
 
     if (this.authService.isLoggedIn()) {
       this.checkForDeliveredOrders();
+    }
+    
+    this.initSpeechRecognition();
+
+    // Ensure voices are loaded for a smoother start
+    if (this.synth.onvoiceschanged !== undefined) {
+        this.synth.onvoiceschanged = () => this.synth.getVoices();
     }
   }
 
@@ -222,15 +238,64 @@ export class AiPlantAssistantComponent {
   }
 
   toggleChat() {
+    this.isVoiceWindowOpen.set(false);
     this.isOpen.set(!this.isOpen());
     if (this.isOpen()) {
       setTimeout(() => this.scrollToBottom(), 100);
     }
   }
 
+  toggleVoiceWindow() {
+    this.isOpen.set(false);
+    this.isVoiceWindowOpen.set(!this.isVoiceWindowOpen());
+    
+    if (this.isVoiceWindowOpen()) {
+        this.isVoiceEnabled.set(true); 
+        
+        // Add Welcome Greeting if it's a new or empty session
+        const welcomeText = "Welcome to Greenie Culture, how can I help you?";
+        const alreadyWelcomed = this.messages.some(m => m.text === welcomeText);
+        
+        if (!alreadyWelcomed || this.messages.length <= 1) {
+            const welcomeMsg: Message = {
+                type: 'ai',
+                text: welcomeText,
+                time: new Date(),
+                safeText: this.formatMessage(welcomeText)
+            };
+            this.messages.push(welcomeMsg);
+            
+            // Speak ONLY the welcome greeting when opening
+            setTimeout(() => {
+                this.speakText(welcomeText);
+            }, 600);
+        }
+
+        setTimeout(() => this.scrollToBottom(), 100);
+        
+        // Start listening after a short delay
+        setTimeout(() => {
+            if (!this.isListening() && !this.isSpeaking()) {
+                this.toggleListening();
+            }
+        }, 1000);
+    }
+  }
+
+  stopSpeaking() {
+    if (this.synth) {
+      this.synth.cancel();
+      this.isSpeaking.set(false); // Reset speaking state
+    }
+  }
+
   toggleHistory() {
     this.showHistory.set(!this.showHistory());
     setTimeout(() => this.scrollToBottom(), 100);
+  }
+
+  toggleVoiceMode() {
+    this.toggleVoiceWindow();
   }
 
   onFileSelected(event: any) {
@@ -282,6 +347,156 @@ export class AiPlantAssistantComponent {
       this.generateAIResponse(text, image);
     }, 2000);
   }
+
+  // --- VOICE LOGIC ---
+  private initSpeechRecognition() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = true; 
+      this.recognition.lang = 'hi-IN'; // Changed to Hindi (India) for better Hinglish support
+      this.recognition.interimResults = true; 
+
+      this.recognition.onresult = (event: any) => {
+        let interim = '';
+        let final = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+
+        // Show live feedback
+        this.interimTranscript.set(interim || final);
+        
+        if (final) {
+          const correctedText = this.correctPlantNames(final.trim());
+          this.userMessage = correctedText;
+          
+          if (correctedText.length > 2) {
+             this.sendMessage();
+             this.interimTranscript.set(''); // Clear preview on send
+          }
+          this.isListening.set(false);
+        }
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        this.isListening.set(false);
+      };
+
+      this.recognition.onend = () => {
+        this.isListening.set(false);
+      };
+    }
+  }
+
+  toggleListening() {
+    if (!this.recognition) {
+      alert('Speech recognition is not supported in your browser.');
+      return;
+    }
+
+    if (this.isListening()) {
+      this.recognition.stop();
+    } else {
+      this.userMessage = '';
+      this.recognition.start();
+      this.isListening.set(true);
+    }
+  }
+
+  private correctPlantNames(text: string): string {
+    let lower = text.toLowerCase();
+    
+    // PHONETIC MAPPINGS: Hindi words commonly misheard by AI
+    const mappings: { [key: string]: string } = {
+      'naag pet': 'Snake plant',
+      'naga pet': 'Snake plant',
+      'naag': 'Snake plant',
+      'mani plant': 'Money plant',
+      'mani': 'Money plant',
+      'money plant': 'Money plant',
+      'cactus': 'Cactus',
+      'aloevera': 'Aloe Vera',
+      'alovera': 'Aloe Vera',
+      'tulsi': 'Tulsi (Holy Basil)',
+      'neem': 'Neem'
+    };
+
+    for (const [key, value] of Object.entries(mappings)) {
+      if (lower.includes(key)) {
+        return text.replace(new RegExp(key, 'gi'), value);
+      }
+    }
+    return text;
+  }
+
+  private speakText(text: string) {
+    if (!this.isVoiceEnabled() || !text) return;
+    
+    this.synth.cancel();
+
+    let cleanText = text
+      .replace(/<[^>]*>/g, '') 
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') 
+      .replace(/\*/g, '') 
+      .replace(/###/g, ''); 
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Track speaking state
+    this.isSpeaking.set(true);
+    utterance.onend = () => this.isSpeaking.set(false);
+    utterance.onerror = () => this.isSpeaking.set(false);
+
+    // SMOOTHNESS TWEAKS: 0.95 rate and 1.05 pitch for a warm, human tone
+    utterance.rate = 0.95; 
+    utterance.pitch = 1.05;
+    utterance.volume = 1;
+    
+    const voices = this.synth.getVoices();
+    
+    // BILINGUAL DETECTION: Check for Hindi characters (Devenagari range)
+    const isHindi = /[\u0900-\u097F]/.test(cleanText);
+    
+    let selectedVoice;
+    
+    if (isHindi) {
+        // PRIORITY: Hindi Voices (India)
+        selectedVoice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) ||
+                         voices.find(v => v.lang === 'hi-IN');
+    }
+
+    if (!selectedVoice) {
+        // PRIORITY 1: Premium Google/Natural Indian English voices
+        selectedVoice = voices.find(v => v.name.includes('Google') && v.lang === 'en-IN') ||
+                           voices.find(v => v.name.includes('Natural') && v.lang === 'en-IN') ||
+                           voices.find(v => v.lang === 'en-IN' && !v.name.includes('Microsoft')); 
+    }
+
+    // PRIORITY 2: High-quality English (US/UK) if Indian isn't found
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en-')) ||
+                       voices.find(v => v.name.includes('Natural') && v.lang.startsWith('en-'));
+    }
+
+    // FALLBACK: Best available Indian English accent
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.includes('en-IN'));
+    }
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+    }
+
+    this.synth.speak(utterance);
+  }
+  // --- END VOICE LOGIC ---
 
   generateAIResponse(query: string, image?: string | null) {
     const body: any = { message: query, image: image };
@@ -338,14 +553,23 @@ export class AiPlantAssistantComponent {
                   const partialMatchIdx = uniqueProducts.findIndex(p => p.name.toLowerCase().includes(targetName));
                   if (partialMatchIdx !== -1) {
                     const [partialMatch] = uniqueProducts.splice(partialMatchIdx, 1);
-                    uniqueProducts = [partialMatch, ...uniqueProducts];
+                  uniqueProducts = [partialMatch, ...uniqueProducts];
                   }
                 }
               }
 
               aiMsg.recommendedProducts = uniqueProducts.slice(0, 3);
               this.scrollToBottom();
+              
+              if (this.isVoiceEnabled()) {
+                this.speakText(res.text);
+              }
             });
+          } else {
+            // No products to fetch, just speak if enabled
+            if (this.isVoiceEnabled()) {
+              this.speakText(res.text);
+            }
           }
 
           this.saveHistory();
