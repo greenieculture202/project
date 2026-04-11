@@ -101,4 +101,10 @@ export class ProductTabsComponent implements AfterViewInit {
         }
         return '';
     }
+
+    isZoomCategory(product: Product): boolean {
+        if (!product || !product.category) return false;
+        const cat = product.category.toLowerCase();
+        return cat.includes('seed') || cat.includes('soil') || cat.includes('fertilizer') || cat.includes('nutrient') || cat.includes('media');
+    }
 }

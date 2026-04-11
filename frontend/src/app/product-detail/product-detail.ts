@@ -28,7 +28,12 @@ export class ProductDetailComponent implements OnInit {
     showVideo = false;
     relatedProducts: Product[] = [];
     isLoading = true;
+    isDescriptionExpanded = false;
     expandedFaqs = new Set<string>();
+
+    toggleDescription() {
+        this.isDescriptionExpanded = !this.isDescriptionExpanded;
+    }
 
     selectedWeight = '';
     selectedPrice = '';
@@ -119,8 +124,8 @@ export class ProductDetailComponent implements OnInit {
 
     get thumbnails(): string[] {
         if (!this.product) return [];
-        const additionalImages = this.product.images || [];
-        return [this.product.image, ...additionalImages];
+        const allImages = [this.product.image, ...(this.product.images || [])];
+        return [...new Set(allImages)];
     }
 
     get displayImage(): string {
@@ -295,9 +300,9 @@ export class ProductDetailComponent implements OnInit {
     isHowToUseCategory(): boolean {
         if (!this.product?.category) return false;
         const cat = this.product.category;
-        return cat.includes('Soil') || cat.includes('Media') || cat.includes('Fertilizer') || 
-               cat.includes('Nutrient') || cat.includes('Tools') || cat.includes('Gardening') || 
-               cat.includes('Access');
+        return cat.includes('Soil') || cat.includes('Media') || cat.includes('Fertilizer') ||
+            cat.includes('Nutrient') || cat.includes('Tools') || cat.includes('Gardening') ||
+            cat.includes('Access');
     }
 
     createSlug(name: string): string {
@@ -317,9 +322,9 @@ export class ProductDetailComponent implements OnInit {
     getOfferBenefit(product: Product): string {
         if (!product) return '';
         const offerTags = OFFER_RULES.map(r => r.code);
-        const code = product.tags?.find(tag => offerTags.includes(tag)) || 
-                     (product.category ? CATEGORY_TO_OFFER[product.category] : null);
-        
+        const code = product.tags?.find(tag => offerTags.includes(tag)) ||
+            (product.category ? CATEGORY_TO_OFFER[product.category] : null);
+
         if (code) {
             const rule = OFFER_RULES.find(r => r.code === code);
             return rule ? rule.shortBenefit : '';

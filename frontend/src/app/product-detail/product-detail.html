@@ -14,7 +14,8 @@
             <div class="breadcrumb-separator">
                 <i class="fas fa-chevron-right"></i>
             </div>
-            <a *ngIf="product.category" [routerLink]="['/products', product.category]" class="breadcrumb-item category-link">
+            <a *ngIf="product.category" [routerLink]="['/products', product.category]"
+                class="breadcrumb-item category-link">
                 <span>{{ getCleanCategory(product.category) }}</span>
             </a>
             <div class="breadcrumb-separator" *ngIf="product.category">
@@ -66,7 +67,8 @@
             <div class="price-block">
                 <span class="current-price">{{ selectedPrice }}</span>
                 <span class="original-price" *ngIf="product.originalPrice">₹{{ product.originalPrice }}</span>
-                <span class="discount-badge" *ngIf="product.discount && !hasOfferTag(product)">{{ product.discount }}</span>
+                <span class="discount-badge" *ngIf="product.discount && !hasOfferTag(product)">{{ product.discount
+                    }}</span>
                 <span class="offer-badge" *ngIf="hasOfferTag(product)">
                     <i class="fas fa-gift"></i> {{ getOfferBenefit(product) }}
                 </span>
@@ -89,36 +91,62 @@
             <span class="taxes-text">(Incl. of all taxes)</span>
 
 
-            <!-- SELECT WEIGHT - For weight-based products -->
-            <div class="weight-section"
+            <!-- SELECT WEIGHT - Modern Chips -->
+            <div class="selection-grid-container"
                 *ngIf="product.category?.includes('Seeds') || product.category?.includes('Soil') || product.category?.includes('Fertilizers') || product.category?.includes('Nutrients')">
-                <p class="section-label">SELECT WEIGHT</p>
-                <div class="weight-options">
-                    <div *ngFor="let weight of seedWeights" class="weight-option"
-                        [class.selected]="selectedWeight === weight.name" (click)="selectWeight(weight.name)">
-                        <span class="weight-name">{{ weight.name }}</span>
-                        <span class="weight-price">{{ weight.price }}</span>
-                        <div class="check-mark" *ngIf="selectedWeight === weight.name">
-                            <i class="fas fa-check"></i>
+                <p class="section-label-minimal">Select Weight</p>
+                <div class="chips-container">
+                    <div *ngFor="let weight of seedWeights" class="weight-chip"
+                        [class.active]="selectedWeight === weight.name" (click)="selectWeight(weight.name)">
+                        <div class="chip-content">
+                            <span class="chip-name">{{ weight.name }}</span>
+                            <span class="chip-price">{{ weight.price }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
 
-            <!-- ABOUT PRODUCT Section moved here -->
-            <div class="about-section">
-                <h3 class="section-title">About The Product</h3>
-                <p class="about-text"
-                    [innerHTML]="product.description || 'Easy to grow and care for, this plant is a popular indoor plant because of more reasons than just its care requirements. According to Feng Shui, this is one of the best lucky plants for homes, and its reputation as such greatly adds to its charm and allure. Additionally, it is also a great gifting option that works as a personal pick-me-up!'">
-                </p>
+            <!-- Editorial Concept About Section -->
+            <div class="editorial-about">
+                <div class="about-top-bar">
+                    <span class="accent-line"></span>
+                    <h3 class="editorial-title">Product Description</h3>
+                </div>
+
+                <div class="editorial-content">
+                    <p class="editorial-text highlight-first" [class.collapsed]="!isDescriptionExpanded"
+                        [innerHTML]="product.description || 'Elevate your space with this premium selection. Carefully curated for both aesthetic appeal and ease of care, it\'s the perfect addition to any modern home or garden.'">
+                    </p>
+                    <button class="view-toggle-btn" (click)="toggleDescription()">
+                        {{ isDescriptionExpanded ? 'Read Less' : 'Read More' }}
+                        <i class="fas" [ngClass]="isDescriptionExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                </div>
+
+                <!-- New Premium Highlights Bar -->
+                <div class="benefits-badges-bar">
+                    <div class="badge-item">
+                        <div class="badge-icon"><i class="fas fa-certificate"></i></div>
+                        <span>Premium Quality</span>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon"><i class="fas fa-shield-alt"></i></div>
+                        <span>Tested & Verified</span>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon"><i class="fas fa-truck-loading"></i></div>
+                        <span>Safe Delivery</span>
+                    </div>
+                </div>
             </div>
 
             <div class="actions">
                 <div class="quantity-selector" [class.disabled]="product.stock !== undefined && product.stock <= 0">
                     <button (click)="decreaseQuantity()"
                         [disabled]="product.stock !== undefined && product.stock <= 0">-</button>
-                    <input type="number" [(ngModel)]="quantity" (input)="onQuantityChange()" min="1" max="20" class="qty-input">
+                    <input type="number" [(ngModel)]="quantity" (input)="onQuantityChange()" min="1" max="20"
+                        class="qty-input">
                     <button (click)="increaseQuantity()"
                         [disabled]="product.stock !== undefined && product.stock <= 0">+</button>
                 </div>
@@ -131,7 +159,8 @@
 
             <div class="limit-message" *ngIf="isLimitReached">
                 <i class="fas fa-info-circle"></i>
-                <span>We're sorry, but the maximum limit is 20 plants per order to ensure safe delivery. Please place a separate order for more. Thank you!</span>
+                <span>We're sorry, but the maximum limit is 20 plants per order to ensure safe delivery. Please place a
+                    separate order for more. Thank you!</span>
             </div>
 
             <div style="color: #008f53; font-weight: 600; margin-top: 25px; margin-bottom: 15px; cursor: pointer;">
@@ -139,7 +168,9 @@
             </div>
 
             <!-- FAQs (Accordion Style) -->
-            <h3 class="section-title" *ngIf="isHowToUseCategory()" style="margin-top: 35px; margin-bottom: 15px; border-top: 1px solid #f8f8f8; padding-top: 25px;">How to Use</h3>
+            <h3 class="section-title" *ngIf="isHowToUseCategory()"
+                style="margin-top: 35px; margin-bottom: 15px; border-top: 1px solid #f8f8f8; padding-top: 25px;">How to
+                Use</h3>
             <div class="features-list">
                 <div *ngFor="let faq of currentFaqs" class="feature-card" [class.expanded]="isFaqExpanded(faq.id)">
                     <div class="feature-header" (click)="toggleFaq(faq.id)">
@@ -166,8 +197,8 @@
             <div class="product-card" *ngFor="let p of relatedProducts" [routerLink]="['/product', createSlug(p.name)]">
                 <div class="card-image">
                     <img [src]="p.image" [alt]="p.name" class="main-img" loading="lazy">
-                    <img [src]="(p.images && p.images.length > 0) ? p.images[0] : (p.hoverImage || p.image)" [alt]="p.name" class="hover-img"
-                        loading="lazy">
+                    <img [src]="(p.images && p.images.length > 0) ? p.images[0] : (p.hoverImage || p.image)"
+                        [alt]="p.name" class="hover-img" loading="lazy">
                     <span class="card-discount" *ngIf="p.discount && !hasOfferTag(p)">{{ p.discount }}</span>
                     <span class="offer-badge mini" *ngIf="hasOfferTag(p)">{{ getOfferBenefit(p) }}</span>
                 </div>

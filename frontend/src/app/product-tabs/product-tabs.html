@@ -19,6 +19,7 @@
         <!-- Product Slider -->
         <div class="products-slider" #sliderRef>
             <div class="product-card" *ngFor="let product of currentProducts"
+                [ngClass]="isZoomCategory(product) ? 'zoom-effect' : 'scroll-effect'"
                 [routerLink]="['/product', getSlug(product.name)]" style="cursor: pointer;">
                 <div class="image-container">
                     <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">

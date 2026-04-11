@@ -1076,7 +1076,6 @@ export class AdminPanelComponent implements OnInit {
             })
             .catch(e => {
                 console.warn('❌ Audio play failed (Browser policy):', e);
-                this.notiService.show('Please click anywhere on the page once to enable notification sounds.', 'Audio Blocked', 'info', 'toast');
             });
     }
 

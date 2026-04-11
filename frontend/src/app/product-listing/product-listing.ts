@@ -122,7 +122,7 @@ export class ProductListingComponent {
 
     getOfferBenefit(product: Product): string {
         if (!product) return '';
-        const offerTags = OFFER_RULES.map(r => r.code);
+        const offerTags = OFFER_RULES.map(tag => tag.code);
         const code = product.tags?.find(tag => offerTags.includes(tag)) || 
                      (product.category ? CATEGORY_TO_OFFER[product.category] : null);
         
@@ -131,5 +131,11 @@ export class ProductListingComponent {
             return rule ? rule.shortBenefit : '';
         }
         return '';
+    }
+
+    isZoomCategory(product: Product): boolean {
+        if (!product || !product.category) return false;
+        const cat = product.category.toLowerCase();
+        return cat.includes('seed') || cat.includes('soil') || cat.includes('fertilizer') || cat.includes('nutrient') || cat.includes('media');
     }
 }

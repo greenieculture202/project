@@ -97,10 +97,9 @@ const potsAndPlanters = [
     'Grow Bags', 'Metal Planters', 'Wooden Planters', 'Wall-Mounted Planters', 'Balcony Railing Planters',
     'Decorative Planters', 'Seedling Trays', 'Nursery Pots', 'Vertical Garden Pots', 'Large Outdoor Planters'
 ];
-        productImages.watering[(idx + 1) % productImages.watering.length],
-        ['Efficient', 'Easy to Use', 'Water Saving']
-    ));
-});
+productImages.watering[(idx + 1) % productImages.watering.length],
+    ['Efficient', 'Easy to Use', 'Water Saving']
+
 
 // ACCESSORIES - Watering Equipment
 const wateringEquipment = [
