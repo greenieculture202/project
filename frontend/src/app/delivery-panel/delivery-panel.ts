@@ -100,9 +100,23 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
   isSendingMsg: boolean = false;
   settlementHistory: any[] = [];
 
-  // Settlement Confirm Modal
   showSettlementConfirmModal: boolean = false;
   pendingSettlementData: any = null;
+
+  // Global Returns Statistics
+  returnStats: any = {
+    totalReturns: 0,
+    requestsPending: 0,
+    approvedReturns: 0,
+    courierBreakdown: [] as any[]
+  };
+
+  // Items Preview State for Returns
+  expandedReturnItems: { [orderId: string]: boolean } = {};
+
+  toggleReturnItems(orderId: string) {
+    this.expandedReturnItems[orderId] = !this.expandedReturnItems[orderId];
+  }
 
 
   openTerritoryView(courier: any) {
@@ -344,6 +358,22 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
     return filtered.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
   }
 
+  get returnFilteredOrders() {
+    if (!this.selectedCourier) return [];
+    
+    // As per user request: Returns go to the company assigned based on state assignment
+    // Even if it was shipped by someone else (not usual, but logic handles it)
+    return this.allOrders.filter(o => {
+      if (o.status !== 'Return Approved') return false;
+      
+      const orderState = this.extractState(o);
+      const assignedCourier = this.getCourierForState(orderState);
+      
+      // Also check if courier was manually assigned in courierName
+      return assignedCourier === this.selectedCourier || o.courierName === this.selectedCourier;
+    });
+  }
+
   get paginatedOrders() {
     const orders = this.filteredOrdersV2;
     const startIndex = (this.currentPageOrders - 1) * this.pageSize;
@@ -389,7 +419,7 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
       const token = sessionStorage.getItem('auth_token');
       this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
         next: (orders) => {
-          this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+          this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered', 'Return Requested', 'Return Approved', 'Return Terminated', 'Return Rejected', 'Pick-up Scheduled'].includes(o.status));
           this.checkAutomaticDelivery();
           this.updateComparisonData();
           this.calculatePaymentSummary();
@@ -529,8 +559,8 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
     const token = sessionStorage.getItem('auth_token');
     this.http.get<any[]>('/api/admin/orders', { headers: { 'x-auth-token': token || '' } }).subscribe({
       next: (orders) => {
-        // Only show relevant delivery statuses
-        this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered'].includes(o.status));
+        // Include all return statuses for global Returns Management
+        this.allOrders = orders.filter(o => ['Pending', 'Shipped', 'Delivered', 'Return Requested', 'Return Approved', 'Return Terminated', 'Return Rejected', 'Pick-up Scheduled'].includes(o.status));
         this.autoCalculateExpectedDates();
         this.checkAutomaticDelivery();
         this.updateComparisonData();
@@ -735,6 +765,27 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
     })).sort((a, b) => b.total - a.total);
 
     this.topCourier = (this.comparisonData.length > 0 && this.comparisonData[0].total > 0) ? this.comparisonData[0] : null;
+    
+    this.calculateReturnStats();
+  }
+
+  calculateReturnStats() {
+    const returnRelatedStatuses = ['Return Requested', 'Return Approved', 'Return Terminated', 'Return Rejected', 'Pick-up Scheduled'];
+    const returnOrders = this.allOrders.filter(o => returnRelatedStatuses.includes(o.status));
+    
+    this.returnStats.totalReturns = returnOrders.length;
+    this.returnStats.requestsPending = returnOrders.filter(o => o.status === 'Return Requested').length;
+    this.returnStats.approvedReturns = returnOrders.filter(o => o.status === 'Return Approved' || o.status === 'Pick-up Scheduled').length;
+    
+    const courierMap: { [key: string]: number } = {};
+    returnOrders.forEach(o => {
+      const cName = o.courierName || 'Unassigned';
+      courierMap[cName] = (courierMap[cName] || 0) + 1;
+    });
+    
+    this.returnStats.courierBreakdown = Object.entries(courierMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   }
 
   getStatusClass(status: string) {
@@ -1405,6 +1456,39 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
             error: (err) => console.error(`[Auto-Date] Error updating order ${order.orderId}:`, err)
           });
         }
+      }
+    });
+  }
+
+  updateReturnDate(orderId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.value) return;
+
+    const token = sessionStorage.getItem('auth_token');
+    const selectedDate = new Date(input.value);
+    const isoDate = selectedDate.toISOString();
+
+    const order = this.allOrders.find(o => o.orderId === orderId);
+    if (!order) return;
+
+    order.expectedReturnDate = isoDate;
+    this.cdr.detectChanges();
+
+    const payload = {
+      status: order.status,
+      expectedReturnDate: isoDate
+    };
+
+    this.http.put(`/api/admin/orders/${order._id || orderId}/status`, payload, { 
+      headers: { 'x-auth-token': token || '' } 
+    }).subscribe({
+      next: (updatedOrder: any) => {
+        order.expectedReturnDate = updatedOrder.expectedReturnDate || isoDate;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error updating return date:', err);
+        this.loadShipments();
       }
     });
   }

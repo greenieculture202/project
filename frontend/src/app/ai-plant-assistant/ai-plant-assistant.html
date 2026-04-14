@@ -1,12 +1,5 @@
 <div class="ai-assistant-wrapper" [class.is-open]="isOpen()">
   <!-- Floating Bubble -->
-  <button class="voice-bubble ripple" (click)="toggleVoiceMode()" [class.hidden]="isOpen()" title="Voice Assistant">
-    <div class="bubble-icon">
-      <i class="fas fa-microphone"></i>
-      <span class="pulse"></span>
-    </div>
-    <span class="bubble-label voice">Voice Mode</span>
-  </button>
 
   <button class="chat-bubble ripple" (click)="toggleChat()" [class.hidden]="isOpen()">
     <div class="bubble-icon">
@@ -78,9 +71,6 @@
           </button>
           <input #fileInput type="file" hidden accept="image/*" (change)="onFileSelected($event)">
           <input type="text" [(ngModel)]="userMessage" (keyup.enter)="sendMessage()" placeholder="Ask about your plant..." class="chat-input">
-          <button class="mic-btn" [class.listening]="isListening()" (click)="toggleListening()" [title]="isListening() ? 'Stop Listening' : 'Voice Input'">
-            <i class="fas" [class.fa-microphone]="!isListening()" [class.fa-stop]="isListening()"></i>
-          </button>
           <button class="send-btn" [disabled]="!userMessage.trim() && !selectedImage" (click)="sendMessage()">
             <i class="fas fa-paper-plane"></i>
           </button>
@@ -97,11 +87,16 @@
           <i class="fas fa-headset"></i>
         </div>
         <div>
-          <h4 class="voice-title">Voice Assistant 🎤</h4>
+          <h4 class="voice-title">Voice Assistant</h4>
           <div class="status"><span class="dot voice"></span> Listening...</div>
         </div>
       </div>
       <div class="header-actions">
+        <div class="language-selection">
+            <button class="lang-btn" [class.active]="selectedLanguage() === 'en-IN'" (click)="setLanguage('en-IN')">EN</button>
+            <button class="lang-btn" [class.active]="selectedLanguage() === 'hi-IN'" (click)="setLanguage('hi-IN')">HI</button>
+            <button class="lang-btn" [class.active]="selectedLanguage() === 'gu-IN'" (click)="setLanguage('gu-IN')">GU</button>
+        </div>
         <button class="close-btn voice" (click)="isVoiceWindowOpen.set(false); stopSpeaking()">
             <i class="fas fa-times"></i>
         </button>
@@ -109,11 +104,15 @@
     </div>
 
     <div class="voice-messages-container" #scrollMe>
-      <div *ngFor="let msg of messages" class="voice-msg-row" [class.user]="msg.type === 'user'">
+      <div *ngFor="let msg of messages; let i = index" class="voice-msg-row" [class.user]="msg.type === 'user'">
         <div class="voice-bubble-transcript" [class.user]="msg.type === 'user'">
           <div class="voice-text">
             {{ msg.text }}
           </div>
+          
+          <button class="msg-delete-btn" (click)="deleteMessage(i)" title="Remove message">
+            <i class="fas fa-trash-alt"></i>
+          </button>
           
           <!-- Suggested Products (Voice window) -->
           <div class="voice-recommended-products" *ngIf="msg.type === 'ai' && msg.recommendedProducts && msg.recommendedProducts.length > 0">
@@ -132,25 +131,6 @@
       </div>
     </div>
 
-    <div class="voice-controls-section">
-        <div class="live-preview-container" *ngIf="interimTranscript()">
-            <p class="live-preview-text">{{ interimTranscript() }}...</p>
-        </div>
-
-        <div class="voice-visualizer" *ngIf="isListening() || isSpeaking()">
-            <span></span><span></span><span></span><span></span><span></span>
-        </div>
-        
-      <button *ngIf="!isSpeaking()" class="big-mic-btn" [class.listening]="isListening()" (click)="toggleListening()">
-        <i class="fas fa-microphone"></i>
-      </button>
-
-      <button *ngIf="isSpeaking()" class="big-stop-btn" (click)="stopSpeaking()">
-        <i class="fas fa-stop"></i>
-      </button>
-
-      <div class="voice-hint">{{ isSpeaking() ? 'AI is speaking...' : (isListening() ? 'I am listening...' : 'Tap Mic to Speak') }}</div>
-    </div>
   </div>
 </div>
 >

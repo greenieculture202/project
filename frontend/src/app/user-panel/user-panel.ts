@@ -15,7 +15,30 @@ import { jsPDF } from 'jspdf';
     styleUrl: './user-panel.css'
 })
 export class UserPanelComponent implements OnInit {
-    authService = inject(AuthService);
+    // Return Flow State
+    // Return Flow State
+    isReturning = false;
+    returnStep = 1; // 1=Reason, 2=Evidence Upload, 3=Confirmation
+    returnReason = '';
+    returnReasonOther = '';
+    returnBillPreview = '';
+    returnProductPreview = '';
+    returnProductPreview2 = '';
+    isSubmittingReturn = false;
+    submittedReturns = new Set<string>(); // Mock tracking for returns already submitted
+    showStatusInfoModal = false;
+    selectedOrderForStatusInfo: any = null;
+
+    returnReasons = [
+        { id: 'damaged', icon: 'fas fa-box-open', label: 'Product Damaged / Broken', desc: 'Item arrived in damaged condition or broken parts' },
+        { id: 'wrong', icon: 'fas fa-times-circle', label: 'Wrong Item Received', desc: 'Received a different product than what was ordered' },
+        { id: 'dead_plant', icon: 'fas fa-seedling', label: 'Plant Arrived Dead', desc: 'Plants were wilted, dead, or in very poor condition' },
+        { id: 'not_desc', icon: 'fas fa-tag', label: 'Not as Described', desc: 'Product does not match the description or photos' },
+        { id: 'quality', icon: 'fas fa-star-half-stroke', label: 'Poor Quality', desc: 'Product quality is significantly below expectations' },
+        { id: 'other', icon: 'fas fa-comment-dots', label: 'Other Reason', desc: 'Something else — please describe below' }
+    ];
+
+    public authService = inject(AuthService);
     private userService = inject(UserService);
     private router = inject(Router);
     private cdr = inject(ChangeDetectorRef);
@@ -318,6 +341,10 @@ export class UserPanelComponent implements OnInit {
         this.userService.getOrders().subscribe({
             next: (orders: any[]) => {
                 this.allOrders = orders.map(order => {
+                    // Persistent tracking: If status is 'Return Requested', count it as submitted
+                    if (order.status === 'Return Requested') {
+                        this.submittedReturns.add(order.orderId);
+                    }
                     const expectedDate = this.getExpectedDeliveryDate(order);
                     return {
                         ...order,
@@ -376,7 +403,7 @@ export class UserPanelComponent implements OnInit {
 
     getEffectiveStatus(order: any): string {
         if (!order) return 'Processing';
-        if (order.status === 'Delivered' || order.status === 'Cancelled') return order.status;
+        if (order.status === 'Delivered' || order.status === 'Cancelled' || order.status === 'Return Requested') return order.status;
         if (!order.assignedAt || order.status !== 'Shipped') return order.status;
         const shippedAt = new Date(order.assignedAt);
         const now = new Date();
@@ -395,6 +422,7 @@ export class UserPanelComponent implements OnInit {
 
     closeOrderModal() {
         this.selectedOrderForModal = null;
+        this.cancelReturnRequest();
         document.body.style.overflow = 'auto';
     }
 
@@ -410,20 +438,283 @@ export class UserPanelComponent implements OnInit {
         this.selectedOrderForBill = null;
     }
 
-    cancelOrder(orderId: string) {
+    cancelOrder(id: string) {
+        if (!this.isActionWindowOpen(this.selectedOrderForModal)) {
+            alert('Cancellation window (7 hours) has expired.');
+            return;
+        }
         if (!confirm('Are you sure you want to cancel this order?')) return;
 
-        this.userService.updateOrderStatus(orderId, 'Cancelled').subscribe({
+        this.userService.updateOrderStatus(id, 'Cancelled').subscribe({
             next: () => {
                 alert('Order cancelled successfully.');
                 this.loadAllOrders();
                 this.loadDashboard();
+                this.closeOrderModal();
             },
             error: (err) => {
                 console.error('[UserPanel] Cancel failed:', err);
                 alert('Failed to cancel order: ' + (err.error?.message || 'Error occurred'));
             }
         });
+    }
+
+    requestReturn(order: any) {
+        if (!order) return;
+        
+        // Block if return already submitted
+        if (this.submittedReturns.has(order.orderId)) {
+            alert('A return request for this order (#' + order.orderId + ') has already been submitted and is under review.');
+            return;
+        }
+
+        if (!this.isActionWindowOpen(order, 'return')) {
+            alert('Return request window has expired.');
+            return;
+        }
+        this.returnStep = 1;
+        this.returnReason = '';
+        this.returnReasonOther = '';
+        this.returnBillPreview = '';
+        this.returnProductPreview = '';
+        this.returnProductPreview2 = '';
+        this.isReturning = true;
+    }
+
+    formatStatus(status: string): string {
+        if (!status) return 'Processing';
+        const s = status.toLowerCase();
+        if (s === 'delivered') return 'Successfully Delivered';
+        if (s === 'return approved') return 'Return Approved';
+        if (s === 'return rejected') return 'Return Rejected';
+        return status;
+    }
+
+    onStatusClick(order: any) {
+        if (!order) return;
+        const status = (order.effectiveStatus || order.status).toLowerCase();
+        
+        // Show info popup for Return Approved, Return Rejected, or Return Requested
+        if (status.includes('return')) {
+            this.selectedOrderForStatusInfo = order;
+            this.showStatusInfoModal = true;
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    closeStatusInfoModal() {
+        this.showStatusInfoModal = false;
+        this.selectedOrderForStatusInfo = null;
+        document.body.style.overflow = 'auto';
+    }
+
+
+    isReturnSubmitted(orderId: string): boolean {
+        // Check local set first
+        if (this.submittedReturns.has(orderId)) return true;
+        // Check allOrders list status
+        const order = this.allOrders.find(o => o.orderId === orderId);
+        return order?.status === 'Return Requested' || order?.effectiveStatus === 'Return Requested';
+    }
+
+    cancelReturnRequest() {
+        this.isReturning = false;
+        this.returnStep = 1;
+        this.returnReason = '';
+        this.returnReasonOther = '';
+        this.returnBillPreview = '';
+        this.returnProductPreview = '';
+        this.returnProductPreview2 = '';
+    }
+
+    nextReturnStep() {
+        if (this.returnStep === 1 && !this.returnReason) return;
+        if (this.returnStep < 4) this.returnStep++;
+    }
+
+    prevReturnStep() {
+        if (this.returnStep > 1) this.returnStep--;
+    }
+
+    getReturnReasonLabel(): string {
+        const found = this.returnReasons.find(r => r.id === this.returnReason);
+        return found ? found.label : this.returnReason;
+    }
+
+    onReturnFileSelected(event: any, type: 'bill' | 'product' | 'product2') {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                if (type === 'bill') {
+                    this.returnBillPreview = e.target.result;
+                } else if (type === 'product') {
+                    this.returnProductPreview = e.target.result;
+                } else {
+                    this.returnProductPreview2 = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    submitReturnRequest() {
+        // Bill + at least 1 product photo = mandatory (product2 is optional)
+        if (!this.returnBillPreview || !this.returnProductPreview) {
+            alert('Please upload the Bill image and at least 1 Product photo to continue.');
+            return;
+        }
+
+        this.isSubmittingReturn = true;
+        
+        // Call backend to update status permanently
+        if (this.selectedOrderForModal) {
+            const dbId = this.selectedOrderForModal._id;
+            const displayId = this.selectedOrderForModal.orderId;
+            
+            // Collect return details to send to server
+            console.log('[DEBUG] Submitting Return with Images:', {
+                hasBill: !!this.returnBillPreview,
+                hasP1: !!this.returnProductPreview,
+                billLen: this.returnBillPreview?.length,
+                p1Len: this.returnProductPreview?.length
+            });
+
+            const returnData = {
+                returnDetails: {
+                    reason: this.getReturnReasonLabel(),
+                    additionalInfo: this.returnReason === 'other' ? this.returnReasonOther : '',
+                    billImage: this.returnBillPreview,
+                    productImage1: this.returnProductPreview,
+                    productImage2: this.returnProductPreview2 || null
+                }
+            };
+
+            this.userService.updateOrderStatus(dbId, 'Return Requested', returnData).subscribe({
+                next: (response: any) => {
+                    console.log('[DEBUG] Return submission success response:', response);
+                    this.submittedReturns.add(displayId);
+                    
+                    // Update local object states immediately
+                    this.selectedOrderForModal.status = 'Return Requested';
+                    this.selectedOrderForModal.effectiveStatus = 'Return Requested';
+                    this.selectedOrderForModal.returnDetails = returnData.returnDetails;
+                    
+                    this.isSubmittingReturn = false;
+                    this.returnStep = 4; // Show custom success screen
+                    
+                    // Refresh the main order list in background
+                    this.loadAllOrders();
+                },
+                error: (err) => {
+                    console.error('[UserPanel] Failed to update return status:', err);
+                    this.isSubmittingReturn = false;
+                    alert('Submission failed. Your images might be too large. Please try again with smaller photos.');
+                }
+            });
+        } else {
+            // Safety fallback
+            setTimeout(() => {
+                this.isSubmittingReturn = false;
+                this.returnStep = 4;
+            }, 1000);
+        }
+    }
+
+    requestExchange(order: any) {
+        if (!this.isActionWindowOpen(order, 'exchange')) {
+            alert('Exchange request window (2 days from delivery) has expired.');
+            return;
+        }
+        if (!confirm('Are you sure you want to request an exchange for this order?')) return;
+        alert('Exchange request initiated! A botanical expert will assist you with the process shortly.');
+    }
+
+    isActionWindowOpen(order: any, type: 'cancel' | 'return' | 'exchange' = 'cancel'): boolean {
+        if (!order) return false;
+        const now = new Date();
+
+        if (type === 'cancel') {
+            if (!order.orderDate) return false;
+            const orderDate = new Date(order.orderDate);
+            const diffInMs = now.getTime() - orderDate.getTime();
+            return diffInMs / (1000 * 60 * 60) <= 7;
+        } else {
+            // For return: check if ANY item still has an open return window
+            return this.getReturnableItems(order).length > 0;
+        }
+    }
+
+    // Check if an item is a plant (not in non-plant categories)
+    isPlantItem(item: any): boolean {
+        const nonPlantCats = ['accessories', 'gardening tools', 'seeds', 'fertilizer', 'soil', 'nutrients', 'media', 'gardening', 'tool', 'pot', 'pots'];
+        const cat = (item.category || '').toLowerCase();
+        return !nonPlantCats.some(nc => cat.includes(nc));
+    }
+
+    // Returns items whose return window is still OPEN
+    getReturnableItems(order: any): any[] {
+        if (!order || !order.items) return [];
+        const deliveryDate = this.getActualDeliveryDate(order);
+        if (!deliveryDate) return [];
+        const now = new Date();
+        const diffHours = (now.getTime() - deliveryDate.getTime()) / (1000 * 60 * 60);
+
+        return order.items.filter((item: any) => {
+            const isPlant = this.isPlantItem(item);
+            if (isPlant) return diffHours <= 24;
+            else return diffHours <= 48;
+        });
+    }
+
+    // Returns plant items whose 24h window EXPIRED but overall 48h hasn't
+    getExpiredPlantItems(order: any): any[] {
+        if (!order || !order.items) return [];
+        const deliveryDate = this.getActualDeliveryDate(order);
+        if (!deliveryDate) return [];
+        const now = new Date();
+        const diffHours = (now.getTime() - deliveryDate.getTime()) / (1000 * 60 * 60);
+        // Only relevant between 24h and 48h
+        if (diffHours <= 24 || diffHours > 48) return [];
+
+        return order.items.filter((item: any) => this.isPlantItem(item));
+    }
+
+    // True if ALL items' return windows are expired (button should be fully hidden)
+    isReturnWindowFullyExpired(order: any): boolean {
+        if (!order) return true;
+        const deliveryDate = this.getActualDeliveryDate(order);
+        if (!deliveryDate) return true;
+        const now = new Date();
+        const diffHours = (now.getTime() - deliveryDate.getTime()) / (1000 * 60 * 60);
+        return diffHours > 48;
+    }
+
+    // True if order was Delivered AND return window is not fully expired
+    hasAnyReturnableItems(order: any): boolean {
+        const status = order?.effectiveStatus || order?.status;
+        if (status !== 'Delivered') return false;
+        return !this.isReturnWindowFullyExpired(order);
+    }
+
+    getActualDeliveryDate(order: any): Date | null {
+        if (!order) return null;
+        if (order.status === 'Delivered' && order.deliveredAt) return new Date(order.deliveredAt);
+        
+        // If simulated delivery
+        if (order.assignedAt && order.status === 'Shipped') {
+            const shippedAt = new Date(order.assignedAt);
+            const days = this.getDeliveryDurationDays(order);
+            return new Date(shippedAt.getTime() + days * 24 * 60 * 60 * 1000);
+        }
+        
+        // Fallback to orderDate + estimated delivery if not even shipped yet (shouldn't happen for return)
+        return null;
+    }
+
+    hasReturnableItems(order: any): boolean {
+        // Now all items are potentially returnable under different rules (Wrong product for plants, 48h for others)
+        return order && order.items && order.items.length > 0;
     }
 
     async downloadBill(order: any) {
@@ -484,5 +775,13 @@ export class UserPanelComponent implements OnInit {
     logout() {
         this.authService.logout();
         this.router.navigate(['/']);
+    }
+
+    getCourierContact(name: string): string {
+        const courier = (name || '').toLowerCase();
+        if (courier.includes('bluedart') || courier.includes('blue dart')) return '99098 18606';
+        if (courier.includes('delivery') || courier.includes('delhivery')) return '9725966483';
+        if (courier.includes('dtdc')) return '9327585720';
+        return 'N/A';
     }
 }

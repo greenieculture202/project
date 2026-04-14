@@ -60,6 +60,7 @@ export class AuthService {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
                 sessionStorage.setItem('user_id', res.user._id);
+                sessionStorage.setItem('user_email', res.user.email);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('user_state', res.user.state || '');
                 sessionStorage.setItem('is_admin', 'false');
@@ -100,6 +101,7 @@ export class AuthService {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
                 sessionStorage.setItem('user_id', res.user._id);
+                sessionStorage.setItem('user_email', res.user.email);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('is_admin', 'false');
                 this.isLoggedInSubject.next(true);
@@ -117,6 +119,7 @@ export class AuthService {
             tap(res => {
                 sessionStorage.setItem('auth_token', res.token);
                 sessionStorage.setItem('user_name', res.user.fullName);
+                sessionStorage.setItem('user_email', res.user.email);
                 sessionStorage.setItem('user_pic', res.user.profilePic || '');
                 sessionStorage.setItem('user_state', res.user.state || '');
                 sessionStorage.setItem('is_admin', 'false');
@@ -135,6 +138,7 @@ export class AuthService {
         sessionStorage.removeItem('auth_token');
         sessionStorage.removeItem('user_name');
         sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('user_email');
         sessionStorage.removeItem('user_pic');
         sessionStorage.removeItem('user_state');
         sessionStorage.removeItem('is_admin');
@@ -161,6 +165,14 @@ export class AuthService {
 
     get currentUserId(): string | null {
         return sessionStorage.getItem('user_id');
+    }
+
+    get currentUserValue() {
+        return {
+            fullName: this.getCurrentUser(),
+            email: sessionStorage.getItem('user_email'),
+            _id: this.currentUserId
+        };
     }
 
     isAdmin(): boolean {

@@ -78,26 +78,37 @@
                         <div class="order-main-info">
                             <div class="order-id-row">
                                 <span class="order-id">#{{ order.orderId.substr(-8) }}</span>
-                                <span class="order-badge" [ngClass]="order.status.toLowerCase()">{{ order.status }}</span>
+                                <span class="order-badge" [ngClass]="order.status.toLowerCase()">{{ order.status
+                                    }}</span>
                             </div>
                             <span class="order-date">Ordered on {{ order.orderDate | date:'mediumDate' }}</span>
                         </div>
 
-                        <div class="delivery-highlight-box" *ngIf="order.deliveryType">
-                            <div class="speed-indicator" [class.priority]="order.deliveryType.includes('2 Day')">
+                        <div class="delivery-highlight-box" *ngIf="order.deliveryType || order.expectedReturnDate">
+                            <div class="speed-indicator" [class.priority]="order.deliveryType?.includes('2 Day')" *ngIf="order.deliveryType">
                                 <i class="fas" [class.fa-bolt]="order.deliveryType.includes('2 Day')"
                                     [class.fa-truck]="!order.deliveryType.includes('2 Day')"></i>
                                 <span>{{ order.deliveryType }}</span>
                             </div>
                             <div class="date-indicator"
-                                *ngIf="order.expectedDeliveryDate && order.status !== 'Delivered'">
+                                *ngIf="order.expectedDeliveryDate && !['Delivered', 'Cancelled', 'Return Requested', 'Return Approved'].includes(order.status)">
                                 <span class="label">Expected Delivery</span>
                                 <span class="val">{{ order.expectedDeliveryDate | date:'EEEE, dd MMM' }}</span>
                             </div>
+
+                            <!-- Scheduled Return Pickup Display -->
+                            <div class="date-indicator return-pickup-indicator" *ngIf="order.expectedReturnDate">
+                                <span class="label">Scheduled Pickup</span>
+                                <span class="val text-blue animate-pulse">{{ order.expectedReturnDate | date:'EEEE, dd MMM yyyy' }}</span>
+                            </div>
                         </div>
 
-                        <div class="order-price-box">
-                            <span class="price-val">₹{{ order.totalAmount }}</span>
+                        <div class="order-price-box" [class.has-refund]="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">
+                            <span class="price-val" [class.original-striked]="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">₹{{ order.totalAmount }}</span>
+                            <div class="refund-badge" *ngIf="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">
+                                <span class="refund-label">Refund:</span>
+                                <span class="refund-val">₹{{ (+order.totalAmount * 0.6).toFixed(0) }}</span>
+                            </div>
                         </div>
 
                         <div class="order-actions">
@@ -155,12 +166,30 @@
                         </div>
 
                         <div class="status-price-group">
-                             <div class="expected-delivery-info" *ngIf="order.status !== 'Delivered' && order.expectedDeliveryDate">
+                            <div class="expected-delivery-info"
+                                *ngIf="!['Delivered', 'Cancelled', 'Return Requested', 'Return Approved'].includes(order.status) && order.expectedDeliveryDate">
                                 <span class="label">Expected By</span>
                                 <span class="val">{{ order.expectedDeliveryDate | date:'mediumDate' }}</span>
                             </div>
-                            <div class="order-status" [ngClass]="(order.effectiveStatus || order.status).toLowerCase().replace(' ', '-')">{{ order.effectiveStatus || order.status }}</div>
-                            <div class="order-total">₹{{ order.totalAmount }}</div>
+
+                            <!-- My Orders Tab: Return Pickup Info -->
+                            <div class="expected-pickup-info" *ngIf="order.expectedReturnDate">
+                                <span class="label">Scheduled Pickup</span>
+                                <span class="val pickup-val">{{ order.expectedReturnDate | date:'EEEE, MMMM d, y' }}</span>
+                            </div>
+                            <div class="order-status"
+                                [class.clickable]="(order.effectiveStatus || order.status).toLowerCase().includes('return')"
+                                (click)="onStatusClick(order)"
+                                [ngClass]="(order.effectiveStatus || order.status).toLowerCase().replace(' ', '-')">{{
+                                formatStatus(order.effectiveStatus || order.status) }}</div>
+
+                            <div class="order-total" [class.has-refund]="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">
+                                <span class="val" [class.original-striked]="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">₹{{ order.totalAmount }}</span>
+                                <div class="refund-info" *ngIf="['Return Requested', 'Return Approved', 'Pick-up Scheduled', 'Return Terminated'].includes(order.effectiveStatus || order.status)">
+                                    <span class="r-label">Refund &bull; 60%</span>
+                                    <span class="r-val">₹{{ (+order.totalAmount * 0.6).toFixed(0) }}</span>
+                                </div>
+                            </div>
                             <div class="order-actions">
                                 <button class="view-details-btn" (click)="openOrderModal(order)">
                                     <i class="fas fa-info-circle"></i>
@@ -212,7 +241,8 @@
                                 <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*"
                                     style="display: none;">
                                 <div class="upload-btn-row">
-                                    <button class="btn-clear-photo" (click)="profilePicPreview = ''" *ngIf="profilePicPreview">Remove</button>
+                                    <button class="btn-clear-photo" (click)="profilePicPreview = ''"
+                                        *ngIf="profilePicPreview">Remove</button>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +257,8 @@
                             <div class="form-group email-group">
                                 <label><i class="fas fa-envelope"></i> Email Address</label>
                                 <div class="input-with-badge">
-                                    <input type="email" [(ngModel)]="email" readonly class="settings-input readonly-input">
+                                    <input type="email" [(ngModel)]="email" readonly
+                                        class="settings-input readonly-input">
                                     <span class="readonly-badge"><i class="fas fa-lock"></i> Locked</span>
                                 </div>
                                 <small class="input-hint">Email cannot be changed once verified.</small>
@@ -246,9 +277,10 @@
                                 <div class="form-group">
                                     <label><i class="fas fa-map-marker-alt"></i> City</label>
                                     <div class="state-autocomplete-container">
-                                        <input type="text" [(ngModel)]="city" (input)="onCityInput()" (blur)="closeDropdowns()"
-                                            placeholder="City" class="settings-input">
-                                        <div class="state-dropdown" *ngIf="showCityDropdown && filteredCities.length > 0">
+                                        <input type="text" [(ngModel)]="city" (input)="onCityInput()"
+                                            (blur)="closeDropdowns()" placeholder="City" class="settings-input">
+                                        <div class="state-dropdown"
+                                            *ngIf="showCityDropdown && filteredCities.length > 0">
                                             <div class="state-option" *ngFor="let city of filteredCities"
                                                 (click)="selectCity(city)">
                                                 {{ city }}
@@ -261,7 +293,8 @@
                                     <div class="state-autocomplete-container">
                                         <input type="text" [(ngModel)]="stateName" (input)="onStateInput()"
                                             (blur)="closeDropdowns()" placeholder="State" class="settings-input">
-                                        <div class="state-dropdown" *ngIf="showStateDropdown && filteredStates.length > 0">
+                                        <div class="state-dropdown"
+                                            *ngIf="showStateDropdown && filteredStates.length > 0">
                                             <div class="state-option" *ngFor="let state of filteredStates"
                                                 (click)="selectState(state)">
                                                 {{ state }}
@@ -273,7 +306,8 @@
 
                             <div class="form-group full-width">
                                 <label><i class="fas fa-home"></i> Shipping Address</label>
-                                <textarea rows="3" [(ngModel)]="address" placeholder="Room no, Street, Landmark..." class="settings-input"></textarea>
+                                <textarea rows="3" [(ngModel)]="address" placeholder="Room no, Street, Landmark..."
+                                    class="settings-input"></textarea>
                             </div>
                         </div>
 
@@ -306,7 +340,8 @@
                 </button>
             </header>
 
-            <div class="modal-body scrollable">
+            <!-- Modal Body (Order Details) -->
+            <div class="modal-body scrollable" *ngIf="!isReturning">
                 <!-- Tracking Timeline -->
                 <div class="modal-section stepper-section">
                     <div class="tracker-steps">
@@ -322,19 +357,24 @@
                             <div class="step-icon"><i class="fas fa-receipt"></i></div>
                             <div class="step-label">Order Placed</div>
                         </div>
-                        <div class="step" [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
+                        <div class="step"
+                            [class.active]="['Shipped', 'Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
                             <div class="step-icon"><i class="fas fa-box"></i></div>
                             <div class="step-label">Shipped</div>
                         </div>
-                        <div class="step" [class.active]="['Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
+                        <div class="step"
+                            [class.active]="['Out for Delivery', 'Delivered'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
                             <div class="step-icon"><i class="fas fa-truck-fast"></i></div>
                             <div class="step-label">Out for Delivery</div>
                         </div>
-                        <div class="step" [class.active]="(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status) === 'Delivered'">
+                        <div class="step"
+                            [class.active]="(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status) === 'Delivered'">
                             <div class="step-icon"><i class="fas fa-house-circle-check"></i></div>
-                            <div class="step-label">Delivered</div>
+                            <div class="step-label">Successfully Delivered</div>
                         </div>
                     </div>
+                </div>
+
                 <!-- Tracking ID Section -->
                 <div class="modal-section tracking-id-section" *ngIf="selectedOrderForModal.trackingNumber">
                     <div class="tracking-card-premium">
@@ -364,7 +404,7 @@
                     </div>
                 </div>
 
-                <!-- Footer Summary -->
+                <!-- Footer Summary (Actions) -->
                 <div class="modal-footer-grid">
                     <div class="footer-box price-box">
                         <h3 class="section-title">Payment Summary</h3>
@@ -383,20 +423,286 @@
                             </div>
                         </div>
                     </div>
-                    <div class="footer-box bill-box">
+                    <div class="footer-box action-box">
                         <h3 class="section-title">Actions</h3>
                         <div class="action-btns-wrap">
                             <button class="modal-action-btn primary" (click)="openViewBill(selectedOrderForModal)">
                                 <i class="fas fa-eye"></i>
                                 View Bill
                             </button>
-                            <button class="modal-action-btn" *ngIf="selectedOrderForModal.status === 'Order Placed'" (click)="cancelOrder(selectedOrderForModal.orderId)">
-                                <i class="fas fa-ban"></i>
+
+                            <!-- Return Section (Smart Per-Item Logic) -->
+                            <ng-container *ngIf="['Delivered', 'Return Requested'].includes(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status)">
+
+                                <!-- Return Submitted Badge -->
+                                <div class="return-submitted-badge" *ngIf="isReturnSubmitted(selectedOrderForModal.orderId)">
+                                    <i class="fas fa-clock-rotate-left"></i>
+                                    <div class="rsb-info">
+                                        <strong>Return Request Under Review</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Return Options (Hidden if already submitted) -->
+                                <ng-container *ngIf="!isReturnSubmitted(selectedOrderForModal.orderId)">
+                                    <!-- Case 1: Items are returnable AND no plant has expired yet — simple button -->
+                                    <button class="modal-action-btn slate"
+                                        *ngIf="getReturnableItems(selectedOrderForModal).length > 0 && getExpiredPlantItems(selectedOrderForModal).length === 0"
+                                        (click)="requestReturn(selectedOrderForModal)">
+                                        <i class="fas fa-undo"></i>
+                                        Request Return
+                                    </button>
+
+                                    <!-- Case 2: Mixed order — 24h passed, some plant items' window expired -->
+                                    <ng-container *ngIf="getExpiredPlantItems(selectedOrderForModal).length > 0">
+                                        <div class="partial-return-box">
+                                            <div class="partial-return-header">
+                                                <i class="fas fa-circle-info"></i>
+                                                <strong>Partial Return Available</strong>
+                                            </div>
+                                            <!-- Expired plant items notice -->
+                                            <div class="expired-item-notice"
+                                                *ngFor="let item of getExpiredPlantItems(selectedOrderForModal)">
+                                                <i class="fas fa-clock"></i>
+                                                <span><strong>{{ item.name }}</strong> — Return window expired (24h limit for plants)</span>
+                                            </div>
+                                            <!-- Return button for remaining non-plant items -->
+                                            <button class="modal-action-btn slate"
+                                                *ngIf="getReturnableItems(selectedOrderForModal).length > 0"
+                                                (click)="requestReturn(selectedOrderForModal)">
+                                                <i class="fas fa-undo"></i>
+                                                Return Remaining Items
+                                            </button>
+                                        </div>
+                                    </ng-container>
+                                </ng-container>
+
+                                <!-- Case 3: All windows expired (48h+) — nothing shown (button fully hidden) -->
+
+                            </ng-container>
+
+
+                            <button class="modal-action-btn danger"
+                                *ngIf="(selectedOrderForModal.effectiveStatus || selectedOrderForModal.status) !== 'Delivered' && isActionWindowOpen(selectedOrderForModal, 'cancel')"
+                                (click)="cancelOrder(selectedOrderForModal._id)">
+                                <i class="fas fa-times-circle"></i>
                                 Cancel Order
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Return Request Wizard -->
+            <div class="return-wizard-modal" *ngIf="isReturning">
+
+                <!-- Wizard Header -->
+                <div class="wizard-header">
+                    <button class="wizard-back-btn" (click)="returnStep > 1 ? prevReturnStep() : cancelReturnRequest()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="wizard-step-track">
+                        <div class="wizard-step-item" [class.active]="returnStep >= 1" [class.done]="returnStep > 1">
+                            <div class="wsi-circle"><i class="fas fa-list-check" *ngIf="returnStep <= 1"></i><i class="fas fa-check" *ngIf="returnStep > 1"></i></div>
+                            <span>Reason</span>
+                        </div>
+                        <div class="wizard-step-connector" [class.filled]="returnStep > 1"></div>
+                        <div class="wizard-step-item" [class.active]="returnStep >= 2" [class.done]="returnStep > 2">
+                            <div class="wsi-circle"><i class="fas fa-camera" *ngIf="returnStep <= 2"></i><i class="fas fa-check" *ngIf="returnStep > 2"></i></div>
+                            <span>Evidence</span>
+                        </div>
+                        <div class="wizard-step-connector" [class.filled]="returnStep > 2"></div>
+                        <div class="wizard-step-item" [class.active]="returnStep >= 3">
+                            <div class="wsi-circle"><i class="fas fa-wallet"></i></div>
+                            <span>Refund</span>
+                        </div>
+                    </div>
+                    <button class="wizard-close-btn" (click)="cancelReturnRequest()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- STEP 1: Reason for Return -->
+                <div class="wizard-body scrollable" *ngIf="returnStep === 1">
+                    <div class="wizard-step-title">
+                        <h3>Why are you returning?</h3>
+                        <p>Select the reason that best describes your issue</p>
+                    </div>
+                    <div class="reason-cards-grid">
+                        <div class="reason-card" *ngFor="let r of returnReasons"
+                            [class.selected]="returnReason === r.id"
+                            (click)="returnReason = r.id">
+                            <div class="reason-icon"><i [class]="r.icon"></i></div>
+                            <div class="reason-text">
+                                <strong>{{ r.label }}</strong>
+                                <span>{{ r.desc }}</span>
+                            </div>
+                            <div class="reason-check"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </div>
+                    <!-- Other Reason Text -->
+                    <div class="other-reason-box" *ngIf="returnReason === 'other'">
+                        <label>Please describe your reason</label>
+                        <textarea [(ngModel)]="returnReasonOther" placeholder="Describe your issue in detail..." rows="3"></textarea>
+                    </div>
+                    <div class="wizard-footer">
+                        <button class="wizard-next-btn" [disabled]="!returnReason || (returnReason === 'other' && !returnReasonOther.trim())" (click)="nextReturnStep()">
+                            Continue to Evidence Upload <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Evidence Upload -->
+                <div class="wizard-body scrollable" *ngIf="returnStep === 2">
+                    <div class="wizard-step-title">
+                        <h3>Upload Evidence Photos</h3>
+                        <p>Help us process your return faster with clear photos</p>
+                    </div>
+                    <div class="upload-req-badges">
+                        <span class="req-badge mandatory"><i class="fas fa-star"></i> 2 Mandatory</span>
+                        <span class="req-badge optional"><i class="fas fa-plus"></i> 1 Optional</span>
+                    </div>
+                    <div class="return-upload-grid">
+                        <!-- Bill Image — Mandatory -->
+                        <div class="return-upload-card" [class.has-image]="returnBillPreview">
+                            <div class="ruc-label mandatory">📄 Bill Photo <span class="must-tag">Required</span></div>
+                            <p class="ruc-desc">Screenshot of your order bill/invoice from email</p>
+                            <div class="ruc-zone" (click)="billInput.click()">
+                                <input type="file" #billInput (change)="onReturnFileSelected($event, 'bill')" accept="image/*" style="display:none">
+                                <div class="ruc-preview" *ngIf="returnBillPreview">
+                                    <img [src]="returnBillPreview" alt="Bill">
+                                    <div class="ruc-change"><i class="fas fa-sync-alt"></i> Change</div>
+                                </div>
+                                <div class="ruc-empty" *ngIf="!returnBillPreview">
+                                    <i class="fas fa-file-image"></i>
+                                    <span>Tap to Upload</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Product Image 1 — Mandatory -->
+                        <div class="return-upload-card" [class.has-image]="returnProductPreview">
+                            <div class="ruc-label mandatory">📸 Product Photo 1 <span class="must-tag">Required</span></div>
+                            <p class="ruc-desc">Clear photo showing the product condition</p>
+                            <div class="ruc-zone" (click)="p1Input.click()">
+                                <input type="file" #p1Input (change)="onReturnFileSelected($event, 'product')" accept="image/*" style="display:none">
+                                <div class="ruc-preview" *ngIf="returnProductPreview">
+                                    <img [src]="returnProductPreview" alt="Product 1">
+                                    <div class="ruc-change"><i class="fas fa-sync-alt"></i> Change</div>
+                                </div>
+                                <div class="ruc-empty" *ngIf="!returnProductPreview">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Tap to Upload</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Product Image 2 — Optional -->
+                        <div class="return-upload-card optional-card" [class.has-image]="returnProductPreview2">
+                            <div class="ruc-label optional-lbl">📸 Product Photo 2 <span class="opt-tag">Optional</span></div>
+                            <p class="ruc-desc">Additional angle — helps speed up verification</p>
+                            <div class="ruc-zone optional-zone" (click)="p2Input.click()">
+                                <input type="file" #p2Input (change)="onReturnFileSelected($event, 'product2')" accept="image/*" style="display:none">
+                                <div class="ruc-preview" *ngIf="returnProductPreview2">
+                                    <img [src]="returnProductPreview2" alt="Product 2">
+                                    <div class="ruc-change"><i class="fas fa-sync-alt"></i> Change</div>
+                                </div>
+                                <div class="ruc-empty" *ngIf="!returnProductPreview2">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Add Optional Photo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wizard-footer two-btn">
+                        <button class="wizard-prev-btn" (click)="prevReturnStep()"><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="wizard-next-btn" [disabled]="!returnBillPreview || !returnProductPreview" (click)="nextReturnStep()">
+                            Review & Submit <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Refund Confirmation -->
+                <div class="wizard-body scrollable" *ngIf="returnStep === 3">
+                    <div class="refund-confirm-hero">
+                        <div class="refund-icon-ring">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3>Almost There!</h3>
+                        <p>Your return request is ready to submit. Here's what happens next:</p>
+                    </div>
+                    <div class="refund-steps-list">
+                        <div class="refund-step-item">
+                            <div class="rs-num">1</div>
+                            <div class="rs-content">
+                                <strong>Expert Review</strong>
+                                <span>Our team will review your evidence photos shortly.</span>
+                            </div>
+                        </div>
+                        <div class="refund-step-item">
+                            <div class="rs-num">2</div>
+                            <div class="rs-content">
+                                <strong>Pickup Arranged</strong>
+                                <span>We'll coordinate a pickup or ask you to ship the item back</span>
+                            </div>
+                        </div>
+                        <div class="refund-step-item">
+                            <div class="rs-num green">3</div>
+                            <div class="rs-content">
+                                <strong>Refund Processed Online</strong>
+                                <span>💰 Your refund will be credited back to your <b>original payment method</b> within <b>5–7 business days</b></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="refund-summary-box">
+                        <div class="rsb-row"><span>Return Reason</span><strong>{{ getReturnReasonLabel() }}</strong></div>
+                        <div class="rsb-row"><span>Evidence Uploaded</span><strong>{{ returnProductPreview2 ? '3 Photos' : '2 Photos' }}</strong></div>
+                        <div class="rsb-row"><span>Refund Method</span><strong class="green-text">Online (Original Payment)</strong></div>
+                    </div>
+                    <div class="wizard-footer two-btn">
+                        <button class="wizard-prev-btn" (click)="prevReturnStep()"><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="wizard-submit-btn" [disabled]="isSubmittingReturn" (click)="submitReturnRequest()">
+                            <span *ngIf="!isSubmittingReturn"><i class="fas fa-paper-plane"></i> Submit Return Request</span>
+                            <span *ngIf="isSubmittingReturn"><i class="fas fa-spinner fa-spin"></i> Submitting...</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Success Message -->
+                <div class="wizard-body wizard-success-body" *ngIf="returnStep === 4">
+                    <div class="success-confetti">
+                        <i class="fas fa-seedling s1"></i>
+                        <i class="fas fa-star s2"></i>
+                        <i class="fas fa-leaf s3"></i>
+                    </div>
+                    <div class="success-icon-wrap">
+                        <div class="success-ring"></div>
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2>Request Submitted!</h2>
+                    <p>Your return request for <strong>#{{ selectedOrderForModal.orderId }}</strong> has been received successfully.</p>
+                    
+                    <div class="success-info-card">
+                        <div class="sic-row">
+                            <i class="fas fa-shield-check"></i>
+                            <div class="sic-text">
+                                <strong>Under Expert Review</strong>
+                                <span>Verification in progress.</span>
+                            </div>
+                        </div>
+                        <div class="sic-row">
+                            <i class="fas fa-paper-plane"></i>
+                            <div class="sic-text">
+                                <strong>Email Confirmation</strong>
+                                <span>You will receive an update on your registered email.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="primary-btn-luxury full-width mt-4" (click)="cancelReturnRequest(); closeOrderModal();">
+                        Done, Back to Orders
+                    </button>
+                </div>
+
+            </div>
+
             </div>
         </div>
     </div>
@@ -418,14 +724,16 @@
                         <!-- Invoice Header -->
                         <div class="invoice-top-row">
                             <div class="brand-left">
-                                <h1 class="brand-name"><img src="/images/greenie-logo.png" alt="Logo" style="height: 45px; width: auto;"> GREENIE CULTURE</h1>
+                                <h1 class="brand-name"><img src="/images/greenie-logo.png" alt="Logo"
+                                        style="height: 45px; width: auto;"> GREENIE CULTURE</h1>
                                 <p class="brand-info">123 Botanical Avenue, Green City, 400001</p>
                                 <p class="brand-info">support&#64;greenieculture.com | +91 9876543210</p>
                             </div>
                             <div class="invoice-right">
                                 <h2 class="invoice-label">INVOICE</h2>
                                 <p class="invoice-id">#{{ selectedOrderForBill.orderId }}</p>
-                                <p class="invoice-date">Date: {{ selectedOrderForBill.orderDate | date:'dd MMM yyyy' }}</p>
+                                <p class="invoice-date">Date: {{ selectedOrderForBill.orderDate | date:'dd MMM yyyy' }}
+                                </p>
                             </div>
                         </div>
 
@@ -433,18 +741,20 @@
                         <div class="invoice-billing-grid">
                             <div class="bill-to">
                                 <h4 class="tiny-label">Bill To</h4>
-                                <strong class="cust-name">{{ selectedOrderForBill.userId?.fullName || fullName }}</strong>
+                                <strong class="cust-name">{{ selectedOrderForBill.userId?.fullName || fullName
+                                    }}</strong>
                                 <p class="cust-addr">
                                     {{ selectedOrderForBill.userId?.address || address }}<br>
-                                    {{ selectedOrderForBill.userId?.city || city }}, 
+                                    {{ selectedOrderForBill.userId?.city || city }},
                                     {{ selectedOrderForBill.userId?.state || stateName }}
                                 </p>
                             </div>
                             <div class="payment-method-box">
                                 <h4 class="tiny-label">Payment Method</h4>
-                                <strong class="method">{{ selectedOrderForBill.paymentMethod || 'Online Payment' }}</strong>
+                                <strong class="method">{{ selectedOrderForBill.paymentMethod || 'Online Payment'
+                                    }}</strong>
                                 <h4 class="tiny-label mt-2">Status</h4>
-                                <strong class="status success">{{ selectedOrderForBill.status }}</strong>
+                                <strong class="status success">{{ formatStatus(selectedOrderForBill.status) }}</strong>
                             </div>
                         </div>
 
@@ -489,7 +799,9 @@
                         </div>
 
                         <div class="invoice-footer-msg">
-                            <p>Thank you for shopping with Greenie Culture! <img src="/images/greenie-logo.png" alt="Logo" style="height: 18px; width: auto; vertical-align: middle; margin-left: 5px;"></p>
+                            <p>Thank you for shopping with Greenie Culture! <img src="/images/greenie-logo.png"
+                                    alt="Logo"
+                                    style="height: 18px; width: auto; vertical-align: middle; margin-left: 5px;"></p>
                             <small>This is a computer generated invoice and does not require a signature.</small>
                         </div>
                     </div>
@@ -497,7 +809,8 @@
             </div>
 
             <footer class="modal-footer-sticky">
-                <button class="modal-action-btn primary large" (click)="downloadBill(selectedOrderForBill)" [disabled]="isGeneratingPdf">
+                <button class="modal-action-btn primary large" (click)="downloadBill(selectedOrderForBill)"
+                    [disabled]="isGeneratingPdf">
                     <i class="fas" [ngClass]="isGeneratingPdf ? 'fa-spinner fa-spin' : 'fa-download'"></i>
                     {{ isGeneratingPdf ? 'Generating PDF...' : 'Download Official Bill' }}
                 </button>
@@ -509,7 +822,8 @@
     <div class="user-modal-overlay impact-overlay" *ngIf="showImpactModal" (click)="closeImpactModal()">
         <div class="user-modal-container impact-card-modal" (click)="$event.stopPropagation()">
             <header class="modal-header">
-                <h2>Your Green Legacy <img src="/images/greenie-logo.png" alt="Logo" style="height: 24px; width: auto; vertical-align: middle; margin-left: 8px;"></h2>
+                <h2>Your Green Legacy <img src="/images/greenie-logo.png" alt="Logo"
+                        style="height: 24px; width: auto; vertical-align: middle; margin-left: 8px;"></h2>
                 <button class="modal-close" (click)="closeImpactModal()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -554,4 +868,62 @@
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Return Status Info Modal -->
+    <div class="user-modal-overlay status-info-overlay" *ngIf="showStatusInfoModal" (click)="closeStatusInfoModal()">
+        <div class="user-modal-container status-info-card" (click)="$event.stopPropagation()">
+            <div class="status-info-header">
+                <div class="status-icon-wrap" [ngClass]="(selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status).toLowerCase().replace(' ', '-')">
+                    <i class="fas" [ngClass]="{
+                        'fa-clock': (selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Requested',
+                        'fa-check-circle': (selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Approved',
+                        'fa-times-circle': (selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Rejected'
+                    }"></i>
+                </div>
+                <h3>Return Status Details</h3>
+                <button class="modal-close-simple" (click)="closeStatusInfoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="status-info-body">
+                <div class="status-msg-box" *ngIf="(selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Approved'">
+                    <p class="main-msg">Your return is scheduled for pickup! 🚚</p>
+
+                    <p class="sub-msg">The courier company has assigned a pickup slot for your return items. Please keep the products ready for handover.</p>
+                    
+                    <div class="courier-contact-box" style="margin-top: 15px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; display: flex; align-items: center; gap: 12px; text-align: left;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #10b981; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.7rem; color: #64748b; margin: 0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Pickup Partner Details</p>
+                            <p style="font-size: 0.9rem; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">
+                                {{ selectedOrderForStatusInfo?.courierName || 'Logistic Partner' }} 
+                                <span style="color: #10b981; margin-left: 8px; font-weight: 900; background: #f0fdf4; padding: 2px 8px; border-radius: 6px; border: 1px solid #dcfce7; font-size: 0.85rem;">
+                                    <i class="fas fa-phone-alt" style="font-size: 0.75rem; margin-right: 4px;"></i> 
+                                    {{ getCourierContact(selectedOrderForStatusInfo?.courierName) }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="sub-msg" style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">Your refund will be credited back to your original payment method after the products are successfully picked up.</p>
+                </div>
+                
+                <div class="status-msg-box" *ngIf="(selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Rejected'">
+                    <p class="main-msg">Your return request was not approved.</p>
+                    <p class="sub-msg">After reviewing the evidence, our team could not verify the issue. If you have questions, please contact our support.</p>
+                </div>
+
+                <div class="status-msg-box" *ngIf="(selectedOrderForStatusInfo?.effectiveStatus || selectedOrderForStatusInfo?.status) === 'Return Requested'">
+                    <p class="main-msg">Return Request Under Review</p>
+                    <p class="sub-msg">Our experts are currently reviewing your evidence photos. You will receive an update here and via email shortly.</p>
+                </div>
+            </div>
+            
+            <div class="status-info-footer">
+                <button class="primary-btn-luxury" (click)="closeStatusInfoModal()">Close</button>
+            </div>
+        </div>
+    </div>

@@ -4580,3 +4580,82 @@
     from { transform: translateY(50px) scale(0.95); opacity: 0; }
     to { transform: translateY(0) scale(1); opacity: 1; }
 }
+
+/* Return Tab Specific Styles */
+.return-tab-btn i {
+    color: #ef4444 !important;
+}
+
+.return-tab-btn.cti-active {
+    background: #fef2f2 !important;
+    border-color: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.return-info-banner {
+    animation: slideDownIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.return-routing-view .delivery-table th {
+    background: #fdf2f220;
+    color: #991b1b;
+}
+
+.return-routing-view .delivery-table td {
+    padding: 1.5rem;
+}
+
+.order-id-cell {
+    font-weight: 900;
+    color: #1e293b;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.5px;
+}
+
+/* Return Items Preview Styles */
+.items-preview-wrapper {
+    position: relative;
+    z-index: 10; /* Ensure button area is above base row */
+}
+
+.view-items-btn:hover {
+    background: #f1f5f9 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.view-items-btn:active {
+    transform: translateY(0);
+}
+
+.items-details-popover {
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: top left;
+    z-index: 9999 !important; /* Force to top of all layers */
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.98) !important;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.8) translateY(-10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.popover-item {
+    transition: all 0.2s ease;
+}
+
+.popover-item:hover {
+    background: #f0f9ff !important;
+    transform: translateX(5px);
+}
+
+.return-date-picker:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+}

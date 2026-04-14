@@ -36,7 +36,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested'],
         default: 'Pending'
     },
     courierName: {
@@ -103,6 +103,18 @@ const orderSchema = new mongoose.Schema({
         city: String,
         state: String,
         phone: String
+    },
+    returnDetails: {
+        reason: String,
+        additionalInfo: String,
+        billImage: String,
+        productImage1: String,
+        productImage2: String,
+        submittedAt: { type: Date, default: Date.now }
+    },
+    expectedReturnDate: {
+        type: String,
+        default: ''
     }
 });
 

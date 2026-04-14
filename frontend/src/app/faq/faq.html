@@ -89,4 +89,98 @@
             </div>
         </div>
     </div>
+
+    <!-- Compact FAQ Ask Banner: Premium Redesign -->
+    <div class="faq-ask-banner" *ngIf="!isLoading">
+        <div class="ask-banner-glow"></div>
+        <div class="ask-banner-content">
+            <div class="ask-banner-visual">
+                <div class="visual-stack">
+                    <i class="fas fa-seedling"></i>
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+            </div>
+            <div class="ask-banner-text">
+                <h4>Couldn't find what you're looking for?</h4>
+                <p>Our botanical experts are ready to help you grow. Ask a question and we'll sprout a reply!</p>
+            </div>
+            <button class="ask-experts-trigger" (click)="showSubmissionModal.set(true)">
+                <span>Ask our Experts</span>
+                <i class="fas fa-wand-magic-sparkles"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Question Submission Modal: Premium Redesign -->
+    <div class="modal-overlay" *ngIf="showSubmissionModal()">
+        <div class="submission-modal premium-modal">
+            <div class="modal-decoration">
+                <div class="leaf leaf-1"></div>
+                <div class="leaf leaf-2"></div>
+            </div>
+            
+            <div class="modal-close" (click)="showSubmissionModal.set(false)">
+                <i class="fas fa-times"></i>
+            </div>
+
+            <div class="modal-header-visual">
+                <div class="expert-badge">
+                    <i class="fas fa-clipboard-check"></i> Verified Experts
+                </div>
+                <div class="header-main">
+                    <h3>Ask our botanical experts!</h3>
+                    <p>Your question helps us cultivate collective knowledge. Type yours below to get started.</p>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Your Inquiry</label>
+                    <textarea [(ngModel)]="userQuestion" 
+                        placeholder="e.g., How often should I water my Fiddle Leaf Fig in winter?" 
+                        rows="4"
+                        class="faq-textarea">
+                    </textarea>
+                    <div class="input-hint">
+                        <i class="fas fa-info-circle"></i> Experts usually respond within 24 hours
+                    </div>
+                </div>
+                
+                <button class="faq-submit-btn" [disabled]="!userQuestion.trim() || isSubmitting()"
+                    (click)="submitUserFaq(); showSubmissionModal.set(false)">
+                    <span *ngIf="!isSubmitting()">Plant Question <i class="fas fa-paper-plane"></i></span>
+                    <span *ngIf="isSubmitting()"><i class="fas fa-spinner fa-spin"></i> Growing...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal Popup: Premium Redesign -->
+    <div class="modal-overlay" *ngIf="showSuccessModal()">
+        <div class="success-modal premium-success">
+            <div class="success-glow"></div>
+            <div class="modal-close" (click)="closeModal()">
+                <i class="fas fa-times"></i>
+            </div>
+
+            <div class="success-visual">
+                <div class="icon-ring-animated"></div>
+                <div class="success-icon-box">
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <h3>Question Planted!</h3>
+                <p>We've received your inquiry. Our experts will sprout a reply soon in your email, and we might even add it to our community FAQs!</p>
+
+                <div class="success-footer">
+                    <button class="modal-btn-primary" (click)="closeModal()">
+                        <span>Got it, thanks!</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

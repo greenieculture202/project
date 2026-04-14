@@ -77,7 +77,10 @@ export class AdminPanelComponent implements OnInit {
     };
     hoveredPaymentSegment: any = null;
     isLoadingOrders: boolean = false;
+    isReturnDetailsOnly: boolean = false;
     backendRevenue: number = 0;
+    showFullImageModal: boolean = false;
+    fullImageViewUrl: string = '';
 
     // Admin Payment View State
     adminPaymentFilterMethod: string = 'All';
@@ -127,10 +130,17 @@ export class AdminPanelComponent implements OnInit {
 
     // Inquiries
     inquiries: Inquiry[] = [];
+    userFaqs: Inquiry[] = [];
     isLoadingInquiries: boolean = false;
     showReplyModal: boolean = false;
     selectedInquiry: Inquiry | null = null;
     replyContent: string = '';
+
+    // FAQ Promotion logic
+    addToFaqs: boolean = false;
+    replyFaqCategory: string = 'General';
+    isNewFaqCategory: boolean = false;
+    newFaqCategoryName: string = '';
 
     today: Date = new Date();
 
@@ -199,12 +209,13 @@ export class AdminPanelComponent implements OnInit {
     associatedProducts: any[] = [];
     activeOfferCode: string = '';
     activeOfferBadge: string = '';
+    
 
     // Courier Messaging
     showCourierReplyModal: boolean = false;
     currentReplyCourierName: string = '';
     courierReplyMessage: string = '';
-    inquiryActiveSubTab: 'customers' | 'couriers' = 'customers';
+    inquiryActiveSubTab: 'customers' | 'couriers' | 'suggestions' = 'customers';
     showAddProductToOfferModal: boolean = false;
     addProductSearchTerm: string = '';
     allProductsList: any[] = [];
@@ -745,6 +756,7 @@ export class AdminPanelComponent implements OnInit {
         this.loadUsers();
         this.loadOrders();
         this.loadAdminNotifications();
+        this.loadFaqs();
 
         // Setup polling for orders and notifications (Faster updates)
         this.pollingInterval = setInterval(() => {
@@ -855,15 +867,18 @@ export class AdminPanelComponent implements OnInit {
         });
     }
 
-    viewOrderDetails(order: any) {
+    viewOrderDetails(order: any, returnOnly: boolean = false) {
         this.selectedOrder = order;
+        this.isReturnDetailsOnly = returnOnly;
 
-        // Auto-select courier based on state if not already set
-        if (!order.courierName) {
-            const state = this.extractState(order);
-            this.selectedCourier = this.findRecommendedCourier(state);
-        } else {
-            this.selectedCourier = order.courierName;
+        // Auto-select courier based on state if not already set (only for full view)
+        if (!returnOnly) {
+            if (!order.courierName) {
+                const state = this.extractState(order);
+                this.selectedCourier = this.findRecommendedCourier(state);
+            } else {
+                this.selectedCourier = order.courierName;
+            }
         }
 
         this.showOrderModal = true;
@@ -871,6 +886,32 @@ export class AdminPanelComponent implements OnInit {
         this.suggestedCourier = '';
         this.toggleBodyScroll(true);
         this.cdr.detectChanges();
+    }
+
+    public reviewReturnRequest(order: any) {
+        // Open modal in return-only mode
+        this.viewOrderDetails(order, true);
+
+        // Scroll to the return section after a short delay for modal animation
+        setTimeout(() => {
+            const returnElement = document.getElementById('return-section-admin');
+            if (returnElement) {
+                returnElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
+    }
+
+    public viewFullImage(url: string) {
+        if (!url) return;
+        this.fullImageViewUrl = url;
+        this.showFullImageModal = true;
+        document.body.style.overflow = 'hidden'; // Lock scroll
+    }
+
+    public closeFullImage() {
+        this.showFullImageModal = false;
+        this.fullImageViewUrl = '';
+        document.body.style.overflow = 'auto'; // Restore scroll
     }
 
     closeOrderModal() {
@@ -985,6 +1026,7 @@ export class AdminPanelComponent implements OnInit {
             this.loadOrders();
         } else if (tab === 'inquiries') {
             this.loadInquiries();
+            this.loadFaqs(); // Added to support FAQ promotion in reply modal
         } else if (tab === 'payment') {
             this.loadOrders();
             this.loadPaymentSummary();
@@ -2042,6 +2084,61 @@ export class AdminPanelComponent implements OnInit {
         });
     }
 
+    updateFaqCategories() {
+        if (!this.faqs || this.faqs.length === 0) return;
+        const categoriesSet = new Set(this.faqCategories);
+        this.faqs.forEach(f => {
+            if (f.category) categoriesSet.add(f.category);
+        });
+        this.faqCategories = Array.from(categoriesSet);
+    }
+
+    removeFaqCategory(category: string, event: MouseEvent) {
+        event.stopPropagation();
+        const faqsInCategory = this.faqs.filter(f => f.category === category);
+        const count = faqsInCategory.length;
+
+        let confirmMsg = `Are you sure you want to remove the category '${category}'?`;
+        if (count > 0) {
+            confirmMsg = `CAUTION: This category contains ${count} FAQs. Removing it will PERMANENTLY DELETE all these FAQs. Continue?`;
+        }
+
+        if (confirm(confirmMsg)) {
+            this.isLoadingFaqs = true;
+            if (count > 0) {
+                let processed = 0;
+                faqsInCategory.forEach(f => {
+                    this.faqService.deleteFaq(f._id!).subscribe({
+                        next: () => {
+                            processed++;
+                            if (processed === count) this.finalizeCategoryRemoval(category);
+                        },
+                        error: (err) => {
+                            console.error('Delete FAQ error:', err);
+                            this.isLoadingFaqs = false;
+                            this.cdr.detectChanges();
+                        }
+                    });
+                });
+            } else {
+                this.finalizeCategoryRemoval(category);
+            }
+        }
+    }
+
+    private finalizeCategoryRemoval(category: string) {
+        this.faqCategories = this.faqCategories.filter(c => c !== category);
+        if (this.faqCategoryFilter === category) {
+            this.faqCategoryFilter = 'All';
+        }
+        this.notiService.show(`Category '${category}' removed successfully.`, 'Success', 'success');
+        this.loadFaqs();
+        // Also refresh user suggestions list if categorizing there
+        this.loadInquiries();
+        this.isLoadingFaqs = false;
+        this.cdr.detectChanges();
+    }
+
     deleteProduct(id: string, name: string) {
         this.openDeleteModal(id, name);
     }
@@ -2051,6 +2148,7 @@ export class AdminPanelComponent implements OnInit {
         this.faqService.getAdminFaqs().subscribe({
             next: (data) => {
                 this.faqs = data;
+                this.updateFaqCategories();
                 this.isLoadingFaqs = false;
                 this.cdr.detectChanges();
             },
@@ -2278,13 +2376,15 @@ export class AdminPanelComponent implements OnInit {
                     }
                     this.lastOrderCount = data.length;
 
-                    // Filter out orders marked as "Guest Customer" or those missing registered user data
+                    // Filter guest orders and ensure numeric totalAmount for correct piping
                     this.orders = data.filter((order: any) => {
                         const name = (order.userName || order.userId?.fullName || '').trim();
                         return name !== 'Guest Customer';
-                    });
+                    }).map((order: any) => this.sanitizeOrder(order));
+
 
                     this.calculatePaymentSummary();
+
                     this.updateDashboardStats();
                     this.isLoadingOrders = false;
                     this.cdr.detectChanges();
@@ -2343,11 +2443,19 @@ export class AdminPanelComponent implements OnInit {
     }
 
     updateOrderStatus(orderId: string, newStatus: string) {
+        console.log(`[Admin] Updating order ${orderId} to status: ${newStatus}`);
         const token = sessionStorage.getItem('auth_token');
-        if (!token) return;
+        if (!token) {
+            console.error('[Admin] No auth token found in session storage.');
+            return;
+        }
 
-        const targetOrder = this.orders.find(o => o._id === orderId);
-        if (!targetOrder) return;
+        const targetOrder = this.orders.find(o => o._id === orderId || o.id === orderId);
+        if (!targetOrder) {
+            console.error(`[Admin] Order not found for ID: ${orderId}`);
+            return;
+        }
+
 
         const body: any = { status: newStatus };
 
@@ -2411,10 +2519,13 @@ export class AdminPanelComponent implements OnInit {
         this.http.put(`/api/admin/orders/${orderId}/status`, body, { headers: { 'x-auth-token': token } })
             .subscribe({
                 next: (updatedOrder: any) => {
-                        this.ngZone.run(() => {
+                    this.ngZone.run(() => {
                         const idx = this.orders.findIndex(o => o._id === orderId);
                         if (idx !== -1) {
-                            this.orders[idx] = updatedOrder;
+                            const sanitized = this.sanitizeOrder(updatedOrder);
+                            this.orders[idx] = sanitized;
+                            this.selectedOrder = sanitized; // Update selected order too
+                            
                             this.selectedCourier = '';
                             this.trackingNumber = '';
                             
@@ -2427,9 +2538,22 @@ export class AdminPanelComponent implements OnInit {
                         }
                     });
                 },
-                error: (err) => console.error('Error updating order:', err)
+                error: (err) => {
+                    console.error('Error updating order:', err);
+                }
             });
     }
+
+    private sanitizeOrder(order: any): any {
+        if (!order) return order;
+        return {
+            ...order,
+            totalAmount: typeof order.totalAmount === 'string' 
+                ? Number(order.totalAmount.replace(/,/g, '')) 
+                : order.totalAmount
+        };
+    }
+
     dispatchOrder(orderId: string) {
         this.updateOrderStatus(orderId, 'Shipped');
     }
@@ -2519,8 +2643,12 @@ export class AdminPanelComponent implements OnInit {
             case 'Processing': return 'status-processing';
             case 'Shipped': return 'status-shipped';
             case 'Delivered': return 'status-delivered';
+            case 'Return Requested': return 'status-return-requested';
+            case 'Return Approved': return 'status-cancelled';
+            case 'Return Rejected': return 'status-delivered';
             case 'Cancelled': return 'status-cancelled';
             default: return 'status-unknown';
+
         }
     }
 
@@ -2791,7 +2919,10 @@ export class AdminPanelComponent implements OnInit {
         this.isLoadingInquiries = true;
         this.inquiryService.getAllInquiries().subscribe({
             next: (data) => {
-                this.inquiries = data;
+                // Separate general inquiries from user-submitted FAQs
+                this.inquiries = data.filter(i => !i.subject.includes('User-Submitted FAQ'));
+                this.userFaqs = data.filter(i => i.subject.includes('User-Submitted FAQ'));
+                
                 this.isLoadingInquiries = false;
                 this.cdr.detectChanges();
             },
@@ -2808,6 +2939,12 @@ export class AdminPanelComponent implements OnInit {
         this.replyContent = inquiry.reply?.content || '';
         this.showReplyModal = true;
         this.toggleBodyScroll(true);
+
+        // Auto-check promote to FAQ if it's from the FAQ page
+        this.addToFaqs = (inquiry.subject === 'User-Submitted FAQ');
+        this.replyFaqCategory = 'Plants'; // Default
+        this.isNewFaqCategory = false;
+        this.newFaqCategoryName = '';
     }
 
     closeReplyModal() {
@@ -2821,12 +2958,43 @@ export class AdminPanelComponent implements OnInit {
         if (!this.selectedInquiry || !this.replyContent.trim()) return;
 
         this.isSubmitting = true;
-        this.inquiryService.replyToInquiry(this.selectedInquiry._id!, this.replyContent).subscribe({
+        const inquiryId = this.selectedInquiry._id!;
+
+        // 1. Submit the reply through the inquiry service
+        this.inquiryService.replyToInquiry(inquiryId, this.replyContent).subscribe({
             next: (res) => {
                 console.log('Reply submitted:', res);
-                this.isSubmitting = false;
-                this.loadInquiries();
-                this.closeReplyModal();
+
+                // 2. If flagged to add to FAQs, do that now
+                if (this.addToFaqs) {
+                    const finalCategory = this.isNewFaqCategory ? this.newFaqCategoryName : this.replyFaqCategory;
+
+                    // Update local categories list if it's a new one
+                    if (this.isNewFaqCategory && !this.faqCategories.includes(finalCategory)) {
+                        this.faqCategories.push(finalCategory);
+                    }
+
+                    const newFaq: Faq = {
+                        question: this.selectedInquiry!.message,
+                        answer: this.replyContent,
+                        category: finalCategory,
+                        order: 0
+                    };
+
+                    this.faqService.addFaq(newFaq).subscribe({
+                        next: () => {
+                            this.notiService.show('FAQ entry sprouted successfully!', 'Success', 'success');
+                            this.finalizeReplySuccess();
+                        },
+                        error: (err) => {
+                            console.error('FAQ promotion failed:', err);
+                            this.notiService.show('Reply sent, but FAQ creation failed.', 'Half-Success', 'warning');
+                            this.finalizeReplySuccess();
+                        }
+                    });
+                } else {
+                    this.finalizeReplySuccess();
+                }
             },
             error: (err) => {
                 console.error('Reply error:', err);
@@ -2834,6 +3002,13 @@ export class AdminPanelComponent implements OnInit {
                 this.notiService.show('Failed to submit your reply. Please try again.', 'Submission Error', 'error');
             }
         });
+    }
+
+    private finalizeReplySuccess() {
+        this.isSubmitting = false;
+        this.loadInquiries();
+        this.closeReplyModal();
+        this.cdr.detectChanges();
     }
 
     updateDashboardStats() {
@@ -2887,6 +3062,7 @@ export class AdminPanelComponent implements OnInit {
             });
             const repeatCustomers = Object.values(userOrdersMap).filter(c => c > 1).length;
             const repeatRate = totalUsersCount > 0 ? (repeatCustomers / totalUsersCount * 100) : 0;
+            
 
             // 7. Abandoned Cart Rate
             const abandedCount = this.users.filter(u => u.cart?.length > 0 && !userOrdersMap[u.id]).length;

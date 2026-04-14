@@ -1256,6 +1256,38 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     animation: voiceBubbleIn 0.4s ease-out;
+    position: relative; /* For absolute positioning of delete button */
+}
+
+.msg-delete-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(239, 68, 68, 0.8);
+    color: white;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.voice-bubble-transcript:hover .msg-delete-btn {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.voice-bubble-transcript.user .msg-delete-btn {
+    right: auto;
+    left: -8px;
 }
 
 .voice-bubble-transcript.user {
@@ -1370,5 +1402,51 @@
         right: 0;
         border-radius: 0;
     }
+}
+
+/* Language Selection - Premium Glass Toggles */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.language-selection {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-right: 10px;
+    position: relative;
+    z-index: 1001; /* Ensure it stays above other elements in the header */
+    pointer-events: auto !important; /* Force clickability */
+}
+
+.lang-btn {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.05em;
+    pointer-events: auto !important;
+}
+
+.lang-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.lang-btn.active {
+    background: #4ade80;
+    color: #064e3b;
+    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+    transform: translateY(-1px);
 }
 

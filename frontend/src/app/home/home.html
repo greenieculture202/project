@@ -35,6 +35,20 @@
             </div>
         </div>
 
+        <!-- NEW: Compact FAQ Ask Banner -->
+        <div class="faq-ask-banner">
+            <div class="ask-banner-content">
+                <div class="ask-banner-text">
+                    <i class="fas fa-comment-dots"></i>
+                    <span>Still have a question? Our experts are here to help.</span>
+                </div>
+                <button class="ask-experts-trigger" (click)="showSubmissionModal.set(true)">
+                    <span>Ask Experts</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
         <div class="home-faq-footer">
             <a routerLink="/faq" class="view-all-faqs-btn">
                 <span>View All FAQ</span>
@@ -43,5 +57,57 @@
         </div>
     </div>
 </section>
+
+<!-- Question Submission Modal -->
+<div class="modal-overlay" *ngIf="showSubmissionModal()">
+    <div class="submission-modal">
+        <div class="modal-close" (click)="showSubmissionModal.set(false)">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <div class="modal-header">
+            <div class="header-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h3>Ask our botanical experts!</h3>
+            <p>Your question will help us grow our community knowledge.</p>
+        </div>
+
+        <div class="modal-body">
+            <textarea [(ngModel)]="userQuestion" placeholder="Type your question here..." rows="4" class="faq-textarea">
+            </textarea>
+            <button class="faq-submit-btn" [disabled]="!userQuestion.trim() || isSubmitting()"
+                (click)="submitUserFaq(); showSubmissionModal.set(false)">
+                <span *ngIf="!isSubmitting()">Send Question <i class="fas fa-paper-plane"></i></span>
+                <span *ngIf="isSubmitting()"><i class="fas fa-spinner fa-spin"></i> Planting...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal Popup -->
+<div class="modal-overlay" *ngIf="showSuccessModal()">
+    <div class="success-modal">
+        <div class="modal-glow"></div>
+        <div class="modal-close" (click)="closeModal()">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <div class="modal-icon">
+            <div class="icon-ring"></div>
+            <i class="fas fa-check"></i>
+        </div>
+
+        <div class="modal-body">
+            <h3>Question Planted!</h3>
+            <p>We've received your inquiry. Our experts will sprout a reply soon in your email, and we might even add it
+                to our community FAQs!</p>
+
+            <button class="modal-btn" (click)="closeModal()">
+                <span>Got it, thanks!</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 <app-reviews></app-reviews>

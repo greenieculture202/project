@@ -61,8 +61,10 @@ export class AiPlantAssistantComponent {
   // Voice Settings
   isListening = signal(false);
   isVoiceEnabled = signal(false);
+  selectedLanguage = signal('hi-IN'); // Default to Hindi (India)
   private recognition: any;
   private synth = window.speechSynthesis;
+  private recognitionTimeout: any; // Timer to wait for full question
 
   messages: Message[] = [];
   private destroy$ = new Subject<void>();
@@ -237,6 +239,13 @@ export class AiPlantAssistantComponent {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
   }
 
+  deleteMessage(index: number) {
+    if (index >= 0 && index < this.messages.length) {
+      this.messages.splice(index, 1);
+      this.saveHistory();
+    }
+  }
+
   toggleChat() {
     this.isVoiceWindowOpen.set(false);
     this.isOpen.set(!this.isOpen());
@@ -298,6 +307,25 @@ export class AiPlantAssistantComponent {
     this.toggleVoiceWindow();
   }
 
+  setLanguage(lang: string) {
+    console.log('[LanguageSelection] Selected:', lang);
+    this.selectedLanguage.set(lang);
+    if (this.recognition) {
+        this.recognition.lang = lang;
+        if (this.isListening()) {
+            console.log('[LanguageSelection] Restarting recognition for new language...');
+            this.recognition.stop();
+            // A slightly longer timeout ensures the browser handles the state change correctly
+            setTimeout(() => {
+                if (!this.isListening()) {
+                    this.recognition.start();
+                    this.isListening.set(true);
+                }
+            }, 300);
+        }
+    }
+  }
+
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
     if (file) {
@@ -354,7 +382,7 @@ export class AiPlantAssistantComponent {
     if (SpeechRecognition) {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = true; 
-      this.recognition.lang = 'hi-IN'; // Changed to Hindi (India) for better Hinglish support
+      this.recognition.lang = this.selectedLanguage(); // Use signal value instead of hardcoded 'hi-IN'
       this.recognition.interimResults = true; 
 
       this.recognition.onresult = (event: any) => {
@@ -374,13 +402,18 @@ export class AiPlantAssistantComponent {
         
         if (final) {
           const correctedText = this.correctPlantNames(final.trim());
-          this.userMessage = correctedText;
+          this.userMessage += (this.userMessage ? ' ' : '') + correctedText; // Append to capture full question
           
-          if (correctedText.length > 2) {
-             this.sendMessage();
-             this.interimTranscript.set(''); // Clear preview on send
-          }
-          this.isListening.set(false);
+          // Clear previous timeout and start a new one to wait for more speech
+          if (this.recognitionTimeout) clearTimeout(this.recognitionTimeout);
+          this.recognitionTimeout = setTimeout(() => {
+              if (this.userMessage.trim().length > 2) {
+                  this.sendMessage();
+                  this.interimTranscript.set(''); // Clear preview on send
+                  this.userMessage = ''; // Reset for next sentence
+              }
+              this.isListening.set(false);
+          }, 1500); // Wait 1.5 seconds of silence before sending
         }
       };
 
@@ -463,6 +496,7 @@ export class AiPlantAssistantComponent {
     
     // BILINGUAL DETECTION: Check for Hindi characters (Devenagari range)
     const isHindi = /[\u0900-\u097F]/.test(cleanText);
+    const isGujarati = /[\u0A80-\u0AFF]/.test(cleanText); // Detection for Gujarati characters
     
     let selectedVoice;
     
@@ -470,6 +504,10 @@ export class AiPlantAssistantComponent {
         // PRIORITY: Hindi Voices (India)
         selectedVoice = voices.find(v => v.lang === 'hi-IN' && v.name.includes('Google')) ||
                          voices.find(v => v.lang === 'hi-IN');
+    } else if (isGujarati) {
+        // PRIORITY: Gujarati Voices (India)
+        selectedVoice = voices.find(v => v.lang === 'gu-IN' && v.name.includes('Google')) ||
+                         voices.find(v => v.lang === 'gu-IN');
     }
 
     if (!selectedVoice) {
@@ -499,7 +537,11 @@ export class AiPlantAssistantComponent {
   // --- END VOICE LOGIC ---
 
   generateAIResponse(query: string, image?: string | null) {
-    const body: any = { message: query, image: image };
+    const body: any = { 
+      message: query, 
+      image: image,
+      language: this.selectedLanguage() // Send selected language preference
+    };
     const userId = this.authService.currentUserId;
     if (userId) body.userId = userId;
 

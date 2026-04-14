@@ -474,13 +474,29 @@ export class ProductService {
     // Search products efficiently
     searchProducts(term: string): Observable<Product[]> {
         if (!term || term.length < 2) return of([]);
-        return this.http.get<Product[]>(`${this.apiUrl}/products/search?q=${encodeURIComponent(term)}`).pipe(
+        const timestamp = Date.now();
+        return this.http.get<Product[]>(`${this.apiUrl}/products/search?q=${encodeURIComponent(term)}&t=${timestamp}`).pipe(
             map(products => products.map(p => {
                 const sl = p.slug || this.convertToSlug(p.name);
                 const prod = { ...p, slug: sl };
                 this.productCache.set(sl, prod);
                 return prod;
             }))
+        );
+    }
+
+    // Get minimal details of all active products for mega-menu synchronization
+    getActiveProductsMinimal(): Observable<Partial<Product>[]> {
+        return this.http.get<Product[]>(`${this.apiUrl}/products`).pipe(
+            map(products => products.map(p => ({
+                name: p.name,
+                category: p.category,
+                slug: p.slug || this.convertToSlug(p.name)
+            }))),
+            catchError(error => {
+                console.error('Error fetching active products minimal:', error);
+                return of([]);
+            })
         );
     }
 

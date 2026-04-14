@@ -21,6 +21,9 @@
             <a class="nav-item" [class.active]="activeMainTab === 'settlements'" (click)="setTab('settlements')">
                 <i class="fas fa-handshake-angle"></i> Settlements
             </a>
+            <a class="nav-item" [class.active]="activeMainTab === 'returns'" (click)="setTab('returns')">
+                <i class="fas fa-rotate-left"></i> Returns
+            </a>
             <a class="nav-item" [class.active]="activeMainTab === 'setting'" (click)="setTab('setting')">
                 <i class="fas fa-sliders"></i> Configurations
             </a>
@@ -443,6 +446,10 @@
                             <i class="fas fa-comments"></i>
                             <span>Settlement</span>
                         </button>
+                        <button (click)="activeCourierSubTab = 4" class="courier-tab-icon-btn return-tab-btn" [class.cti-active]="activeCourierSubTab === 4">
+                            <i class="fas fa-rotate-left"></i>
+                            <span>Return</span>
+                        </button>
                     </div>
                 </div>
 
@@ -691,9 +698,117 @@
                     </div>
                 </div>
 
+                <!-- Sub-Tab 4: Professional Return Routing (Privacy Focused) -->
+                <div class="return-routing-view" *ngIf="activeCourierSubTab === 4" style="padding: 1rem;">
+                    <div class="return-info-banner" style="display: flex; align-items: center; gap: 15px; background: #fef2f2; border: 1px solid #fee2e2; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="background: #ef4444; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0; font-weight: 800; color: #991b1b;">Pending Return Pickups</h5>
+                            <p style="margin: 2px 0 0; font-size: 0.8rem; color: #b91c1c; font-weight: 600;">Please coordinate collection for these approved returns based on your assigned states.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                        <table class="delivery-table">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th>Order ID</th>
+                                    <th>Product Content</th>
+                                    <th>User Name</th>
+                                    <th>Pickup Address</th>
+                                    <th>Contact Phone</th>
+                                    <th>Expected Pickup</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let order of returnFilteredOrders">
+                                    <td class="order-id-cell">#{{ order.orderId }}</td>
+                                    <td>
+                                        <div class="items-preview-wrapper" style="position: relative;">
+                                            <button 
+                                                class="view-items-btn" 
+                                                style="display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 6px 12px; cursor: pointer; font-weight: 800; color: #475569; font-size: 0.8rem; height: 36px; transition: all 0.2s;"
+                                                [style.borderColor]="expandedReturnItems[order.orderId] ? '#6366f1' : '#e2e8f0'"
+                                                [style.color]="expandedReturnItems[order.orderId] ? '#6366f1' : '#475569'"
+                                                (click)="toggleReturnItems(order.orderId)">
+                                                <i class="fas" [class.fa-boxes-stacked]="!expandedReturnItems[order.orderId]" [class.fa-chevron-up]="expandedReturnItems[order.orderId]"></i>
+                                                {{ order.items?.length || 0 }} Items
+                                            </button>
+
+                                            <!-- Interactive Items Dropdown -->
+                                            <div class="items-details-popover" *ngIf="expandedReturnItems[order.orderId]" 
+                                                style="position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; padding: 12px; width: 280px; margin-top: 8px;">
+                                                <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
+                                                    Product Details
+                                                </div>
+                                                <div class="popover-items-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                                                    <div class="popover-item" *ngFor="let item of order.items" style="display: flex; gap: 12px; align-items: center; background: #f8fafc; padding: 8px; border-radius: 10px;">
+                                                        <div class="popover-img" style="width: 45px; height: 45px; border-radius: 8px; overflow: hidden; background: white; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                                                            <img [src]="item.image || '/images/placeholder-plant.png'" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        </div>
+                                                        <div class="popover-meta" style="display: flex; flex-direction: column; overflow: hidden;">
+                                                            <span style="font-weight: 700; color: #1e293b; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</span>
+                                                            <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Quantity: {{ item.quantity }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="font-weight: 600; color: #475569;">{{ (order.userId?.fullName || order.userName || 'Customer') }}</td>
+                                    <td>
+                                        <div style="max-width: 250px; font-size: 0.85rem; color: #64748b; line-height: 1.4;">
+                                            <i class="fas fa-map-pin" style="color: #ef4444; margin-right: 5px;"></i>
+                                            {{ (order.userId?.address || order.shippingAddress || 'No address provided') }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="tel:{{ order.userId?.phone || order.shippingDetails?.phone }}" style="color: #2563eb; font-weight: 800; text-decoration: none;">
+                                            <i class="fas fa-phone-volume" style="margin-right: 5px;"></i>
+                                            {{ order.userId?.phone || order.shippingDetails?.phone || 'N/A' }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="date-picker-wrapper return-date-picker" (click)="returnDateInput.showPicker()"
+                                            style="display: inline-flex; align-items: center; gap: 8px; background: #fff1f2; border: 1.5px solid #fecaca; border-radius: 10px; padding: 7px 12px; cursor: pointer; transition: all 0.2s; font-weight: 800; color: #991b1b; font-size: 0.88rem; white-space: nowrap;"
+                                            onmouseover="this.style.borderColor='#ef4444'; this.style.background='#fef2f2';"
+                                            onmouseout="this.style.borderColor='#fecaca'; this.style.background='#fff1f2';">
+                                            <span style="white-space: nowrap;">{{ order.expectedReturnDate ? (order.expectedReturnDate | date:'dd MMM yyyy') : 'Set Pickup Date' }}</span>
+                                            <i class="fas fa-calendar-plus" style="color: #ef4444; font-size: 1rem;"></i>
+                                            <input #returnDateInput type="date"
+                                                [ngModel]="order.expectedReturnDate | date:'yyyy-MM-dd'"
+                                                (change)="updateReturnDate(order.orderId, $event)"
+                                                style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                                        </div>
+                                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px; font-weight: 600;">
+                                            <i class="fas fa-check-double" style="color: #10b981; margin-right: 4px;"></i> Approved: {{ (order.returnDetails?.submittedAt || order.orderDate) | date:'dd MMM' }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="status-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 6px 12px; cursor: default; font-weight: 800;">
+                                            APPROVED
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="returnFilteredOrders.length === 0">
+                                    <td colspan="6" style="padding: 40px; text-align: center;">
+                                        <div style="color: #94a3b8;">
+                                            <i class="fas fa-circle-check" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                                            <p style="font-weight: 700;">No pending return pickups for {{ selectedCourier }}</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Sub-tab indicator text -->
                 <div style="padding: 0.5rem 1.75rem 0; font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;">
-                    {{ activeCourierSubTab === 1 ? '📋 Orders & Shipments' : activeCourierSubTab === 2 ? '₹ Financial Breakdown' : '💬 Settlement & Communication' }}
+                    {{ activeCourierSubTab === 1 ? '📋 Orders & Shipments' : activeCourierSubTab === 2 ? '₹ Financial Breakdown' : activeCourierSubTab === 3 ? '💬 Settlement & Communication' : '🔄 Assigned Return Pickups' }}
                 </div>
             </div>
 
@@ -1244,6 +1359,135 @@
                 </div>
             </ng-container>
         </div>
+
+        <!-- Returns Management View -->
+        <ng-container *ngIf="activeMainTab === 'returns'">
+            <div class="reports-dashboard">
+                <!-- Return Stats Row -->
+                <div class="stats-row" style="margin-bottom: 30px;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef2f2; color: #dc2626;">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Total Returns</span>
+                            <span class="count">{{returnStats.totalReturns}}</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fff7ed; color: #ea580c;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Pending Requests</span>
+                            <span class="count">{{returnStats.requestsPending}}</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Approved & Scheduled</span>
+                            <span class="count">{{returnStats.approvedReturns}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-grid" style="grid-template-columns: 2fr 1.2fr; gap: 24px;">
+                    <!-- Returns Table -->
+                    <div class="table-card" style="margin: 0;">
+                        <div class="table-header">
+                            <h3>Return Request Management</h3>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Complete history of return requests</p>
+                        </div>
+                        <div style="flex: 1; overflow-x: auto; max-height: 600px;">
+                            <table class="delivery-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Product</th>
+                                        <th>Reason</th>
+                                        <th>Courier</th>
+                                        <th>Refund Due</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let order of allOrders" [hidden]="!['Return Requested', 'Return Approved', 'Return Terminated', 'Return Rejected', 'Pick-up Scheduled'].includes(order.status)">
+                                        <td class="order-id-cell">#{{order.orderId}}</td>
+                                        <td>
+                                            <div class="customer-preview" *ngIf="order.items && order.items.length > 0">
+                                                <div class="mini-avatar" style="width: 32px; height: 32px; border-radius: 6px; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                                                    <img [src]="order.items[0].image" style="width: 100%; height: 100%; object-fit: cover;">
+                                                </div>
+                                                <div class="c-info">
+                                                    <span class="c-name" style="font-size: 0.8rem;">{{order.items[0].name}}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="max-width: 150px; font-size: 0.75rem; color: #64748b; line-height: 1.3;">
+                                                {{ (order.returnDetails?.reason || 'No reason') | slice:0:40 }}{{ (order.returnDetails?.reason?.length > 40) ? '...' : '' }}
+                                            </div>
+                                        </td>
+                                        <td class="customer-name-cell" style="font-size: 0.8rem;">{{ order.courierName || 'Unassigned' }}</td>
+                                        <td>
+                                            <div style="display: flex; flex-direction: column;">
+                                                <span style="font-size: 0.85rem; font-weight: 800; color: #dc2626;">₹{{ (+order.totalAmount * 0.6).toFixed(0) }}</span>
+                                                <span style="font-size: 0.65rem; color: #64748b;">(40% cut)</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge" [ngClass]="getStatusClass(order.status)">{{order.status}}</span>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="returnStats.totalReturns === 0">
+                                        <td colspan="6" style="padding: 40px; text-align: center; color: #94a3b8;">
+                                            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                                            <p>No returns found.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Side Panel: Courier Distribution -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="territory-coverage-section" style="padding: 2.2rem;">
+                            <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #0f172a;">Courier Logistics</h3>
+                            <div style="display: flex; flex-direction: column; gap: 18px;">
+                                <div *ngFor="let c of returnStats.courierBreakdown">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; font-weight: 700;">
+                                        <span style="color: #475569;">{{c.name}}</span>
+                                        <span style="color: #0f172a;">{{c.count}}</span>
+                                    </div>
+                                    <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                                        <div [style.width.%]="(c.count / returnStats.totalReturns) * 100" 
+                                             style="height: 100%; background: #166534; border-radius: 4px; transition: width 0.8s ease;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="territory-coverage-section" style="background: #1e293b; color: white; padding: 2.22rem;">
+                            <h3 style="color: white; margin-bottom: 15px; font-size: 1.1rem;">Logistics Policy</h3>
+                            <ul style="padding: 0; list-style: none; margin: 0; font-size: 0.8rem; display: flex; flex-direction: column; gap: 12px; opacity: 0.9;">
+                                <li style="display: flex; gap: 10px;">
+                                    <i class="fas fa-circle-check" style="color: #10b981;"></i>
+                                    <span>Verify evidence images before approving pickup.</span>
+                                </li>
+                                <li style="display: flex; gap: 10px;">
+                                    <i class="fas fa-circle-check" style="color: #10b981;"></i>
+                                    <span>Calculated refunds include 40% processing fee.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
 
         <div class="setting-view" *ngIf="activeMainTab === 'setting'">
             <div class="courier-mgmt-card">

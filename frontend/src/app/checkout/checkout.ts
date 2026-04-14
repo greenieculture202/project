@@ -119,6 +119,7 @@ export class CheckoutComponent implements OnInit {
 
 
     currentStep = 1;
+    policyAgreed = false;
     showInvoiceModal = false;
     placedOrder: any = null;
 
@@ -435,6 +436,7 @@ export class CheckoutComponent implements OnInit {
             stateName: this.stateName,
             pincode: this.pincode,
             currentStep: this.currentStep,
+            policyAgreed: this.policyAgreed,
             selectedPayment: this.selectedPayment,
             selectedOptionId: this.selectedOptionId()
         };
@@ -456,10 +458,11 @@ export class CheckoutComponent implements OnInit {
                 this.selectedState.set(this.stateName);
                 this.pincode = state.pincode || '';
                 this.currentStep = state.currentStep || 1;
+                this.policyAgreed = state.policyAgreed || false;
                 this._selectedPayment = state.selectedPayment || '';
                 if (state.selectedOptionId) this.selectedOptionId.set(state.selectedOptionId);
 
-                if (this.currentStep === 3 && this.selectedPayment === 'upi') {
+                if (this.currentStep === 4 && this.selectedPayment === 'upi') {
                     // Reset UPI state on reload to avoid ghost timers
                     this.showUPIDetailBox = true;
                     this.showUPIScanner = false;
@@ -499,13 +502,13 @@ export class CheckoutComponent implements OnInit {
             alert('Please fill all the details to continue.');
             return;
         }
-        if (this.currentStep < 3) {
+        if (this.currentStep < 4) {
             this.currentStep++;
             this.saveCheckoutState();
             window.scrollTo(0, 0);
 
-            // If they just landed on Step 3 and UPI is default, start simulation
-            if (this.currentStep === 3 && this.selectedPayment === 'upi') {
+            // If they just landed on Step 4 and UPI is default, start simulation
+            if (this.currentStep === 4 && this.selectedPayment === 'upi') {
                 this.simulateUPIScan();
             }
         }

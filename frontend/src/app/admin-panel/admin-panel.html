@@ -949,6 +949,7 @@
             </div>
         </ng-container>
 
+
         <!-- Orders Management Content -->
         <ng-container *ngIf="activeTab === 'orders'">
             <header class="top-header">
@@ -1015,6 +1016,8 @@
                             (click)="orderStatusFilter = 'Shipped'">Shipped</button>
                         <button [class.active]="orderStatusFilter === 'Delivered'"
                             (click)="orderStatusFilter = 'Delivered'">Delivered</button>
+                        <button [class.active]="orderStatusFilter === 'Return Requested'"
+                            (click)="orderStatusFilter = 'Return Requested'">Returns</button>
                     </div>
                 </div>
 
@@ -1108,10 +1111,16 @@
                             <i class="fas fa-file-invoice"></i>
                         </button>
 
-                        <!-- 7. View Button -->
-                        <button class="btn-view-straight" (click)="viewOrderDetails(order)">
-                            View <i class="fas fa-arrow-right"></i>
-                        </button>
+                        <!-- 7. View Button / Review Return Button -->
+                        <div class="action-buttons-v2" style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn-view-straight" (click)="viewOrderDetails(order)">
+                                View <i class="fas fa-arrow-right"></i>
+                            </button>
+                            
+                            <button class="btn-review-return-icon" *ngIf="order.status === 'Return Requested'" (click)="reviewReturnRequest(order)" title="Review Return Details">
+                                <i class="fas fa-undo-alt"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1400,8 +1409,10 @@
                     All Categories
                 </button>
                 <button class="category-pill" *ngFor="let cat of faqCategories"
-                    [class.active]="faqCategoryFilter === cat" (click)="faqCategoryFilter = cat">
+                    [class.active]="faqCategoryFilter === cat" (click)="faqCategoryFilter = cat"
+                    style="display: flex; align-items: center; gap: 8px;">
                     {{cat}}
+                    <span class="remove-cat-x" (click)="removeFaqCategory(cat, $event)" title="Remove Category">&times;</span>
                 </button>
             </div>
 
@@ -1603,6 +1614,10 @@
                             (click)="inquiryActiveSubTab = 'couriers'">
                             <i class="fas fa-truck-fast"></i> Courier Channels
                         </button>
+                        <button [class.active]="inquiryActiveSubTab === 'suggestions'"
+                            (click)="inquiryActiveSubTab = 'suggestions'">
+                            <i class="fas fa-lightbulb"></i> FAQ Suggestions
+                        </button>
                     </div>
                     <button class="add-floating-btn" *ngIf="inquiryActiveSubTab === 'couriers'"
                         (click)="openNewCourierMessageModal($event)" style="background: #10b981; margin-right: 10px;">
@@ -1668,6 +1683,75 @@
                     </table>
                 </div>
             </div>
+
+            <!-- USER FAQ SUGGESTIONS BOX (MOVED FROM HERE - wrapper deleted) -->
+
+            <!-- USER FAQ SUGGESTIONS VIEW (RELOCATED) -->
+            <div class="data-card orders-card" *ngIf="inquiryActiveSubTab === 'suggestions'">
+                <div class="card-header" style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; background: #eef2ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6366f1; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.1);">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h3>User FAQ Suggestion Registry</h3>
+                        </div>
+                        <div class="stats-mini" style="font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                            {{ userFaqs.length }} Suggestions Found
+                        </div>
+                    </div>
+                </div>
+                <!-- ... Registry Table Content ... -->
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th>Contributor</th>
+                                <th>Suggested Question</th>
+                                <th>Submitted On</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngIf="isLoadingInquiries">
+                                <td colspan="5" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-leaf fa-spin" style="color: #10b981;"></i>
+                                    <p>Gathering suggestions...</p>
+                                </td>
+                            </tr>
+                            <tr *ngIf="!isLoadingInquiries && userFaqs.length === 0">
+                                <td colspan="5" style="text-align: center; padding: 60px; color: #64748b;">
+                                    <i class="fas fa-seedling fa-3x" style="opacity: 0.2; margin-bottom: 15px; display: block;"></i>
+                                    <p>No community FAQ suggestions yet.</p>
+                                </td>
+                            </tr>
+                            <tr *ngFor="let faq of userFaqs">
+                                <td>
+                                    <div class="client-name">{{faq.name}}</div>
+                                    <small style="color: #64748b; font-size: 0.75rem;">{{faq.email}}</small>
+                                </td>
+                                <td style="max-width: 400px;">
+                                    <div style="font-weight: 500; font-style: italic; color: #334155;">"{{faq.message}}"</div>
+                                </td>
+                                <td>{{faq.createdAt | date:'mediumDate'}}</td>
+                                <td>
+                                    <span class="status-badge" [ngClass]="faq.status.toLowerCase()">
+                                        {{faq.status}}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button class="btn-details-v2" (click)="openReplyModal(faq)" style="background: #10b981; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto;">
+                                        <i class="fas" [ngClass]="faq.status === 'Replied' ? 'fa-edit' : 'fa-comment-medical'"></i>
+                                        <span>{{ faq.status === 'Replied' ? 'Review & Update' : 'Answer & Guide' }}</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
 
             <!-- COURIER COMMUNICATIONS VIEW -->
             <div class="data-card orders-card" *ngIf="inquiryActiveSubTab === 'couriers'">
@@ -2050,93 +2134,213 @@
     <div class="modal-overlay" *ngIf="showOrderModal" (click)="closeOrderModal()">
         <div class="user-detail-modal order-modal" (click)="$event.stopPropagation()">
             <button class="close-modal" (click)="closeOrderModal()">&times;</button>
-            <div class="modal-header-premium">
-                <h2>Order Details</h2>
-                <p>Complete view of the order information and customer address.</p>
+            <div class="modal-header-premium" [class.return-mode]="isReturnDetailsOnly">
+                <h2>{{ isReturnDetailsOnly ? 'Return Request Details' : 'Order Details' }}</h2>
+                <p>{{ isReturnDetailsOnly ? 'Review the customer\'s return request and evidence images below.' : 'Complete view of the order information and customer address.' }}</p>
             </div>
             <div class="modal-body-premium" *ngIf="selectedOrder" style="padding-top: 30px;">
-                <!-- Customer Details Section -->
-                <div class="form-section" style="margin-bottom: 24px;">
-                    <div class="section-tag"
-                        style="background:#dcfce7; color:#16a34a; padding:6px 12px; border-radius:12px; font-weight:700; font-size:0.85rem; display:inline-block; margin-bottom:15px;">
-                        Customer & Shipping Information</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Name</label>
-                            <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
-                                selectedOrder.userId?.fullName || 'Guest User' }}</p>
-                        </div>
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Email</label>
-                            <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
-                                selectedOrder.userId?.email || 'N/A' }}</p>
-                        </div>
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Phone</label>
-                            <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
-                                selectedOrder.userId?.phone || 'N/A' }}</p>
-                        </div>
-                        <div class="info-item full">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Full
-                                Shipping Address</label>
-                            <p
-                                style="font-size:1.05rem; font-weight:500; color:#1e293b; margin-top:5px; background: #f8fafc; padding:15px; border-radius:12px; border: 1px solid #e2e8f0; line-height:1.6;">
-                                {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'Address not
-                                provided during checkout.' }}<br>
-                                <ng-container *ngIf="selectedOrder.userId?.city">{{ selectedOrder.userId?.city }},
-                                </ng-container>
-                                <ng-container *ngIf="selectedOrder.userId?.state">{{ selectedOrder.userId?.state
-                                    }}</ng-container>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Details Section -->
-                <div class="form-section">
-                    <div class="section-tag"
-                        style="background:#e0e7ff; color:#4338ca; padding:6px 12px; border-radius:12px; font-weight:700; font-size:0.85rem; display:inline-block; margin-bottom:15px;">
-                        Order Summary (ID: #{{ selectedOrder.orderId }})</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Order
-                                Date</label>
-                            <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
-                                selectedOrder.orderDate | date:'medium' }}</p>
-                        </div>
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Status</label>
-                            <p style="font-size:1.05rem; font-weight:700; margin-top:5px;"
-                                [ngClass]="selectedOrder.status.toLowerCase()">{{ selectedOrder.status }}</p>
-                        </div>
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery
-                                / Payment</label>
-                            <p style="font-size:1.05rem; font-weight:700; color:#1e293b; margin-top:5px;">
-                                <i class="fas"
-                                    [ngClass]="selectedOrder.paymentMethod === 'Cash on Delivery' ? 'fa-truck' : 'fa-mobile-alt'"
-                                    style="margin-right:8px; color:#15803d;"></i>
-                                {{ selectedOrder.paymentMethod || 'UPI' }}
-                            </p>
-                        </div>
-                        <div class="info-item">
-                            <label
-                                style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery
-                                Speed</label>
-                            <p style="font-size:1.05rem; font-weight:700; color:#16a34a; margin-top:5px;">
-                                <i class="fas fa-clock" style="margin-right:8px;"></i>
-                                {{ selectedOrder.deliveryType || '7 Day Delivery' }}
-                            </p>
+                <ng-container *ngIf="!isReturnDetailsOnly">
+                    <div class="form-section" style="margin-bottom: 24px;">
+                        <div class="section-tag"
+                            style="background:#dcfce7; color:#16a34a; padding:6px 12px; border-radius:12px; font-weight:700; font-size:0.85rem; display:inline-block; margin-bottom:15px;">
+                            Customer & Shipping Information</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Name</label>
+                                <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
+                                    selectedOrder.userId?.fullName || 'Guest User' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Email</label>
+                                <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
+                                    selectedOrder.userId?.email || 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Phone</label>
+                                <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
+                                    selectedOrder.userId?.phone || 'N/A' }}</p>
+                            </div>
+                            <div class="info-item full">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Full
+                                    Shipping Address</label>
+                                <p
+                                    style="font-size:1.05rem; font-weight:500; color:#1e293b; margin-top:5px; background: #f8fafc; padding:15px; border-radius:12px; border: 1px solid #e2e8f0; line-height:1.6;">
+                                    {{ selectedOrder.userId?.address || selectedOrder.shippingAddress || 'Address not
+                                    provided during checkout.' }}<br>
+                                    <ng-container *ngIf="selectedOrder.userId?.city">{{ selectedOrder.userId?.city }},
+                                    </ng-container>
+                                    <ng-container *ngIf="selectedOrder.userId?.state">{{ selectedOrder.userId?.state
+                                        }}</ng-container>
+                                </p>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Order Details Section -->
+                    <div class="form-section">
+                        <div class="section-tag"
+                            style="background:#e0e7ff; color:#4338ca; padding:6px 12px; border-radius:12px; font-weight:700; font-size:0.85rem; display:inline-block; margin-bottom:15px;">
+                            Order Summary (ID: #{{ selectedOrder.orderId }})</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Order
+                                    Date</label>
+                                <p style="font-size:1.05rem; font-weight:600; color:#1e293b; margin-top:5px;">{{
+                                    selectedOrder.orderDate | date:'medium' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Status</label>
+                                <p style="font-size:1.05rem; font-weight:700; margin-top:5px;"
+                                    [ngClass]="selectedOrder.status.toLowerCase()">{{ selectedOrder.status }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery
+                                    / Payment</label>
+                                <p style="font-size:1.05rem; font-weight:700; color:#1e293b; margin-top:5px;">
+                                    <i class="fas"
+                                        [ngClass]="selectedOrder.paymentMethod === 'Cash on Delivery' ? 'fa-truck' : 'fa-mobile-alt'"
+                                        style="margin-right:8px; color:#15803d;"></i>
+                                    {{ selectedOrder.paymentMethod || 'UPI' }}
+                                </p>
+                            </div>
+                            <div class="info-item">
+                                <label
+                                    style="color:#64748b; font-size:0.85rem; text-transform:uppercase; font-weight:700;">Delivery
+                                    Speed</label>
+                                <p style="font-size:1.05rem; font-weight:700; color:#16a34a; margin-top:5px;">
+                                    <i class="fas fa-clock" style="margin-right:8px;"></i>
+                                    {{ selectedOrder.deliveryType || '7 Day Delivery' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+
+                    <!-- Return Request Details Section -->
+                    <div id="return-details-section" class="form-section return-details-section"
+                        *ngIf="selectedOrder.status === 'Return Requested'"
+                        style="margin-top: 25px; padding: 25px; background: #ecfdf5; border-radius: 20px; border: 1px solid #d1fae5; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);">
+                        <div class="section-tag"
+                            style="background:#d1fae5; color:#065f46; padding:6px 15px; border-radius:12px; font-weight:800; font-size:0.8rem; display:inline-block; margin-bottom:20px; text-transform: uppercase; letter-spacing: 1px;">
+                            <i class="fas fa-undo-alt" style="margin-right: 8px;"></i> Customer Return Request 
+                        </div>
+                        
+                        <!-- Consolidated Return Details -->
+                        <div class="return-details-section-premium" id="return-section-admin" *ngIf="selectedOrder.returnDetails; else noReturnDetails">
+                            <div class="return-info-grid-premium">
+                                <div class="return-info-item-premium">
+                                    <label><i class="fas fa-tag"></i> Reason for Return</label>
+                                    <p>{{ selectedOrder.returnDetails.reason }}</p>
+                                </div>
+                                <div class="return-info-item-premium" *ngIf="selectedOrder.returnDetails.additionalInfo">
+                                    <label><i class="fas fa-comment-dots"></i> Customer Comments</label>
+                                    <p>{{ selectedOrder.returnDetails.additionalInfo }}</p>
+                                </div>
+                                <div class="return-info-item-premium">
+                                    <label><i class="fas fa-clock"></i> Submitted On</label>
+                                    <p>{{ (selectedOrder.returnDetails.submittedAt | date:'medium') || 'N/A' }}</p>
+                                </div>
+                                <!-- Refund Breakdown Card -->
+                                <div class="return-info-item-premium refund-calc-card" 
+                                    style="grid-column: span 2; background: #fff5f5; border: 1px dashed #feb2b2; margin-top: 10px; padding: 15px; border-radius: 12px;">
+                                    <label style="color: #c53030; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: block;">
+                                        <i class="fas fa-hand-holding-dollar" style="margin-right: 6px;"></i> Refund breakdown (40% policy deduction)
+                                    </label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                                        <div style="flex: 1; text-align: center; padding: 8px; background: white; border-radius: 8px; border: 1px solid #fee2e2;">
+                                            <span style="font-size: 0.65rem; color: #64748b; display: block; margin-bottom: 2px;">REAL PRICE</span>
+                                            <span style="font-size: 1rem; font-weight: 700; color: #1e293b;">₹{{ selectedOrder.totalAmount }}</span>
+                                        </div>
+                                        <div style="font-weight: 900; color: #94a3b8; font-size: 1.2rem;">-</div>
+                                        <div style="flex: 1; text-align: center; padding: 8px; background: white; border-radius: 8px; border: 1px solid #fee2e2;">
+                                            <span style="font-size: 0.65rem; color: #ef4444; display: block; margin-bottom: 2px;">40% CUT</span>
+                                            <span style="font-size: 1rem; font-weight: 700; color: #ef4444;">-₹{{ (+selectedOrder.totalAmount * 0.4) | number:'1.0-0' }}</span>
+                                        </div>
+                                        <div style="font-weight: 900; color: #94a3b8; font-size: 1.2rem;">=</div>
+                                        <div style="flex: 1.2; text-align: center; padding: 8px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                            <span style="font-size: 0.65rem; color: #166534; display: block; margin-bottom: 2px;">FINAL REFUND</span>
+                                            <span style="font-size: 1.15rem; font-weight: 800; color: #166534;">₹{{ (+selectedOrder.totalAmount * 0.6) | number:'1.0-0' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Evidence Images -->
+                            <div class="evidence-section-premium">
+                                <label class="section-label-premium">Evidence & Documentation</label>
+                                <div class="evidence-grid-premium">
+                                    <div class="evidence-card-premium" *ngIf="selectedOrder.returnDetails?.billImage">
+                                        <div class="card-tag-premium">BILL / INVOICE</div>
+                                        <div class="img-container-premium" (click)="viewFullImage(selectedOrder.returnDetails.billImage)">
+                                            <img [src]="selectedOrder.returnDetails.billImage" alt="Bill Evidence">
+                                            <div class="img-overlay-premium"><i class="fas fa-search-plus"></i></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="evidence-card-premium" *ngIf="selectedOrder.returnDetails?.productImage1">
+                                        <div class="card-tag-premium">PRODUCT PHOTO 1</div>
+                                        <div class="img-container-premium" (click)="viewFullImage(selectedOrder.returnDetails.productImage1)">
+                                            <img [src]="selectedOrder.returnDetails.productImage1" alt="Product Evidence 1">
+                                            <div class="img-overlay-premium"><i class="fas fa-search-plus"></i></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="evidence-card-premium" *ngIf="selectedOrder.returnDetails?.productImage2">
+                                        <div class="card-tag-premium">PRODUCT PHOTO 2</div>
+                                        <div class="img-container-premium" (click)="viewFullImage(selectedOrder.returnDetails.productImage2)">
+                                            <img [src]="selectedOrder.returnDetails.productImage2" alt="Product Evidence 2">
+                                            <div class="img-overlay-premium"><i class="fas fa-search-plus"></i></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Empty State for Evidence -->
+                                    <div class="evidence-empty-premium" *ngIf="!selectedOrder.returnDetails?.billImage && !selectedOrder.returnDetails?.productImage1">
+                                        <i class="fas fa-image"></i>
+                                        <p>No evidence images provided by customer</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Return Management Actions -->
+                            <div class="return-actions-container-premium" *ngIf="selectedOrder.status === 'Return Requested'">
+                                <div class="actions-header-premium">
+                                    <i class="fas fa-shield-alt"></i> Return Management
+                                </div>
+                                <div class="actions-buttons-premium">
+                                    <button class="btn-reject-premium" (click)="updateOrderStatus(selectedOrder._id || selectedOrder.id, 'Return Rejected')">
+                                        <i class="fas fa-times-circle"></i> Reject Return
+                                    </button>
+                                    <button class="btn-approve-premium" (click)="updateOrderStatus(selectedOrder._id || selectedOrder.id, 'Return Approved')">
+                                        <i class="fas fa-check-circle"></i> Approve & Refund
+                                    </button>
+
+
+                                </div>
+                                <p class="actions-note-premium">
+                                    <i class="fas fa-info-circle"></i> Approving will set the status to "Return Approved". Rejecting will set it to "Return Rejected".
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <ng-template #noReturnDetails>
+                            <div class="return-empty-error-premium">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Missing Return Form</h3>
+                                <p>This order was marked for return, but no automated form details were found.</p>
+                                <button class="btn-premium-secondary" (click)="closeOrderModal()">Contact Customer</button>
+                            </div>
+                        </ng-template>
+                    </div>
+
+                    <ng-container *ngIf="!isReturnDetailsOnly">
                     <div class="dispatch-controls" [class.shake-error]="isShaking"
                         style="margin-top: 25px; padding: 20px; background: #fffbeb; border-radius: 16px; border: 1px solid #fef3c7; transition: all 0.3s;"
                         *ngIf="selectedOrder.status === 'Pending' || selectedOrder.status === 'Processing'">
@@ -2286,11 +2490,10 @@
                         <span style="font-size:1.8rem; font-weight:800; color:#15803d;">₹{{ selectedOrder.totalAmount
                             }}</span>
                     </div>
+                    </ng-container>
                 </div>
             </div>
-
         </div>
-    </div>
 
     <!-- Invoice Modal -->
     <div class="modal-overlay" *ngIf="showInvoiceModal" (click)="closeInvoiceModal()">
@@ -2434,9 +2637,25 @@
                             <span>Shipping & Handling:</span>
                             <span>COMPLIMENTARY</span>
                         </div>
-                        <div class="grand-total-strip">
-                            <span class="label">Total Amount Payable</span>
-                            <span class="value">₹{{ selectedOrder.totalAmount | number }}</span>
+                        <div class="grand-total-strip" [style.background]="isReturnDetailsOnly ? '#fff5f5' : 'var(--primary-green)'">
+                            <i class="fas fa-money-bill-transfer" *ngIf="isReturnDetailsOnly" style="font-size: 1.2rem; margin-right: 12px; color: #ef4444;"></i>
+                            <span class="label" [style.color]="isReturnDetailsOnly ? '#c53030' : 'white'">{{ isReturnDetailsOnly ? 'Total Refund (60% of Original)' : 'Total Amount Payable' }}</span>
+                            <span class="value" [style.color]="isReturnDetailsOnly ? '#c53030' : 'white'">₹{{ (isReturnDetailsOnly ? (+selectedOrder.totalAmount * 0.6) : selectedOrder.totalAmount) | number:'1.0-0' }}</span>
+                        </div>
+                        <div *ngIf="isReturnDetailsOnly" style="text-align: right; margin-top: 15px; padding: 12px; border-radius: 10px; background: #fffaf0; border: 1px solid #feebc8; font-size: 0.85rem; color: #9c4221; font-weight: 700; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 500; color: #718096;">Original Sale Price:</span>
+                                <span>₹{{ selectedOrder.totalAmount | number }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: #c53030;">
+                                <span style="font-weight: 500;">Deduction (40% Admin Fee):</span>
+                                <span>-₹{{ (+selectedOrder.totalAmount * 0.4) | number:'1.0-0' }}</span>
+                            </div>
+                            <div style="height: 1px; background: #fbd38d; margin: 4px 0;"></div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1rem; color: #2f855a;">
+                                <span style="font-weight: 800;">Net Refundable:</span>
+                                <span>₹{{ (+selectedOrder.totalAmount * 0.6) | number:'1.0-0' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3281,8 +3500,53 @@
                     </div>
                     <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
                         From: <span style="font-weight: 500;">{{selectedInquiry?.name}}</span>
-                        ({{selectedInquiry?.email}})
+                        <span *ngIf="selectedInquiry?.userId" style="margin-left: 8px; color: #6366f1; font-weight: 700;">(ID: {{selectedInquiry?.userId}})</span>
+                        <span *ngIf="!selectedInquiry?.userId" style="margin-left: 8px; color: #64748b;">(GUEST)</span>
                     </div>
+                </div>
+
+                <!-- NEW: FAQ Promotion Controls -->
+                <div class="faq-promotion-section" 
+                     style="padding: 15px; background: rgba(16, 185, 129, 0.03); border: 1px dashed #10b981; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 12px;">
+                        <input type="checkbox" [(ngModel)]="addToFaqs" style="width: 18px; height: 18px; accent-color: #10b981;">
+                        <span style="font-weight: 700; color: #064e3b; font-size: 0.95rem;">Publish this conversation to Public FAQs?</span>
+                    </label>
+
+                    <div *ngIf="addToFaqs" style="margin-top: 15px;">
+                        <div style="display: flex; gap: 15px; align-items: flex-end;">
+                            <div style="flex: 1;" *ngIf="!isNewFaqCategory">
+                                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 5px;">SELECT CATEGORY</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <select [(ngModel)]="replyFaqCategory" 
+                                            style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 600;">
+                                        <option *ngFor="let cat of faqCategories" [value]="cat">{{cat}}</option>
+                                    </select>
+                                    <button (click)="isNewFaqCategory = true" 
+                                            title="Add New Category"
+                                            style="padding: 0 12px; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer;">
+                                        <i class="fas fa-plus" style="color: #64748b;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="flex: 1;" *ngIf="isNewFaqCategory">
+                                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 5px;">NEW CATEGORY NAME</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" [(ngModel)]="newFaqCategoryName" 
+                                           placeholder="e.g. Garden Care"
+                                           style="flex: 1; padding: 10px; border: 2px solid #10b981; border-radius: 10px; background: #fff;">
+                                    <button (click)="isNewFaqCategory = false" 
+                                            title="Back to List"
+                                            style="padding: 0 12px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 10px; cursor: pointer;">
+                                        <i class="fas fa-list" style="color: #10b981;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                          </div>
+                          <p style="margin-top: 10px; font-size: 0.8rem; color: #10b981;">
+                              <i class="fas fa-info-circle"></i> This question and your reply will be added to the public FAQ list.
+                          </p>
+                      </div>
                 </div>
 
                 <div class="form-group">
@@ -3509,4 +3773,15 @@
 
     <!-- Add FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</div>
+    <!-- Image Lightbox Modal -->
+    <div class="modal-overlay image-lightbox-overlay" *ngIf="showFullImageModal" (click)="closeFullImage()">
+        <div class="lightbox-container" (click)="$event.stopPropagation()">
+            <button class="close-lightbox" (click)="closeFullImage()">&times;</button>
+            <div class="lightbox-image-wrap">
+                <img [src]="fullImageViewUrl" alt="Full Evidence">
+            </div>
+            <div class="lightbox-footer">
+                <button class="btn-premium-secondary" (click)="closeFullImage()">Close Viewer</button>
+            </div>
+        </div>
+    </div>

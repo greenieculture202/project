@@ -24,6 +24,7 @@ const Settlement = require('./models/Settlement');
 const PlantReminder = require('./models/PlantReminder');
 const AdminChatMessage = require('./models/AdminChatMessage');
 const ChatMessage = require('./models/ChatMessage');
+const Courier = require('./models/Courier');
 
 const Cart = require('./models/Cart');
 const Payment = require('./models/Payment');
@@ -208,8 +209,68 @@ const sendOrderStatusEmail = async (order) => {
         } else if (order.status === 'Delivered') {
             statusText = 'Delivered & Green! 🎁';
             statusMessage = 'Your plants have reached their new home. We hope they bring you joy!';
-            
             trackingSection = '';
+        } else if (order.status === 'Return Approved') {
+            statusText = 'Return Approved! 📦';
+            statusMessage = 'Great news! Your return request has been approved. Please keep the items ready for pickup.';
+            
+            // Calculate Refund Breakdown (40% Cut)
+            const originalTotal = order.totalAmount;
+            const refundAmount = Math.round(originalTotal * 0.6); // 60% Refund
+            
+            // Generate Items HTML
+            const itemsHtml = order.items.map(item => `
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 10px; background: #f9fafb; border-radius: 8px;">
+                    <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                    <div style="text-align: left;">
+                        <p style="margin: 0; font-weight: 600; color: #374151;">${item.name}</p>
+                        <p style="margin: 0; font-size: 12px; color: #6b7280;">Qty: ${item.quantity}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Fetch Courier Phone
+            let courierPhone = 'Partner will contact you';
+            try {
+                const courier = await Courier.findOne({ name: order.courierName });
+                if (courier && courier.phone) {
+                    courierPhone = courier.phone;
+                }
+            } catch (err) {
+                console.error('[EMAIL-COURIER-ERROR]', err.message);
+            }
+
+            const pickupDate = order.expectedReturnDate ? 
+                new Date(order.expectedReturnDate).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' }) : 
+                'Soon';
+
+            trackingSection = `
+                <div style="margin: 25px 0; border: 1px dashed #e5e7eb; border-radius: 12px; padding: 20px;">
+                    <p style="margin: 0 0 15px; color: #4b5563; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Items to Return</p>
+                    ${itemsHtml}
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #f3f4f6; text-align: center;">
+                        <p style="margin: 0; color: #6b7280; text-decoration: line-through; font-size: 14px;">Original: ₹${originalTotal}</p>
+                        <p style="margin: 5px 0; color: #1a5d1a; font-size: 22px; font-weight: 800;">Refund: ₹${refundAmount}</p>
+                    </div>
+                </div>
+
+                <div style="background: #eff6ff; border-radius: 12px; padding: 20px; text-align: center;">
+                    <p style="margin: 0; color: #1e40af; font-size: 13px; font-weight: 700;">PICKUP PARTNER CONTACT</p>
+                    <p style="margin: 5px 0 0; color: #1e3a8a; font-size: 20px; font-weight: 800;">${courierPhone}</p>
+                    <p style="margin: 10px 0 0; color: #1e40af; font-size: 14px;"><strong>Pickup Date:</strong> ${pickupDate}</p>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0;">
+                    <p style="margin: 0; color: #15803d; font-weight: 600;">💰 Refund Update:</p>
+                    <p style="margin: 5px 0 0; color: #166534; font-size: 15px;">Your refund will be transferred to you **online**. The process has been initiated!</p>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <p style="margin: 0; font-size: 18px; color: #2d8c6f; font-weight: 700;">Thank you for shopping at Greenie Culture! 🌿</p>
+                    <p style="color: #6b7280; font-size: 14px;">We hope your next experience with us will be even better.</p>
+                </div>
+            `;
         } else {
             return;
         }
@@ -566,7 +627,7 @@ app.get('/api/admin/regional-analytics', auth, async (req, res) => {
                 .map(p => ({ name: p[0], count: p[1] }));
 
             const prices = stateData.prices.sort((a, b) => a - b);
-            
+
             finalized[s] = {
                 state: s,
                 topProducts: sortedProducts,
@@ -840,9 +901,9 @@ app.post('/api/cart', auth, async (req, res) => {
 
 // --- UNIFIED AI HANDLER (Failover Strategy) ---
 const callGemini = async (systemPrompt, userPrompt, image, apiKey) => {
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
-        systemInstruction: systemPrompt 
+        systemInstruction: systemPrompt
     });
     let result;
     if (image) {
@@ -929,7 +990,7 @@ const callHuggingFace = async (systemPrompt, userPrompt, image, apiKey) => {
     if (!response.ok) throw new Error(`Hugging Face Error: ${response.statusText}`);
     const data = await response.json();
     const text = Array.isArray(data) ? (data[0].generated_text || data[0].text) : (data.generated_text || JSON.stringify(data));
-    return { text: text.replace(fullPrompt, '').trim() }; 
+    return { text: text.replace(fullPrompt, '').trim() };
 };
 
 const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
@@ -961,9 +1022,9 @@ const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
 
 // API Routes for AI Assistant
 app.post('/api/ai-assistant', async (req, res) => {
-    let userId; 
+    let userId;
     try {
-        const { message, image } = req.body;
+        const { message, image, language } = req.body;
         userId = req.body.userId;
 
         const token = req.header('x-auth-token');
@@ -981,9 +1042,9 @@ app.post('/api/ai-assistant', async (req, res) => {
                     .sort({ timestamp: -1 })
                     .limit(6)
                     .lean();
-                
+
                 if (history && history.length > 0) {
-                    historyText = "\nRecent Conversation History:\n" + 
+                    historyText = "\nRecent Conversation History:\n" +
                         history.reverse().map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n') + "\n";
                 }
 
@@ -1000,12 +1061,20 @@ app.post('/api/ai-assistant', async (req, res) => {
             }
         }
 
+        // Language mapping for AI preference
+        let langInstruction = "MATCH SCRIPT: Your response MUST match the script/language of the user's question.";
+        if (language === 'hi-IN') {
+            langInstruction = "STRICT LANGUAGE: Your response MUST be in HINDI using DEVANAGARI SCRIPT (हिंदी लिपि). Even if the user asks in English, you must reply in Hindi.";
+        } else if (language === 'gu-IN') {
+            langInstruction = "STRICT LANGUAGE: Your response MUST be in GUJARATI using GUJARATI SCRIPT (ગુજરાતી લિપિ). Even if the user asks in English, you must reply in Gujarati.";
+        } else if (language === 'en-IN') {
+            langInstruction = "STRICT LANGUAGE: Your response MUST be in PROFESSIONAL ENGLISH.";
+        }
+
         const systemPrompt = `You are "Plant Expert AI" for Greenie Culture. Provide professional plant care advice with a friendly tone.
         
         LANGUAGE & FORMATTING:
-        1. MATCH SCRIPT: Your response MUST match the script/language of the user's question.
-           - User asks in Gujarati script -> Answer in Gujarati script.
-           - User asks in Roman script (Hinglish/Gujarati mix) -> Answer in Roman script (Hindi/Gujarati).
+        1. ${langInstruction}
         2. EMOJIS ARE MANDATORY: Use relevant emojis (🌱, 🌿, 💧, ☀️, 🧪, 🧤, ✅, ⚠️, 😉) to make your response visually professional and engaging.
         3. STRUCTURE: Use bullet points and paragraphs for readability.
         
@@ -1078,9 +1147,9 @@ app.post('/api/ai-assistant', async (req, res) => {
         res.json({ text: aiText, recommendations, remindable, plantName: identifiedPlantName });
     } catch (err) {
         console.error('[AI-ASSISTANT-ERROR]', err.message);
-        
+
         let errorText = "Lagta hai main abhi thoda vyast hoon ya API limit khatam ho gayi hai. Please thodi der mein phir se try karein! 🌱";
-        
+
         if (err.message.includes('429') || err.message.includes('Resource has been exhausted')) {
             errorText = "Aapki free AI limit aaj ke liye khatam ho gayi hai (Daily Quota Reached). 🛑 Please kal try karein ya naya API key use karein. (Your free AI limit is reached. Please try again tomorrow! or use a new key) 🌱";
         } else if (err.message.includes('API_KEY_INVALID')) {
@@ -1091,7 +1160,7 @@ app.post('/api/ai-assistant', async (req, res) => {
         let fallbackRecs = ['Indoor Plants', 'Gardening'];
         if (msgLower.includes('tulsi')) fallbackRecs = ['Tulsi Plant', ...fallbackRecs];
         if (msgLower.includes('money plant')) fallbackRecs = ['Money Plant', ...fallbackRecs];
-        
+
         res.json({
             text: errorText,
             recommendations: fallbackRecs.slice(0, 3),
@@ -1161,9 +1230,9 @@ app.post('/api/admin/ai-assistant', auth, async (req, res) => {
 
     } catch (err) {
         console.error('[MASTER-AI-CRITICAL-ERROR]', err); // Full error for logs
-        
+
         let customError = "AI Diagnostic: Detailed Master AI analysis is currently on cooldown (All providers tested). Please rely on the live dashboard metrics above! 🌱";
-        
+
         if (err.message.includes('429')) customError = "⚠️ **AI Rate Limit Reached**: Too many requests in a short time. Please wait 60 seconds.";
         if (err.message.includes('API_KEY_INVALID')) customError = "⚠️ **AI Configuration Error**: One or more API keys are invalid. Detailed analytics are limited.";
 
@@ -1184,8 +1253,8 @@ app.get('/api/admin/chat-history', auth, async (req, res) => {
 app.get('/api/user/notifications', auth, async (req, res) => {
     try {
         // Since userId in Notification schema is 'Mixed', we must query both as string and ObjectId
-        const notifications = await Notification.find({ 
-            userId: { $in: [req.user.id, new mongoose.Types.ObjectId(req.user.id)] } 
+        const notifications = await Notification.find({
+            userId: { $in: [req.user.id, new mongoose.Types.ObjectId(req.user.id)] }
         }).sort({ createdAt: -1 });
         res.json(notifications);
     } catch (err) {
@@ -1215,7 +1284,7 @@ app.delete('/api/user/notifications', auth, async (req, res) => {
 app.get('/api/reminders/opt-in', async (req, res) => {
     try {
         const { userId, orderId, choice } = req.query;
-        
+
         if (!userId || !orderId) {
             return res.status(400).send('<h1>Invalid Request</h1><p>Missing user or order information.</p>');
         }
@@ -1263,9 +1332,9 @@ app.get('/api/reminders/opt-in', async (req, res) => {
         let reminderCount = 0;
 
         // Filter valid plant items from order
-        const plantItems = (order.items || []).filter(item => !item.isGift); 
-        
-        const firstPlant = plantItems[0]; 
+        const plantItems = (order.items || []).filter(item => !item.isGift);
+
+        const firstPlant = plantItems[0];
         if (firstPlant) {
             for (const item of sequence) {
                 const reminderDate = new Date();
@@ -1453,7 +1522,7 @@ app.get('/api/products', async (req, res) => {
                         { tags: { $in: map.subCats } }
                     ]
                 };
-                
+
                 if (map.exclude) {
                     query = {
                         $and: [
@@ -1549,7 +1618,7 @@ app.get('/api/products', async (req, res) => {
         if (state && products.length > 0) {
             const rawState = state.trim().toUpperCase();
             const searchStates = [rawState];
-            
+
             // If full name provided, find code; if code provided, find full name
             if (INDIAN_STATE_CODE_MAP[rawState]) {
                 searchStates.push(INDIAN_STATE_CODE_MAP[rawState]);
@@ -1565,7 +1634,7 @@ app.get('/api/products', async (req, res) => {
 
             try {
                 // 1. Get regional popularity data - Using JS-side filtering like Admin Analytics for robustness
-                const allOrders = await Order.find({ 
+                const allOrders = await Order.find({
                     status: { $ne: 'Cancelled' }
                 }).limit(500).lean();
 
@@ -1590,7 +1659,7 @@ app.get('/api/products', async (req, res) => {
                     const scoreB = popularityMap[b.name?.trim().toLowerCase()] || 0;
                     return scoreB - scoreA;
                 });
-                
+
                 // Mark top regional favorites
                 let markedCount = 0;
                 products.forEach((p) => {
@@ -1604,7 +1673,7 @@ app.get('/api/products', async (req, res) => {
                 });
 
                 // Debug log to file
-                require('fs').appendFileSync('popular_plants_debug.log', 
+                require('fs').appendFileSync('popular_plants_debug.log',
                     `[${new Date().toISOString()}] State: ${rawState} | Matches: ${searchStates.join(',')} | Total Orders: ${allOrders.length} | Filtered: ${filteredOrders.length} | PopularityMap: ${JSON.stringify(popularityMap)}\n`
                 );
 
@@ -1623,6 +1692,7 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/search', async (req, res) => {
     try {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         const { q } = req.query;
         if (!q || q.length < 2) return res.json([]);
 
@@ -1681,6 +1751,7 @@ app.get('/api/products/categories', async (req, res) => {
 
 app.get('/api/products/map', async (req, res) => {
     try {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         // Optimization: Only fetch fields needed for the map (assuming we need full objects for some reason, 
         // but if we only need names/images for a list, we should project. 
         // For now, let's at least exclude heavy fields if any, or just rely on the fact that we fixed the main slug issue.
@@ -1948,13 +2019,13 @@ app.get('/api/admin/payments-stats', auth, async (req, res) => {
                 }
             }
         ]);
-        
+
         // Transform for easier frontend consumption
         const result = {
             cod: stats.find(s => s._id === 'COD') || { count: 0, totalAmount: 0 },
             online: stats.find(s => s._id === 'Online') || { count: 0, totalAmount: 0 }
         };
-        
+
         res.json(result);
     } catch (err) {
         console.error('[AdminPaymentStatsAPI] Error:', err.message);
@@ -2010,12 +2081,22 @@ app.get('/api/admin/payment-summary', auth, async (req, res) => {
 
 app.put('/api/admin/orders/:id/status', auth, async (req, res) => {
     try {
-        const { status, courierName, trackingNumber, expectedDeliveryDate } = req.body;
+        const { status, courierName, trackingNumber, expectedDeliveryDate, expectedReturnDate, returnDetails } = req.body;
         const updateData = { status };
-        
+
+        if (expectedReturnDate) updateData.expectedReturnDate = expectedReturnDate;
+
+        if (returnDetails) {
+            console.log(`\n🔄 [RETURN REQUEST] Received return details for Order ID: ${req.params.id}`);
+            console.log(`📝 Reason: ${returnDetails.reason}`);
+            console.log(`🖼️ Bill Image: ${returnDetails.billImage ? (returnDetails.billImage.substring(0, 50) + '... (' + returnDetails.billImage.length + ' chars)') : 'NONE'}`);
+            console.log(`📸 Product Img 1: ${returnDetails.productImage1 ? (returnDetails.productImage1.substring(0, 50) + '... (' + returnDetails.productImage1.length + ' chars)') : 'NONE'}`);
+            updateData.returnDetails = returnDetails;
+        }
+
         // Find existing order first to check previous states
         const existingOrder = await Order.findById(req.params.id);
-        if(!existingOrder) return res.status(404).json({ message: 'Order not found' });
+        if (!existingOrder) return res.status(404).json({ message: 'Order not found' });
 
         if (courierName) {
             updateData.courierName = courierName;
@@ -2707,7 +2788,6 @@ const seedFaqs = async () => {
 };
 
 // --- Courier Management Routes ---
-const Courier = require('./models/Courier');
 
 // Seed default couriers if none exist
 const seedCouriers = async () => {
@@ -2981,7 +3061,7 @@ app.get('/api/admin/notifications', auth, async (req, res) => {
             return res.status(403).json({ message: 'Access denied - Admins only' });
         }
         // Fetch ALL admin-relevant notifications (Settlements, Low Stock, Messages, etc.)
-        const notifications = await Notification.find({ 
+        const notifications = await Notification.find({
             $or: [
                 { userId: 'admin' },
                 { type: 'admin' },
@@ -2989,7 +3069,7 @@ app.get('/api/admin/notifications', auth, async (req, res) => {
                 { type: 'LowStock' },
                 { type: 'NewOrder' },
                 { type: 'Reply' }
-            ] 
+            ]
         }).sort({ createdAt: -1 }).limit(100);
         res.json(notifications);
     } catch (err) {
@@ -3042,7 +3122,7 @@ app.post('/api/admin/notify-courier', auth, async (req, res) => {
 app.get('/api/courier/notifications/:courierName', async (req, res) => {
     try {
         const { courierName } = req.params;
-        const notifications = await Notification.find({ 
+        const notifications = await Notification.find({
             $or: [
                 { userId: courierName }, // Received by courier
                 { sender: courierName }  // Sent by courier
@@ -3088,14 +3168,14 @@ app.put('/api/admin/notifications/read', auth, async (req, res) => {
         if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
             return res.status(403).json({ message: 'Access denied' });
         }
-        await Notification.updateMany({ 
+        await Notification.updateMany({
             $or: [
                 { userId: 'admin' },
                 { type: 'admin' },
                 { type: 'LowStock' },
                 { type: 'NewOrder' },
                 { type: 'Reply' }
-            ] 
+            ]
         }, { $set: { isRead: true } });
         res.json({ message: 'All admin notifications marked as read' });
     } catch (err) {
@@ -3124,12 +3204,12 @@ app.post('/api/admin/generate-marketing', auth, async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        
+
         // 3-second timeout to guarantee ultra-fast responses (either AI or Template!)
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('AI Request Timeout or Rate Limited')), 3000);
         });
-        
+
         const result = await Promise.race([
             model.generateContent(prompt),
             timeoutPromise
@@ -3139,12 +3219,12 @@ app.post('/api/admin/generate-marketing', auth, async (req, res) => {
         res.json({ text: response.text() });
     } catch (err) {
         console.error('[MarketingAPI] Error/Timeout:', err.message);
-        
+
         // INSTANT OFFLINE FALLBACK GENERATOR with 6 VARIATIONS!
         let fallbackText = "";
         const cleanName = productName ? productName.trim().charAt(0).toUpperCase() + productName.trim().slice(1) : "Plant";
         const randomIndex = Math.floor(Math.random() * 6); // Choose from 6 variations
-        
+
         if (type === 'social') {
             const variations = [
                 `🌿 Say hello to green goodness! 🌿\n\nOur stunning ${cleanName} is exactly what your space needs right now. ✨\n\n${offerDetails}\n\nHurry, limited stock available! 🛍️🛒\n\n#GreenieCulture #${cleanName.replace(/\\s+/g, '')} #PlantLove #HomeDecor #GreenLiving`,
@@ -3189,9 +3269,9 @@ app.get('/api/admin/ai-tasks', auth, async (req, res) => {
         if (!req.user.isAdmin && req.user.id !== 'admin-special-id') {
             return res.status(403).json({ message: 'Access denied' });
         }
-        
+
         const tasks = [];
-        
+
         // 1. Critical Stock Alerts (< 10)
         const criticalItems = await Product.find({ stock: { $lt: 10 } }).limit(2);
         criticalItems.forEach(p => tasks.push(`🚨 CRITICAL: Replenish ${p.name} (Stock: ${p.stock})`));
@@ -3208,7 +3288,7 @@ app.get('/api/admin/ai-tasks', auth, async (req, res) => {
 
         // 4. Daily Volume Insight
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         const orderCount = await Order.countDocuments({ orderDate: { $gte: today } });
         if (orderCount > 8) tasks.push(`🏁 High Traffic: ${orderCount} orders placed today so far! 🚀`);
 
@@ -3265,11 +3345,11 @@ app.get('/api/admin/chat-history', auth, async (req, res) => {
 app.post('/api/admin/reminders', auth, async (req, res) => {
     const debugInfo = { timestamp: new Date(), userId: req.user?.id, body: req.body };
     fs.appendFileSync(path.join(__dirname, 'reminder_logs.txt'), JSON.stringify(debugInfo) + '\n');
-    
+
     try {
         const { plantName, problemType } = req.body;
         console.log(`[REMINDER-DEBUG] User ${req.user.id} setting reminder for ${plantName}`);
-        
+
         const sequence = [
             { type: 'water', delayDays: 0, label: 'Water Reminder' },
             { type: 'fertilizer', delayDays: 4, label: 'Fertilizer Reminder' },
@@ -3282,7 +3362,7 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
 
         for (const item of sequence) {
             const reminderDate = new Date();
-            
+
             if (item.type === 'water') {
                 // First one in 1 minute for immediate feedback
                 reminderDate.setMinutes(reminderDate.getMinutes() + 1);
@@ -3295,7 +3375,7 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
                 userId: req.user.id,
                 plantName,
                 problemType: `${problemType} (${item.label})`,
-                reminderType: item.type, 
+                reminderType: item.type,
                 reminderDate,
                 sequenceId
             });
@@ -3304,9 +3384,9 @@ app.post('/api/admin/reminders', auth, async (req, res) => {
             createdReminders.push(reminder);
         }
 
-        res.json({ 
-            message: 'Sequenced reminders scheduled successfully (4 parts)', 
-            reminders: createdReminders 
+        res.json({
+            message: 'Sequenced reminders scheduled successfully (4 parts)',
+            reminders: createdReminders
         });
     } catch (err) {
         console.error('[REMINDER-ERROR]', err.message);
@@ -3354,11 +3434,11 @@ cron.schedule('* * * * *', async () => {
                 reminderId: reminder._id,
                 title: `🌿 Plant Care: ${reminder.plantName}`,
                 message: `Hello! It's time to check your ${reminder.plantName}. Is it ready for some ${reminder.reminderType}?`,
-                product: { name: reminder.plantName } 
+                product: { name: reminder.plantName }
             });
 
             await notification.save();
-            
+
             // Mark reminder as sent
             reminder.notificationStatus = 'sent';
             await reminder.save();
@@ -3393,12 +3473,12 @@ app.post('/api/cart', auth, async (req, res) => {
     try {
         console.log('[CART POST] Hit by user:', req.user.id, 'Payload:', req.body);
         const { cart: items } = req.body; // frontend sends { cart: items }
-        
+
         let cart = await Cart.findOne({ userId: req.user.id });
         if (!cart) {
             cart = new Cart({ userId: req.user.id, items: [] });
         }
-        
+
         // Ensure required fields are present
         const processedItems = (items || []).map(item => ({
             productId: item.productId || item.id, // Fallback for testing
@@ -3413,7 +3493,7 @@ app.post('/api/cart', auth, async (req, res) => {
 
         cart.items = processedItems;
         await cart.save();
-        
+
         res.json({ message: 'Cart saved successfully', items: cart.items, totalAmount: cart.totalAmount });
     } catch (err) {
         console.error('[CART POST ERROR]', err.message);

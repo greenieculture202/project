@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { ProductService } from '../services/product.service';
+import { ProductService, Product } from '../services/product.service';
 
 @Component({
     selector: 'app-category-nav',
@@ -10,9 +10,12 @@ import { ProductService } from '../services/product.service';
     templateUrl: './category-nav.html',
     styleUrl: './category-nav.css'
 })
-export class CategoryNavComponent {
+export class CategoryNavComponent implements OnInit {
     private productService = inject(ProductService);
     private router = inject(Router);
+
+    activeProducts: Partial<Product>[] = [];
+    isInitialized: boolean = false;
     categories = [
         'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Soil & Growing Media',
         'Fertilizers & Nutrients', 'Gardening Tools', 'About Us', 'Contact Us', "FAQ's"
@@ -298,55 +301,166 @@ export class CategoryNavComponent {
 
     activeCategory: string | null = null;
 
-    getMenuColumns(cat: string): { title: string, items: any[] }[] {
-        const menu = this.menus[cat];
-        if (!menu) return [];
+    ngOnInit() {
+        this.fetchActiveProducts();
+    }
 
-        const columns: { title: string, items: any[] }[] = [];
+    fetchActiveProducts() {
+        this.productService.getActiveProductsMinimal().subscribe({
+            next: (products) => {
+                this.activeProducts = products;
+                this.isInitialized = true;
+            },
+            error: (err) => {
+                console.error('Error in CategoryNav fetch:', err);
+                this.isInitialized = true; // Still show menu if API fails
+            }
+        });
+    }
 
-        if (cat === 'Seeds') {
-            if (menu.vegetableSeeds) columns.push({ title: 'Vegetable Seeds', items: menu.vegetableSeeds });
-            if (menu.fruitSeeds) columns.push({ title: 'Fruit Seeds', items: menu.fruitSeeds });
-            if (menu.herbSeeds) columns.push({ title: 'Herb Seeds', items: menu.herbSeeds });
-            if (menu.flowerSeeds) columns.push({ title: 'Flower Seeds', items: menu.flowerSeeds });
-            if (menu.microgreenSeeds) columns.push({ title: 'Microgreen Seeds', items: menu.microgreenSeeds });
-        } else if (cat === 'Soil & Growing Media') {
-            if (menu.soilTypes) columns.push({ title: 'Soil Types', items: menu.soilTypes });
-            if (menu.organicAmendments) columns.push({ title: 'Organic Amendments', items: menu.organicAmendments });
-            if (menu.growthMedia) columns.push({ title: 'Growth Media', items: menu.growthMedia });
-        } else if (cat === 'Fertilizers & Nutrients') {
-            if (menu.organicFertilizers) columns.push({ title: 'Organic Fertilizers', items: menu.organicFertilizers });
-            if (menu.chemicalFertilizers) columns.push({ title: 'Chemical Fertilizers', items: menu.chemicalFertilizers });
-            if (menu.plantBoosters) columns.push({ title: 'Plant Boosters', items: menu.plantBoosters });
-        } else if (cat === 'Gardening Tools') {
-            if (menu.handTools) columns.push({ title: 'Hand Tools', items: menu.handTools });
-            if (menu.cuttingTools) columns.push({ title: 'Cutting Tools', items: menu.cuttingTools });
-            if (menu.diggingTools) columns.push({ title: 'Digging Tools', items: menu.diggingTools });
-            if (menu.powerTools) columns.push({ title: 'Power Tools', items: menu.powerTools });
-        } else if (cat === 'Accessories') {
-            if (menu.potsAndPlanters) columns.push({ title: 'Pots & Planters', items: menu.potsAndPlanters });
-            if (menu.wateringEquipment) columns.push({ title: 'Watering Equipment', items: menu.wateringEquipment });
-            if (menu.plantSupport) columns.push({ title: 'Support & Protection', items: menu.plantSupport });
-            if (menu.lightingEquipment) columns.push({ title: 'Lighting Equipment', items: menu.lightingEquipment });
-            if (menu.decorativeAccessories) columns.push({ title: 'Decorative & Display', items: menu.decorativeAccessories });
-        } else if (cat === 'Gardening') {
-            if (menu.outdoorBlooms) columns.push({ title: 'Outdoor Blooms', items: menu.outdoorBlooms });
-            if (menu.homeGardenEssentials) columns.push({ title: 'Home Garden Essentials', items: menu.homeGardenEssentials });
-            if (menu.foliageAndGreens) columns.push({ title: 'Foliage & Greens', items: menu.foliageAndGreens });
-            if (menu.decorativeStyle) columns.push({ title: 'Decorative Style', items: menu.decorativeStyle });
-        } else {
-            if (menu.eliteGreens) columns.push({ title: 'Elite Greens', items: menu.eliteGreens });
-            if (menu.perfectPlacements) columns.push({ title: 'Perfect Placements', items: menu.perfectPlacements });
-            if (menu.plantsCollection) columns.push({ title: 'Collection', items: menu.plantsCollection });
-            if (menu.plantersStyle) columns.push({ title: 'Style', items: menu.plantersStyle });
-            if (menu.sendTo || menu.sendPlantsTo) columns.push({ title: 'Delivery To', items: menu.sendTo || menu.sendPlantsTo });
+    private getMappingForMegaMenu(cat: string): string[] {
+        const mapping: { [key: string]: string[] } = {
+            'Indoor': ['Indoor Plants'],
+            'Outdoor': ['Outdoor Plants'],
+            'Flowering': ['Flowering Plants'],
+            'Gardening': ['Gardening'],
+            'Seeds': ['Vegetable Seeds', 'Fruit Seeds', 'Herb Seeds', 'Flower Seeds', 'Microgreen Seeds', 'Seeds Kit'],
+            'Accessories': ['Accessories'],
+            'Soil & Growing Media': ['Soil & Growing Media', 'Soil Types', 'Organic Amendments', 'Growth Media'],
+            'Fertilizers & Nutrients': ['Fertilizers & Nutrients', 'Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters'],
+            'Gardening Tools': ['Gardening Tools', 'Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools']
+        };
+        return mapping[cat] || [cat];
+    }
+
+    private shouldShowItem(category: string, item: any): boolean {
+        // If we haven't loaded products yet, show everything (don't break UI)
+        if (!this.isInitialized) return true;
+
+        const itemName = this.isComplexItem(item) ? item.name : item;
+
+        // Define items that should ALWAYS be shown (not specific products)
+        const persistentItems = [
+            'All Plants', 'Best Sellers', 'Same Day Delivery', 'New Arrivals', 'Premium Plants',
+            'Air Purifying Plants', 'Plants for Her', 'Plants for Him', 'Plants Offers',
+            'Garden Accessories', 'Terrariums Plants', 'Personalised Plants', 'Indoor Plants',
+            'Desktop Plants', 'Valentine\'s', 'Birthday', 'Anniversary', 'House Warming', 'Good Luck',
+            'Ceramic Planters', 'Metal Planters', 'Glass Planters', 'Mugs Planter', 'Planter Pots',
+            'Cake n Plants', 'Plants Combos', 'Flowers n Plants', 'Delhi NCR', 'Bengaluru', 'Mumbai',
+            'Pune', 'Hyderabad', 'Kolkata', 'Chennai', 'Lucknow', 'Ahmedabad', 'All Other Cities',
+            'About Us', 'Contact Us', "FAQ's", 'Vegetable Seeds', 'Fruit Seeds', 'Herb Seeds',
+            'Flower Seeds', 'Microgreen Seeds', 'Soil Types', 'Organic Amendments', 'Growth Media',
+            'Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters', 'Hand Tools',
+            'Cutting Tools', 'Digging Tools', 'Power Tools', 'Pots & Planters', 'Watering Equipment',
+            'Support & Protection', 'Lighting Equipment', 'Decorative & Display'
+        ];
+
+        if (persistentItems.includes(itemName)) {
+            return true;
         }
 
-        return columns;
+        // For actual plant/seed names, check if they exist in the active products list
+        // AND belong to the current category mega-menu
+        const lowerName = itemName.toLowerCase().trim();
+        const dbCategories = this.getMappingForMegaMenu(category).map(c => c.toLowerCase().trim());
+
+        return this.activeProducts.some(p => {
+            const activeName = (p.name || '').toLowerCase().trim();
+            const pCat = (p.category || '').toLowerCase().trim();
+
+            // Name must match AND product must belong to one of the mapped categories for this menu
+            const nameMatch = lowerName === activeName || lowerName.includes(activeName) || activeName.includes(lowerName);
+            const categoryMatch = dbCategories.includes(pCat);
+
+            return nameMatch && categoryMatch;
+        });
+    }
+
+    getMenuColumns(cat: string): { title: string, items: any[] }[] {
+        if (!this.isInitialized) return [];
+
+        const columns: { title: string, items: any[] }[] = [];
+        const menuMappings = this.getMappingForMegaMenu(cat);
+        const lowMappings = menuMappings.map(m => m.toLowerCase().trim());
+        const menu = this.menus[cat];
+
+        // Ensure we always have a menu object to provide premium headers
+        if (menu) {
+            const headerKeys = Object.keys(menu).filter(k => Array.isArray(menu[k]));
+            
+            // Get all database products for this mega-menu context
+            const dbProducts = this.activeProducts.filter(p => {
+                const pCat = (p.category || '').toLowerCase().trim();
+                const pName = (p.name || '').toLowerCase().trim();
+                
+                // Specific matching logic to prevent leakage
+                const isDirectMatch = lowMappings.some(lowM => pCat === lowM);
+                const isPartialMatch = lowMappings.some(lowM => 
+                    pCat.length > 4 && lowM.length > 4 && (pCat.includes(lowM) || lowM.includes(pCat))
+                );
+                
+                // Safety: Avoid 'Gardening' plants leaking into 'Gardening Tools'
+                if (cat === 'Gardening Tools' && pCat === 'gardening') return false;
+
+                return isDirectMatch || isPartialMatch;
+            });
+
+            const capturedNames = new Set<string>();
+
+            // 1. Distribute products strictly matching original premium headers
+            headerKeys.forEach(key => {
+                const staticItems = menu[key];
+                const staticNames = staticItems.map((item: any) => 
+                    (this.isComplexItem(item) ? item.name : item).toLowerCase().trim()
+                );
+                
+                const matchingProducts = dbProducts.filter(p => {
+                    const pName = (p.name || '').toLowerCase().trim();
+                    return staticNames.includes(pName);
+                });
+
+                if (matchingProducts.length > 0) {
+                    columns.push({
+                        title: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+                        items: matchingProducts.map(p => {
+                            capturedNames.add(p.name!.toLowerCase().trim());
+                            return { name: p.name, badge: null };
+                        })
+                    });
+                }
+            });
+
+            // 2. Handle all other database products that belong here but werent in static lists
+            const remainingProducts = dbProducts.filter(p => !capturedNames.has((p.name || '').toLowerCase().trim()));
+            if (remainingProducts.length > 0) {
+                const items = remainingProducts.map(p => ({ name: p.name, badge: null }));
+                
+                // Determine layout density based on category
+                let maxItems = 12;
+                if (cat === 'Seeds') maxItems = 20;
+                if (cat === 'Accessories') maxItems = 15;
+
+                const numCols = Math.ceil(items.length / maxItems);
+                for (let i = 0; i < numCols; i++) {
+                    columns.push({
+                        title: i === 0 ? (headerKeys.length > 0 ? 'More Selection' : cat) : ' ',
+                        items: items.slice(i * maxItems, (i + 1) * maxItems)
+                    });
+                }
+            }
+            return columns;
+        }
+
+        return [];
     }
 
     showMenu(category: string) {
-        this.activeCategory = category;
+        // Toggle the menu if it's already open for this category
+        if (this.activeCategory === category) {
+            this.activeCategory = null;
+        } else {
+            this.activeCategory = category;
+        }
     }
 
     hideMenu() {
@@ -354,12 +468,10 @@ export class CategoryNavComponent {
     }
 
     navigateToCategory(category: string, event: Event) {
-        // Just hide the menu so the user can see the navigation happened
         this.hideMenu();
     }
 
     navigateToItem(category: string, item: any, event: Event) {
-        // Just hide the menu so the user can see the navigation happened
         this.hideMenu();
     }
 
@@ -374,25 +486,19 @@ export class CategoryNavComponent {
     getItemLink(category: string, item: any, columnTitle?: string): string {
         const itemName = this.isComplexItem(item) ? item.name : item;
 
-        // For specific plant categories and accessories, navigate directly to individual product detail page
         const directToProductCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Accessories'];
         if (directToProductCategories.includes(category)) {
             return `/product/${this.productService.createSlug(itemName)}`;
         }
 
-        // For Seeds category items, navigate to individual product detail page
-        // But for column titles (like "Vegetable Seeds"), navigate to category page
         if (category === 'Seeds') {
-            // Column titles should go to category pages
             const seedCategoryTitles = ['Vegetable Seeds', 'Fruit Seeds', 'Herb Seeds', 'Flower Seeds', 'Microgreen Seeds'];
             if (seedCategoryTitles.includes(itemName)) {
                 return `/products/${this.productService.createSlug(itemName)}`;
             }
-            // Individual seed items go to product detail page directly using itemName
             return `/product/${this.productService.createSlug(itemName)}`;
         }
 
-        // For other categories, try to match with product categories
         const productCategories = ['Flowering Plants', 'Air Purifying', 'Bestsellers', 'New Arrivals'];
         if (productCategories.includes(itemName)) {
             return `/products/${this.productService.createSlug(itemName)}`;
@@ -400,49 +506,37 @@ export class CategoryNavComponent {
 
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
         if (gardeningCategories.includes(category)) {
-            // Titles or known category strings should go to products listing
             const toolCats = ['Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools'];
             if (toolCats.includes(itemName)) {
                 return `/products/${this.productService.createSlug(itemName)}`;
             }
-            // Individual items go to product detail page
             return `/product/${this.productService.createSlug(itemName)}`;
         }
 
-        // Default: navigate to the parent category
         const suffix = ['Seeds', 'Accessories', 'Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'].includes(category) ? '' : ' Plants';
         return `/products/${this.productService.createSlug(category + suffix)}`;
     }
 
     getCategoryLink(category: string): string {
-        if (category === 'About Us') {
-            return '/about-us';
-        }
-        if (category === 'Contact Us') {
-            return '/contact-us';
-        }
-        if (category === "FAQ's") {
-            return '/faq';
-        }
-        // For new gardening categories, navigate to category page
+        if (category === 'About Us') return '/about-us';
+        if (category === 'Contact Us') return '/contact-us';
+        if (category === "FAQ's") return '/faq';
+
         const gardeningCategories = ['Soil & Growing Media', 'Fertilizers & Nutrients', 'Gardening Tools'];
         if (gardeningCategories.includes(category)) {
             return `/products/${this.productService.createSlug(category)}`;
         }
 
-        // For other categories with products
         const directCategories = ['Indoor', 'Outdoor', 'Flowering', 'Gardening'];
         if (directCategories.includes(category)) {
             return `/products/${this.productService.createSlug(category + ' Plants')}`;
         }
 
-        // For Seeds and Accessories, don't append " Plants"
         const noSuffixCategories = ['Seeds', 'Accessories'];
         if (noSuffixCategories.includes(category)) {
             return `/products/${this.productService.createSlug(category)}`;
         }
 
-        // Default
         return `/products/${this.productService.createSlug(category)}`;
     }
 }
