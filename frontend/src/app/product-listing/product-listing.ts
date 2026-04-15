@@ -24,7 +24,7 @@ export class ProductListingComponent {
 
     constructor() {
         const viewportScroller = inject(ViewportScroller);
-        
+
         // Listen to state changes
         this.authService.userState$.subscribe(state => {
             this.userState = state;
@@ -123,9 +123,9 @@ export class ProductListingComponent {
     getOfferBenefit(product: Product): string {
         if (!product) return '';
         const offerTags = OFFER_RULES.map(tag => tag.code);
-        const code = product.tags?.find(tag => offerTags.includes(tag)) || 
-                     (product.category ? CATEGORY_TO_OFFER[product.category] : null);
-        
+        const code = product.tags?.find(tag => offerTags.includes(tag)) ||
+            (product.category ? CATEGORY_TO_OFFER[product.category] : null);
+
         if (code) {
             const rule = OFFER_RULES.find(r => r.code === code);
             return rule ? rule.shortBenefit : '';

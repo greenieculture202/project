@@ -21,6 +21,7 @@ export interface Product {
     variants?: { name: string; price: string; originalPrice?: string; }[];
     stock?: number;
     isRegionalFavorite?: boolean;
+    createdAt?: string;
 }
 
 @Injectable({
@@ -398,8 +399,12 @@ export class ProductService {
 
     // Get product by slug
     getProductBySlug(slug: string): Observable<Product | null> {
+        // Only return from cache if it's a "full" product (has images array)
         if (this.productCache.has(slug)) {
-            return of(this.productCache.get(slug)!);
+            const cached = this.productCache.get(slug);
+            if (cached && cached.images && cached.images.length > 0) {
+                return of(cached);
+            }
         }
 
         return this.http.get<Product>(`${this.apiUrl}/products/slug/${slug}`).pipe(
@@ -491,7 +496,8 @@ export class ProductService {
             map(products => products.map(p => ({
                 name: p.name,
                 category: p.category,
-                slug: p.slug || this.convertToSlug(p.name)
+                slug: p.slug || this.convertToSlug(p.name),
+                createdAt: p.createdAt
             }))),
             catchError(error => {
                 console.error('Error fetching active products minimal:', error);

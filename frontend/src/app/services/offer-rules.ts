@@ -19,11 +19,11 @@ export const OFFER_RULES: OfferBenefit[] = [
         minQty: 2,
         category: 'XL Plants',
         image: 'https://images.unsplash.com/photo-1597072634124-6a60774ec894?auto=format&fit=crop&w=400&q=80',
-        freeProduct: { 
-            name: 'Gift: Bonus Medium Plant', 
-            quantity: 1, 
-            price: 0, 
-            image: 'https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?auto=format&fit=crop&w=200&q=80' 
+        freeProduct: {
+            name: 'Gift: Bonus Medium Plant',
+            quantity: 1,
+            price: 0,
+            image: 'https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?auto=format&fit=crop&w=200&q=80'
         }
     },
     {
@@ -34,11 +34,11 @@ export const OFFER_RULES: OfferBenefit[] = [
         minQty: 2,
         category: 'Indoor Plants',
         image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=400&q=80',
-        freeProduct: { 
-            name: 'Gift: Premium Ceramic Pot', 
-            quantity: 1, 
-            price: 0, 
-            image: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=200&q=80' 
+        freeProduct: {
+            name: 'Gift: Premium Ceramic Pot',
+            quantity: 1,
+            price: 0,
+            image: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=200&q=80'
         }
     },
     {
@@ -59,11 +59,11 @@ export const OFFER_RULES: OfferBenefit[] = [
         minQty: 2,
         category: 'Flowering Plants',
         image: 'https://images.unsplash.com/photo-1596724898730-6644f774317f?auto=format&fit=crop&w=400&q=80',
-        freeProduct: { 
-            name: 'Gift: Organic Fertilizer (1kg)', 
-            quantity: 1, 
-            price: 0, 
-            image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=200&q=80' 
+        freeProduct: {
+            name: 'Gift: Organic Fertilizer (1kg)',
+            quantity: 1,
+            price: 0,
+            image: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?auto=format&fit=crop&w=200&q=80'
         }
     }
 ];

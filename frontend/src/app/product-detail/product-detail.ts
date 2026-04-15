@@ -51,14 +51,21 @@ export class ProductDetailComponent implements OnInit {
             if (slug) {
                 window.scrollTo(0, 0);
 
-                // Check cache for instant load
+                // Reset state for new product
+                this.activeImageIndex = 0;
+                this.showVideo = false;
+                this.currentPlanterImage = '';
+                this.quantity = 1;
+
+                // Check cache for instant load (only if it has full detail)
                 const cachedProduct = (this.productService as any).productCache?.get(slug);
-                if (cachedProduct) {
+                if (cachedProduct && cachedProduct.images && cachedProduct.images.length > 0) {
                     this.product = cachedProduct;
                     this.isLoading = false;
                     this.setupProductDetails();
                 } else {
                     this.isLoading = true;
+                    this.product = undefined;
                 }
 
                 this.productService.getProductBySlug(slug).subscribe({
@@ -139,14 +146,10 @@ export class ProductDetailComponent implements OnInit {
     setActiveImage(index: number) {
         this.showVideo = false;
         this.activeImageIndex = index;
-
-        const additionalImages = this.product?.images || [];
-        const totalProductPics = 1 + additionalImages.length;
-
-        if (index === 0) {
-            this.currentPlanterImage = this.product?.image || '';
-        } else if (index < totalProductPics) {
-            this.currentPlanterImage = additionalImages[index - 1];
+        
+        const currentThumbnails = this.thumbnails;
+        if (currentThumbnails[index]) {
+            this.currentPlanterImage = currentThumbnails[index];
         }
     }
 

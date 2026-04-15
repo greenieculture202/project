@@ -17,11 +17,11 @@
 
     <div class="product-grid" *ngIf="!isLoading && !error">
         <a class="product-card" *ngFor="let product of products"
-            [ngClass]="isZoomCategory(product) ? 'zoom-effect' : 'scroll-effect'"
+            [ngClass]="isZoomCategory(product) ? 'zoom-effect' : 'flip-effect'"
             [routerLink]="['/product', product.slug || getSlug(product.name)]">
             <div class="image-container">
                 <img [src]="product.image" [alt]="product.name" class="product-img main-img" loading="lazy">
-                <img [src]="(product.images && product.images.length > 1) ? product.images[1] : (product.hoverImage || product.image)" [alt]="product.name" class="product-img hover-img"
+                <img [src]="(product.images && product.images.length > 0) ? product.images[0] : (product.hoverImage || product.image)" [alt]="product.name" class="product-img hover-img"
                     loading="lazy">
                 <span class="discount-badge" *ngIf="product.discount && !hasOfferTag(product)">{{ product.discount }}</span>
                 <span class="offer-badge" *ngIf="hasOfferTag(product)">

@@ -461,7 +461,7 @@ export class UserPanelComponent implements OnInit {
 
     requestReturn(order: any) {
         if (!order) return;
-        
+
         // Block if return already submitted
         if (this.submittedReturns.has(order.orderId)) {
             alert('A return request for this order (#' + order.orderId + ') has already been submitted and is under review.');
@@ -493,7 +493,7 @@ export class UserPanelComponent implements OnInit {
     onStatusClick(order: any) {
         if (!order) return;
         const status = (order.effectiveStatus || order.status).toLowerCase();
-        
+
         // Show info popup for Return Approved, Return Rejected, or Return Requested
         if (status.includes('return')) {
             this.selectedOrderForStatusInfo = order;
@@ -566,12 +566,12 @@ export class UserPanelComponent implements OnInit {
         }
 
         this.isSubmittingReturn = true;
-        
+
         // Call backend to update status permanently
         if (this.selectedOrderForModal) {
             const dbId = this.selectedOrderForModal._id;
             const displayId = this.selectedOrderForModal.orderId;
-            
+
             // Collect return details to send to server
             console.log('[DEBUG] Submitting Return with Images:', {
                 hasBill: !!this.returnBillPreview,
@@ -594,15 +594,15 @@ export class UserPanelComponent implements OnInit {
                 next: (response: any) => {
                     console.log('[DEBUG] Return submission success response:', response);
                     this.submittedReturns.add(displayId);
-                    
+
                     // Update local object states immediately
                     this.selectedOrderForModal.status = 'Return Requested';
                     this.selectedOrderForModal.effectiveStatus = 'Return Requested';
                     this.selectedOrderForModal.returnDetails = returnData.returnDetails;
-                    
+
                     this.isSubmittingReturn = false;
                     this.returnStep = 4; // Show custom success screen
-                    
+
                     // Refresh the main order list in background
                     this.loadAllOrders();
                 },
@@ -700,14 +700,14 @@ export class UserPanelComponent implements OnInit {
     getActualDeliveryDate(order: any): Date | null {
         if (!order) return null;
         if (order.status === 'Delivered' && order.deliveredAt) return new Date(order.deliveredAt);
-        
+
         // If simulated delivery
         if (order.assignedAt && order.status === 'Shipped') {
             const shippedAt = new Date(order.assignedAt);
             const days = this.getDeliveryDurationDays(order);
             return new Date(shippedAt.getTime() + days * 24 * 60 * 60 * 1000);
         }
-        
+
         // Fallback to orderDate + estimated delivery if not even shipped yet (shouldn't happen for return)
         return null;
     }

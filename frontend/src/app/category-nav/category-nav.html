@@ -1,61 +1,55 @@
 <div class="category-nav-container">
     <ul class="category-list">
-        <li *ngFor="let cat of categories" (click)="showMenu(cat)"
+        <li *ngFor="let cat of categories" (mouseenter)="activeCategory = cat" (mouseleave)="activeCategory = null"
             [class.active]="activeCategory === cat">
-
 
             <a [routerLink]="getCategoryLink(cat)" (click)="navigateToCategory(cat, $event)" class="category-link">
                 {{ cat }}
                 <i class="fas fa-chevron-down" *ngIf="hasMenu(cat)"></i>
             </a>
 
-            <!-- Generic Mega Menu -->
+            <!-- Professional Mega Menu -->
             <div class="mega-menu" *ngIf="hasMenu(cat) && activeCategory === cat">
                 <div class="menu-columns-wrapper">
                     <div class="menu-column" *ngFor="let columnData of getMenuColumns(cat)">
-                        <h3>{{ columnData.title }}</h3>
+                        <h3 class="premium-column-header">{{ columnData.title }}</h3>
                         <ul>
                             <li *ngFor="let item of columnData.items">
                                 <a [routerLink]="getItemLink(cat, item)" (click)="navigateToItem(cat, item, $event)"
                                     class="menu-item-link">
                                     <ng-container *ngIf="isComplexItem(item); else simpleItem">
-                                        {{ $any(item).name }} <span class="badge"
-                                            *ngIf="$any(item).badge">{{ $any(item).badge }}</span>
+                                        {{ $any(item).name }}
+                                        <span class="badge-icon offer" *ngIf="isOfferBadge($any(item).badge)"
+                                            [title]="$any(item).badge">
+                                            <i class="fas fa-gift"></i>
+                                        </span>
+                                        <span class="badge new" *ngIf="$any(item).badge === 'NEW'">NEW</span>
                                     </ng-container>
                                     <ng-template #simpleItem>{{ item }}</ng-template>
                                 </a>
                             </li>
                         </ul>
                     </div>
-                </div>
 
-                <div class="menu-column image-column" *ngIf="menus[cat].image || menus[cat].images">
-                    <ng-container *ngIf="menus[cat].image; else multiImages">
-                        <div class="promo-image-card flip-card">
-                            <div class="flip-card-inner">
+                    <!-- Reference-style Promo Card -->
+                    <div class="image-column" *ngIf="menus[cat].image || menus[cat].images">
+                        <ng-container *ngIf="menus[cat].image; else multiImages">
+                            <div class="promo-image-card">
                                 <div class="flip-card-front">
                                     <img [src]="menus[cat].image" [alt]="menus[cat].imageText">
                                     <div class="promo-text">{{ menus[cat].imageText }}</div>
                                 </div>
-                                <div class="flip-card-back">
-                                    <img [src]="menus[cat].image" [alt]="menus[cat].imageText"
-                                        style="filter: brightness(0.7) blur(2px);">
-                                    <div class="back-content">
-                                        <span class="shop-now-text">SHOP COLLECTION</span>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </div>
+                            </div>
+                        </ng-container>
+                        <ng-template #multiImages>
+                            <div class="multi-image-grid">
+                                <div class="promo-image-card" *ngFor="let img of menus[cat].images">
+                                    <img [src]="img.url" [alt]="img.text" loading="lazy">
+                                    <div class="promo-text">{{ img.text }}</div>
                                 </div>
                             </div>
-                        </div>
-                    </ng-container>
-                    <ng-template #multiImages>
-                        <div class="multi-image-grid">
-                            <div class="promo-image-card" *ngFor="let img of menus[cat].images">
-                                <img [src]="img.url" [alt]="img.text" loading="lazy">
-                                <div class="promo-text">{{ img.text }}</div>
-                            </div>
-                        </div>
-                    </ng-template>
+                        </ng-template>
+                    </div>
                 </div>
             </div>
         </li>

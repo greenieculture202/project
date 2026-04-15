@@ -122,23 +122,28 @@
     z-index: 1;
 }
 
-/* Scroll Effect Style (Default for decorative categories) */
-.scroll-effect .product-img {
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+/* Flip Effect Style */
+.flip-effect .image-container {
+    perspective: 1000px;
 }
 
-.scroll-effect .hover-img {
-    transform: translateX(100%);
+.flip-effect .product-img {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    backface-visibility: hidden;
+}
+
+.flip-effect .hover-img {
+    transform: rotateY(180deg);
     z-index: 2;
     opacity: 1;
 }
 
-.scroll-effect:hover .main-img {
-    transform: translateX(-100%);
+.flip-effect:hover .main-img {
+    transform: rotateY(-180deg);
 }
 
-.scroll-effect:hover .hover-img {
-    transform: translateX(0);
+.flip-effect:hover .hover-img {
+    transform: rotateY(0deg);
 }
 
 /* Zoom Effect Style (for Seeds, Soil, Fertilizer) */

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../services/product.service';
+import { OFFER_RULES, CATEGORY_TO_OFFER } from '../services/offer-rules';
 
 @Component({
     selector: 'app-category-nav',
@@ -181,6 +182,9 @@ export class CategoryNavComponent implements OnInit {
                 'Mustard',
                 'Methi',
                 'Peas'
+            ],
+            seedsKit: [
+                'Vegetable Garden Bundle', 'Flower Garden Mix', 'Herb Garden Collection', 'Organic Farming Kit', 'Kitchen Garden Starter Kit'
             ],
             image: '/images/navbar_seeds.png',
             imageText: 'Premium Seeds Collection'
@@ -387,18 +391,18 @@ export class CategoryNavComponent implements OnInit {
         // Ensure we always have a menu object to provide premium headers
         if (menu) {
             const headerKeys = Object.keys(menu).filter(k => Array.isArray(menu[k]));
-            
+
             // Get all database products for this mega-menu context
             const dbProducts = this.activeProducts.filter(p => {
                 const pCat = (p.category || '').toLowerCase().trim();
                 const pName = (p.name || '').toLowerCase().trim();
-                
+
                 // Specific matching logic to prevent leakage
                 const isDirectMatch = lowMappings.some(lowM => pCat === lowM);
-                const isPartialMatch = lowMappings.some(lowM => 
+                const isPartialMatch = lowMappings.some(lowM =>
                     pCat.length > 4 && lowM.length > 4 && (pCat.includes(lowM) || lowM.includes(pCat))
                 );
-                
+
                 // Safety: Avoid 'Gardening' plants leaking into 'Gardening Tools'
                 if (cat === 'Gardening Tools' && pCat === 'gardening') return false;
 
@@ -410,48 +414,90 @@ export class CategoryNavComponent implements OnInit {
             // 1. Distribute products strictly matching original premium headers
             headerKeys.forEach(key => {
                 const staticItems = menu[key];
-                const staticNames = staticItems.map((item: any) => 
+                const staticNames = staticItems.map((item: any) =>
                     (this.isComplexItem(item) ? item.name : item).toLowerCase().trim()
                 );
-                
+
                 const matchingProducts = dbProducts.filter(p => {
                     const pName = (p.name || '').toLowerCase().trim();
-                    return staticNames.includes(pName);
+                    // Flexible match: Exact or partial
+                    return staticNames.some((sn: string) => sn === pName || sn.includes(pName) || pName.includes(sn));
                 });
 
                 if (matchingProducts.length > 0) {
                     columns.push({
                         title: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-                        items: matchingProducts.map(p => {
+                        items: matchingProducts.map((p, pIndex) => {
                             capturedNames.add(p.name!.toLowerCase().trim());
-                            return { name: p.name, badge: null };
+                            let badge = this.getProductBadge(p, pIndex);
+                            return { name: this.formatProductName(p.name!), badge: badge };
                         })
                     });
                 }
             });
 
-            // 2. Handle all other database products that belong here but werent in static lists
+            // 2. Distribute remaining products (like Nikita) across existing columns
             const remainingProducts = dbProducts.filter(p => !capturedNames.has((p.name || '').toLowerCase().trim()));
-            if (remainingProducts.length > 0) {
-                const items = remainingProducts.map(p => ({ name: p.name, badge: null }));
-                
-                // Determine layout density based on category
-                let maxItems = 12;
-                if (cat === 'Seeds') maxItems = 20;
-                if (cat === 'Accessories') maxItems = 15;
-
-                const numCols = Math.ceil(items.length / maxItems);
-                for (let i = 0; i < numCols; i++) {
-                    columns.push({
-                        title: i === 0 ? (headerKeys.length > 0 ? 'More Selection' : cat) : ' ',
-                        items: items.slice(i * maxItems, (i + 1) * maxItems)
+            if (remainingProducts.length > 0 && columns.length > 0) {
+                remainingProducts.forEach((p, index) => {
+                    const targetCol = columns[index % columns.length];
+                    targetCol.items.push({
+                        name: this.formatProductName(p.name!),
+                        badge: this.getProductBadge(p, index)
                     });
-                }
+                });
             }
+
             return columns;
         }
 
         return [];
+    }
+
+    private getProductBadge(p: any, index: number): string | null {
+        // Priority 1: High Discount (Always highlight if >= 20%)
+        const discountVal = p.discountPercent || (p.discount ? parseInt(p.discount) : 0);
+        if (discountVal > 0) return `${discountVal}% OFF`;
+
+        // Priority 2: Category Promotion (e.g. Indoor Jungle, BOGO)
+        const ruleCode = p.category && CATEGORY_TO_OFFER[p.category];
+        const rule = ruleCode ? OFFER_RULES.find(r => r.code === ruleCode) : null;
+
+        // We show category offers only for the first 3 items unless it's a manual tag
+        if (rule && (index < 3 || (p.tags && p.tags.includes(rule.code)))) {
+            return rule.shortBenefit;
+        }
+
+        // Priority 3: Manual Promo Tags (not the category one)
+        if (p.tags) {
+            const manualRule = OFFER_RULES.find(r => p.tags.includes(r.code) && r.code !== ruleCode);
+            if (manualRule) return manualRule.shortBenefit;
+        }
+
+        // Priority 4: 'New' arrival
+        if (p.createdAt) {
+            const createdDate = new Date(p.createdAt);
+            const now = new Date();
+            const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 7) return 'NEW';
+        }
+        return null;
+    }
+
+    isOfferBadge(badge: string | null): boolean {
+        if (!badge) return false;
+        const b = badge.toUpperCase();
+        return b.includes('OFF') || b.includes('FREE') || b.includes('BOGO') || b.includes('GIFT');
+    }
+
+    private formatProductName(name: string): string {
+        if (!name) return '';
+        // Smart Formatting: Keep abbreviations like XL or II in caps
+        return name.split(' ').map(word => {
+            const up = word.toUpperCase();
+            if (up === 'XL' || up === 'II' || up === 'III') return up;
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }).join(' ');
     }
 
     showMenu(category: string) {
