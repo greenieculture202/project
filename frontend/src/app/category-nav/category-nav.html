@@ -11,7 +11,7 @@
             <!-- Professional Mega Menu -->
             <div class="mega-menu" *ngIf="hasMenu(cat) && activeCategory === cat">
                 <div class="menu-columns-wrapper">
-                    <div class="menu-column" *ngFor="let columnData of getMenuColumns(cat)">
+                    <div class="menu-column" *ngFor="let columnData of getCachedColumns(cat)">
                         <h3 class="premium-column-header">{{ columnData.title }}</h3>
                         <ul>
                             <li *ngFor="let item of columnData.items">

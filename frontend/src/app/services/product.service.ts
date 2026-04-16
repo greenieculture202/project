@@ -36,6 +36,12 @@ export class ProductService {
         return { 'x-auth-token': token };
     }
 
+    // Public method to clear all cached product data
+    clearCache() {
+        this.categoryCache.clear();
+        this.productCache.clear();
+    }
+
     // Fallback mock data in case backend is not available
     private fallbackProducts: { [key: string]: Product[] } = {
         'Bestsellers': [
@@ -353,7 +359,7 @@ export class ProductService {
         }
 
         return this.http.get<Product[]>(url).pipe(
-            timeout(10000), // Enforce 10 seconds timeout so spinner clears
+            timeout(20000), // 20s timeout - gives backend enough time to respond
             map(products => {
                 // Populate individual cache
                 products.forEach(p => {
@@ -492,7 +498,7 @@ export class ProductService {
 
     // Get minimal details of all active products for mega-menu synchronization
     getActiveProductsMinimal(): Observable<Partial<Product>[]> {
-        return this.http.get<Product[]>(`${this.apiUrl}/products`).pipe(
+        return this.http.get<Product[]>(`${this.apiUrl}/products?minimal=true`).pipe(
             map(products => products.map(p => ({
                 name: p.name,
                 category: p.category,

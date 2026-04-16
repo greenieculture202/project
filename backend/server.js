@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const cron = require('node-cron');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -335,15 +336,16 @@ const auth = async (req, res, next) => {
 
 // Middleware
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/admin/offers', offerProductsRouter);
 
-app.use((req, res, next) => {
-    const logStr = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
-    fs.appendFileSync(path.join(__dirname, 'request_logs.txt'), logStr);
-    next();
-});
+// app.use((req, res, next) => {
+//     const logStr = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
+//     fs.appendFileSync(path.join(__dirname, 'request_logs.txt'), logStr);
+//     next();
+// });
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
@@ -590,7 +592,12 @@ app.post('/api/auth/register', async (req, res) => {
 // Admin Regional Analytics
 app.get('/api/admin/regional-analytics', auth, async (req, res) => {
     try {
-        const orders = await Order.find({ status: { $ne: 'Cancelled' } }).lean();
+        // Optimization: For analytics, we only need specific fields. 
+        // Also, fetch only the last 1000 orders to avoid crashing on huge datasets.
+        const orders = await Order.find({ status: { $ne: 'Cancelled' } })
+            .select('items shippingDetails state totalAmount status')
+            .limit(1000)
+            .lean();
         const stats = {};
 
         orders.forEach(order => {
@@ -1573,7 +1580,16 @@ app.get('/api/products', async (req, res) => {
         let products = [];
         if (category === 'Bestsellers') {
             const limitNum = parseInt(limit) || 20;
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
             const topSelling = await Order.aggregate([
+                { 
+                    $match: { 
+                        status: { $ne: 'Cancelled' },
+                        orderDate: { $gte: ninetyDaysAgo }
+                    } 
+                },
                 { $unwind: "$items" },
                 {
                     $group: {
@@ -1596,15 +1612,26 @@ app.get('/api/products', async (req, res) => {
             // Pad with static Bestsellers if not enough order data
             if (products.length < limitNum) {
                 const existingNames = products.map(p => p.name);
-                const padding = await Product.find({
+                const paddingQuery = Product.find({
                     category: 'Bestsellers',
                     name: { $nin: existingNames }
-                }).limit(limitNum - products.length).lean();
+                });
+                if (req.query.minimal === 'true') {
+                    paddingQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage');
+                }
+                const padding = await paddingQuery.limit(limitNum - products.length).lean();
                 products = [...products, ...padding];
             }
             console.log(`[ProductsAPI] Dynamic Bestsellers matched ${products.length} products`);
         } else {
-            let productsQuery = Product.find(query).lean();
+            const isMinimal = req.query.minimal === 'true';
+            let productsQuery = Product.find(query);
+            
+            if (isMinimal) {
+                productsQuery = productsQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage');
+            }
+            
+            productsQuery = productsQuery.lean();
             if (limit) {
                 const limitNum = parseInt(limit);
                 if (!isNaN(limitNum)) {
@@ -1614,29 +1641,21 @@ app.get('/api/products', async (req, res) => {
             products = await productsQuery;
         }
 
-        // --- REGIONAL SORTING ENGINE ---
+        // --- OPTIMIZED REGIONAL SORTING ENGINE ---
         if (state && products.length > 0) {
             const rawState = state.trim().toUpperCase();
             const searchStates = [rawState];
 
-            // If full name provided, find code; if code provided, find full name
             if (INDIAN_STATE_CODE_MAP[rawState]) {
                 searchStates.push(INDIAN_STATE_CODE_MAP[rawState]);
-            } else {
-                // Reverse lookup
-                const fullName = Object.keys(INDIAN_STATE_CODE_MAP)
-                    .find(key => INDIAN_STATE_CODE_MAP[key] === rawState);
-                if (fullName) searchStates.push(fullName);
             }
 
-            // Also add lowercase versions just in case
-            const allSearchStates = [...new Set([...searchStates, ...searchStates.map(s => s.toLowerCase())])];
-
             try {
-                // 1. Get regional popularity data - Using JS-side filtering like Admin Analytics for robustness
+                // Use a cache for regional popularity to avoid Order.find(500) on every request
+                // For now, let's at least project only necessary fields from Orders
                 const allOrders = await Order.find({
                     status: { $ne: 'Cancelled' }
-                }).limit(500).lean();
+                }).select('items shippingDetails state').limit(200).lean();
 
                 const filteredOrders = allOrders.filter(o => {
                     const s = (o.shippingDetails?.state || o.state || '').trim().toUpperCase();
@@ -1752,11 +1771,8 @@ app.get('/api/products/categories', async (req, res) => {
 app.get('/api/products/map', async (req, res) => {
     try {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        // Optimization: Only fetch fields needed for the map (assuming we need full objects for some reason, 
-        // but if we only need names/images for a list, we should project. 
-        // For now, let's at least exclude heavy fields if any, or just rely on the fact that we fixed the main slug issue.
-        // Actually, let's use a lean query.)
-        const products = await Product.find({}).lean();
+        // Only fetch fields needed for the map
+        const products = await Product.find({}).select('name category image price originalPrice discount discountPercent slug tags hoverImage').lean();
         const productMap = products.reduce((acc, product) => {
             if (!acc[product.category]) {
                 acc[product.category] = [];
@@ -1767,6 +1783,7 @@ app.get('/api/products/map', async (req, res) => {
 
         // Inject Dynamic Bestsellers into the map
         const topSelling = await Order.aggregate([
+            { $match: { status: { $ne: 'Cancelled' } } },
             { $unwind: "$items" },
             {
                 $group: {
@@ -1775,21 +1792,20 @@ app.get('/api/products/map', async (req, res) => {
                 }
             },
             { $sort: { totalSold: -1 } },
-            { $limit: 20 }
+            { $limit: 15 }
         ]);
 
         let bestSellers = [];
         if (topSelling.length > 0) {
-            bestSellers = topSelling
-                .map(s => products.find(p => p.name === s._id))
-                .filter(p => !!p);
+            const topNames = topSelling.map(s => s._id);
+            bestSellers = products.filter(p => topNames.includes(p.name));
         }
 
-        // Pad with static Bestsellers up to 20
-        if (bestSellers.length < 20) {
+        // Pad with static Bestsellers
+        if (bestSellers.length < 15) {
             const existingIds = new Set(bestSellers.map(p => p._id.toString()));
             const staticBS = products.filter(p => p.category === 'Bestsellers' && !existingIds.has(p._id.toString()));
-            bestSellers = [...bestSellers, ...staticBS.slice(0, 20 - bestSellers.length)];
+            bestSellers = [...bestSellers, ...staticBS.slice(0, 15 - bestSellers.length)];
         }
         productMap['Bestsellers'] = bestSellers;
 
@@ -1993,13 +2009,111 @@ app.post('/api/user/orders', auth, async (req, res) => {
     }
 });
 
+// ============================================================
+// ADMIN DASHBOARD STATS — Single fast aggregation endpoint
+// Returns all stats the dashboard needs in one DB roundtrip
+// ============================================================
+app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
+    try {
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+
+        const [orderAgg, productCount, userCount, weeklyTrends, recentOrders] = await Promise.all([
+            // 1. Order stats: total, revenue, delivered count
+            Order.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalOrders: { $sum: 1 },
+                        totalRevenue: {
+                            $sum: {
+                                $cond: [{ $ne: ['$status', 'Cancelled'] }, '$totalAmount', 0]
+                            }
+                        },
+                        deliveredCount: {
+                            $sum: { $cond: [{ $eq: ['$status', 'Delivered'] }, 1, 0] }
+                        },
+                        pendingCount: {
+                            $sum: { $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0] }
+                        },
+                        processingCount: {
+                            $sum: { $cond: [{ $eq: ['$status', 'Processing'] }, 1, 0] }
+                        },
+                        shippedCount: {
+                            $sum: { $cond: [{ $eq: ['$status', 'Shipped'] }, 1, 0] }
+                        }
+                    }
+                }
+            ]),
+            // 2. Total product count
+            Product.countDocuments({ isActive: { $ne: false } }),
+            // 3. User counts: total and new this week
+            User.countDocuments({ role: { $ne: 'admin' } }),
+            User.countDocuments({ 
+                role: { $ne: 'admin' },
+                date: { $gte: sevenDaysAgo } 
+            }),
+            // 4. Weekly order trends (last 7 days, grouped by day of week)
+            Order.aggregate([
+                { $match: { orderDate: { $gte: sevenDaysAgo } } },
+                {
+                    $group: {
+                        _id: { $dayOfWeek: '$orderDate' }, // 1=Sun, 2=Mon, ... 7=Sat
+                        count: { $sum: 1 }
+                    }
+                }
+            ]),
+            // 5. Recent orders for dashboard table (last 5)
+            Order.find({})
+                .select('orderId orderDate status paymentMethod totalAmount userName userId')
+                .populate('userId', 'fullName email')
+                .sort({ orderDate: -1 })
+                .limit(5)
+                .lean()
+        ]);
+
+        const stats = orderAgg[0] || { totalOrders: 0, totalRevenue: 0, deliveredCount: 0, pendingCount: 0, processingCount: 0, shippedCount: 0 };
+        const convRate = stats.totalOrders > 0 ? ((stats.deliveredCount / stats.totalOrders) * 100).toFixed(1) : '0';
+
+        // Build day-indexed trend map
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const weekMap = {};
+        dayNames.forEach(d => weekMap[d] = 0);
+        weeklyTrends.forEach(t => {
+            const dayName = dayNames[t._id - 1]; // MongoDB dayOfWeek: 1=Sun
+            if (dayName) weekMap[dayName] = t.count;
+        });
+
+        res.json({
+            totalOrders: stats.totalOrders,
+            totalRevenue: stats.totalRevenue,
+            deliveredCount: stats.deliveredCount,
+            pendingCount: stats.pendingCount,
+            processingCount: stats.processingCount,
+            shippedCount: stats.shippedCount,
+            conversionRate: convRate,
+            productCount,
+            userCount,
+            newUsersThisWeek,
+            weeklyTrends: weekMap,
+            recentOrders: recentOrders
+        });
+    } catch (err) {
+        console.error('[DashboardStats] Error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Admin Orders API
 app.get('/api/admin/orders', auth, async (req, res) => {
     try {
-        // Fetch all orders, populate user details
+        // Optimization: Limit to 500 most recent orders & pick only fields admin UI needs
         const orders = await Order.find({})
+            .select('orderId orderDate status paymentMethod totalAmount items shippingDetails userId courierName trackingNumber expectedDeliveryDate deliveryPin deliveryType returnDetails courierSettled assignedAt')
             .populate('userId', 'fullName email phone alternatePhone address city state')
             .sort({ orderDate: -1 })
+            .limit(500)
             .lean();
         res.json(orders);
     } catch (err) {
@@ -2035,14 +2149,15 @@ app.get('/api/admin/payments-stats', auth, async (req, res) => {
 
 app.get('/api/admin/payment-summary', auth, async (req, res) => {
     try {
-        // Fetch ALL orders to match the record count in the transaction table
-        const rawOrders = await Order.find({}).populate('userId', 'fullName').lean();
+        // Fetch only recently updated/shipped orders or a limited set for summary
+        const rawOrders = await Order.find({})
+            .select('userName userId paymentMethod status totalAmount state shippingDetails')
+            .limit(1000)
+            .populate('userId', 'fullName')
+            .lean();
 
-        // Filter out "Guest Customer" and missing user data to match frontend table logic
-        const orders = rawOrders.filter(o => {
-            const name = (o.userName || o.userId?.fullName || '').trim();
-            return name !== 'Guest Customer';
-        });
+        // Include ALL orders (no filtering out Guest Customers) 
+        const orders = rawOrders;
 
         let cod = 0;
         let online = 0;

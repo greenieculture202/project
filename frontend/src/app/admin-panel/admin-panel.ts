@@ -753,16 +753,14 @@ export class AdminPanelComponent implements OnInit {
         });
 
         this.loadCouriers();
-        this.loadUsers();
-        this.loadOrders();
+        this.loadDashboardStats();   // Fast: single aggregation call
         this.loadAdminNotifications();
         this.loadFaqs();
 
-        // Setup polling for orders and notifications (Faster updates)
+        // Poll every 60s — only notifications, not heavy order list
         this.pollingInterval = setInterval(() => {
-            this.loadOrders();
             this.loadAdminNotifications();
-        }, 10000);
+        }, 60000);
 
         // Initialize settings with current admin name
         const userName = this.authService.getCurrentUser();
@@ -797,6 +795,97 @@ export class AdminPanelComponent implements OnInit {
         }
     }
 
+    // ─── FAST DASHBOARD STATS ──────────────────────────────────────────────────
+    // Replaces loading ALL orders + ALL users just to show counts on the dashboard.
+    // One aggregation call to /api/admin/dashboard-stats returns everything.
+    loadDashboardStats() {
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+        const headers = { 'x-auth-token': token || '' };
+
+        this.http.get<any>('/api/admin/dashboard-stats', { headers }).subscribe({
+            next: (data) => {
+                this.ngZone.run(() => {
+                    // ── 4 stat cards ──────────────────────────────────────────
+                    this.stats[0].value = (data.totalOrders || 0).toString();
+                    this.stats[1].value = '₹' + (data.totalRevenue || 0).toLocaleString('en-IN');
+                    this.stats[2].value = (data.conversionRate || '0') + '%';
+                    this.stats[3].value = (data.productCount || 0).toString();
+
+                    // ── Order stats card ──────────────────────────────────────
+                    const inPipeline = (data.pendingCount || 0) + (data.processingCount || 0) + (data.shippedCount || 0);
+                    this.orderStats[0].value = (data.totalOrders || 0).toString();
+                    this.orderStats[1].value = '₹' + (data.totalRevenue || 0).toLocaleString('en-IN');
+                    this.orderStats[2].value = inPipeline.toString();
+                    this.orderStats[3].value = (data.deliveredCount || 0).toString();
+
+                    // ── Weekly trend bar chart & Day Slices (Donut) ───────────
+                    const wt = data.weeklyTrends || {};
+                    const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    const dayColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
+                    
+                    const counts = orderedDays.map(d => wt[d] || 0);
+                    const maxCount = Math.max(...counts, 1);
+                    this.totalWeeklyOrders = counts.reduce((a, b) => a + b, 0);
+
+                    // Bar Chart
+                    this.dashboardTrends = orderedDays.map((day, i) => {
+                        const count = counts[i];
+                        return {
+                            day,
+                            count,
+                            visualHeight: count > 0 ? Math.max((count / maxCount) * 100, 20) : 8
+                        };
+                    });
+
+                    this.newUsersThisWeek = data.newUsersThisWeek || 0;
+                    this.newUsersPercentage = data.userCount > 0 ? Math.round((this.newUsersThisWeek / data.userCount) * 100) : 0;
+                    
+                    // Donut Chart (Day Slices)
+                    if (this.totalWeeklyOrders > 0) {
+                        let currentDayOffset = 0;
+                        this.daySlices = orderedDays.map((day, i) => {
+                            const count = wt[day] || 0;
+                            const percentage = (count / this.totalWeeklyOrders) * 100;
+                            const dashArray = `${percentage} ${100 - percentage}`;
+                            const dashOffset = 100 - currentDayOffset + 25;
+                            currentDayOffset += percentage;
+                            return {
+                                label: day,
+                                count,
+                                percentage: Math.round(percentage),
+                                color: dayColors[i],
+                                dashArray,
+                                dashOffset: dashOffset % 100
+                            };
+                        });
+                    } else {
+                        this.daySlices = orderedDays.map((day, i) => ({
+                            label: day, count: 0, percentage: 0, color: dayColors[i],
+                            dashArray: '0 100', dashOffset: 25
+                        }));
+                    }
+                    
+                    // ── Recent Orders ──────────────────────────────────────────
+                    if (data.recentOrders && data.recentOrders.length > 0) {
+                        this.orders = data.recentOrders.map((o: any) => this.sanitizeOrder(o));
+                    }
+
+                    // ── Category Stats & Line Chart ───────────────────────────
+                    const points = this.dashboardTrends.map((t, i) => {
+                        const x = (i / (this.dashboardTrends.length - 1)) * 100;
+                        const y = 100 - t.visualHeight;
+                        return { x, y };
+                    });
+                    this.lineChartPath = points.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p.x},${p.y}`).join(' ');
+                    this.areaChartPath = `${this.lineChartPath} L 100,100 L 0,100 Z`;
+
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => console.error('[DashboardStats] Error loading:', err)
+        });
+    }
+
     loadUsers() {
         // Only show spinner if we have no users yet (first load)
         if (this.users.length === 0) {
@@ -808,22 +897,13 @@ export class AdminPanelComponent implements OnInit {
                 this.ngZone.run(() => {
                     this.users = data.map((user: any) => ({
                         id: user._id,
-                        name: user.fullName || user.name || 'User',
+                        name: user.fullName || 'Anonymous',
                         email: user.email,
-                        phone: user.phone || 'N/A',
-                        alternatePhone: user.alternatePhone || 'N/A',
-                        address: user.address || 'N/A',
-                        city: user.city || '',
-                        state: user.state || '',
-                        method: user.method || 'Website',
-                        greenPoints: user.greenPoints || 0,
-                        profilePic: user.profilePic,
-                        role: user.role || 'user',
-                        date: user.createdAt || user.date,
+                        date: user.date || user.createdAt,
                         isBlocked: user.isBlocked || false,
                         cart: user.cart || []
                     }));
-                    this.stats[0].value = this.users.length.toString();
+                    // Removed the line that was overwriting stats[0] (Total Orders) with users count
                     this.updateDashboardStats();
                     this.isLoading = false;
                     this.cdr.detectChanges();
@@ -1008,13 +1088,15 @@ export class AdminPanelComponent implements OnInit {
                 queryParamsHandling: 'merge'
             });
         }
-        if (tab === 'dashboard' || tab === 'users') {
-            this.loadUsers();
+        if (tab === 'dashboard') {
+            this.loadDashboardStats(); // Fast single-request stats
+        } else if (tab === 'users') {
+            if (this.users.length === 0) this.loadUsers();
         } else if (tab === 'products') {
             this.loadProducts();
         } else if (tab === 'offers') {
             this.loadOffers();
-            this.loadProducts(); // Load products to support the "Add Existing" search modal
+            this.loadProducts();
         } else if (tab === 'placements') {
             this.loadPlacements();
         } else if (tab === 'faqs') {
@@ -1023,12 +1105,12 @@ export class AdminPanelComponent implements OnInit {
         } else if (tab === 'about-us') {
             this.loadAboutSections();
         } else if (tab === 'orders') {
-            this.loadOrders();
+            if (this.orders.length === 0) this.loadOrders(); // Only fetch if not cached
         } else if (tab === 'inquiries') {
             this.loadInquiries();
-            this.loadFaqs(); // Added to support FAQ promotion in reply modal
+            this.loadFaqs();
         } else if (tab === 'payment') {
-            this.loadOrders();
+            if (this.orders.length === 0) this.loadOrders();
             this.loadPaymentSummary();
         }
     }
@@ -3014,6 +3096,12 @@ export class AdminPanelComponent implements OnInit {
     updateDashboardStats() {
         if (!this.stats || this.stats.length < 4) return;
         if (!this.orderStats || this.orderStats.length < 4) return;
+
+        // CRITICAL: If we only have recent orders (5 or less), don't overwrite 
+        // the specialized dashboard stats which were already loaded from the fast API.
+        if (this.orders.length > 0 && this.orders.length <= 5 && this.stats[0].value !== '0') {
+            return;
+        }
 
         const totalOrdersCount = (this.orders || []).length;
         const totalUsersCount = (this.users || []).length;

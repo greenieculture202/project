@@ -47,6 +47,9 @@ export class ProductListingComponent {
         this.isLoading = true;
         this.error = '';
 
+        // Commented out to allow service-side caching for faster navigation
+        // this.productService.clearCache();
+
         // Map of slugs to exact category names
         const slugToCategoryMap: { [key: string]: string } = {
             'soil--growing-media': 'Soil & Growing Media',
@@ -63,6 +66,9 @@ export class ProductListingComponent {
             'accessories-plants': 'Accessories',
             'accessories': 'Accessories',
             'gardening-plants': 'Gardening',
+            'indoor-plants': 'Indoor Plants',
+            'outdoor-plants': 'Outdoor Plants',
+            'flowering-plants': 'Flowering Plants',
             'pots-planters': 'Pots & Planters',
             'designer-pots': 'Pots & Planters',
             'pots--planters': 'Pots & Planters'
@@ -78,13 +84,13 @@ export class ProductListingComponent {
                 .join(' ');
         }
 
-        // Safety fallback just in case observable never emits
+        // Safety fallback - increased to 20s to give backend enough time
         const fallbackTimer = setTimeout(() => {
             if (this.isLoading) {
                 this.isLoading = false;
                 this.error = 'Request timed out or hung indefinitely. Check console.';
             }
-        }, 8000);
+        }, 20000);
 
         this.productService.getProducts(categoryName, this.userState || '').subscribe({
             next: (products: any[]) => {

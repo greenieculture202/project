@@ -17,6 +17,8 @@ export class CategoryNavComponent implements OnInit {
 
     activeProducts: Partial<Product>[] = [];
     isInitialized: boolean = false;
+    // Pre-computed cache: computed once after products load, read-only in template
+    private menuColumnsCache: { [cat: string]: { title: string, items: any[] }[] } = {};
     categories = [
         'Indoor', 'Outdoor', 'Flowering', 'Gardening', 'Seeds', 'Accessories', 'Soil & Growing Media',
         'Fertilizers & Nutrients', 'Gardening Tools', 'About Us', 'Contact Us', "FAQ's"
@@ -314,12 +316,21 @@ export class CategoryNavComponent implements OnInit {
             next: (products) => {
                 this.activeProducts = products;
                 this.isInitialized = true;
+                // Pre-compute all mega menu columns ONCE so template never does heavy work
+                this.categories.forEach(cat => {
+                    this.menuColumnsCache[cat] = this._computeMenuColumns(cat);
+                });
             },
             error: (err) => {
                 console.error('Error in CategoryNav fetch:', err);
-                this.isInitialized = true; // Still show menu if API fails
+                this.isInitialized = true;
             }
         });
+    }
+
+    // Fast O(1) lookup used by template — no computation on each change detection
+    getCachedColumns(cat: string): { title: string, items: any[] }[] {
+        return this.menuColumnsCache[cat] || [];
     }
 
     private getMappingForMegaMenu(cat: string): string[] {
@@ -380,7 +391,7 @@ export class CategoryNavComponent implements OnInit {
         });
     }
 
-    getMenuColumns(cat: string): { title: string, items: any[] }[] {
+    _computeMenuColumns(cat: string): { title: string, items: any[] }[] {
         if (!this.isInitialized) return [];
 
         const columns: { title: string, items: any[] }[] = [];
