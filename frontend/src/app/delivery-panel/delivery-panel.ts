@@ -914,7 +914,25 @@ export class DeliveryPanelComponent implements OnInit, OnDestroy {
   }
 
   openOrderDetails(order: any) {
-    this.selectedOrderDetails = order;
+    const token = sessionStorage.getItem('auth_token');
+    if (!token) {
+      this.selectedOrderDetails = order;
+      return;
+    }
+    
+    this.http.get(`/api/admin/orders/${order._id}`, {
+      headers: { 'x-auth-token': token }
+    }).subscribe({
+      next: (fullOrder) => {
+        this.selectedOrderDetails = fullOrder;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching order details:', err);
+        this.selectedOrderDetails = order;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   closeOrderDetails() {

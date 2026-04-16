@@ -899,8 +899,10 @@ export class AdminPanelComponent implements OnInit {
                         id: user._id,
                         name: user.fullName || 'Anonymous',
                         email: user.email,
+                        phone: user.phone || 'N/A',
                         date: user.date || user.createdAt,
                         isBlocked: user.isBlocked || false,
+                        method: user.method || 'Email', // Default value to prevent undefined errors
                         cart: user.cart || []
                     }));
                     // Removed the line that was overwriting stats[0] (Total Orders) with users count
@@ -948,7 +950,30 @@ export class AdminPanelComponent implements OnInit {
     }
 
     viewOrderDetails(order: any, returnOnly: boolean = false) {
-        this.selectedOrder = order;
+        // Load full order details if we only have the lightweight version from the list
+        const needsFullData = returnOnly || !order.items || (order.returnDetails && !order.returnDetails.billImage && order.status === 'Return Requested');
+        
+        if (needsFullData) {
+            const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+            const headers = { 'x-auth-token': token || '' };
+            this.http.get(`/api/admin/orders/${order._id}`, { headers }).subscribe({
+                next: (fullOrder: any) => {
+                    this.selectedOrder = fullOrder;
+                    this.finishOpeningModal(fullOrder, returnOnly);
+                },
+                error: (err) => {
+                    console.error('Error fetching full order details:', err);
+                    this.selectedOrder = order; // Fallback to what we have
+                    this.finishOpeningModal(order, returnOnly);
+                }
+            });
+        } else {
+            this.selectedOrder = order;
+            this.finishOpeningModal(order, returnOnly);
+        }
+    }
+
+    private finishOpeningModal(order: any, returnOnly: boolean) {
         this.isReturnDetailsOnly = returnOnly;
 
         // Auto-select courier based on state if not already set (only for full view)
@@ -2632,7 +2657,9 @@ export class AdminPanelComponent implements OnInit {
             ...order,
             totalAmount: typeof order.totalAmount === 'string' 
                 ? Number(order.totalAmount.replace(/,/g, '')) 
-                : order.totalAmount
+                : order.totalAmount,
+            // Ensure nested user data is gracefully handled if partially returned
+            userId: order.userId || { fullName: 'Guest', email: 'N/A' }
         };
     }
 

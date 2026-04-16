@@ -381,7 +381,7 @@ export class AiAnalyticsPanelComponent implements OnInit {
   }
 
   fetchProducts(headers: any) {
-    this.http.get<any[]>('/api/products', { headers }).subscribe({
+    this.http.get<any[]>('/api/admin/products-light', { headers }).subscribe({
       next: (products) => {
         this.allProducts = products;
         this.applyFilter();

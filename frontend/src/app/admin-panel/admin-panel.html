@@ -601,12 +601,12 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{user.date || 'Today'}}</td>
+                                    <td>{{(user.date | date:'dd MMM yyyy') || 'Recent'}}</td>
                                     <td>
-                                        <span class="method-badge" [ngClass]="user.method.toLowerCase()">
+                                        <span class="method-badge" [ngClass]="(user.method || 'Website').toLowerCase()">
                                             <i class="fab fa-google" *ngIf="user.method === 'Google'"></i>
-                                            <i class="fas fa-globe" *ngIf="user.method === 'Website'"></i>
-                                            {{user.method}}
+                                            <i class="fas fa-globe" *ngIf="user.method !== 'Google'"></i>
+                                            {{user.method || 'Website'}}
                                         </span>
                                     </td>
                                     <td>

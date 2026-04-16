@@ -2019,7 +2019,7 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
 
-        const [orderAgg, productCount, userCount, weeklyTrends, recentOrders] = await Promise.all([
+        const [orderAgg, productCount, totalUserCount, newUsersThisWeek, weeklyTrends, recentOrders] = await Promise.all([
             // 1. Order stats: total, revenue, delivered count
             Order.aggregate([
                 {
@@ -2052,7 +2052,7 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
             User.countDocuments({ role: { $ne: 'admin' } }),
             User.countDocuments({ 
                 role: { $ne: 'admin' },
-                date: { $gte: sevenDaysAgo } 
+                createdAt: { $gte: sevenDaysAgo } 
             }),
             // 4. Weekly order trends (last 7 days, grouped by day of week)
             Order.aggregate([
@@ -2080,10 +2080,13 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const weekMap = {};
         dayNames.forEach(d => weekMap[d] = 0);
-        weeklyTrends.forEach(t => {
-            const dayName = dayNames[t._id - 1]; // MongoDB dayOfWeek: 1=Sun
-            if (dayName) weekMap[dayName] = t.count;
-        });
+        
+        if (Array.isArray(weeklyTrends)) {
+            weeklyTrends.forEach(t => {
+                const dayName = dayNames[t._id - 1]; // MongoDB dayOfWeek: 1=Sun
+                if (dayName) weekMap[dayName] = t.count;
+            });
+        }
 
         res.json({
             totalOrders: stats.totalOrders,
@@ -2094,7 +2097,7 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
             shippedCount: stats.shippedCount,
             conversionRate: convRate,
             productCount,
-            userCount,
+            userCount: totalUserCount,
             newUsersThisWeek,
             weeklyTrends: weekMap,
             recentOrders: recentOrders
@@ -2108,9 +2111,9 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
 // Admin Orders API
 app.get('/api/admin/orders', auth, async (req, res) => {
     try {
-        // Optimization: Limit to 500 most recent orders & pick only fields admin UI needs
+        // Optimization: Limit to 500 orders and explicitly EXCLUDE heavy Base64 image fields
         const orders = await Order.find({})
-            .select('orderId orderDate status paymentMethod totalAmount items shippingDetails userId courierName trackingNumber expectedDeliveryDate deliveryPin deliveryType returnDetails courierSettled assignedAt')
+            .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2')
             .populate('userId', 'fullName email phone alternatePhone address city state')
             .sort({ orderDate: -1 })
             .limit(500)
@@ -2118,6 +2121,32 @@ app.get('/api/admin/orders', auth, async (req, res) => {
         res.json(orders);
     } catch (err) {
         console.error('[AdminOrdersAPI] Fetch error:', err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// LIGHTWEIGHT Products API for Admin management & AI
+app.get('/api/admin/products-light', auth, async (req, res) => {
+    try {
+        const products = await Product.find({})
+            .select('name price stock category image tags')
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.get('/api/admin/orders/:id', auth, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('userId', 'fullName email phone alternatePhone address city state profilePic')
+            .lean();
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        console.error('[AdminOrderDetailsAPI] Error:', err.message);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -2602,7 +2631,11 @@ app.get('/api/offers', async (req, res) => {
 // ADMIN API - Get all users
 app.get('/api/admin/users', auth, async (req, res) => {
     try {
-        const users = await User.find({}).sort({ createdAt: -1 }).lean();
+        const users = await User.find({})
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .limit(500)
+            .lean();
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
