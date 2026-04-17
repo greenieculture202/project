@@ -45,10 +45,43 @@
                     </ng-container>
 
                     <!-- View Plants Overlay Button -->
-                    <div class="video-end-overlay" *ngIf="showViewPlantsBtn">
-                        <button class="view-plants-btn" (click)="navigateToPlants()">
+                    <div class="video-end-overlay" *ngIf="showViewPlantsBtn && !showShopPlantsModal">
+                        <button class="view-plants-btn" (click)="toggleShopPlants()">
                             View Plants <i class="fas fa-arrow-right"></i>
                         </button>
+                    </div>
+
+                    <!-- Nested Pop-up showing Plants -->
+                    <div class="shop-plants-backdrop" *ngIf="showShopPlantsModal" (click)="toggleShopPlants()">
+                        <div class="shop-plants-panel" (click)="$event.stopPropagation()">
+                            <div class="panel-header">
+                                <h3>Featured Plants</h3>
+                                <button class="close-panel-btn" (click)="toggleShopPlants()">&times;</button>
+                            </div>
+                            
+                            <div class="panel-loading" *ngIf="isLoadingPlants">
+                                <div class="spinner"></div>
+                                <p>Finding perfect plants...</p>
+                            </div>
+                            
+                            <div class="panel-empty" *ngIf="!isLoadingPlants && relatedPlants.length === 0">
+                                <p>No specific plants found for this placement.</p>
+                                <button class="view-plants-btn" (click)="navigateToCategory()" style="margin-top:20px; font-size:1rem; padding: 12px 24px;">Browse Category</button>
+                            </div>
+
+                            <div class="plants-grid-popup" *ngIf="!isLoadingPlants && relatedPlants.length > 0">
+                                <div class="plant-card-popup" *ngFor="let plant of relatedPlants" (click)="navigateToProduct(plant.slug, plant.name)">
+                                    <img [src]="plant.image" [alt]="plant.name">
+                                    <div class="plant-info">
+                                        <h4 class="plant-name-popup">{{ plant.name }}</h4>
+                                        <div class="price-container">
+                                            <p class="plant-price">₹{{ plant.price }}</p>
+                                            <p class="original-price" *ngIf="plant.originalPrice">₹{{ plant.originalPrice }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

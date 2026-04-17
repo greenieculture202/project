@@ -600,6 +600,7 @@ export class AdminPanelComponent implements OnInit {
     // Delete Confirmation Modal State
     showDeleteModal: boolean = false;
     deleteSuccess: boolean = false;
+    isDeleting: boolean = false;
     deleteTarget: { id: string; name: string; image?: string; type?: 'product' | 'placement' | 'offer' | 'faq' | 'about' } = { id: '', name: '', type: 'product' };
 
     private toggleBodyScroll(lock: boolean) {
@@ -2219,6 +2220,8 @@ export class AdminPanelComponent implements OnInit {
         this.toggleBodyScroll(false);
     }
 
+
+
     submitProduct() {
         if (this.isSubmitting) return; // Prevent double clicks
 
@@ -2326,22 +2329,19 @@ export class AdminPanelComponent implements OnInit {
         };
         this.showSuccessModal = true;
         this.toggleBodyScroll(true);
+        this.cdr.detectChanges();
     }
 
     closeSuccessModal() {
         this.showSuccessModal = false;
         this.toggleBodyScroll(false);
+        this.cdr.detectChanges();
     }
 
     handleUpdateDuplicate() {
         if (!this.duplicateProduct) return;
-
-        const prodToEdit = { ...this.duplicateProduct };
         this.showDuplicateModal = false;
-        this.duplicateProduct = null;
-
-        // This will open the edit modal with the existing product's data
-        this.openEditProductModal(prodToEdit);
+        this.openEditProductModal(this.duplicateProduct);
     }
 
     getProductPath(category: string): string {
@@ -2371,11 +2371,14 @@ export class AdminPanelComponent implements OnInit {
     cancelDelete() {
         this.showDeleteModal = false;
         this.deleteSuccess = false;
+        this.isDeleting = false;
         this.deleteTarget = { id: '', name: '', type: 'product' };
         this.toggleBodyScroll(false);
     }
 
     confirmDelete() {
+        if (this.isDeleting) return;
+        this.isDeleting = true;
         const { id, type } = this.deleteTarget;
 
         let deleteObs;
@@ -2408,6 +2411,7 @@ export class AdminPanelComponent implements OnInit {
                         this.ngZone.run(() => {
                             this.showDeleteModal = false;
                             this.deleteSuccess = false;
+                            this.isDeleting = false;
                             this.toggleBodyScroll(false);
                             this.cdr.detectChanges();
                         });
@@ -2420,6 +2424,7 @@ export class AdminPanelComponent implements OnInit {
                 const msg = err?.error?.message || `${typeLabel} could not be deleted. Please try again.`;
                 this.ngZone.run(() => {
                     this.showDeleteModal = false;
+                    this.isDeleting = false;
                     this.toggleBodyScroll(false);
                     this.cdr.detectChanges();
                     setTimeout(() => alert('âŒ ' + msg), 50);

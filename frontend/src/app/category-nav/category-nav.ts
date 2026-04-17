@@ -345,7 +345,23 @@ export class CategoryNavComponent implements OnInit {
             'Fertilizers & Nutrients': ['Fertilizers & Nutrients', 'Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters'],
             'Gardening Tools': ['Gardening Tools', 'Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools']
         };
-        return mapping[cat] || [cat];
+        
+        let baseMapping = mapping[cat] || [cat];
+        
+        // Auto-include static names from the menu to prevent leakage/dropping of products with specific subcategories
+        if (this.menus[cat]) {
+            Object.keys(this.menus[cat]).forEach(k => {
+                if (Array.isArray(this.menus[cat][k])) {
+                    this.menus[cat][k].forEach((item: any) => {
+                        const itemName = this.isComplexItem(item) ? item.name : item;
+                        baseMapping.push(itemName);
+                    });
+                }
+            });
+        }
+        
+        // Return unique values only
+        return [...new Set(baseMapping)];
     }
 
     private shouldShowItem(category: string, item: any): boolean {

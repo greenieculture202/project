@@ -243,25 +243,16 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: transparent; /* No dark background while playing */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10;
-    animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    pointer-events: none; /* Allow clicking the video player below */
 }
 
 .view-plants-btn {
+    pointer-events: auto; /* Re-enable clicks for the button */
     background: #2e7d32;
     color: white;
     border: none;
@@ -343,5 +334,167 @@
 
     100% {
         transform: rotate(360deg);
+    }
+}
+
+/* Shop Plants Pop-up Panel */
+.shop-plants-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: flex-end; /* Slide in from right */
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
+}
+
+.shop-plants-panel {
+    width: 380px;
+    height: 100%;
+    background: white;
+    padding: 30px;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.panel-header h3 {
+    font-size: 1.5rem;
+    color: #1a2e35;
+    margin: 0;
+    font-weight: 700;
+}
+
+.close-panel-btn {
+    background: #f8f9fa;
+    border: none;
+    color: #64748b;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.close-panel-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: rotate(90deg);
+}
+
+.panel-loading, .panel-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #64748b;
+}
+
+.plants-grid-popup {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-right: 5px;
+}
+
+/* Custom Scrollbar */
+.plants-grid-popup::-webkit-scrollbar {
+    width: 5px;
+}
+.plants-grid-popup::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.plants-grid-popup::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.plant-card-popup {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.plant-card-popup:hover {
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: #2e7d32;
+}
+
+.plant-card-popup img {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.plant-info {
+    flex: 1;
+}
+
+.plant-name-popup {
+    margin: 0 0 5px;
+    font-size: 1rem;
+    color: #1a2e35;
+    font-weight: 600;
+}
+
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plant-price {
+    margin: 0;
+    color: #2e7d32;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.original-price {
+    margin: 0;
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+    .shop-plants-panel {
+        width: 100%;
     }
 }

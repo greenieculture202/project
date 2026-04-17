@@ -1089,18 +1089,25 @@ app.post('/api/ai-assistant', async (req, res) => {
         2. EMOJIS ARE MANDATORY: Use relevant emojis (🌱, 🌿, 💧, ☀️, 🧪, 🧤, ✅, ⚠️, 😉) to make your response visually professional and engaging.
         3. STRUCTURE: Use bullet points and paragraphs for readability.
         
-        SMART PLANT RECOGNITION:
-        - Identify plant names even if misspelled or mentioned in mixed-language sentences (e.g., "maru money plant...", "tulsi ma pani...").
-        - COMMON PLANTS: Recognize Money Plant (Pothos), Tulsi (Holy Basil), Aloe Vera, Snake Plant, Peace Lily, Ficus, etc.
-        - DIRECT ANSWER: If a plant name is found in the CURRENT message, provide immediate advice. DO NOT ask "Aapke paas kaunsa plant hai?" if you can identify the plant from the message.
-        - ASK ONLY AS LAST RESORT: Only ask for the plant name if the message is completely generic (e.g., "Mera plant sukh raha hai" without specifying which one).
+        PLANT IDENTIFICATION & HEALTH DIAGNOSIS (CRITICAL):
+        - IDENTIFY: Whenever an image is provided, your first priority is to identify the plant name.
+        - HEALTH CHECK: Analyze the image for any signs of damage, pests, yellowing leaves, or diseases.
+        - IF DAMAGED: 
+            a. State clearly: "Is plant mein thoda damage dikh raha hai" (or equivalent in chosen language).
+            b. Explain EXACTLY what is wrong (e.g., "Patte peeli ho rahi hain", "Keede lage hain", "Overwatering ka sign hai").
+            c. Suggest the cure or suggest replacing it if it's beyond saving.
+        - IF HEALTHY: Simply state the plant name and say it looks healthy.
         
-        Your response MUST be a valid JSON object with the following fields:
+        SMART PLANT RECOGNITION (TEXT):
+        - Identify plant names even if misspelled or mentioned in mixed-language sentences.
+        - DIRECT ANSWER: If a plant name is found in the CURRENT message, provide immediate advice.
+        
+        YOUR RESPONSE MUST BE A VALID JSON OBJECT:
         { 
-          "text": "Detailed advice or polite question with plenty of emojis", 
-          "recommendations": ["Identified Plant Name", "Related Category/Product"], 
-          "remindable": true/false (true if specific advice given), 
-          "plantName": "Identified Name or 'Plant'" 
+          "text": "Detailed advice/diagnosis with plant name and health status. Use plenty of emojis.", 
+          "recommendations": ["Identified Plant Name", "Related Category (e.g., Fertilizers & Nutrients)"], 
+          "remindable": true/false (true if diagnosis or specific advice given), 
+          "plantName": "Exact Plant Name Identified" 
         }
         
         AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]`;
@@ -1483,8 +1490,9 @@ app.get('/api/products', async (req, res) => {
         console.log(`[ProductsAPI] Query: "${category}" | Limit: ${limit} | State: ${state}`);
 
         let query = {};
-        if (category && category !== 'Bestsellers') {
+        if (category && category !== 'All' && category !== 'Bestsellers') {
             let decodedCategory = decodeURIComponent(category).trim();
+            const categoryRegex = new RegExp(`^${decodedCategory.replace(/[-\s]+/g, '[-\\s]+')}$`, 'i');
 
             const categoryMap = {
                 'Soil & Growing Media': {
@@ -1552,36 +1560,26 @@ app.get('/api/products', async (req, res) => {
                     };
                 }
             } else {
-                // Broaden search for main categories
-                let usePartial = false;
-                if (['seeds', 'plants', 'accessories', 'soil'].some(c => decodedCategory.toLowerCase().includes(c))) {
-                    usePartial = true;
-                }
+                // Check if it matches a Category document first
+                const Category = require('./models/Category');
+                const matchingCategories = await Category.find({
+                    $or: [
+                        { key: categoryRegex },
+                        { name: categoryRegex },
+                        { label: categoryRegex }
+                    ]
+                });
 
-                // Normalize names for better matching
-                let normalized = decodedCategory.replace(/[-\s]+/g, '[-\\s]+');
-                const regex = new RegExp(`^${normalized}$`, 'i');
-
-                // Partial regex for matching tags or nested category strings
-                const partialPattern = decodedCategory.replace(/[-\s]+/g, '.*');
-                const partialRegex = new RegExp(partialPattern, 'i');
-
-                if (usePartial) {
-                    query = {
-                        $or: [
-                            { category: { $regex: partialRegex } },
-                            { tags: { $regex: partialRegex } }
-                        ]
-                    };
+                if (matchingCategories.length > 0) {
+                    const categorySearchNames = matchingCategories.map(c => c.name || c.label || c.key);
+                    query = { category: { $in: categorySearchNames } };
                 } else {
+                    // Fallback to direct field matches with regex
                     query = {
                         $or: [
-                            { category: decodedCategory },
-                            { tags: decodedCategory },
-                            { category: { $regex: regex } },
-                            { tags: { $regex: regex } },
-                            { category: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } },
-                            { tags: { $regex: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') } }
+                            { category: categoryRegex },
+                            { tags: categoryRegex },
+                            { name: new RegExp(decodedCategory.replace(/[-\s]+/g, '.*'), 'i') }
                         ]
                     };
                 }
@@ -1899,7 +1897,11 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
         const [user, orderCount, recentOrders] = await Promise.all([
             User.findById(userId).select('greenPoints fullName'),
             Order.countDocuments({ userId }),
-            Order.find({ userId }).sort({ orderDate: -1 }).limit(5).lean()
+            Order.find({ userId })
+                 .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2 -paymentScreenshot')
+                 .sort({ orderDate: -1 })
+                 .limit(5)
+                 .lean()
         ]);
 
         res.json({
@@ -1921,7 +1923,10 @@ app.get('/api/user/orders', auth, async (req, res) => {
         if (req.user.id === 'admin-special-id') {
             return res.json([]);
         }
-        const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 }).lean();
+        const orders = await Order.find({ userId: req.user.id })
+            .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2 -paymentScreenshot')
+            .sort({ orderDate: -1 })
+            .lean();
         res.json(orders);
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -2134,7 +2139,7 @@ app.get('/api/admin/orders', auth, async (req, res) => {
     try {
         // Optimization: Limit to 500 orders and explicitly EXCLUDE heavy Base64 image fields
         const orders = await Order.find({})
-            .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2')
+            .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2 -paymentScreenshot')
             .populate('userId', 'fullName email phone alternatePhone address city state')
             .sort({ orderDate: -1 })
             .limit(500)

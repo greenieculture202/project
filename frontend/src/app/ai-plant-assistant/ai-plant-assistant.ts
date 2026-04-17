@@ -671,11 +671,12 @@ export class AiPlantAssistantComponent {
     
     let html = text
       // Headers
-      .replace(/### (.*?)(\n|$)/g, '<h3 style="margin: 10px 0 5px; color: #2e7d32; font-size: 1.1rem; font-weight: 700;">$1</h3>')
+      .replace(/### (.*?)(\n|$)/g, '<h3 style="margin: 15px 0 8px; color: #166534; font-size: 1.15rem; font-weight: 800; border-bottom: 1px solid #d1fae5; padding-bottom: 4px;">$1</h3>')
+      .replace(/## (.*?)(\n|$)/g, '<h4 style="margin: 12px 0 6px; color: #374151; font-size: 1rem; font-weight: 700;">$1</h4>')
       // Bold
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #1b5e20; font-weight: 800;">$1</strong>')
-      // Bullet points
-      .replace(/^- (.*?)(\n|$)/gm, '<div style="margin-left: 10px; display: flex; align-items: flex-start; gap: 5px; margin-bottom: 4px;"><span style="color: #2e7d32;">•</span><span>$1</span></div>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #064e3b; font-weight: 800; background: rgba(16, 185, 129, 0.05); padding: 0 4px; border-radius: 4px;">$1</strong>')
+      // Bullet points with better spacing
+      .replace(/^- (.*?)(\n|$)/gm, '<div style="margin-left: 5px; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;"><span style="color: #10b981; margin-top: 2px;">•</span><span style="color: #374151; font-size: 0.95rem;">$1</span></div>')
       // Line breaks
       .replace(/\n/g, '<br>');
 
