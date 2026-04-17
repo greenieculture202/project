@@ -459,22 +459,24 @@ export class ProductService {
 
     private categoriesCache: string[] | null = null;
 
-    // Get categories
-    getCategories(): Observable<string[]> {
-        if (this.categoriesCache) {
-            return of(this.categoriesCache);
-        }
-        return this.http.get<string[]>(`${this.apiUrl}/products/categories`).pipe(
-            map(categories => {
-                this.categoriesCache = categories;
-                return categories;
-            }),
+    // Get categories from DB
+    getCategories(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/categories`).pipe(
             catchError(error => {
                 console.error('Error fetching categories:', error);
-                // Fallback to static list if available
-                return of(Object.keys(this.fallbackProducts));
+                return of([]);
             })
         );
+    }
+
+    // Admin: Add Category
+    addCategory(category: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/admin/categories`, category, { headers: this.getHeaders() });
+    }
+
+    // Admin: Delete Category
+    deleteCategory(id: string): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/admin/categories/${id}`, { headers: this.getHeaders() });
     }
 
     // Public helper method to convert name to slug (for components)

@@ -14,4 +14,9 @@ import { inject } from '@angular/core';
 export class FooterComponent {
 
     currentYear = new Date().getFullYear();
+
+    subscribeNewsletter() {
+        alert('Thank you for subscribing to our Green Community! 🌿');
+    }
 }
+

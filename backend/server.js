@@ -1,7 +1,7 @@
 const express = require('express');
+const compression = require('compression');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const compression = require('compression');
 const path = require('path');
 const cron = require('node-cron');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -26,6 +26,7 @@ const PlantReminder = require('./models/PlantReminder');
 const AdminChatMessage = require('./models/AdminChatMessage');
 const ChatMessage = require('./models/ChatMessage');
 const Courier = require('./models/Courier');
+const Category = require('./models/Category');
 
 const Cart = require('./models/Cart');
 const Payment = require('./models/Payment');
@@ -214,11 +215,11 @@ const sendOrderStatusEmail = async (order) => {
         } else if (order.status === 'Return Approved') {
             statusText = 'Return Approved! 📦';
             statusMessage = 'Great news! Your return request has been approved. Please keep the items ready for pickup.';
-            
+
             // Calculate Refund Breakdown (40% Cut)
             const originalTotal = order.totalAmount;
             const refundAmount = Math.round(originalTotal * 0.6); // 60% Refund
-            
+
             // Generate Items HTML
             const itemsHtml = order.items.map(item => `
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 10px; background: #f9fafb; border-radius: 8px;">
@@ -241,8 +242,8 @@ const sendOrderStatusEmail = async (order) => {
                 console.error('[EMAIL-COURIER-ERROR]', err.message);
             }
 
-            const pickupDate = order.expectedReturnDate ? 
-                new Date(order.expectedReturnDate).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' }) : 
+            const pickupDate = order.expectedReturnDate ?
+                new Date(order.expectedReturnDate).toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' }) :
                 'Soon';
 
             trackingSection = `
@@ -339,13 +340,16 @@ app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/admin/offers', offerProductsRouter);
 
-// app.use((req, res, next) => {
-//     const logStr = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
-//     fs.appendFileSync(path.join(__dirname, 'request_logs.txt'), logStr);
-//     next();
-// });
+// Async request logging to avoid blocking the event loop
+const logStream = fs.createWriteStream(path.join(__dirname, 'request_logs.txt'), { flags: 'a' });
+app.use((req, res, next) => {
+    const logStr = `[${new Date().toISOString()}] ${req.method} ${req.url}\n`;
+    logStream.write(logStr);
+    next();
+});
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mejor';
@@ -363,7 +367,7 @@ mongoose.connect(MONGODB_URI, {
         // Run seeds only after connection is established
         console.log('🔄 Starting data seeding...');
         try {
-            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers()]);
+            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers(), seedCategories()]);
             console.log('✅ Seeding completed');
         } catch (seedErr) {
             console.error('⚠️ Seeding internal error:', seedErr.message);
@@ -1465,6 +1469,13 @@ app.post('/api/reviews', async (req, res) => {
     }
 });
 
+// Bestsellers Cache (In-memory)
+let bestsellersCache = {
+    data: null,
+    lastFetched: 0,
+    TTL: 60 * 60 * 1000 // 1 hour
+};
+
 // API Routes for Products
 app.get('/api/products', async (req, res) => {
     try {
@@ -1579,16 +1590,21 @@ app.get('/api/products', async (req, res) => {
 
         let products = [];
         if (category === 'Bestsellers') {
+            const now = Date.now();
+            if (bestsellersCache.data && (now - bestsellersCache.lastFetched < bestsellersCache.TTL)) {
+                return res.json(bestsellersCache.data);
+            }
+
             const limitNum = parseInt(limit) || 20;
             const ninetyDaysAgo = new Date();
             ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
             const topSelling = await Order.aggregate([
-                { 
-                    $match: { 
+                {
+                    $match: {
                         status: { $ne: 'Cancelled' },
                         orderDate: { $gte: ninetyDaysAgo }
-                    } 
+                    }
                 },
                 { $unwind: "$items" },
                 {
@@ -1622,15 +1638,20 @@ app.get('/api/products', async (req, res) => {
                 const padding = await paddingQuery.limit(limitNum - products.length).lean();
                 products = [...products, ...padding];
             }
-            console.log(`[ProductsAPI] Dynamic Bestsellers matched ${products.length} products`);
+
+            // Update cache
+            bestsellersCache.data = products;
+            bestsellersCache.lastFetched = now;
+
+            console.log(`[ProductsAPI] Dynamic Bestsellers matched ${products.length} products (Cache Updated)`);
         } else {
             const isMinimal = req.query.minimal === 'true';
             let productsQuery = Product.find(query);
-            
+
             if (isMinimal) {
                 productsQuery = productsQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage');
             }
-            
+
             productsQuery = productsQuery.lean();
             if (limit) {
                 const limitNum = parseInt(limit);
@@ -2050,9 +2071,9 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
             Product.countDocuments({ isActive: { $ne: false } }),
             // 3. User counts: total and new this week
             User.countDocuments({ role: { $ne: 'admin' } }),
-            User.countDocuments({ 
+            User.countDocuments({
                 role: { $ne: 'admin' },
-                createdAt: { $gte: sevenDaysAgo } 
+                createdAt: { $gte: sevenDaysAgo }
             }),
             // 4. Weekly order trends (last 7 days, grouped by day of week)
             Order.aggregate([
@@ -2080,7 +2101,7 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const weekMap = {};
         dayNames.forEach(d => weekMap[d] = 0);
-        
+
         if (Array.isArray(weeklyTrends)) {
             weeklyTrends.forEach(t => {
                 const dayName = dayNames[t._id - 1]; // MongoDB dayOfWeek: 1=Sun
@@ -2816,6 +2837,61 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// --- CATEGORY API ---
+
+// Public: Get all categories
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find({}).sort({ order: 1, name: 1 });
+        res.json(categories);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Admin: Add new category
+app.post('/api/admin/categories', auth, async (req, res) => {
+    try {
+        const { name, mainGroup, image, label } = req.body;
+        if (!name || !mainGroup) {
+            return res.status(400).json({ message: 'Name and mainGroup are required' });
+        }
+
+        const key = name.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-');
+
+        const existing = await Category.findOne({ key });
+        if (existing) {
+            return res.status(400).json({ message: 'Category already exists' });
+        }
+
+        const newCategory = new Category({
+            name,
+            key,
+            mainGroup,
+            image,
+            label: label || name
+        });
+
+        await newCategory.save();
+        res.status(201).json(newCategory);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Admin: Delete category
+app.delete('/api/admin/categories/:id', auth, async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Category deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Seed default placements if none exist
 const seedPlacements = async () => {
     try {
@@ -2932,6 +3008,47 @@ const seedFaqs = async () => {
         }
     } catch (err) {
         console.error('[SEED] Error seeding FAQs:', err.message);
+    }
+};
+
+// Seed default categories if none exist
+const seedCategories = async () => {
+    try {
+        const count = await Category.countDocuments();
+        if (count === 0) {
+            const defaultCategories = [
+                // Plants
+                { name: 'Indoor Plants', key: 'Indoor Plants', mainGroup: 'Plants', label: 'Indoor', image: '/images/cat_indoor.png', order: 1 },
+                { name: 'Outdoor Plants', key: 'Outdoor Plants', mainGroup: 'Plants', label: 'Outdoor', image: '/images/cat_outdoor.png', order: 2 },
+                { name: 'Bestsellers', key: 'Bestsellers', mainGroup: 'Plants', label: 'Bestsellers', image: '/images/cat_best.png', order: 3 },
+                { name: 'Flowering Plants', key: 'Flowering Plants', mainGroup: 'Plants', label: 'Flowering', image: '/images/cat_flowering.png', order: 4 },
+                { name: 'Gardening', key: 'Gardening', mainGroup: 'Plants', label: 'Gardening', image: '/images/cat_gardening.png', order: 5 },
+                { name: 'XL Plants', key: 'XL Plants', mainGroup: 'Plants', label: 'XL Plants', image: '/images/cat_xl.png', order: 6 },
+                { name: 'Air Purifying Plants', key: 'Air Purifying Plants', mainGroup: 'Plants', label: 'Air Purifying', image: '/images/cat_air.png', order: 7 },
+
+                // Seeds
+                { name: 'Vegetable Seeds', key: 'Vegetable Seeds', mainGroup: 'Seeds', image: '/images/seed_veg.png', order: 1 },
+                { name: 'Fruit Seeds', key: 'Fruit Seeds', mainGroup: 'Seeds', image: '/images/seed_fruit.png', order: 2 },
+                { name: 'Herb Seeds', key: 'Herb Seeds', mainGroup: 'Seeds', image: '/images/seed_herb.png', order: 3 },
+                { name: 'Seeds Kit', key: 'Seeds Kit', mainGroup: 'Seeds', image: '/images/seed_kit.png', order: 4 },
+                { name: 'Flower Seeds', key: 'Flower Seeds', mainGroup: 'Seeds', image: '/images/seed_flower.png', order: 5 },
+                { name: 'Microgreen Seeds', key: 'Microgreen Seeds', mainGroup: 'Seeds', image: '/images/seed_micro.png', order: 6 },
+
+                // Accessories - Main Categories
+                { name: 'Pots & Planters', key: 'Pots & Planters', mainGroup: 'Accessories', image: '/images/acc_pots.png', order: 1 },
+                { name: 'Watering Equipment', key: 'Watering Equipment', mainGroup: 'Accessories', image: '/images/acc_water.png', order: 2 },
+                { name: 'Support & Protection', key: 'Support & Protection', mainGroup: 'Accessories', image: '/images/acc_support.png', order: 3 },
+                { name: 'Lighting Equipment', key: 'Lighting Equipment', mainGroup: 'Accessories', image: '/images/acc_light.png', order: 4 },
+                { name: 'Decorative & Display', key: 'Decorative & Display', mainGroup: 'Accessories', image: '/images/acc_deco.png', order: 5 },
+                { name: 'Soil & Growing Media', key: 'Soil & Growing Media', mainGroup: 'Accessories', image: '/images/acc_soil.png', order: 6 },
+                { name: 'Fertilizers & Nutrients', key: 'Fertilizers & Nutrients', mainGroup: 'Accessories', image: '/images/acc_fert.png', order: 7 },
+                { name: 'Gardening Tools', key: 'Gardening Tools', mainGroup: 'Accessories', image: '/images/acc_tools.png', order: 8 }
+            ];
+            await Category.insertMany(defaultCategories);
+            console.log('[SEED] Default categories seeded successfully');
+        }
+    } catch (err) {
+        console.error('[SEED] Error seeding categories:', err.message);
     }
 };
 
@@ -3336,30 +3453,53 @@ app.put('/api/admin/notifications/read', auth, async (req, res) => {
  */
 app.post('/api/admin/generate-marketing', auth, async (req, res) => {
     console.log(`[MarketingAPI] POST received for ${req.body.type} - product: ${req.body.productName}`);
-    const { type, productName, offerDetails, tone = 'professional' } = req.body;
+    const { type, productName, offerDetails, tone = 'professional', image } = req.body;
     try {
-        let prompt = "";
+        let basePrompt = "";
         if (type === 'social') {
-            prompt = `Create a viral, attractive Instagram caption for a plant product named "${productName}". 
+            basePrompt = `Create a viral, attractive Instagram caption for a plant product named "${productName}". 
                      Details: ${offerDetails}. Tone: ${tone}. Include emojis and relevant hashtags. 
                      Format the output cleanly in plain text.`;
         } else if (type === 'email') {
-            prompt = `Write a professional email draft for newsletter subscribers about "${productName}". 
+            basePrompt = `Write a professional email draft for newsletter subscribers about "${productName}". 
                      Subject line included. Tone: Catchy and green-focused. Details: ${offerDetails}.`;
         } else if (type === 'care') {
-            prompt = `Suggest 3 essential, quick-to-read care tips for a plant named "${productName}". 
+            basePrompt = `Suggest 3 essential, quick-to-read care tips for a plant named "${productName}". 
                      Focus on: Sunlight, Watering, and a "Pro Secret". Include emojis.`;
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        // Build multimodal content parts
+        const contentParts = [];
+        
+        // Add image part if provided (Base64 only for now)
+        if (image && image.startsWith('data:image')) {
+            const [metadata, base64Data] = image.split(',');
+            const mimeType = metadata.match(/:(.*?);/)[1] || 'image/jpeg';
+            contentParts.push({
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
+                }
+            });
+            basePrompt += `\n\nIMPORTANT: I have attached an image of the actual product. 
+                          Analyze its visual features (colors, leaf shape, pot style, overall aesthetic) 
+                          and include these specific details in your output to make it unique and convincing.`;
+        } else if (image && image.startsWith('http')) {
+            basePrompt += `\n\nProduct Visual Reference (URL): ${image}. 
+                          Please reference the visual style of this product in your content.`;
+        }
 
-        // 3-second timeout to guarantee ultra-fast responses (either AI or Template!)
+        contentParts.push({ text: basePrompt });
+
+        // 5-second timeout for multimodal (image processing takes longer)
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('AI Request Timeout or Rate Limited')), 3000);
+            setTimeout(() => reject(new Error('AI Request Timeout or Rate Limited')), 5000);
         });
 
         const result = await Promise.race([
-            model.generateContent(prompt),
+            model.generateContent(contentParts),
             timeoutPromise
         ]);
 

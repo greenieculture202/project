@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -32,6 +32,8 @@ export class AiAnalyticsPanelComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   public authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
   @ViewChild('chatScroll') private chatScrollContainer!: ElementRef;
 
   activeTab = 'overview';
@@ -43,6 +45,8 @@ export class AiAnalyticsPanelComponent implements OnInit {
   isMarketingLoading = signal(false);
   marketingProductName = signal<string>('');
   marketingOfferDetails = signal<string>('');
+  marketingStep = signal(1);
+  marketingImage = signal<string>('');
   
   // Operations Hub
   plantReminders = signal<any[]>([]);
@@ -275,6 +279,87 @@ export class AiAnalyticsPanelComponent implements OnInit {
     this.marketingContent.set(null);
     this.marketingProductName.set('');
     this.marketingOfferDetails.set('');
+    this.marketingStep.set(1);
+    this.marketingImage.set('');
+  }
+
+  clearMarketingImage() {
+    this.marketingImage.set('');
+    this.cdr.detectChanges();
+  }
+
+  isBase64(url: string): boolean {
+    return !!url && url.startsWith('data:image');
+  }
+
+  // ─── MARKETING WIZARD NAVIGATION ──────────────────────────────────────────
+
+  nextMarketingStep() {
+    if (!this.marketingProductName().trim() || !this.marketingOfferDetails().trim()) {
+      alert("Please enter both Product Name and Offer Details first! 🌱");
+      return;
+    }
+    this.marketingStep.set(2);
+  }
+
+  prevMarketingStep() {
+    this.marketingStep.set(1);
+  }
+
+  // ─── IMAGE HANDLING (PORTED FROM ADMIN) ──────────────────────────────────
+
+  sanitizeImageUrl(url: string): string {
+    if (!url) return '';
+    let cleanUrl = url.trim().replace(/^["']|["']$/g, '');
+    cleanUrl = cleanUrl.replace(/\\/g, '/');
+
+    const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+    const match = cleanUrl.match(driveRegex);
+    if (match && match[1]) {
+      return `https://drive.google.com/uc?id=${match[1]}`;
+    }
+    return cleanUrl;
+  }
+
+  onImageChange() {
+    this.marketingImage.set(this.sanitizeImageUrl(this.marketingImage()));
+    this.cdr.detectChanges();
+  }
+
+  isLocalPath(url: string): boolean {
+    if (!url) return false;
+    const clean = url.trim().replace(/^["']|["']$/g, '');
+    if (clean.startsWith('data:image')) return false;
+    return /^[a-zA-Z]:[\\\/]/.test(clean) || (clean.startsWith('/') && !clean.startsWith('http'));
+  }
+
+  triggerFileSelect(inputId: string) {
+    const element = document.getElementById(inputId) as HTMLInputElement;
+    if (element) element.click();
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File is too large (Refined limit is 5MB).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.ngZone.run(() => {
+        this.marketingImage.set(e.target.result);
+        this.cdr.detectChanges();
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   getPageSubtitle(): string {
@@ -598,7 +683,16 @@ export class AiAnalyticsPanelComponent implements OnInit {
     this.lastType = type;
     this.isMarketingLoading.set(true);
     const token = sessionStorage.getItem('auth_token');
-    this.http.post<any>('/api/admin/generate-marketing', { type, productName: prod, offerDetails: details }, {
+
+    // Build payload including the current marketing image
+    const payload = { 
+      type, 
+      productName: prod, 
+      offerDetails: details,
+      image: this.marketingImage() 
+    };
+
+    this.http.post<any>('/api/admin/generate-marketing', payload, {
       headers: { 'x-auth-token': token || '' }
     }).subscribe({
       next: (res) => {

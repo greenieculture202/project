@@ -17,6 +17,19 @@
             <span class="ticker-item"><i class="fas fa-wind"></i> Breathe Deeply</span>
         </div>
     </div>
+
+    <!-- Newsletter Section -->
+    <div class="footer-newsletter">
+        <div class="newsletter-content">
+            <h3>Join our Green Community</h3>
+            <p>Get plant care tips, exclusive offers, and botanical inspiration delivered to your inbox.</p>
+            <form class="newsletter-form" (submit)="$event.preventDefault(); subscribeNewsletter()">
+                <input type="email" placeholder="Enter your email address" required>
+                <button type="submit" class="btn-subscribe">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
     <div class="footer-container">
         <!-- Main Footer Links -->
         <div class="footer-grid">
@@ -24,11 +37,13 @@
             <div class="footer-col">
                 <div class="header-with-icon">
                     <img src="/images/greenie-logo.png" alt="Logo" class="heading-logo">
-                    <h5 class="col-title">ABOUT US</h5>
+                    <h5 class="col-title">ABOUT GREENIE</h5>
                 </div>
                 <ul class="footer-links">
-                    <li><a routerLink="/about-us">About Us</a></li>
+                    <li><a routerLink="/about-us">Our Story</a></li>
                     <li><a routerLink="/contact-us">Contact Us</a></li>
+                    <li><a href="#">Sustainable Practices</a></li>
+                    <li><a href="#">Store Locator</a></li>
                 </ul>
             </div>
 
@@ -42,11 +57,8 @@
                     <li><a routerLink="/products/indoor-plants">Indoor Plants</a></li>
                     <li><a routerLink="/products/outdoor-plants">Outdoor Plants</a></li>
                     <li><a routerLink="/products/flowering-plants">Flowering Plants</a></li>
-                    <li><a routerLink="/products/gardening-plants">Gardening</a></li>
                     <li><a routerLink="/products/seeds">Seeds & Bulbs</a></li>
                     <li><a routerLink="/products/accessories">Accessories</a></li>
-                    <li><a routerLink="/products/soil-growing-media">Soil & Media</a></li>
-                    <li><a routerLink="/products/fertilizers-nutrients">Fertilizers</a></li>
                     <li><a routerLink="/products/gardening-tools">Gardening Tools</a></li>
                 </ul>
             </div>
@@ -55,77 +67,51 @@
             <div class="footer-col">
                 <div class="header-with-icon">
                     <i class="fas fa-headphones-alt"></i>
-                    <h5 class="col-title">CUSTOMER SUPPORT</h5>
+                    <h5 class="col-title">SUPPORT</h5>
                 </div>
                 <ul class="footer-links">
-                    <li><a href="#">Take The Plant Quiz</a></li>
+                    <li><a routerLink="/faq">FAQs</a></li>
+                    <li><a routerLink="/user-panel">Track Order</a></li>
+                    <li><a routerLink="/user-panel">Return Policy</a></li>
+                    <li><a routerLink="/login">Login / Sign In</a></li>
+                    <li><a routerLink="/register">Register / Sign Up</a></li>
                     <li><a href="#">Shipping Policy</a></li>
                     <li><a href="#">Terms and Conditions</a></li>
                     <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Track Order</a></li>
-                    <li><a routerLink="/faq">FAQs</a></li>
-                    <li><a href="#">Order Related Policy</a></li>
                 </ul>
             </div>
 
-            <!-- Column 4: Offers & Rewards -->
+            <!-- Column 4: AI Assistance -->
             <div class="footer-col">
                 <div class="header-with-icon">
-                    <i class="fas fa-certificate"></i>
-                    <h5 class="col-title">OFFERS & REWARDS</h5>
+                    <i class="fas fa-robot"></i>
+                    <h5 class="col-title">AI ASSISTANCE</h5>
                 </div>
                 <ul class="footer-links">
-                    <li><a href="#">Plant Parent Rewards Club</a></li>
-                    <li><a href="#">Greenie Culture Coupons</a></li>
+                    <li><a routerLink="/ai-analytics">AI Plant Analytics</a></li>
+                    <li><a href="#" (click)="$event.preventDefault()">Help AI Assistant</a></li>
+                    <li><a href="#">Plant Care Quiz</a></li>
+                    <li><a href="#">Disease Diagnosis</a></li>
                 </ul>
             </div>
 
-            <!-- Column 5: Get In Touch -->
-            <div class="footer-col contact-col">
-                <div class="header-with-icon">
-                    <i class="fas fa-paper-plane"></i>
-                    <h5 class="col-title">GET IN TOUCH</h5>
-                </div>
-                <ul class="contact-links">
-                    <li>
-                        <i class="fas fa-phone-alt"></i>
-                        <span>Call us: +91-9129912991 ( 9 AM to 6 PM)</span>
-                    </li>
-                    <li>
-                        <i class="fab fa-whatsapp"></i>
-                        <span>WhatsApp us: +91-7090970909</span>
-                    </li>
-                    <li>
-                        <i class="far fa-envelope"></i>
-                        <span>Email us: support&#64;greenieculture.com</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span class="address-text">03-111, Third Floor, GreenWorks, Plot 67, Baner, Pune, Maharashtra
-                            411045</span>
-                    </li>
-                </ul>
-            </div>
         </div>
+    </div>
 
-        <!-- Divider Line -->
-        <hr class="footer-divider">
-
-        <!-- Bottom Bar -->
+    <!-- Bottom Bar -->
+    <div class="footer-bottom-wrapper">
         <div class="footer-bottom">
             <div class="bottom-left">
                 <span class="copyright">&copy; {{currentYear}}, Greenie Culture. All rights reserved.</span>
-                <span class="made-in-india">Made in India <span class="flag">🇮🇳</span> with <span
-                        class="heart">❤️</span> for Plant Lovers <span class="sprout">🌱</span></span>
+                <span class="made-in-india">Made with <span class="heart">❤️</span> in India for Plant Lovers 🌿</span>
             </div>
             <div class="bottom-right social-section">
-                <span class="follow-us">Follow Us</span>
+                <span class="follow-us">Follow Our Journey</span>
                 <div class="social-icons">
-                    <a href="#" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social-icon twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="social-icon instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="social-icon linkedin"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" class="social-icon youtube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
         </div>

@@ -12,6 +12,9 @@
       <a class="nav-item" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
         <i class="fas fa-th-large"></i> Overview
       </a>
+      <a class="nav-item" [class.active]="activeTab === 'marketing'" (click)="setActiveTab('marketing')">
+        <i class="fas fa-wand-magic-sparkles"></i> Marketing AI
+      </a>
       <a class="nav-item" [class.active]="activeTab === 'sales'" (click)="setActiveTab('sales')">
         <i class="fas fa-chart-line"></i> Sales AI
       </a>
@@ -23,9 +26,6 @@
       </a>
       <a class="nav-item" [class.active]="activeTab === 'chatbot'" (click)="setActiveTab('chatbot')">
         <i class="fas fa-comment-dots"></i> AI Assistant
-      </a>
-      <a class="nav-item" [class.active]="activeTab === 'marketing'" (click)="setActiveTab('marketing')">
-        <i class="fas fa-wand-magic-sparkles"></i> Marketing AI
       </a>
       <a class="nav-item" [class.active]="activeTab === 'tasks'" (click)="setActiveTab('tasks')">
         <i class="fas fa-list-check"></i> Operations Hub
@@ -356,10 +356,13 @@
       <div *ngIf="!isLoading && activeTab === 'marketing'" class="tab-content animate-fade marketing-tab">
         <div class="content-row">
           <div class="glass-card hud-item marketing-input-card">
-            <div class="card-header">
+            <div class="card-header wizard-header">
               <h4><i class="fas fa-bullhorn"></i> Campaign Generator</h4>
+              <div class="step-indicator">STEP {{ marketingStep() }} OF 2</div>
             </div>
-            <div class="marketing-controls">
+
+            <!-- STEP 1: CAMPAIGN DATA -->
+            <div class="marketing-controls animate-slide-in" *ngIf="marketingStep() === 1">
               <div class="input-group">
                 <label>Product Name</label>
                 <input type="text" [ngModel]="marketingProductName()" (ngModelChange)="marketingProductName.set($event)" placeholder="e.g. Money Plant">
@@ -368,6 +371,47 @@
                 <label>Offer Details</label>
                 <textarea [ngModel]="marketingOfferDetails()" (ngModelChange)="marketingOfferDetails.set($event)" placeholder="e.g. 20% Off for New Year, Limited Stock"></textarea>
               </div>
+              <div class="wizard-actions">
+                <button (click)="nextMarketingStep()" class="tool-btn next-btn glow">
+                  Next: Visual Assets <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 2: VISUAL ASSETS & GENERATION -->
+            <div class="marketing-controls animate-slide-in" *ngIf="marketingStep() === 2">
+              <div class="input-group">
+                <label>Product Image Asset</label>
+                <div class="input-with-action">
+                  <!-- Unified Input Handler: Shows Badge for Uploads, Text for Links -->
+                  <input *ngIf="!isBase64(marketingImage())" type="text" [ngModel]="marketingImage()" 
+                         (ngModelChange)="marketingImage.set($event); onImageChange()" 
+                         placeholder="Paste Drive link or URL...">
+                  
+                  <div *ngIf="isBase64(marketingImage())" class="asset-badge-premium animate-pop">
+                    <div class="badge-content">
+                      <i class="fas fa-image"></i>
+                      <span>Image Uploaded (Ready for AI)</span>
+                    </div>
+                    <button class="badge-remove-btn" (click)="clearMarketingImage()" title="Remove Image">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                  </div>
+
+                  <input type="file" id="aiImageUpload" style="display: none;" (change)="onFileSelected($event)" accept="image/*">
+                  <button type="button" class="action-btn-mini" (click)="triggerFileSelect('aiImageUpload')" title="Upload from Device">
+                    <i class="fas fa-folder-open"></i>
+                  </button>
+                </div>
+                <div class="url-warning-mini" *ngIf="isLocalPath(marketingImage())">
+                  <i class="fas fa-exclamation-triangle"></i> Browser cannot load "D:\" paths. Use the Folder button.
+                </div>
+                <div class="ai-image-preview-box" *ngIf="marketingImage()">
+                   <img [src]="marketingImage()" alt="Visual Preview">
+                   <div class="preview-overlay">AI VISION ACTIVE</div>
+                </div>
+              </div>
+
               <div class="action-grid-mini">
                 <button (click)="generateMarketing('social', marketingProductName(), marketingOfferDetails())" 
                         [disabled]="isMarketingLoading()" class="tool-btn emerald">
@@ -380,6 +424,12 @@
                 <button (click)="generateMarketing('care', marketingProductName(), marketingOfferDetails())" 
                         [disabled]="isMarketingLoading()" class="tool-btn glow">
                   <i class="fas fa-leaf"></i> Plant Care Tips
+                </button>
+              </div>
+
+              <div class="wizard-nav-back">
+                <button (click)="prevMarketingStep()" class="back-link-mini">
+                  <i class="fas fa-chevron-left"></i> Edit Product Details
                 </button>
               </div>
             </div>

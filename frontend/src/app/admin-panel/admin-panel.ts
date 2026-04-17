@@ -209,7 +209,7 @@ export class AdminPanelComponent implements OnInit {
     associatedProducts: any[] = [];
     activeOfferCode: string = '';
     activeOfferBadge: string = '';
-    
+
 
     // Courier Messaging
     showCourierReplyModal: boolean = false;
@@ -513,6 +513,17 @@ export class AdminPanelComponent implements OnInit {
 
     isSubmitting: boolean = false;
 
+    // Categories State
+    allCategories: any[] = [];
+    isLoadingCategories: boolean = false;
+    showAddCategoryModal: boolean = false;
+    newCategory: any = {
+        name: '',
+        mainGroup: 'Plants',
+        image: '',
+        label: ''
+    };
+
     // State to Courier Mapping (Populated dynamically via DB)
     public courierStateMapping: { [key: string]: string[] } = {};
 
@@ -602,21 +613,21 @@ export class AdminPanelComponent implements OnInit {
 
     get filteredUsers() {
         let filtered = this.users;
-        
+
         // Filter by Login Type
         if (this.userFilter !== 'All') {
             filtered = filtered.filter(u => u.method === this.userFilter);
         }
-        
+
         // Filter by Search Query (Name or Email)
         if (this.userSearchQuery) {
             const query = this.userSearchQuery.toLowerCase().trim();
-            filtered = filtered.filter(u => 
-                (u.name && u.name.toLowerCase().includes(query)) || 
+            filtered = filtered.filter(u =>
+                (u.name && u.name.toLowerCase().includes(query)) ||
                 (u.email && u.email.toLowerCase().includes(query))
             );
         }
-        
+
         return filtered;
     }
 
@@ -756,6 +767,7 @@ export class AdminPanelComponent implements OnInit {
         this.loadDashboardStats();   // Fast: single aggregation call
         this.loadAdminNotifications();
         this.loadFaqs();
+        this.loadCategories();
 
         // Poll every 60s — only notifications, not heavy order list
         this.pollingInterval = setInterval(() => {
@@ -798,6 +810,81 @@ export class AdminPanelComponent implements OnInit {
     // ─── FAST DASHBOARD STATS ──────────────────────────────────────────────────
     // Replaces loading ALL orders + ALL users just to show counts on the dashboard.
     // One aggregation call to /api/admin/dashboard-stats returns everything.
+
+    loadCategories() {
+        this.isLoadingCategories = true;
+        this.productService.getCategories().subscribe({
+            next: (data) => {
+                this.ngZone.run(() => {
+                    this.allCategories = data;
+                    this.isLoadingCategories = false;
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error loading categories:', err);
+                this.isLoadingCategories = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    openAddCategoryModal() {
+        this.newCategory = {
+            name: '',
+            mainGroup: this.activeMainCategory || 'Plants',
+            image: '',
+            label: ''
+        };
+        this.showAddCategoryModal = true;
+        this.toggleBodyScroll(true);
+    }
+
+    closeAddCategoryModal() {
+        this.showAddCategoryModal = false;
+        this.toggleBodyScroll(false);
+    }
+
+    submitCategory() {
+        if (this.isSubmitting) return;
+        if (!this.newCategory.name || !this.newCategory.mainGroup) {
+            alert('Name and Main Group are required!');
+            return;
+        }
+
+        this.isSubmitting = true;
+        this.productService.addCategory(this.newCategory).subscribe({
+            next: () => {
+                this.ngZone.run(() => {
+                    this.isSubmitting = false;
+                    this.showAddCategoryModal = false;
+                    this.toggleBodyScroll(false);
+                    this.loadCategories();
+                    this.cdr.detectChanges();
+                });
+            },
+            error: (err) => {
+                console.error('Error adding category:', err);
+                this.isSubmitting = false;
+                alert('Error adding category: ' + (err.error?.message || err.message));
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    deleteCategory(id: string, name: string) {
+        if (confirm(`Are you sure you want to delete the category "${name}"?`)) {
+            this.productService.deleteCategory(id).subscribe({
+                next: () => {
+                    this.loadCategories();
+                },
+                error: (err) => {
+                    console.error('Error deleting category:', err);
+                    alert('Error deleting category');
+                }
+            });
+        }
+    }
     loadDashboardStats() {
         const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
         const headers = { 'x-auth-token': token || '' };
@@ -822,7 +909,7 @@ export class AdminPanelComponent implements OnInit {
                     const wt = data.weeklyTrends || {};
                     const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                     const dayColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'];
-                    
+
                     const counts = orderedDays.map(d => wt[d] || 0);
                     const maxCount = Math.max(...counts, 1);
                     this.totalWeeklyOrders = counts.reduce((a, b) => a + b, 0);
@@ -839,7 +926,7 @@ export class AdminPanelComponent implements OnInit {
 
                     this.newUsersThisWeek = data.newUsersThisWeek || 0;
                     this.newUsersPercentage = data.userCount > 0 ? Math.round((this.newUsersThisWeek / data.userCount) * 100) : 0;
-                    
+
                     // Donut Chart (Day Slices)
                     if (this.totalWeeklyOrders > 0) {
                         let currentDayOffset = 0;
@@ -864,7 +951,7 @@ export class AdminPanelComponent implements OnInit {
                             dashArray: '0 100', dashOffset: 25
                         }));
                     }
-                    
+
                     // ── Recent Orders ──────────────────────────────────────────
                     if (data.recentOrders && data.recentOrders.length > 0) {
                         this.orders = data.recentOrders.map((o: any) => this.sanitizeOrder(o));
@@ -952,7 +1039,7 @@ export class AdminPanelComponent implements OnInit {
     viewOrderDetails(order: any, returnOnly: boolean = false) {
         // Load full order details if we only have the lightweight version from the list
         const needsFullData = returnOnly || !order.items || (order.returnDetails && !order.returnDetails.billImage && order.status === 'Return Requested');
-        
+
         if (needsFullData) {
             const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
             const headers = { 'x-auth-token': token || '' };
@@ -1061,15 +1148,15 @@ export class AdminPanelComponent implements OnInit {
             } as any).then((canvas: HTMLCanvasElement) => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                
+
                 const imgWidth = 210; // A4 width in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                
+
                 pdf.addImage(canvas, 'PNG', 0, 0, imgWidth, imgHeight);
-                
+
                 const fileName = `Greenie_Invoice_${this.selectedOrder?.orderId || 'Download'}.pdf`;
                 pdf.save(fileName);
-                
+
                 this.isDownloading = false;
                 this.cdr.detectChanges();
             }).catch((err: any) => {
@@ -1241,7 +1328,7 @@ export class AdminPanelComponent implements OnInit {
         this.http.get<any[]>('/api/admin/notifications', { headers }).subscribe({
             next: (data: any[]) => {
                 const currentUnreadCount = data.filter((n: any) => !n.isRead).length;
-                
+
                 // If we have more unread notifications than before, play sound (Skip first load)
                 if (!this.isFirstNotiLoad && currentUnreadCount > this.unreadNotificationsCount) {
                     console.log('--- NEW NOTIFICATION DETECTED, PLAYING SOUND ---');
@@ -1321,7 +1408,7 @@ export class AdminPanelComponent implements OnInit {
             next: (res: any) => {
                 this.notiService.show(`Message sent to ${this.newCourierName}`, 'Message Sent', 'success', 'toast');
                 this.showNewCourierMessageModal = false;
-                
+
                 // Add the outbound message locally so it shows up immediately
                 const outboundMsg = {
                     sender: 'admin',
@@ -1367,7 +1454,7 @@ export class AdminPanelComponent implements OnInit {
 
     getCourierName(noti: any): string {
         if (noti.courierName) return noti.courierName;
-        
+
         // For outbound admin messages, the recipient (userId) is the courier name
         if (noti.sender === 'admin' && noti.userId && noti.userId !== 'admin') return noti.userId;
 
@@ -1668,7 +1755,27 @@ export class AdminPanelComponent implements OnInit {
 
     getCategoryList() {
         if (!this.mainCategoryGroups[this.activeMainCategory]) return [];
-        const cats = this.mainCategoryGroups[this.activeMainCategory];
+
+        // Start with hardcoded categories
+        let cats = [...this.mainCategoryGroups[this.activeMainCategory]];
+
+        // Merge with dynamic categories from DB
+        if (this.allCategories && this.allCategories.length > 0) {
+            const dbCats = this.allCategories
+                .filter(cat => cat.mainGroup === this.activeMainCategory)
+                .map(cat => ({
+                    key: cat.key || cat.name,
+                    label: cat.label || cat.name,
+                    image: cat.image
+                }));
+
+            // Avoid duplicates by key
+            dbCats.forEach(dbCat => {
+                if (!cats.some(c => c.key === dbCat.key)) {
+                    cats.push(dbCat);
+                }
+            });
+        }
 
         if (this.activeMainCategory === 'Accessories') {
             const accHeaders = [
@@ -1694,14 +1801,14 @@ export class AdminPanelComponent implements OnInit {
                 { key: 'Digging Tools', label: 'Digging Tools' },
                 { key: 'Power Tools', label: 'Power Tools' }
             ];
-            const allHeaders = [...accHeaders, ...soilHeaders, ...fertHeaders, ...toolHeaders];
 
-            if (this.activeCompanionGroup === 'All') return allHeaders;
-
+            // Filter headers if a companion group is active
             if (this.activeCompanionGroup === 'Accessories') return accHeaders;
             if (this.activeCompanionGroup === 'Soil & Growing Media') return soilHeaders;
             if (this.activeCompanionGroup === 'Fertilizers & Nutrients') return fertHeaders;
             if (this.activeCompanionGroup === 'Gardening Tools') return toolHeaders;
+
+            return [...accHeaders, ...soilHeaders, ...fertHeaders, ...toolHeaders];
         }
 
         return cats;
@@ -1773,67 +1880,134 @@ export class AdminPanelComponent implements OnInit {
     }
 
     getFilteredCategoriesForModal() {
-        const categories = this.getCategoryList();
+        // 1. Get Built-in Categories for the active main group (Plants, Seeds, Accessories)
+        const builtInCategories = this.mainCategoryGroups[this.activeMainCategory] || [];
+        
+        // 2. Map Database Categories to the { key, label } format
+        const dbCategories = (this.allCategories || [])
+            .filter(cat => cat.mainGroup === this.activeMainCategory)
+            .map(cat => ({
+                key: cat.name,
+                label: cat.name
+            }));
 
-        // If we are adding a product for a specific offer, filter categories
-        if (!this.isEditingProduct && this.newProduct.tags) {
-            const offerCode = this.newProduct.tags;
-
-            if (offerCode === 'G-INDOOR-6-SEC') {
-                return (categories as any[]).filter(c => c.key === 'Indoor Plants' || c.key.includes('Indoor'));
+        // 3. Merge both lists using a Map to avoid duplicates by 'key'
+        const mergedMap = new Map<string, { key: string, label: string }>();
+        
+        // Add built-in categories first
+        builtInCategories.forEach(cat => mergedMap.set(cat.key.toLowerCase(), cat));
+        
+        // Add database categories (added categories will take precedence or extend the list)
+        dbCategories.forEach(cat => {
+            if (!mergedMap.has(cat.key.toLowerCase())) {
+                mergedMap.set(cat.key.toLowerCase(), cat);
             }
-            if (offerCode === 'G-GARDEN-6-SEC') {
-                return (categories as any[]).filter(c => c.key === 'Gardening Tools' || c.key.includes('Tool'));
-            }
-            if (offerCode === 'G-FLOWER-6-SEC') {
-                return (categories as any[]).filter(c => c.key === 'Flowering Plants' || c.key.includes('Flower'));
-            }
-            if (offerCode === 'G-BOGO-6-SECTION') {
-                return (categories as any[]).filter(c => c.key === 'XL Plants' || c.key.includes('XL'));
-            }
-        }
-
-        // Original logic for grouping by activeMainCategory and activeCompanionGroup
-        if (!this.activeMainCategory || !this.mainCategoryGroups[this.activeMainCategory]) return [];
-
-        if (this.activeMainCategory !== 'Accessories') {
-            return this.mainCategoryGroups[this.activeMainCategory];
-        }
-
-        let targetSubGroups: string[] = [];
-
-        if (this.productCategoryFilter !== 'All') {
-            if (this.navbarDefinitions[this.productCategoryFilter]) {
-                targetSubGroups = [this.productCategoryFilter];
-            } else {
-                return [{ key: this.productCategoryFilter, label: this.productCategoryFilter }];
-            }
-        } else {
-            const companionMapping: any = {
-                'Accessories': ['Pots & Planters', 'Watering Equipment', 'Support & Protection', 'Lighting Equipment', 'Decorative & Display'],
-                'Soil & Growing Media': ['Soil Types', 'Organic Amendments', 'Growth Media'],
-                'Fertilizers & Nutrients': ['Organic Fertilizers', 'Chemical Fertilizers', 'Plant Boosters'],
-                'Gardening Tools': ['Hand Tools', 'Cutting Tools', 'Digging Tools', 'Power Tools']
-            };
-            targetSubGroups = companionMapping[this.activeCompanionGroup] || [];
-        }
-
-        if (targetSubGroups.length === 0) {
-            return this.mainCategoryGroups['Accessories'];
-        }
-
-        const validCategories = new Set(targetSubGroups);
-        targetSubGroups.forEach((group: string) => {
-            (this.navbarDefinitions[group] || []).forEach((item: string) => validCategories.add(item));
         });
 
-        return this.mainCategoryGroups['Accessories'].filter(cat => validCategories.has(cat.key));
+        // 4. Convert back to array and sort alphabetically by label for a professional look
+        return Array.from(mergedMap.values()).sort((a, b) => a.label.localeCompare(b.label));
     }
 
     getTypeBadgeClass(count: number): string {
         if (count > 10) return 'high-count';
         if (count > 0) return 'active-count';
         return 'zero-count';
+    }
+
+    // ─── IMAGE HANDLING & SANITIZATION ─────────────────────────────────────────
+
+    sanitizeImageUrl(url: string): string {
+        if (!url) return '';
+        
+        let cleanUrl = url.trim();
+        
+        // 1. Strip leading/trailing quotes (single or double)
+        cleanUrl = cleanUrl.replace(/^["']|["']$/g, '');
+        
+        // 2. Convert backslashes to forward slashes
+        cleanUrl = cleanUrl.replace(/\\/g, '/');
+
+        // 3. Google Drive transformation
+        // Detects: https://drive.google.com/file/d/ID/view...
+        const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+        const match = cleanUrl.match(driveRegex);
+        if (match && match[1]) {
+            return `https://drive.google.com/uc?id=${match[1]}`;
+        }
+
+        return cleanUrl;
+    }
+
+    onImageChange(type: 'main' | 'alt', index: number = 0) {
+        if (type === 'main') {
+            this.newProduct.image = this.sanitizeImageUrl(this.newProduct.image);
+        } else if (this.newProduct.images && this.newProduct.images[index] !== undefined) {
+            this.newProduct.images[index] = this.sanitizeImageUrl(this.newProduct.images[index]);
+        }
+        this.cdr.detectChanges();
+    }
+
+    isBase64(url: string): boolean {
+        return !!url && url.startsWith('data:image');
+    }
+
+    clearImage(type: 'main' | 'alt', index: number = 0) {
+        if (type === 'main') {
+            this.newProduct.image = '';
+        } else {
+            this.newProduct.images[index] = '';
+        }
+        this.cdr.detectChanges();
+    }
+
+    isLocalPath(url: string): boolean {
+        if (!url) return false;
+        // Strip quotes first for accurate detection
+        const clean = url.trim().replace(/^["']|["']$/g, '');
+        // Detect Windows drive letters (C:\) or absolute Unix paths (/)
+        // Important: Base64 data URLs should NOT be flagged as local paths
+        if (clean.startsWith('data:image')) return false;
+        return /^[a-zA-Z]:[\\\/]/.test(clean) || (clean.startsWith('/') && !clean.startsWith('http'));
+    }
+
+    // ─── FILE SELECTION & BASE64 UPLOAD ────────────────────────────────────────
+
+    triggerFileSelect(inputId: string) {
+        const element = document.getElementById(inputId) as HTMLInputElement;
+        if (element) {
+            element.click();
+        }
+    }
+
+    onFileSelected(event: any, type: 'main' | 'alt', index: number = 0) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Basic validation: must be an image
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            return;
+        }
+
+        // Limit size to ~5MB to prevent browser/DB lag (Express has 50mb limit though)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File is too large (Refined limit is 5MB for optimal performance).');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+            this.ngZone.run(() => {
+                const base64Data = e.target.result;
+                if (type === 'main') {
+                    this.newProduct.image = base64Data;
+                } else {
+                    this.newProduct.images[index] = base64Data;
+                }
+                this.cdr.detectChanges();
+            });
+        };
+        reader.readAsDataURL(file);
     }
 
     getMainCategoryLabel(key: string) {
@@ -1876,18 +2050,81 @@ export class AdminPanelComponent implements OnInit {
             'Seeds Kit': 'fa-box-open',
             'Garden Toolkits': 'fa-toolbox'
         };
+
+        // Search in DB categories for an icon hint
+        if (this.allCategories && this.allCategories.length > 0) {
+            const dbMatch = this.allCategories.find(c => c.key === category || c.name === category);
+            if (dbMatch) {
+                if (dbMatch.mainGroup === 'Plants') return 'fa-leaf';
+                if (dbMatch.mainGroup === 'Seeds') return 'fa-seedling';
+                if (dbMatch.mainGroup === 'Accessories') return 'fa-bucket';
+            }
+        }
+
         return iconMap[category] || 'fa-tag';
     }
 
-    getCategoryLabel(key: string) {
-        if (key === 'All') return 'All';
-        const allCats = [
+    getCategoryImage(category: string): string | null {
+        // Search in hardcoded categories first
+        const allHardcoded = [
             ...this.mainCategoryGroups['Plants'],
             ...this.mainCategoryGroups['Seeds'],
             ...this.mainCategoryGroups['Accessories']
         ];
-        const match = allCats.find(c => c.key === key);
-        return match ? match.label : key;
+        const hardcodedMatch = allHardcoded.find(c => c.key === category);
+        if (hardcodedMatch && (hardcodedMatch as any).image) return (hardcodedMatch as any).image;
+
+        // Search in dynamic DB categories
+        if (this.allCategories && this.allCategories.length > 0) {
+            const dbMatch = this.allCategories.find(c => c.key === category || c.name === category);
+            if (dbMatch && dbMatch.image) return dbMatch.image;
+        }
+
+        return null;
+    }
+
+    removeCategory(event: Event, category: string) {
+        event.stopPropagation(); // Prevent navigating into category
+        
+        const catObj = this.getCategoryById(category);
+        if (!catObj || !catObj._id) {
+            alert('This category cannot be removed (System Category)');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to remove the category "${catObj.label || catObj.name}"? This will NOT delete products in this category, but they will become uncategorized.`)) {
+            this.productService.deleteCategory(catObj._id).subscribe({
+                next: () => {
+                    alert('Category removed successfully');
+                    this.loadCategories(); // Refresh list
+                },
+                error: (err: any) => {
+                    console.error('Delete category error:', err);
+                    alert('Failed to remove category.');
+                }
+            });
+        }
+    }
+
+    getCategoryLabel(key: string) {
+        if (key === 'All') return 'All';
+
+        // Search in hardcoded categories
+        const allHardcoded = [
+            ...this.mainCategoryGroups['Plants'],
+            ...this.mainCategoryGroups['Seeds'],
+            ...this.mainCategoryGroups['Accessories']
+        ];
+        const hardcodedMatch = allHardcoded.find(c => c.key === key);
+        if (hardcodedMatch) return hardcodedMatch.label;
+
+        // Search in DB categories
+        if (this.allCategories && this.allCategories.length > 0) {
+            const dbMatch = this.allCategories.find(c => c.key === key || c.name === key);
+            if (dbMatch) return dbMatch.label || dbMatch.name;
+        }
+
+        return key;
     }
 
     get filteredProductCategories() {
@@ -2632,15 +2869,15 @@ export class AdminPanelComponent implements OnInit {
                             const sanitized = this.sanitizeOrder(updatedOrder);
                             this.orders[idx] = sanitized;
                             this.selectedOrder = sanitized; // Update selected order too
-                            
+
                             this.selectedCourier = '';
                             this.trackingNumber = '';
-                            
+
                             // Close modal after successful dispatch
                             if (updatedOrder.status === 'Shipped') {
                                 this.closeOrderModal();
                             }
-                            
+
                             this.cdr.detectChanges();
                         }
                     });
@@ -2655,8 +2892,8 @@ export class AdminPanelComponent implements OnInit {
         if (!order) return order;
         return {
             ...order,
-            totalAmount: typeof order.totalAmount === 'string' 
-                ? Number(order.totalAmount.replace(/,/g, '')) 
+            totalAmount: typeof order.totalAmount === 'string'
+                ? Number(order.totalAmount.replace(/,/g, ''))
                 : order.totalAmount,
             // Ensure nested user data is gracefully handled if partially returned
             userId: order.userId || { fullName: 'Guest', email: 'N/A' }
@@ -2985,14 +3222,14 @@ export class AdminPanelComponent implements OnInit {
 
     addProductToOffer(product: any) {
         const updatedProduct = { ...product };
-        
+
         let currentTags = [];
         if (Array.isArray(updatedProduct.tags)) {
             currentTags = [...updatedProduct.tags];
         } else if (typeof updatedProduct.tags === 'string' && updatedProduct.tags.trim() !== '') {
             currentTags = updatedProduct.tags.split(',').map((t: string) => t.trim());
         }
-        
+
         if (!currentTags.includes(this.activeOfferCode)) {
             currentTags.push(this.activeOfferCode);
         }
@@ -3031,7 +3268,7 @@ export class AdminPanelComponent implements OnInit {
                 // Separate general inquiries from user-submitted FAQs
                 this.inquiries = data.filter(i => !i.subject.includes('User-Submitted FAQ'));
                 this.userFaqs = data.filter(i => i.subject.includes('User-Submitted FAQ'));
-                
+
                 this.isLoadingInquiries = false;
                 this.cdr.detectChanges();
             },
@@ -3151,7 +3388,7 @@ export class AdminPanelComponent implements OnInit {
 
             // --- SPECIALIZED ORDER PAGE STATS (VOLUME, REVENUE, PIPELINE, FULFILLED) ---
             const inPipelineCount = this.orders.filter(o => ['Pending', 'Processing', 'Shipped'].includes(o.status)).length;
-            
+
             this.orderStats[0].value = totalOrdersCount.toString();
             this.orderStats[1].value = '₹' + totalRevenueValue.toLocaleString();
             this.orderStats[2].value = inPipelineCount.toString();
@@ -3160,7 +3397,7 @@ export class AdminPanelComponent implements OnInit {
             // --- REAL CONVERSION ANALYTICS LOGIC ---
             const successfulOrders = this.orders.filter(o => o.status === 'Delivered').length;
             const visitorsSim = totalUsersCount > 0 ? totalUsersCount * 5 : 100; // Simulated visitors based on users
-            
+
             // 2. Add to Cart Rate
             const usersWithItems = this.users.filter(u => u.cart && u.cart.length > 0).length;
             const cartRate = totalUsersCount > 0 ? (usersWithItems / totalUsersCount * 100) : 0;
@@ -3177,7 +3414,7 @@ export class AdminPanelComponent implements OnInit {
             });
             const repeatCustomers = Object.values(userOrdersMap).filter(c => c > 1).length;
             const repeatRate = totalUsersCount > 0 ? (repeatCustomers / totalUsersCount * 100) : 0;
-            
+
 
             // 7. Abandoned Cart Rate
             const abandedCount = this.users.filter(u => u.cart?.length > 0 && !userOrdersMap[u.id]).length;
@@ -3439,25 +3676,25 @@ export class AdminPanelComponent implements OnInit {
             // 2. Create jsPDF instance (A4 size)
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
-            
+
             // 3. Add Brand Header
             pdf.setFontSize(24);
             pdf.setTextColor(22, 101, 52); // Brand green #166534
             pdf.text('GREENIE CULTURE', 15, 20);
-            
+
             pdf.setFontSize(14);
             pdf.setTextColor(71, 85, 105); // Slate gray
             pdf.text('Weekly Analytics Distribution Report', 15, 28);
-            
+
             pdf.setFontSize(10);
-            pdf.text(`Report Date: ${new Date().toLocaleDateString('en-IN', { 
-                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            pdf.text(`Report Date: ${new Date().toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
             })}`, 15, 34);
 
             // 4. Add the Chart Image
             const imgWidth = pageWidth - 30; // 15mm margins
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
+
             // Draw a subtle border for the chart
             pdf.setDrawColor(226, 232, 240); // Lighter gray
             pdf.rect(14.5, 41.5, imgWidth + 1, imgHeight + 1, 'S');
@@ -3468,7 +3705,7 @@ export class AdminPanelComponent implements OnInit {
             pdf.setFontSize(16);
             pdf.setTextColor(15, 23, 42); // Navy
             pdf.text('Key Performance Indicators (KPIs)', 15, currentY);
-            
+
             pdf.setDrawColor(22, 101, 52);
             pdf.setLineWidth(0.5);
             pdf.line(15, currentY + 2, 60, currentY + 2); // Underline
@@ -3593,7 +3830,7 @@ export class AdminPanelComponent implements OnInit {
             if (this.isAdminPaymentCOD(o.paymentMethod)) {
                 codCount++;
                 codRevenue += amount;
-                
+
                 // COD Settlement: Courier owes admin (totalAmount - fee)
                 const adminGets = amount - fee;
                 totalCollectedFromCouriers += adminGets;
@@ -3636,8 +3873,8 @@ export class AdminPanelComponent implements OnInit {
     toggleCourierSettled(order: any) {
         const token = sessionStorage.getItem('auth_token');
         const newStatus = !order.courierSettled;
-        this.http.put(`/api/admin/orders/${order._id}/courier-settled`, 
-            { courierSettled: newStatus }, 
+        this.http.put(`/api/admin/orders/${order._id}/courier-settled`,
+            { courierSettled: newStatus },
             { headers: { 'x-auth-token': token || '' } }
         ).subscribe({
             next: (updated: any) => {
@@ -3652,12 +3889,17 @@ export class AdminPanelComponent implements OnInit {
     getGlobalSettlement() {
         // Returns per-courier breakdown
         return this.couriers.map(c => {
-            const courierOrders = this.orders.filter(o => 
+            const courierOrders = this.orders.filter(o =>
                 o.courierName === c.name || this.extractState(o) === this.getCourierForState(this.extractState(o))
             );
             // This is slightly complex to repeat here, maybe I'll just use the global totals for now
             // as per user request "remove courier part from payment hub" (maybe meaning selection sidebar)
             return null;
         });
+    }
+
+    getCategoryById(categoryKey: string): any | null {
+        if (!this.allCategories) return null;
+        return this.allCategories.find(c => c.key === categoryKey || c.name === categoryKey);
     }
 }
