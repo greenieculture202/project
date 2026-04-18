@@ -543,11 +543,10 @@
                                             <td><span class="discount-pill"
                                                     *ngIf="prod.discount">{{prod.discount}}</span></td>
                                             <td>
-                                                <span class="status-badge"
-                                                    [ngClass]="prod.stock > 0 ? 'delivered' : 'cancelled'">
-                                                    {{ prod.stock }} {{ prod.category?.includes('Seeds') ? 'Packets' :
-                                                    (prod.stock > 0 ? 'In Stock' : 'Out of Stock') }}
-                                                </span>
+                                                <div class="stock-info-row" [ngClass]="{'low-stock': prod.stock > 0 && prod.stock <= 10, 'out-of-stock': !prod.stock || prod.stock <= 0}">
+                                                    <span class="stock-count">{{ prod.stock ?? 0 }}</span>
+                                                    <span class="stock-label">{{ prod.category?.includes('Seeds') ? 'Packs' : 'Units' }}</span>
+                                                </div>
                                             </td>
                                             <td class="action-cell">
                                                 <button class="btn-icon edit" title="Edit"
@@ -991,13 +990,17 @@
                             <span class="stat-trend"><i class="fas fa-chart-line"></i> +12% this week</span>
                         </div>
                     </div>
-                    <div class="stat-luxury-card revenue">
-                        <div class="card-glow"></div>
-                        <div class="stat-icon-wrapper"><i class="fas fa-indian-rupee-sign"></i></div>
+                    <div class="stat-luxury-card revenue" style="border-bottom: 3px solid #ef4444;">
+                        <div class="card-glow"
+                            style="background: radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.15) 0%, transparent 70%);">
+                        </div>
+                        <div class="stat-icon-wrapper" style="background: #fef2f2; color: #ef4444;"><i
+                                class="fas fa-rotate-left"></i></div>
                         <div class="stat-content">
-                            <span class="stat-label">Revenue Flow</span>
-                            <h2 class="stat-value">₹{{getTotalRevenue() | number}}</h2>
-                            <span class="stat-trend"><i class="fas fa-shield-check"></i> Verified</span>
+                            <span class="stat-label">Return Orders</span>
+                            <h2 class="stat-value">{{getOrdersByStatus('Return Requested').length}}</h2>
+                            <span class="stat-trend" style="color: #ef4444;"><i class="fas fa-undo"></i> Return
+                                Requested</span>
                         </div>
                     </div>
                     <div class="stat-luxury-card processing">
@@ -2758,7 +2761,8 @@
                                     <select [(ngModel)]="newProduct.category" name="category" required>
                                         <option value="" disabled>Select Category</option>
                                         <optgroup [label]="getMainCategoryLabel(activeMainCategory)">
-                                            <option *ngFor="let cat of getFilteredCategoriesForModal()" [value]="cat.key">
+                                            <option *ngFor="let cat of getFilteredCategoriesForModal()"
+                                                [value]="cat.key">
                                                 {{cat.label}}
                                             </option>
                                         </optgroup>
@@ -2805,27 +2809,32 @@
                             <div class="info-item full">
                                 <label><i class="fas fa-image"></i> Main Product Image URL *</label>
                                 <div class="input-with-action">
-                                    <input *ngIf="!isBase64(newProduct.image)" type="text" [(ngModel)]="newProduct.image" name="image" required
+                                    <input *ngIf="!isBase64(newProduct.image)" type="text"
+                                        [(ngModel)]="newProduct.image" name="image" required
                                         (ngModelChange)="onImageChange('main')"
                                         placeholder="https://images.unsplash.com/...">
-                                    
+
                                     <div *ngIf="isBase64(newProduct.image)" class="asset-badge-premium animate-pop">
                                         <div class="badge-content">
                                             <i class="fas fa-image"></i>
                                             <span>Image Uploaded (Ready)</span>
                                         </div>
-                                        <button class="badge-remove-btn" (click)="clearImage('main')" title="Remove Image">
+                                        <button class="badge-remove-btn" (click)="clearImage('main')"
+                                            title="Remove Image">
                                             <i class="fas fa-times-circle"></i>
                                         </button>
                                     </div>
 
-                                    <input type="file" id="mainImageUpload" style="display: none;" (change)="onFileSelected($event, 'main')" accept="image/*">
-                                    <button type="button" class="action-btn-mini" (click)="triggerFileSelect('mainImageUpload')" title="Upload from Device">
+                                    <input type="file" id="mainImageUpload" style="display: none;"
+                                        (change)="onFileSelected($event, 'main')" accept="image/*">
+                                    <button type="button" class="action-btn-mini"
+                                        (click)="triggerFileSelect('mainImageUpload')" title="Upload from Device">
                                         <i class="fas fa-folder-open"></i>
                                     </button>
                                 </div>
                                 <div class="url-warning" *ngIf="isLocalPath(newProduct.image)">
-                                    <i class="fas fa-exclamation-triangle"></i> Browser cannot load "D:\" paths. Please use the "Folder" button to select the file properly.
+                                    <i class="fas fa-exclamation-triangle"></i> Browser cannot load "D:\" paths. Please
+                                    use the "Folder" button to select the file properly.
                                 </div>
                                 <div class="premium-image-preview" *ngIf="newProduct.image">
                                     <img [src]="newProduct.image" alt="Main Preview">
@@ -2835,27 +2844,31 @@
                             <div class="info-item" *ngFor="let img of newProduct.images; let i = index">
                                 <label><i class="fas fa-images"></i> Alt Image {{i + 1}}</label>
                                 <div class="input-with-action">
-                                    <input *ngIf="!isBase64(newProduct.images[i])" type="text" [(ngModel)]="newProduct.images[i]" name="image{{i}}"
-                                        (ngModelChange)="onImageChange('alt', i)"
-                                        placeholder="Optional angle URL">
-                                    
+                                    <input *ngIf="!isBase64(newProduct.images[i])" type="text"
+                                        [(ngModel)]="newProduct.images[i]" name="image{{i}}"
+                                        (ngModelChange)="onImageChange('alt', i)" placeholder="Optional angle URL">
+
                                     <div *ngIf="isBase64(newProduct.images[i])" class="asset-badge-premium animate-pop">
                                         <div class="badge-content">
                                             <i class="fas fa-image"></i>
                                             <span>Image {{i+1}} Selected</span>
                                         </div>
-                                        <button class="badge-remove-btn" (click)="clearImage('alt', i)" title="Remove Image">
+                                        <button class="badge-remove-btn" (click)="clearImage('alt', i)"
+                                            title="Remove Image">
                                             <i class="fas fa-times-circle"></i>
                                         </button>
                                     </div>
 
-                                    <input type="file" [id]="'altImageUpload' + i" style="display: none;" (change)="onFileSelected($event, 'alt', i)" accept="image/*">
-                                    <button type="button" class="action-btn-mini" (click)="triggerFileSelect('altImageUpload' + i)" title="Upload from Device">
+                                    <input type="file" [id]="'altImageUpload' + i" style="display: none;"
+                                        (change)="onFileSelected($event, 'alt', i)" accept="image/*">
+                                    <button type="button" class="action-btn-mini"
+                                        (click)="triggerFileSelect('altImageUpload' + i)" title="Upload from Device">
                                         <i class="fas fa-folder-open"></i>
                                     </button>
                                 </div>
                                 <div class="url-warning" *ngIf="isLocalPath(newProduct.images[i])">
-                                    <i class="fas fa-exclamation-triangle"></i> Local path detected. Use the Folder button.
+                                    <i class="fas fa-exclamation-triangle"></i> Local path detected. Use the Folder
+                                    button.
                                 </div>
                                 <div class="premium-image-preview mini" *ngIf="newProduct.images[i]">
                                     <img [src]="newProduct.images[i]" alt="Alt Preview">

@@ -114,18 +114,7 @@
             <ng-container *ngIf="activeMainTab === 'orders' && !selectedCourier">
                 <div class="reports-dashboard">
 
-                    <!-- Performance Highlight -->
-                    <div class="top-performance-card" *ngIf="topCourier">
-                        <div class="glass-streak"></div>
-                        <div class="performance-info">
-                            <span class="performance-label">Top Courier This Month</span>
-                            <h2 class="performance-value">{{ topCourier?.name }}</h2>
-                            <p class="performance-subtext">Handling {{ topCourier?.total }} total shipments</p>
-                        </div>
-                        <div class="performance-icon">
-                            <i class="fas fa-crown"></i>
-                        </div>
-                    </div>
+
 
                     <!-- Courier Reports Grid -->
                     <div class="reports-grid">
@@ -317,7 +306,7 @@
                                                     <th>Address</th>
                                                     <th>Order Date</th>
                                                     <th>Status</th>
-                                                    <th>Performance</th>
+
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -335,12 +324,7 @@
                                                             Delivered
                                                         </div>
                                                     </td>
-                                                    <td>
-                                                        <div
-                                                            style="display: flex; align-items: center; gap: 5px; color: #fbbf24; font-weight: 800; font-size: 0.85rem;">
-                                                            <i class="fas fa-star"></i> 5.0
-                                                        </div>
-                                                    </td>
+
                                                 </tr>
                                             </tbody>
                                         </table>

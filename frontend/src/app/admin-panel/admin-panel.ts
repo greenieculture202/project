@@ -641,7 +641,7 @@ export class AdminPanelComponent implements OnInit {
 
     orderStats = [
         { label: 'TOTAL VOLUME', value: '0', icon: 'shopping-bag', color: '#4f46e5', trend: '+12% this week' },
-        { label: 'REVENUE FLOW', value: '₹0', icon: 'rupee-sign', color: '#10b981', trend: 'Verified' },
+        { label: 'RETURN ORDERS', value: '0', icon: 'rotate-left', color: '#ef4444', trend: 'Return requested' },
         { label: 'IN PIPELINE', value: '0', icon: 'spinner', color: '#f59e0b', trend: 'Active now' },
         { label: 'FULFILLED', value: '0', icon: 'check-double', color: '#8b5cf6', trend: '99.8% Success' }
     ];
@@ -902,7 +902,7 @@ export class AdminPanelComponent implements OnInit {
                     // ── Order stats card ──────────────────────────────────────
                     const inPipeline = (data.pendingCount || 0) + (data.processingCount || 0) + (data.shippedCount || 0);
                     this.orderStats[0].value = (data.totalOrders || 0).toString();
-                    this.orderStats[1].value = '₹' + (data.totalRevenue || 0).toLocaleString('en-IN');
+                    this.orderStats[1].value = (data.returnCount || 0).toString();
                     this.orderStats[2].value = inPipeline.toString();
                     this.orderStats[3].value = (data.deliveredCount || 0).toString();
 
@@ -1883,7 +1883,7 @@ export class AdminPanelComponent implements OnInit {
     getFilteredCategoriesForModal() {
         // 1. Get Built-in Categories for the active main group (Plants, Seeds, Accessories)
         const builtInCategories = this.mainCategoryGroups[this.activeMainCategory] || [];
-        
+
         // 2. Map Database Categories to the { key, label } format
         const dbCategories = (this.allCategories || [])
             .filter(cat => cat.mainGroup === this.activeMainCategory)
@@ -1894,10 +1894,10 @@ export class AdminPanelComponent implements OnInit {
 
         // 3. Merge both lists using a Map to avoid duplicates by 'key'
         const mergedMap = new Map<string, { key: string, label: string }>();
-        
+
         // Add built-in categories first
         builtInCategories.forEach(cat => mergedMap.set(cat.key.toLowerCase(), cat));
-        
+
         // Add database categories (added categories will take precedence or extend the list)
         dbCategories.forEach(cat => {
             if (!mergedMap.has(cat.key.toLowerCase())) {
@@ -1919,12 +1919,12 @@ export class AdminPanelComponent implements OnInit {
 
     sanitizeImageUrl(url: string): string {
         if (!url) return '';
-        
+
         let cleanUrl = url.trim();
-        
+
         // 1. Strip leading/trailing quotes (single or double)
         cleanUrl = cleanUrl.replace(/^["']|["']$/g, '');
-        
+
         // 2. Convert backslashes to forward slashes
         cleanUrl = cleanUrl.replace(/\\/g, '/');
 
@@ -2086,7 +2086,7 @@ export class AdminPanelComponent implements OnInit {
 
     removeCategory(event: Event, category: string) {
         event.stopPropagation(); // Prevent navigating into category
-        
+
         const catObj = this.getCategoryById(category);
         if (!catObj || !catObj._id) {
             alert('This category cannot be removed (System Category)');
@@ -2793,9 +2793,9 @@ export class AdminPanelComponent implements OnInit {
 
     updateOrderStatus(orderId: string, newStatus: string) {
         console.log(`[Admin] Updating order ${orderId} to status: ${newStatus}`);
-        const token = sessionStorage.getItem('auth_token');
+        const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
         if (!token) {
-            console.error('[Admin] No auth token found in session storage.');
+            console.error('[Admin] No auth token found in storage.');
             return;
         }
 

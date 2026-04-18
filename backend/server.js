@@ -360,32 +360,32 @@ mongoose.connect(MONGODB_URI, {
     serverSelectionTimeoutMS: 30000, // Increased to 30s
     connectTimeoutMS: 30000         // Increased to 30s
 })
-    .then(async () => {
+    .then(() => {
         console.log('✅ MongoDB connected successfully');
         console.log('📊 Active Database:', mongoose.connection.name);
-
-        // Run seeds only after connection is established
-        console.log('🔄 Starting data seeding...');
-        try {
-            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers(), seedCategories()]);
-            console.log('✅ Seeding completed');
-        } catch (seedErr) {
-            console.error('⚠️ Seeding internal error:', seedErr.message);
-        }
     })
     .catch(err => {
         console.error('❌ MongoDB connection error:', err.message);
-        console.log('\n--- DIAGNOSTIC HELP ---');
-        console.log('1. Check if your IP is whitelisted in MongoDB Atlas (Network Access).');
-        console.log('   Current Environment IP: 152.59.15.24');
-        console.log('2. Verify that your connection string in .env is correct.');
-        console.log('3. Ensure your firewall allows outbound traffic on port 27017.');
-        console.log('-----------------------\n');
     });
+
+// 2-3 minute load time fix: Run seeds in background WITHOUT blocking startup
+const runBackgroundSeeds = async () => {
+    // Wait a bit for server to be fully responsive
+    setTimeout(async () => {
+        console.log('🔄 Starting data seeding in background...');
+        try {
+            await Promise.all([seedPlacements(), seedFaqs(), seedCouriers(), seedCategories()]);
+            console.log('✅ Background seeding completed');
+        } catch (seedErr) {
+            console.error('⚠️ Seeding internal error:', seedErr.message);
+        }
+    }, 1000);
+};
 
 // Start listening immediately so frontend proxy doesn't fail with ECONNREFUSED
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT} at http://0.0.0.0:${PORT}`);
+    runBackgroundSeeds(); // Trigger non-blocking seeds
 });
 
 // Helper: Send SMS/WhatsApp Notification (Placeholder)
@@ -918,9 +918,23 @@ const callGemini = async (systemPrompt, userPrompt, image, apiKey) => {
     });
     let result;
     if (image) {
-        const base64Data = image.split(',')[1] || image;
-        const imageData = { inlineData: { data: base64Data, mimeType: "image/jpeg" } };
-        result = await model.generateContent([userPrompt, imageData]);
+        // Extract mime type from data URL if present
+        let mimeType = "image/jpeg";
+        let base64Data = image;
+        if (image.startsWith('data:')) {
+            const matches = image.match(/^data:([^;]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                mimeType = matches[1];
+                base64Data = matches[2];
+            }
+        }
+
+        const imageData = { inlineData: { data: base64Data, mimeType } };
+        console.log(`[AI-GEMINI] Identified vision request (${mimeType}). Analyzing...`);
+
+        // Ensure the AI focuses on identifying the plant in the image
+        const enhancedPrompt = `${userPrompt}\n\nIMPORTANT: Use the provided image to identify the plant. Be specific and provide its real botanical/common name. If it looks unhealthy, explain why.`;
+        result = await model.generateContent([enhancedPrompt, imageData]);
     } else {
         result = await model.generateContent(userPrompt);
     }
@@ -1006,11 +1020,11 @@ const callHuggingFace = async (systemPrompt, userPrompt, image, apiKey) => {
 
 const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
     const providers = [
-        { name: 'Gemini', key: process.env.GEMINI_API_KEY, func: callGemini },
-        { name: 'Groq', key: process.env.GROQ_API_KEY, func: callGroq },
-        { name: 'Cerebras', key: process.env.CEREBRAS_API_KEY, func: callCerebras },
-        { name: 'Mistral', key: process.env.MISTRAL_API_KEY, func: callMistral },
-        { name: 'Hugging Face', key: process.env.HUGGINGFACE_API_KEY, func: callHuggingFace }
+        { name: 'Gemini', key: process.env.GEMINI_API_KEY, func: callGemini, hasVision: true },
+        { name: 'Groq', key: process.env.GROQ_API_KEY, func: callGroq, hasVision: false },
+        { name: 'Cerebras', key: process.env.CEREBRAS_API_KEY, func: callCerebras, hasVision: false },
+        { name: 'Mistral', key: process.env.MISTRAL_API_KEY, func: callMistral, hasVision: false },
+        { name: 'Hugging Face', key: process.env.HUGGINGFACE_API_KEY, func: callHuggingFace, hasVision: false }
     ];
 
     let lastError = null;
@@ -1019,14 +1033,24 @@ const callUnifiedAI = async (systemPrompt, userPrompt, image) => {
             continue;
         }
 
+        // If an image is provided, skip providers that don't support vision
+        if (image && !provider.hasVision) {
+            console.log(`[AI-ROUTING] Skipping ${provider.name} (No Vision support for image request)`);
+            continue;
+        }
+
         try {
-            console.log(`[AI-FAILOVER] Trying ${provider.name}...`);
+            console.log(`[AI-ROUTING] Trying ${provider.name}...`);
             const result = await provider.func(systemPrompt, userPrompt, image, provider.key);
             if (result && result.text) return { ...result, provider: provider.name };
         } catch (err) {
-            console.error(`[AI-FAILOVER] ${provider.name} failed:`, err.message);
+            console.error(`[AI-ROUTING] ${provider.name} failed:`, err.message);
             lastError = err;
         }
+    }
+
+    if (image) {
+        throw new Error("Unable to analyze image. Please ensure your Gemini API key is valid and has vision capabilities.");
     }
     throw lastError || new Error("All AI providers failed. Check your API keys.");
 };
@@ -1105,15 +1129,23 @@ app.post('/api/ai-assistant', async (req, res) => {
         YOUR RESPONSE MUST BE A VALID JSON OBJECT:
         { 
           "text": "Detailed advice/diagnosis with plant name and health status. Use plenty of emojis.", 
-          "recommendations": ["Identified Plant Name", "Related Category (e.g., Fertilizers & Nutrients)"], 
-          "remindable": true/false (true if diagnosis or specific advice given), 
+          "recommendations": ["EXACT IDENTIFIED PLANT NAME", "Related Category"], 
+          "remindable": true/false, 
           "plantName": "Exact Plant Name Identified" 
         }
+        
+        CRITICAL: The FIRST item in the "recommendations" array MUST be the exact name of the plant you identified in the image. This is mandatory for product linking.
         
         AVAILABLE CATEGORIES: ["Indoor Plants", "Outdoor Plants", "Flowering Plants", "Gardening", "Flower Seeds", "Fertilizers & Nutrients", "Gardening Tools", "Soil & Growing Media", "Accessories"]`;
 
 
-        const userPrompt = `${historyText}\nUser Current Question: "${message}"`;
+        let userPrompt;
+        if (image) {
+            // For image requests, summarize history or prioritize current context to avoid loop confusion
+            userPrompt = `[IMAGE ATTACHED]\n${historyText}\nUser just sent a plant photo and asked: "${message}"`;
+        } else {
+            userPrompt = `${historyText}\nUser Current Question: "${message}"`;
+        }
 
         const result = await callUnifiedAI(systemPrompt, userPrompt, image);
         let aiFullText = result.text;
@@ -1484,6 +1516,53 @@ let bestsellersCache = {
 };
 
 // API Routes for Products
+/**
+ * Performance Cache for Regional Popularity
+ * Refreshes every 15 minutes to avoid hitting Orders collection on every catalog request
+ */
+let regionalPopularityCache = {
+    map: null,
+    lastFetched: 0,
+    REFRESH_INTERVAL: 15 * 60 * 1000 // 15 Minutes
+};
+
+const getRegionalPopularityMap = async () => {
+    const now = Date.now();
+    if (regionalPopularityCache.map && (now - regionalPopularityCache.lastFetched < regionalPopularityCache.REFRESH_INTERVAL)) {
+        return regionalPopularityCache.map;
+    }
+
+    try {
+        console.log('[PERF] Refreshing Regional Popularity Map from Orders...');
+        const allOrders = await Order.find({
+            status: { $ne: 'Cancelled' }
+        })
+            .select('items shippingDetails state')
+            .sort({ orderDate: -1 })
+            .limit(300)
+            .lean();
+
+        const popularityMap = {};
+        allOrders.forEach(o => {
+            (o.items || []).forEach(item => {
+                if (item.name) {
+                    const n = item.name.trim().toLowerCase();
+                    const s = (o.shippingDetails?.state || o.state || '').trim().toUpperCase();
+                    if (!popularityMap[s]) popularityMap[s] = {};
+                    popularityMap[s][n] = (popularityMap[s][n] || 0) + (item.quantity || 1);
+                }
+            });
+        });
+
+        regionalPopularityCache.map = popularityMap;
+        regionalPopularityCache.lastFetched = now;
+        return popularityMap;
+    } catch (err) {
+        console.error('[RegionalEngine-Cache-Error]', err.message);
+        return regionalPopularityCache.map || {}; // Fallback to stale or empty
+    }
+};
+
 app.get('/api/products', async (req, res) => {
     try {
         const { category, limit, state } = req.query;
@@ -1631,7 +1710,7 @@ app.get('/api/products', async (req, res) => {
                     name: { $nin: existingNames }
                 });
                 if (req.query.minimal === 'true') {
-                    paddingQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage');
+                    paddingQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage stock');
                 }
                 const padding = await paddingQuery.limit(limitNum - products.length).lean();
                 products = [...products, ...padding];
@@ -1647,7 +1726,7 @@ app.get('/api/products', async (req, res) => {
             let productsQuery = Product.find(query);
 
             if (isMinimal) {
-                productsQuery = productsQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage');
+                productsQuery = productsQuery.select('name category slug createdAt image price originalPrice discount discountPercent tags hoverImage stock');
             }
 
             productsQuery = productsQuery.lean();
@@ -1670,38 +1749,30 @@ app.get('/api/products', async (req, res) => {
             }
 
             try {
-                // Use a cache for regional popularity to avoid Order.find(500) on every request
-                // For now, let's at least project only necessary fields from Orders
-                const allOrders = await Order.find({
-                    status: { $ne: 'Cancelled' }
-                }).select('items shippingDetails state').limit(200).lean();
+                const fullPopularityMap = await getRegionalPopularityMap();
 
-                const filteredOrders = allOrders.filter(o => {
-                    const s = (o.shippingDetails?.state || o.state || '').trim().toUpperCase();
-                    return searchStates.some(match => s === match);
-                });
-
-                const popularityMap = {};
-                filteredOrders.forEach(o => {
-                    (o.items || []).forEach(item => {
-                        if (item.name) {
-                            const n = item.name.trim().toLowerCase();
-                            popularityMap[n] = (popularityMap[n] || 0) + (item.quantity || 1);
+                // Merge counts for valid match states
+                const combinedMap = {};
+                searchStates.forEach(s => {
+                    const stateMap = fullPopularityMap[s];
+                    if (stateMap) {
+                        for (const name in stateMap) {
+                            combinedMap[name] = (combinedMap[name] || 0) + stateMap[name];
                         }
-                    });
+                    }
                 });
 
                 // 2. Sort and Mark
                 products.sort((a, b) => {
-                    const scoreA = popularityMap[a.name?.trim().toLowerCase()] || 0;
-                    const scoreB = popularityMap[b.name?.trim().toLowerCase()] || 0;
+                    const scoreA = combinedMap[a.name?.trim().toLowerCase()] || 0;
+                    const scoreB = combinedMap[b.name?.trim().toLowerCase()] || 0;
                     return scoreB - scoreA;
                 });
 
                 // Mark top regional favorites
                 let markedCount = 0;
                 products.forEach((p) => {
-                    const productScore = popularityMap[p.name?.trim().toLowerCase()] || 0;
+                    const productScore = combinedMap[p.name?.trim().toLowerCase()] || 0;
                     if (productScore > 0 && markedCount < 3) {
                         p.isRegionalFavorite = true;
                         markedCount++;
@@ -1709,12 +1780,6 @@ app.get('/api/products', async (req, res) => {
                         p.isRegionalFavorite = false;
                     }
                 });
-
-                // Debug log to file
-                require('fs').appendFileSync('popular_plants_debug.log',
-                    `[${new Date().toISOString()}] State: ${rawState} | Matches: ${searchStates.join(',')} | Total Orders: ${allOrders.length} | Filtered: ${filteredOrders.length} | PopularityMap: ${JSON.stringify(popularityMap)}\n`
-                );
-
             } catch (regErr) {
                 console.error('[RegionalEngine] Error:', regErr.message);
             }
@@ -1745,7 +1810,7 @@ app.get('/api/products/search', async (req, res) => {
         )
             .sort({ score: { $meta: "textScore" } })
             .limit(50)
-            .select('name category price originalPrice discount image slug tags')
+            .select('name category price originalPrice discount image slug tags stock')
             .lean();
 
         // If text search yields few results, fallback to regex for partial matches
@@ -1761,8 +1826,7 @@ app.get('/api/products/search', async (req, res) => {
                     ...(searchTerms.length > 1 ? [{ $and: regexes.map(r => ({ name: { $regex: r } })) }] : [])
                 ]
             })
-                .limit(50)
-                .select('name category price originalPrice discount image slug tags')
+                .select('name category price originalPrice discount image slug tags stock')
                 .lean();
 
             // Merge and de-duplicate
@@ -1791,7 +1855,7 @@ app.get('/api/products/map', async (req, res) => {
     try {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         // Only fetch fields needed for the map
-        const products = await Product.find({}).select('name category image price originalPrice discount discountPercent slug tags hoverImage').lean();
+        const products = await Product.find({}).select('name category image price originalPrice discount discountPercent slug tags hoverImage stock').lean();
         const productMap = products.reduce((acc, product) => {
             if (!acc[product.category]) {
                 acc[product.category] = [];
@@ -1898,10 +1962,10 @@ app.get('/api/user/dashboard', auth, async (req, res) => {
             User.findById(userId).select('greenPoints fullName'),
             Order.countDocuments({ userId }),
             Order.find({ userId })
-                 .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2 -paymentScreenshot')
-                 .sort({ orderDate: -1 })
-                 .limit(5)
-                 .lean()
+                .select('-returnDetails.billImage -returnDetails.productImage1 -returnDetails.productImage2 -paymentScreenshot')
+                .sort({ orderDate: -1 })
+                .limit(5)
+                .lean()
         ]);
 
         res.json({
@@ -2068,6 +2132,9 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
                         },
                         shippedCount: {
                             $sum: { $cond: [{ $eq: ['$status', 'Shipped'] }, 1, 0] }
+                        },
+                        returnCount: {
+                            $sum: { $cond: [{ $eq: ['$status', 'Return Requested'] }, 1, 0] }
                         }
                     }
                 }
@@ -2121,6 +2188,7 @@ app.get('/api/admin/dashboard-stats', auth, async (req, res) => {
             pendingCount: stats.pendingCount,
             processingCount: stats.processingCount,
             shippedCount: stats.shippedCount,
+            returnCount: stats.returnCount || 0,
             conversionRate: convRate,
             productCount,
             userCount: totalUserCount,
@@ -3474,10 +3542,10 @@ app.post('/api/admin/generate-marketing', auth, async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        
+
         // Build multimodal content parts
         const contentParts = [];
-        
+
         // Add image part if provided (Base64 only for now)
         if (image && image.startsWith('data:image')) {
             const [metadata, base64Data] = image.split(',');
@@ -3794,3 +3862,4 @@ app.post('/api/cart', auth, async (req, res) => {
     }
 });
 // END CART ROUTES
+

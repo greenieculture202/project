@@ -25,9 +25,6 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="voice-toggle-btn" (click)="isVoiceEnabled.set(!isVoiceEnabled())" [class.enabled]="isVoiceEnabled()" [title]="isVoiceEnabled() ? 'Mute AI' : 'Unmute AI'">
-          <i class="fas" [class.fa-volume-up]="isVoiceEnabled()" [class.fa-volume-mute]="!isVoiceEnabled()"></i>
-        </button>
         <button class="new-chat-btn" (click)="startNewChat()" title="Start New Chat">
           <i class="fas fa-plus"></i>
         </button>
@@ -65,6 +62,17 @@
     <!-- Input Area -->
     <div class="chat-footer">
       <div class="input-container">
+        <!-- Image Preview Strip -->
+        <div class="image-preview-strip" *ngIf="selectedImage">
+          <div class="preview-thumb-container">
+            <img [src]="selectedImage" class="preview-thumb">
+            <button class="remove-img-btn" (click)="removeImage()" title="Remove Image">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <span class="preview-label">Plant photo ready! 🌱</span>
+        </div>
+
         <div class="input-actions">
           <button class="plus-btn" (click)="triggerFileInput()" title="Add Plant Photo">
             <i class="fas fa-camera-retro"></i>
@@ -79,59 +87,7 @@
     </div>
   </div>
 
-  <!-- Dedicated Voice Chat Window (Restored) -->
-  <div class="voice-chat-window shadow-premium-blue" [class.active]="isVoiceWindowOpen()">
-    <div class="voice-chat-header">
-      <div class="bot-info">
-        <div class="bot-avatar voice">
-          <i class="fas fa-headset"></i>
-        </div>
-        <div>
-          <h4 class="voice-title">Voice Assistant</h4>
-          <div class="status"><span class="dot voice"></span> Listening...</div>
-        </div>
-      </div>
-      <div class="header-actions">
-        <div class="language-selection">
-            <button class="lang-btn" [class.active]="selectedLanguage() === 'en-IN'" (click)="setLanguage('en-IN')">EN</button>
-            <button class="lang-btn" [class.active]="selectedLanguage() === 'hi-IN'" (click)="setLanguage('hi-IN')">HI</button>
-            <button class="lang-btn" [class.active]="selectedLanguage() === 'gu-IN'" (click)="setLanguage('gu-IN')">GU</button>
-        </div>
-        <button class="close-btn voice" (click)="isVoiceWindowOpen.set(false); stopSpeaking()">
-            <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
 
-    <div class="voice-messages-container" #scrollMe>
-      <div *ngFor="let msg of messages; let i = index" class="voice-msg-row" [class.user]="msg.type === 'user'">
-        <div class="voice-bubble-transcript" [class.user]="msg.type === 'user'">
-          <div class="voice-text">
-            {{ msg.text }}
-          </div>
-          
-          <button class="msg-delete-btn" (click)="deleteMessage(i)" title="Remove message">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-          
-          <!-- Suggested Products (Voice window) -->
-          <div class="voice-recommended-products" *ngIf="msg.type === 'ai' && msg.recommendedProducts && msg.recommendedProducts.length > 0">
-            <div class="voice-product-scroll">
-              <div *ngFor="let prod of msg.recommendedProducts" class="voice-product-card" (click)="goToProduct(prod)">
-                <img [src]="prod.image" [alt]="prod.name">
-                <div class="voice-prod-details">
-                  <span class="voice-prod-name">{{ prod.name }}</span>
-                  <span class="voice-prod-price">₹{{ prod.price }}</span>
-                </div>
-                <button class="voice-view-btn">VIEW</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
 >
 
